@@ -1,0 +1,49 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { canApplyProductionAction, type ProductionAction } from "@/lib/action-engine";
+
+type ActionDockProps = {
+  action: ProductionAction;
+  onApply?: (action: ProductionAction) => void;
+  status?: string | null;
+};
+
+export function ActionDock({ action, onApply, status }: ActionDockProps) {
+  const canApply = canApplyProductionAction(action) && Boolean(onApply);
+
+  return (
+    <Card className="action-dock-card">
+      <CardContent>
+        <div className="summary-between">
+          <div>
+            <p className="eyebrow">Unified Action Engine</p>
+            <h3 className="card-title">{action.label}</h3>
+          </div>
+          <Badge tone={action.execution === "inline" ? "confirmed" : "neutral"}>{formatScope(action.scope)}</Badge>
+        </div>
+        <p className="card-copy">{action.detail}</p>
+        <div className="action-dock-meta">
+          <span>{action.execution === "inline" ? "Can apply inside this studio" : "Opens the right studio view"}</span>
+          {action.riskId ? <strong>{action.riskId}</strong> : <strong>moment action</strong>}
+        </div>
+        {canApply ? (
+          <Button onClick={() => onApply?.(action)} size="small">
+            Apply Action
+          </Button>
+        ) : (
+          <Button href={action.href} size="small">
+            Open Action
+          </Button>
+        )}
+        <span aria-live="polite" className="copy-status">
+          {status ?? (canApply ? "Ready to apply inside the local wedding plan." : "Opens the connected studio view.")}
+        </span>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatScope(value: string) {
+  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}

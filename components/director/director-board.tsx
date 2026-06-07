@@ -1,0 +1,59 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { RoleProductionBoard } from "@/components/director/role-production-board";
+import { RoleSelector } from "@/components/director/role-selector";
+import { StudioCommand } from "@/components/ui/studio-command";
+import { StudioWorkflow } from "@/components/wedding/studio-workflow";
+import { buildRoleBriefs } from "@/lib/role-briefs";
+
+export function DirectorBoard() {
+  const briefs = useMemo(() => buildRoleBriefs(), []);
+  const [activeRole, setActiveRole] = useState(briefs[0].role);
+  const activeBrief = briefs.find((brief) => brief.role === activeRole) ?? briefs[0];
+
+  useEffect(() => {
+    const readRoleFromUrl = window.setTimeout(() => {
+      const incomingRole = new URLSearchParams(window.location.search).get("role");
+
+      if (incomingRole && briefs.some((brief) => brief.role === incomingRole)) {
+        setActiveRole(incomingRole);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(readRoleFromUrl);
+  }, [briefs]);
+
+  return (
+    <div className="page-grid director-mode-page">
+      <RoleSelector activeRole={activeRole} briefs={briefs} onChange={setActiveRole} />
+      <RoleProductionBoard brief={activeBrief} />
+
+      <details className="director-detail-drawer">
+        <summary>
+          <span>Studio Context</span>
+          <small>Open the broader workflow and module metrics when you need orientation beyond the active role.</small>
+        </summary>
+        <div className="director-detail-drawer-content">
+          <StudioCommand
+            actions={[
+              { href: "/exports", label: "Prepare Brief" },
+              { href: "/preview", label: "Preview Day", variant: "secondary" }
+            ]}
+            description="One focused board per role: relevant timing, warnings, handoffs, checklist, contacts, and copy-ready instructions."
+            eyebrow="Director Mode"
+            metrics={[
+              { label: "Active role", value: activeBrief.title },
+              { label: "Timeline moments", value: `${activeBrief.relevantTimelineItemIds.length}` },
+              { label: "Checklist", tone: "confirmed", value: `${activeBrief.checklistItems.length} items` },
+              { label: "Contact", value: activeBrief.contactPerson }
+            ]}
+            status={{ label: "Role board live", tone: "confirmed" }}
+            title="Give every role exactly what they need."
+          />
+          <StudioWorkflow activeStep="director" />
+        </div>
+      </details>
+    </div>
+  );
+}
