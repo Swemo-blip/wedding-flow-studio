@@ -1,6 +1,9 @@
 import {
   clampGuestCount,
+  clampAccessibilitySeats,
   clampSceneOffset,
+  colorDirectionOptions,
+  decorLevelOptions,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
   planningSteps,
@@ -59,7 +62,7 @@ export function writeStoredWeddingStudioLayout(plan: WeddingStudioPlan, sceneEdi
 
 export function createStoredWeddingStudioLayoutDraft(source: Partial<StoredWeddingStudioLayout> = {}): StoredWeddingStudioLayout {
   return {
-    activeStep: isStudioPlanningStepId(source.activeStep) ? source.activeStep : "ceremony",
+    activeStep: isStudioPlanningStepId(source.activeStep) ? source.activeStep : "vision",
     plan: createWeddingStudioPlanDraft(source.plan),
     sceneEdits: createStudioSceneEditsDraft(source.sceneEdits),
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : new Date().toISOString()
@@ -69,12 +72,20 @@ export function createStoredWeddingStudioLayoutDraft(source: Partial<StoredWeddi
 function createWeddingStudioPlanDraft(source: Partial<WeddingStudioPlan> | undefined): WeddingStudioPlan {
   const style = styleOptions.find((option) => option.value === source?.style)?.value ?? defaultWeddingStudioPlan.style;
   const venueType = venueOptions.find((option) => option.value === source?.venueType)?.value ?? defaultWeddingStudioPlan.venueType;
+  const decorLevel = decorLevelOptions.find((option) => option.value === source?.decorLevel)?.value ?? defaultWeddingStudioPlan.decorLevel;
+  const colorDirection =
+    colorDirectionOptions.find((option) => option.value === source?.colorDirection)?.value ?? defaultWeddingStudioPlan.colorDirection;
 
   return {
+    accessibilitySeats: clampAccessibilitySeats(
+      typeof source?.accessibilitySeats === "number" ? source.accessibilitySeats : defaultWeddingStudioPlan.accessibilitySeats
+    ),
     budgetLevel:
       source?.budgetLevel === "essential" || source?.budgetLevel === "elevated" || source?.budgetLevel === "signature"
         ? source.budgetLevel
         : defaultWeddingStudioPlan.budgetLevel,
+    colorDirection,
+    decorLevel,
     guestCount: clampGuestCount(typeof source?.guestCount === "number" ? source.guestCount : defaultWeddingStudioPlan.guestCount),
     style,
     venueType

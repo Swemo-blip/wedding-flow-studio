@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { CeremonyScene } from "@/components/wedding-studio/church-scene";
-import { PlanningStepper } from "@/components/wedding-studio/planning-stepper";
 import { StudioControls } from "@/components/wedding-studio/studio-controls";
+import { StudioQuickStrip } from "@/components/wedding-studio/studio-quick-strip";
 import { StudioSummary } from "@/components/wedding-studio/studio-summary";
 import { StudioToolkit } from "@/components/wedding-studio/studio-toolkit";
 import { sampleWedding } from "@/lib/wedding-data";
@@ -18,12 +19,14 @@ import {
   type StudioSceneEdits,
   type StudioSceneObjectId,
   type StudioPlanningStepId,
+  type StudioViewMode,
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
 export function WeddingStudio() {
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
-  const [activeStep, setActiveStep] = useState<StudioPlanningStepId>("ceremony");
+  const [activeStep, setActiveStep] = useState<StudioPlanningStepId>("vision");
+  const [viewMode, setViewMode] = useState<StudioViewMode>("3d");
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
@@ -91,13 +94,19 @@ export function WeddingStudio() {
     <section className="wedding-planning-studio" aria-label="Wedding Planning Studio">
       <div className="wedding-studio-hero wedding-studio-focus-hero">
         <div>
-          <span>Wedding Studio OS</span>
-          <h1>See the plan in 3D.</h1>
-          <p>{activeCopy.caption}</p>
+          <span>Wedding Planning Studio</span>
+          <h1>See your wedding before it happens.</h1>
+          <p>Plan the ceremony, reception, guests, timeline, and handoff in one calm visual studio with smart guidance.</p>
+        </div>
+        <div className="studio-hero-actions" aria-label="Primary studio actions">
+          <Button href="/intake">Start with 5 questions</Button>
+          <Button href="/preview" variant="secondary">
+            Watch demo
+          </Button>
         </div>
         <div className="studio-focus-meta" aria-label="Current studio context">
           <span>{sampleWedding.coupleNames}</span>
-          <span>{sampleWedding.guestCount} guests</span>
+          <span>{plan.guestCount} guests</span>
           <span>{activeCopy.sceneTitle}</span>
         </div>
       </div>
@@ -111,26 +120,39 @@ export function WeddingStudio() {
           onMoveSelectedObject={moveSelectedObject}
           onResetSelectedObject={resetSelectedObject}
           onSelectObject={setSelectedObjectId}
+          onStepChange={updateActiveStep}
           plan={plan}
           sceneEdits={sceneEdits}
           selectedObjectId={activeSelectedObjectId}
         />
 
         <main className="wedding-studio-stage" aria-label="3D wedding planning studio">
-          <div className="studio-stage-switcher">
-            <PlanningStepper activeStep={activeStep} onChange={updateActiveStep} />
+          <div className="studio-stage-switcher" aria-label="Scene view controls">
+            <div>
+              <span>Visual Planning Canvas</span>
+              <strong>{activeCopy.sceneTitle}</strong>
+            </div>
+            <div className="studio-view-switcher" role="group" aria-label="Choose scene view">
+              {renderViewButton("3d", "3D View")}
+              {renderViewButton("top", "Top View")}
+              {renderViewButton("guest", "Guest View")}
+              {renderViewButton("walkthrough", "Walkthrough")}
+            </div>
           </div>
           <CeremonyScene
             activeStep={activeStep}
             budgetLevel={plan.budgetLevel}
             capacity={capacity}
+            colorDirection={plan.colorDirection}
             onMoveObject={moveSceneObject}
             onSelectObject={setSelectedObjectId}
             sceneEdits={sceneEdits}
             selectedObjectId={activeSelectedObjectId}
             style={plan.style}
             venueType={plan.venueType}
+            viewMode={viewMode}
           />
+          <StudioQuickStrip onChange={updatePlan} plan={plan} />
         </main>
 
         <StudioSummary activeStep={activeStep} capacity={capacity} plan={plan} />
@@ -139,4 +161,12 @@ export function WeddingStudio() {
       <StudioToolkit />
     </section>
   );
+
+  function renderViewButton(mode: StudioViewMode, label: string) {
+    return (
+      <button aria-pressed={viewMode === mode} data-active={viewMode === mode} key={mode} onClick={() => setViewMode(mode)} type="button">
+        {label}
+      </button>
+    );
+  }
 }

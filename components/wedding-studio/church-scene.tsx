@@ -4,16 +4,17 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Badge } from "@/components/ui/badge";
 import {
   studioStepCopy,
   venueOptions,
   type StudioBudgetLevel,
+  type StudioColorDirection,
   type StudioPlanningStepId,
   type StudioSceneEdits,
   type StudioSceneObjectId,
   type StudioStyle,
   type StudioVenueType,
+  type StudioViewMode,
   type WeddingStudioCapacity
 } from "@/lib/wedding-studio-plan";
 
@@ -21,12 +22,14 @@ type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
+  colorDirection: StudioColorDirection;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
   style: StudioStyle;
   venueType: StudioVenueType;
+  viewMode: StudioViewMode;
 };
 
 type GuestMarker = {
@@ -88,18 +91,57 @@ const palettes: Record<StudioStyle, Palette> = {
   }
 };
 
+const colorDirectionOverrides: Record<StudioColorDirection, Partial<Palette>> = {
+  blue: {
+    accent: "#8aa0a6",
+    blush: "#dce6e9",
+    carpet: "#eef3f3"
+  },
+  blush: {
+    accent: "#d7a59b",
+    blush: "#f0d5cf",
+    carpet: "#f5ebe8"
+  },
+  bold: {
+    accent: "#9a6935",
+    blush: "#d7b7a6",
+    carpet: "#eadfd0"
+  },
+  green: {
+    accent: "#7f8f70",
+    blush: "#dfe8d8",
+    carpet: "#eef4ea"
+  },
+  neutral: {},
+  warm: {
+    accent: "#c29a63",
+    blush: "#ead4c1",
+    carpet: "#f2e5d5"
+  }
+};
+
+function createPalette(style: StudioStyle, colorDirection: StudioColorDirection): Palette {
+  return {
+    ...palettes[style],
+    ...colorDirectionOverrides[colorDirection]
+  };
+}
+
 export function CeremonyScene({
   activeStep,
   budgetLevel,
   capacity,
+  colorDirection,
   onMoveObject,
   onSelectObject,
   sceneEdits,
   selectedObjectId,
   style,
-  venueType
+  venueType,
+  viewMode
 }: CeremonySceneProps) {
   const stageCopy = studioStepCopy[activeStep];
+  const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
@@ -108,14 +150,14 @@ export function CeremonyScene({
           <span>3D Wedding Stage</span>
           <strong>{stageCopy.sceneTitle}</strong>
         </div>
-        <Badge tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>
+        <span className="scene-status-label" data-tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>
           {getSceneBadge(activeStep, capacity, venueType)}
-        </Badge>
+        </span>
       </div>
 
       <div className="ceremony-canvas-frame">
-        <Canvas camera={{ fov: 42, near: 0.1, position: [0, 6.7, 9.8] }} dpr={[1, 1.8]} shadows>
-          <CameraSetup />
+        <Canvas camera={{ fov: 42, near: 0.1, position: getCameraPosition(viewMode) }} dpr={[1, 1.8]} shadows={{ type: THREE.PCFShadowMap }}>
+          <CameraSetup viewMode={viewMode} />
           <color args={["#fbf8f1"]} attach="background" />
           <fog args={["#fbf8f1", 10, 21]} attach="fog" />
           <ambientLight intensity={1.15} />
@@ -127,7 +169,7 @@ export function CeremonyScene({
             capacity={capacity}
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
-            palette={palettes[style]}
+            palette={palette}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             venueType={venueType}
@@ -166,10 +208,10 @@ function WeddingStageInterior({
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const guestMarkers = useMemo(() => buildGuestMarkers(capacity), [capacity]);
-  const visibleRows = activeStep === "venue" ? 0 : activeStep === "details" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
+  const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
   const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
-  const showGuests = activeStep === "guests" || activeStep === "ceremony";
+  const showGuests = ["ceremony", "guests", "preview", "share", "timeline"].includes(activeStep);
   const surface = getVenueSurface(venueType, palette);
 
   useFrame(({ clock }) => {
@@ -227,7 +269,7 @@ function WeddingStageInterior({
             </EditableSceneObject>
           ) : null}
 
-          {activeStep === "details" || budgetLevel !== "essential" ? (
+          {activeStep === "budget" || budgetLevel !== "essential" ? (
             <EditableSceneObject
               objectId="lighting"
               onMoveObject={onMoveObject}
@@ -263,7 +305,7 @@ function WeddingStageInterior({
             {showGuests && capacity.overflowGuests > 0 ? <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} /> : null}
           </EditableSceneObject>
 
-          {activeStep === "details" ? <DetailLayer decorScale={decorScale} palette={palette} /> : null}
+          {activeStep === "budget" || activeStep === "preview" ? <DetailLayer decorScale={decorScale} palette={palette} /> : null}
         </>
       )}
     </group>
@@ -794,15 +836,28 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
   );
 }
 
-function CameraSetup() {
+function CameraSetup({ viewMode }: { viewMode: StudioViewMode }) {
   const { camera } = useThree();
 
   useEffect(() => {
-    camera.position.set(0, 6.7, 9.8);
-    camera.lookAt(0, 0.34, -0.35);
-  }, [camera]);
+    const position = getCameraPosition(viewMode);
+
+    camera.position.set(...position);
+    camera.lookAt(0, viewMode === "guest" ? 0.75 : 0.34, viewMode === "walkthrough" ? -1.1 : -0.35);
+  }, [camera, viewMode]);
 
   return null;
+}
+
+function getCameraPosition(viewMode: StudioViewMode): [number, number, number] {
+  const positions: Record<StudioViewMode, [number, number, number]> = {
+    "3d": [0, 6.7, 9.8],
+    guest: [0, 1.42, 5.4],
+    top: [0, 10.6, 0.5],
+    walkthrough: [2.9, 3.35, 6.4]
+  };
+
+  return positions[viewMode];
 }
 
 function buildReceptionTablePositions(tableCount: number): Array<[number, number, number]> {
@@ -875,10 +930,14 @@ function formatVenueLabel(venueType: StudioVenueType) {
 function getSceneBadge(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
   const labels: Record<StudioPlanningStepId, string> = {
     ceremony: `${capacity.renderedRows} rows`,
-    details: "Lighting layer",
+    budget: "Spend impact",
     guests: `${capacity.visibleGuestMarkers} guests`,
+    preview: "Live preview",
     reception: `${Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)))} tables`,
-    venue: formatVenueLabel(venueType)
+    share: "Brief ready",
+    timeline: "Flow layer",
+    venue: formatVenueLabel(venueType),
+    vision: "First plan"
   };
 
   return labels[activeStep];
@@ -887,26 +946,34 @@ function getSceneBadge(activeStep: StudioPlanningStepId, capacity: WeddingStudio
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
   const labels: Record<StudioPlanningStepId, string> = {
     ceremony: `${capacity.renderedRows} ceremony rows`,
-    details: "Decor and cue layer",
+    budget: "Budget level visualized",
     guests: `${capacity.visibleGuestMarkers} guest markers shown`,
+    preview: "Preview perspective ready",
     reception: "Reception flow shown",
-    venue: `${formatVenueLabel(venueType)} model`
+    share: "Summary layer ready",
+    timeline: "Day flow connected",
+    venue: `${formatVenueLabel(venueType)} model`,
+    vision: "Guided first plan"
   };
 
   return labels[activeStep];
 }
 
 function getSceneCaption(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
-  if (capacity.capacityStatus === "over_capacity" && (activeStep === "guests" || activeStep === "ceremony")) {
+  if (capacity.capacityStatus === "over_capacity" && (activeStep === "guests" || activeStep === "ceremony" || activeStep === "reception")) {
     return `The ${formatVenueLabel(venueType).toLowerCase()} scene is full; overflow guests need a larger plan.`;
   }
 
   const captions: Record<StudioPlanningStepId, string> = {
     ceremony: "Rows, aisle, focal point, and guest density stay connected.",
-    details: "Lighting and floral markers show how the atmosphere changes.",
+    budget: "Budget level changes the visual intensity without requiring manual object edits.",
     guests: "Guest density updates immediately as the list changes.",
+    preview: "Use view controls to inspect the plan from the angle that matches your next decision.",
     reception: "Tables, dance floor, bar, and service path are staged together.",
-    venue: "Choose the scene type, then move the main planning objects."
+    share: "The visual plan is ready to become a partner, planner, or vendor summary.",
+    timeline: "The 3D scene stays connected to the day flow and handoff moments.",
+    venue: "Choose the scene type, then let the system generate the first layout.",
+    vision: "Start from a complete generated plan instead of a blank canvas."
   };
 
   return captions[activeStep];

@@ -18,7 +18,7 @@ export function TopBar({ wedding }: TopBarProps) {
       <div className="topbar-inner">
         <div>
           <p className="eyebrow">Wedding Day Digital Twin</p>
-          <h1 className="topbar-title">{activeWedding.coupleNames}</h1>
+          <p className="topbar-title">{activeWedding.coupleNames}</p>
           <p className="topbar-meta">{activeWedding.date} · {activeWedding.receptionLocation}</p>
         </div>
         <div className="topbar-actions">

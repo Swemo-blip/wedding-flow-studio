@@ -4338,11 +4338,11 @@ a {
     0 30px 92px rgba(23, 23, 19, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  padding: clamp(18px, 2.6vw, 28px);
+  padding: clamp(16px, 2vw, 22px);
 }
 
 .wedding-studio-focus-hero {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: end;
   gap: 18px;
 }
@@ -4379,20 +4379,20 @@ a {
   max-width: 920px;
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(2.15rem, 4vw, 4.15rem);
+  font-size: clamp(2rem, 3vw, 3.2rem);
   font-weight: 720;
-  line-height: 0.96;
+  line-height: 1;
 }
 
 .wedding-studio-hero p {
   max-width: 760px;
   margin: 0;
   color: rgba(255, 255, 255, 0.76);
-  font-size: 1.04rem;
-  line-height: 1.55;
+  font-size: 0.98rem;
+  line-height: 1.45;
 }
 
-.studio-focus-meta {
+.wedding-studio-hero .studio-focus-meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -4411,6 +4411,13 @@ a {
   padding: 8px 11px;
 }
 
+.wedding-studio-hero .studio-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .wedding-studio-grid {
   display: grid;
   grid-template-columns: minmax(238px, 0.66fr) minmax(520px, 1.72fr) minmax(246px, 0.68fr);
@@ -4421,7 +4428,7 @@ a {
 .wedding-studio-focus-grid {
   display: grid;
   grid-template-areas: "controls stage summary";
-  grid-template-columns: minmax(230px, 0.58fr) minmax(640px, 1.95fr) minmax(240px, 0.62fr);
+  grid-template-columns: minmax(268px, 0.66fr) minmax(560px, 1.85fr) minmax(294px, 0.72fr);
   gap: 14px;
   align-items: start;
 }
@@ -4487,6 +4494,53 @@ a {
   gap: 12px;
 }
 
+.studio-step-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(23, 23, 19, 0.08);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.9), rgba(246, 240, 231, 0.62)),
+    rgba(255, 253, 248, 0.68);
+  padding: 12px;
+}
+
+.studio-step-intro,
+.studio-plain-note {
+  display: grid;
+  gap: 5px;
+}
+
+.studio-step-intro span,
+.studio-plain-note span,
+.studio-moment-mini-list span,
+.studio-quick-strip label span,
+.studio-quick-range label,
+.studio-readiness-topline span,
+.studio-smart-recommendations span,
+.studio-ai-panel span,
+.studio-plan-summary dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.studio-step-intro strong,
+.studio-plain-note strong {
+  color: var(--ink);
+  font-size: 0.94rem;
+  line-height: 1.25;
+}
+
+.studio-plain-note span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-transform: none;
+}
+
 .studio-primary-control {
   border: 1px solid rgba(23, 23, 19, 0.08);
   border-radius: 10px;
@@ -4499,6 +4553,10 @@ a {
 .studio-control-group input[type="range"] {
   width: 100%;
   accent-color: var(--champagne-dark);
+}
+
+.studio-control-group select {
+  min-height: 40px;
 }
 
 .studio-number-row {
@@ -4528,7 +4586,7 @@ a {
 
 .studio-option-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
@@ -4541,13 +4599,20 @@ a {
     linear-gradient(180deg, rgba(255, 253, 248, 0.9), rgba(246, 240, 231, 0.66)),
     rgba(255, 253, 248, 0.72);
   color: inherit;
-  min-height: 68px;
+  min-height: 64px;
   padding: 10px;
   text-align: left;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
+}
+
+.studio-choice-card small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .studio-choice-card[data-active="true"] {
@@ -4578,6 +4643,54 @@ a {
   border: 1px solid rgba(23, 23, 19, 0.1);
   border-radius: var(--radius-control);
   background: var(--line);
+}
+
+.studio-moment-mini-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.studio-moment-mini-list span {
+  border: 1px solid rgba(23, 23, 19, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.74);
+  color: var(--ink);
+  padding: 7px 9px;
+  text-transform: none;
+}
+
+.studio-advanced-editor {
+  overflow: hidden;
+  border: 1px solid rgba(23, 23, 19, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 253, 248, 0.42);
+}
+
+.studio-advanced-editor > summary {
+  display: grid;
+  gap: 3px;
+  cursor: pointer;
+  list-style: none;
+  padding: 12px;
+}
+
+.studio-advanced-editor > summary::-webkit-details-marker {
+  display: none;
+}
+
+.studio-advanced-editor > summary span {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.studio-advanced-editor > summary small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.studio-advanced-editor[open] > summary {
+  border-bottom: 1px solid rgba(23, 23, 19, 0.08);
 }
 
 .studio-segmented-control button {
@@ -4805,11 +4918,16 @@ a {
 
 .planning-stepper {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.studio-controls-panel .planning-stepper {
+  grid-template-columns: 1fr;
+  gap: 6px;
 }
 
 .planning-stepper li {
@@ -4851,6 +4969,14 @@ a {
   text-align: left;
 }
 
+.studio-controls-panel .planning-stepper button {
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 44px;
+  gap: 9px;
+  padding: 8px 9px;
+}
+
 .planning-stepper button span {
   color: var(--muted);
 }
@@ -4860,6 +4986,12 @@ a {
   color: var(--ink);
   font-size: 0.92rem;
   line-height: 1.04;
+}
+
+.planning-stepper small {
+  color: var(--subtle);
+  font-size: 0.68rem;
+  font-weight: 900;
 }
 
 .planning-stepper li[data-active="true"] button span {
@@ -4873,7 +5005,7 @@ a {
 .wedding-studio-stage {
   display: grid;
   grid-area: stage;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 720px;
   padding: 12px;
   background:
@@ -4883,15 +5015,64 @@ a {
 }
 
 .studio-stage-switcher {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid rgba(23, 23, 19, 0.08);
   padding-bottom: 12px;
+}
+
+.studio-stage-switcher span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.studio-stage-switcher strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 1.08rem;
+}
+
+.studio-view-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.studio-view-switcher button {
+  min-height: 34px;
+  border: 1px solid rgba(23, 23, 19, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.72);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 7px 9px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.studio-view-switcher button:hover,
+.studio-view-switcher button:focus-visible,
+.studio-view-switcher button[data-active="true"] {
+  border-color: rgba(23, 23, 19, 0.5);
+  background: var(--studio-ink);
+  color: #fffaf0;
 }
 
 .ceremony-scene-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
-  min-height: 630px;
+  min-height: 570px;
 }
 
 .ceremony-scene-toolbar,
@@ -4915,10 +5096,29 @@ a {
   line-height: 1.05;
 }
 
+.scene-status-label {
+  border: 1px solid rgba(23, 23, 19, 0.12);
+  border-radius: 5px;
+  background: rgba(255, 253, 248, 0.78);
+  color: var(--ink) !important;
+  padding: 8px 10px;
+  text-transform: none !important;
+}
+
+.scene-status-label[data-tone="medium"] {
+  border-color: rgba(154, 105, 53, 0.24);
+  color: var(--warning) !important;
+}
+
+.scene-status-label[data-tone="high"] {
+  border-color: rgba(141, 79, 77, 0.24);
+  color: var(--danger) !important;
+}
+
 .ceremony-canvas-frame {
   position: relative;
   display: grid;
-  min-height: 540px;
+  min-height: 460px;
 }
 
 .ceremony-canvas-frame canvas {
@@ -4943,6 +5143,50 @@ a {
   text-align: right;
   font-size: 0.95rem;
   line-height: 1.35;
+}
+
+.studio-quick-strip {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.15fr) repeat(4, minmax(112px, 0.72fr)) minmax(150px, 0.9fr);
+  gap: 8px;
+  border-top: 1px solid rgba(23, 23, 19, 0.08);
+  padding-top: 12px;
+}
+
+.studio-quick-strip label,
+.studio-quick-range {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.studio-quick-strip select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(23, 23, 19, 0.11);
+  border-radius: 7px;
+  background: rgba(255, 253, 248, 0.92);
+  color: var(--ink);
+  padding: 8px 9px;
+}
+
+.studio-quick-range {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid rgba(23, 23, 19, 0.09);
+  border-radius: 7px;
+  background: rgba(255, 253, 248, 0.7);
+  padding: 8px 9px;
+}
+
+.studio-quick-range input {
+  width: 100%;
+  accent-color: var(--sage);
+}
+
+.studio-quick-range strong {
+  color: var(--ink);
+  font-size: 0.9rem;
 }
 
 .studio-capacity-indicator {
@@ -5065,7 +5309,10 @@ a {
 
 .studio-alert,
 .studio-checklist,
-.studio-next-decision {
+.studio-next-decision,
+.studio-readiness-card,
+.studio-smart-recommendations,
+.studio-ai-panel {
   display: grid;
   gap: 9px;
   border: 1px solid rgba(23, 23, 19, 0.095);
@@ -5077,9 +5324,71 @@ a {
   padding: 14px;
 }
 
+.studio-health-panel {
+  gap: 12px;
+}
+
+.studio-readiness-card {
+  border-color: rgba(102, 120, 109, 0.22);
+  background:
+    linear-gradient(180deg, rgba(246, 250, 244, 0.94), rgba(235, 241, 232, 0.76)),
+    rgba(102, 120, 109, 0.06);
+}
+
+.studio-readiness-topline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.studio-readiness-topline strong {
+  color: var(--ink);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.9;
+}
+
+.studio-readiness-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.studio-plan-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(23, 23, 19, 0.08);
+  border-radius: 10px;
+  background: rgba(23, 23, 19, 0.07);
+  margin: 0;
+}
+
+.studio-plan-summary > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  background: rgba(255, 253, 248, 0.82);
+  padding: 11px;
+}
+
+.studio-plan-summary dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
 .studio-decision-panel .studio-next-decision {
   min-height: 180px;
   align-content: start;
+}
+
+.studio-health-panel .studio-next-decision {
+  min-height: 0;
 }
 
 .studio-decision-panel .studio-panel-header h2 {
@@ -5090,6 +5399,86 @@ a {
   margin: 0;
   color: var(--muted);
   line-height: 1.42;
+}
+
+.studio-next-decision .button {
+  justify-content: center;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.studio-smart-recommendations ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-smart-recommendations li {
+  position: relative;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  padding-left: 16px;
+}
+
+.studio-smart-recommendations li::before {
+  position: absolute;
+  left: 0;
+  top: 0.56em;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--sage);
+  content: "";
+}
+
+.studio-ai-panel {
+  border-color: rgba(85, 109, 115, 0.18);
+  background:
+    linear-gradient(180deg, rgba(250, 253, 252, 0.94), rgba(235, 243, 242, 0.72)),
+    rgba(85, 109, 115, 0.06);
+}
+
+.studio-ai-panel strong {
+  display: block;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.studio-ai-panel input {
+  width: 100%;
+  border: 1px solid rgba(23, 23, 19, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 253, 248, 0.92);
+  color: var(--ink);
+  padding: 10px 11px;
+}
+
+.studio-ai-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.studio-ai-actions button {
+  border: 1px solid rgba(23, 23, 19, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.76);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 9px;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.studio-ai-actions button:hover,
+.studio-ai-actions button:focus-visible {
+  border-color: rgba(85, 109, 115, 0.42);
+  background: rgba(255, 253, 248, 0.96);
+  color: var(--ink);
 }
 
 .studio-checklist ul {
@@ -9535,6 +9924,8 @@ a {
   .studio-command-main,
   .music-cue-board,
   .speech-program-canvas,
+  .wedding-studio-focus-grid,
+  .wedding-studio-focus-hero,
   .digital-twin-map-header,
   .digital-twin-map-layout,
   .studio-workspace-grid,
@@ -9553,6 +9944,30 @@ a {
   .director-role-picker,
   .director-role-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .wedding-studio-focus-grid {
+    grid-template-areas:
+      "stage"
+      "controls"
+      "summary";
+  }
+
+  .wedding-studio-hero .studio-hero-actions,
+  .wedding-studio-hero .studio-focus-meta {
+    justify-content: flex-start;
+  }
+
+  .wedding-studio-hero .studio-focus-meta {
+    display: none;
+  }
+
+  .studio-quick-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .studio-quick-range {
+    grid-column: span 2;
   }
 
   .director-live-actions,
@@ -9879,8 +10294,78 @@ a {
     padding: 18px 14px;
   }
 
+  .route-ribbon {
+    display: none;
+  }
+
   .studio-hero {
     padding: 24px 18px;
+  }
+
+  .wedding-studio-hero h1 {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+  }
+
+  .wedding-studio-hero p,
+  .wedding-studio-hero .studio-focus-meta {
+    display: none;
+  }
+
+  .wedding-studio-hero .studio-hero-actions {
+    align-items: stretch;
+    flex-direction: row;
+  }
+
+  .wedding-studio-hero .studio-hero-actions .button {
+    justify-content: center;
+    width: auto;
+  }
+
+  .wedding-studio-hero .studio-hero-actions .button-secondary {
+    display: none;
+  }
+
+  .wedding-studio-stage {
+    min-height: 0;
+    padding: 10px;
+  }
+
+  .studio-stage-switcher,
+  .ceremony-scene-toolbar,
+  .ceremony-scene-caption {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .studio-view-switcher {
+    justify-content: flex-start;
+  }
+
+  .ceremony-scene-shell {
+    min-height: 520px;
+  }
+
+  .ceremony-canvas-frame {
+    min-height: 360px;
+  }
+
+  .ceremony-scene-caption strong {
+    text-align: left;
+  }
+
+  .studio-quick-strip,
+  .studio-plan-summary,
+  .studio-ai-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-quick-range {
+    grid-column: auto;
+  }
+
+  .studio-toolkit-grid,
+  .studio-intelligence-links {
+    grid-template-columns: 1fr;
   }
 
   .hero-primary-path {
@@ -10250,30 +10735,33 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .studio-focus-meta {
-    justify-content: flex-start;
-    gap: 6px;
+  .wedding-studio-hero .studio-focus-meta {
+    display: none;
   }
 
   .wedding-studio-hero h1 {
-    font-size: clamp(1.9rem, 8vw, 2.55rem);
+    font-size: clamp(1.8rem, 8vw, 2.25rem);
+  }
+
+  .wedding-studio-hero .studio-hero-actions {
+    flex-direction: column;
+  }
+
+  .wedding-studio-hero .studio-hero-actions .button {
+    width: 100%;
   }
 
   .wedding-studio-hero p {
     display: none;
   }
 
-  .studio-focus-meta span {
-    padding: 7px 9px;
-  }
-
   .wedding-studio-stage,
   .ceremony-scene-shell {
-    min-height: 620px;
+    min-height: 0;
   }
 
   .ceremony-canvas-frame {
-    min-height: 470px;
+    min-height: 340px;
   }
 
   .studio-stage-switcher {

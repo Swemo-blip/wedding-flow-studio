@@ -1,7 +1,19 @@
 export type StudioVenueType = "church" | "garden" | "beach" | "hall";
 export type StudioStyle = "classic" | "romantic" | "modern" | "rustic";
 export type StudioBudgetLevel = "essential" | "elevated" | "signature";
-export type StudioPlanningStepId = "venue" | "guests" | "ceremony" | "reception" | "details";
+export type StudioDecorLevel = "simple" | "balanced" | "elevated" | "statement";
+export type StudioColorDirection = "neutral" | "blush" | "green" | "warm" | "blue" | "bold";
+export type StudioPlanningStepId =
+  | "vision"
+  | "venue"
+  | "guests"
+  | "ceremony"
+  | "reception"
+  | "timeline"
+  | "budget"
+  | "preview"
+  | "share";
+export type StudioViewMode = "3d" | "top" | "guest" | "walkthrough";
 export type CapacityStatus = "intimate" | "balanced" | "full" | "over_capacity";
 export type StudioSceneObjectId = "bar" | "ceremonyPath" | "danceFloor" | "dinnerTables" | "focalPoint" | "guestSeating" | "lighting";
 
@@ -13,6 +25,9 @@ export type StudioSceneOffset = {
 export type StudioSceneEdits = Record<StudioSceneObjectId, StudioSceneOffset>;
 
 export type WeddingStudioPlan = {
+  accessibilitySeats: number;
+  colorDirection: StudioColorDirection;
+  decorLevel: StudioDecorLevel;
   guestCount: number;
   venueType: StudioVenueType;
   style: StudioStyle;
@@ -35,7 +50,10 @@ export type WeddingStudioCapacity = {
 };
 
 export const defaultWeddingStudioPlan: WeddingStudioPlan = {
+  accessibilitySeats: 2,
   budgetLevel: "elevated",
+  colorDirection: "neutral",
+  decorLevel: "balanced",
   guestCount: 112,
   style: "classic",
   venueType: "church"
@@ -78,6 +96,28 @@ export const styleOptions: Array<{
   { label: "Rustic", value: "rustic" }
 ];
 
+export const decorLevelOptions: Array<{
+  label: string;
+  value: StudioDecorLevel;
+}> = [
+  { label: "Simple", value: "simple" },
+  { label: "Balanced", value: "balanced" },
+  { label: "Elevated", value: "elevated" },
+  { label: "Statement", value: "statement" }
+];
+
+export const colorDirectionOptions: Array<{
+  label: string;
+  value: StudioColorDirection;
+}> = [
+  { label: "Neutral", value: "neutral" },
+  { label: "Blush", value: "blush" },
+  { label: "Green", value: "green" },
+  { label: "Warm", value: "warm" },
+  { label: "Blue", value: "blue" },
+  { label: "Bold", value: "bold" }
+];
+
 export const budgetLevelOptions: Array<{
   label: string;
   value: StudioBudgetLevel;
@@ -88,28 +128,64 @@ export const budgetLevelOptions: Array<{
 ];
 
 export const planningSteps: Array<{
+  description: string;
   id: StudioPlanningStepId;
   label: string;
+  state: "complete" | "current" | "needs_attention" | "optional";
 }> = [
   {
+    description: "Mood, priorities, formality, and first direction.",
+    id: "vision",
+    label: "Vision",
+    state: "complete"
+  },
+  {
+    description: "Choose the venue model that shapes the plan.",
     id: "venue",
-    label: "Venue"
+    label: "Venue",
+    state: "complete"
   },
   {
+    description: "Guest count, comfort, and accessibility needs.",
     id: "guests",
-    label: "Guests"
+    label: "Guests",
+    state: "complete"
   },
   {
+    description: "Aisle, focal area, seating zones, and flow.",
     id: "ceremony",
-    label: "Ceremony"
+    label: "Ceremony",
+    state: "current"
   },
   {
+    description: "Dinner layout, tables, dance floor, and service path.",
     id: "reception",
-    label: "Reception"
+    label: "Reception",
+    state: "needs_attention"
   },
   {
-    id: "details",
-    label: "Details"
+    description: "Moments, gaps, and vendor handoffs.",
+    id: "timeline",
+    label: "Timeline",
+    state: "needs_attention"
+  },
+  {
+    description: "Priority level, tradeoffs, and spend direction.",
+    id: "budget",
+    label: "Budget",
+    state: "optional"
+  },
+  {
+    description: "See the day from 3D, top, guest, or walkthrough view.",
+    id: "preview",
+    label: "Preview",
+    state: "optional"
+  },
+  {
+    description: "Shareable summary, vendor briefs, and exports.",
+    id: "share",
+    label: "Share",
+    state: "optional"
   }
 ];
 
@@ -122,14 +198,14 @@ export const studioStepCopy: Record<
   }
 > = {
   ceremony: {
-    caption: "Aisle, altar, rows, and guests are connected.",
+    caption: "Aisle, focal area, rows, and guests stay connected.",
     sceneTitle: "Ceremony Layout",
     summaryTitle: "Ceremony plan"
   },
-  details: {
-    caption: "Lighting and decor intensity follow the selected style level.",
-    sceneTitle: "Details Layer",
-    summaryTitle: "Detail plan"
+  budget: {
+    caption: "Priority level changes the plan without adding clutter.",
+    sceneTitle: "Budget Impact",
+    summaryTitle: "Budget plan"
   },
   guests: {
     caption: "Guest markers show how full the space feels.",
@@ -141,10 +217,30 @@ export const studioStepCopy: Record<
     sceneTitle: "Reception Preview",
     summaryTitle: "Reception plan"
   },
+  preview: {
+    caption: "Switch perspective and preview how the day feels.",
+    sceneTitle: "Preview Mode",
+    summaryTitle: "Preview plan"
+  },
+  share: {
+    caption: "Turn the visual plan into a clear planning summary.",
+    sceneTitle: "Share Plan",
+    summaryTitle: "Share plan"
+  },
+  timeline: {
+    caption: "Moments and handoffs connect back to the visual plan.",
+    sceneTitle: "Day Flow",
+    summaryTitle: "Timeline plan"
+  },
   venue: {
     caption: "The room frame sets the planning envelope before details are added.",
     sceneTitle: "Venue Shell",
     summaryTitle: "Venue plan"
+  },
+  vision: {
+    caption: "Start with style, mood, and a useful first plan.",
+    sceneTitle: "First Visual Plan",
+    summaryTitle: "Vision plan"
   }
 };
 
@@ -198,10 +294,14 @@ export const studioEditableObjects: Record<
 export function getEditableObjectsForStep(activeStep: StudioPlanningStepId): StudioSceneObjectId[] {
   const objects: Record<StudioPlanningStepId, StudioSceneObjectId[]> = {
     ceremony: ["focalPoint", "ceremonyPath", "guestSeating"],
-    details: ["lighting", "focalPoint", "guestSeating"],
+    budget: ["guestSeating", "ceremonyPath", "focalPoint"],
     guests: ["guestSeating", "ceremonyPath", "focalPoint"],
+    preview: ["guestSeating", "ceremonyPath", "focalPoint"],
     reception: ["dinnerTables", "danceFloor", "bar"],
-    venue: ["focalPoint", "ceremonyPath", "guestSeating"]
+    share: ["guestSeating", "ceremonyPath", "focalPoint"],
+    timeline: ["ceremonyPath", "guestSeating", "focalPoint"],
+    venue: ["focalPoint", "ceremonyPath", "guestSeating"],
+    vision: ["focalPoint", "ceremonyPath", "guestSeating"]
   };
 
   return objects[activeStep];
@@ -242,6 +342,21 @@ export function calculateWeddingStudioCapacity(plan: WeddingStudioPlan): Wedding
 
 export function clampGuestCount(value: number) {
   return Math.min(180, Math.max(10, Math.round(value)));
+}
+
+export function clampAccessibilitySeats(value: number) {
+  return Math.min(24, Math.max(0, Math.round(value)));
+}
+
+export function mapDecorLevelToBudget(decorLevel: StudioDecorLevel): StudioBudgetLevel {
+  const levels: Record<StudioDecorLevel, StudioBudgetLevel> = {
+    balanced: "elevated",
+    elevated: "signature",
+    simple: "essential",
+    statement: "signature"
+  };
+
+  return levels[decorLevel];
 }
 
 function getCapacityStatus(guestCount: number): CapacityStatus {

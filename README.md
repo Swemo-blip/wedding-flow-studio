@@ -35,8 +35,8 @@ npm run build
 
 ## Main Modules
 
-- Focused Studio Canvas on the home route with one centered 3D planning experience, stage-specific controls, and one next decision
-- Wedding Planning Studio with responsive 3D scenes for church, garden, beach, and hall settings, plus guest-count controls, capacity modeling, direct-drag scene objects, local layout persistence, and a concise decision panel
+- Guided Studio Canvas on the home route with step-based planning, one centered 3D planning experience, quick controls, plan health, and one recommended next decision
+- Wedding Planning Studio with responsive 3D scenes for church, garden, beach, and hall settings, plus guest-count controls, accessibility seats, style/decor/color direction, capacity modeling, optional zone editing, local layout persistence, and a concise AI assistant foundation
 - Route-aware studio shell with persistent navigation, mobile section switching, and a compact current-layer ribbon across the app
 - Connected Planning Toolkit linking guest intelligence, floor plan editing, vendor fit, and export settings without turning the studio into a generic dashboard
 - Focused command surfaces across Reception, Vendor Sourcing, Music, Speeches, Director, and Exports so each module presents one active decision before deeper detail
@@ -75,7 +75,7 @@ npm run build
 - Recovery Orchestrator stores applied recovery decisions locally in the browser.
 - Vendor Intelligence stores local shortlist candidates and decision status, but does not yet verify vendor profiles, quotes, availability, contracts, or bookings.
 - Export previews can be copied as focused text briefs; generated PDF files are still future work.
-- Ceremony and reception planning includes multi-stage 3D studio previews, selectable scene objects, direct drag, nudge-based object placement, and interactive-looking HTML/CSS planning tools; it is not yet a full drag-and-drop venue editor.
+- Ceremony and reception planning includes multi-stage 3D studio previews, selectable zones, optional direct drag, nudge-based zone placement, and interactive-looking HTML/CSS planning tools; it is not yet a full drag-and-drop venue editor.
 - Director Mode simulates role-specific views without real permissions.
 - Music cues store metadata only and do not stream or embed music.
 

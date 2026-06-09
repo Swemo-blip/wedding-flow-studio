@@ -1,6 +1,11 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { studioStepCopy, venueOptions, type StudioPlanningStepId, type WeddingStudioCapacity, type WeddingStudioPlan } from "@/lib/wedding-studio-plan";
+import {
+  studioStepCopy,
+  venueOptions,
+  type StudioPlanningStepId,
+  type WeddingStudioCapacity,
+  type WeddingStudioPlan
+} from "@/lib/wedding-studio-plan";
 
 type StudioSummaryProps = {
   activeStep: StudioPlanningStepId;
@@ -11,8 +16,6 @@ type StudioSummaryProps = {
 type DecisionPanel = {
   ctaHref: string;
   ctaLabel: string;
-  metricLabel: string;
-  metricValue: string;
   note: string;
   recommendation: string;
   status: string;
@@ -21,100 +24,199 @@ type DecisionPanel = {
 export function StudioSummary({ activeStep, capacity, plan }: StudioSummaryProps) {
   const activeCopy = studioStepCopy[activeStep];
   const decision = getDecisionPanel(activeStep, capacity, plan);
-  const tone = capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed";
+  const readiness = getReadinessScore(activeStep, capacity, plan);
+  const venueLabel = venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue";
 
   return (
-    <aside className="wedding-studio-panel studio-summary-panel studio-decision-panel" aria-label="Next wedding studio decision">
+    <aside className="wedding-studio-panel studio-summary-panel studio-health-panel" aria-label="Wedding readiness and recommendations">
       <div className="studio-panel-header">
-        <span>One Decision</span>
+        <span>Plan Health</span>
         <h2>{activeCopy.summaryTitle}</h2>
       </div>
 
-      <div className="studio-decision-status">
-        <Badge tone={tone}>{decision.status}</Badge>
-        <div>
-          <span>{decision.metricLabel}</span>
-          <strong>{decision.metricValue}</strong>
+      <section className="studio-readiness-card" aria-label={`Wedding readiness ${readiness}%`}>
+        <div className="studio-readiness-topline">
+          <span>Wedding Readiness</span>
+          <strong>{readiness}%</strong>
         </div>
-      </div>
+        <div className="studio-capacity-meter" aria-hidden="true">
+          <span style={{ width: `${readiness}%` }} />
+        </div>
+        <p>{decision.status}</p>
+      </section>
 
-      <div className="studio-next-decision">
-        <span>Best next move</span>
+      <dl className="studio-plan-summary" aria-label="Current plan summary">
+        <div>
+          <dt>Venue</dt>
+          <dd>{venueLabel}</dd>
+        </div>
+        <div>
+          <dt>Guests</dt>
+          <dd>{plan.guestCount}</dd>
+        </div>
+        <div>
+          <dt>Style</dt>
+          <dd>{plan.style}</dd>
+        </div>
+        <div>
+          <dt>Access seats</dt>
+          <dd>{plan.accessibilitySeats}</dd>
+        </div>
+      </dl>
+
+      <section className="studio-next-decision">
+        <span>Recommended next step</span>
         <strong>{decision.recommendation}</strong>
         <p>{decision.note}</p>
-      </div>
-
-      <div className="studio-summary-actions">
         <Button href={decision.ctaHref} size="small">
           {decision.ctaLabel}
         </Button>
-      </div>
+      </section>
+
+      <section className="studio-smart-recommendations" aria-label="Smart recommendations">
+        <span>Smart recommendations</span>
+        <ul>
+          {getSmartRecommendations(capacity, plan).map((recommendation) => (
+            <li key={recommendation}>{recommendation}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="studio-ai-panel" aria-label="AI planning assistant">
+        <div>
+          <span>AI Assistant</span>
+          <strong>Ask for one planning improvement.</strong>
+        </div>
+        <label>
+          <span className="sr-only">AI planning request</span>
+          <input placeholder="Example: optimize seating for elderly guests" type="text" />
+        </label>
+        <div className="studio-ai-actions" role="group" aria-label="AI assistant suggested actions">
+          {["Optimize seating", "Improve timeline", "Check budget", "Create vendor brief"].map((action) => (
+            <button key={action} type="button">
+              {action}
+            </button>
+          ))}
+        </div>
+      </section>
     </aside>
   );
+}
+
+function getReadinessScore(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, plan: WeddingStudioPlan) {
+  const baseByStep: Record<StudioPlanningStepId, number> = {
+    budget: 68,
+    ceremony: 74,
+    guests: 70,
+    preview: 78,
+    reception: 66,
+    share: 82,
+    timeline: 64,
+    venue: 62,
+    vision: 58
+  };
+  const capacityPenalty = capacity.capacityStatus === "over_capacity" ? 22 : capacity.capacityStatus === "full" ? 8 : 0;
+  const accessibilityBonus = plan.accessibilitySeats > 0 ? 4 : 0;
+
+  return Math.max(32, Math.min(92, baseByStep[activeStep] + accessibilityBonus - capacityPenalty));
 }
 
 function getDecisionPanel(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, plan: WeddingStudioPlan): DecisionPanel {
   if (capacity.capacityStatus === "over_capacity" && (activeStep === "guests" || activeStep === "ceremony" || activeStep === "reception")) {
     return {
       ctaHref: "/reception",
-      ctaLabel: "Open Seating",
-      metricLabel: "Overflow",
-      metricValue: `${capacity.overflowGuests}`,
-      note: "The current model is above comfortable capacity.",
-      recommendation: "Reduce the list or plan a larger room model.",
-      status: "Needs review"
+      ctaLabel: "Review capacity",
+      note: "The current plan is above comfortable capacity.",
+      recommendation: "Reduce the list or switch to a larger layout.",
+      status: "Needs attention"
     };
   }
 
-  const tableCount = Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
-
   const panels: Record<StudioPlanningStepId, DecisionPanel> = {
+    budget: {
+      ctaHref: "/exports",
+      ctaLabel: "Prepare brief",
+      note: "The plan has enough detail to become a vendor-ready summary.",
+      recommendation: "Turn priorities into a short planning brief.",
+      status: "On track"
+    },
     ceremony: {
       ctaHref: "/day-flow",
-      ctaLabel: "Review Day Flow",
-      metricLabel: "Rows",
-      metricValue: `${capacity.recommendedRows}`,
-      note: "The aisle and altar are ready for timing review.",
-      recommendation: capacity.capacityStatus === "full" ? "Lock reserved rows before decor." : "Confirm aisle and altar framing.",
+      ctaLabel: "Review timeline",
+      note: "The ceremony layout is connected to guest density and focal placement.",
+      recommendation: capacity.capacityStatus === "full" ? "Lock reserved rows before decor." : "Confirm aisle width and focal framing.",
       status: capacity.capacityLabel
-    },
-    details: {
-      ctaHref: "/exports",
-      ctaLabel: "Prepare Briefs",
-      metricLabel: "Style",
-      metricValue: plan.style,
-      note: "Turn atmosphere choices into clear vendor notes.",
-      recommendation: "Confirm lighting and floral intensity.",
-      status: "Ready to brief"
     },
     guests: {
       ctaHref: "/reception",
-      ctaLabel: "Open Seating",
-      metricLabel: "Guests",
-      metricValue: `${plan.guestCount}`,
-      note: "Guest density is now reflected in the 3D model.",
-      recommendation: "Check density before seating assignments.",
+      ctaLabel: "Open seating",
+      note: "Guest density is now reflected in the visual plan.",
+      recommendation: "Add guest groups and accessibility seats next.",
       status: capacity.capacityLabel
+    },
+    preview: {
+      ctaHref: "/preview",
+      ctaLabel: "Preview day",
+      note: "Use the walkthrough when you want to understand how the day feels.",
+      recommendation: "Preview the plan from the guest perspective.",
+      status: "Ready to preview"
     },
     reception: {
       ctaHref: "/reception",
-      ctaLabel: "Open Seating",
-      metricLabel: "Tables",
-      metricValue: `${tableCount}`,
-      note: "Dinner layout, dance floor, bar, and service path are connected.",
-      recommendation: "Place tables around the service path next.",
-      status: "Flow visible"
+      ctaLabel: "Refine seating",
+      note: "Tables, dance floor, bar, and service path are visible together.",
+      recommendation: "Check table flow before assigning everyone.",
+      status: "Layout visible"
+    },
+    share: {
+      ctaHref: "/exports",
+      ctaLabel: "Open exports",
+      note: "Share the plan only after the timeline and guest flow are clear.",
+      recommendation: "Create a planner or vendor summary.",
+      status: "Ready to share"
+    },
+    timeline: {
+      ctaHref: "/day-flow",
+      ctaLabel: "Edit timeline",
+      note: "Moments should stay modular so every wedding can fit the couple.",
+      recommendation: "Add buffer between ceremony and dinner.",
+      status: "Needs timeline review"
     },
     venue: {
       ctaHref: "/ceremony",
-      ctaLabel: "Refine Ceremony",
-      metricLabel: "Model",
-      metricValue: venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue",
-      note: "The 3D scene envelope is set before adding density.",
-      recommendation: "Choose the scene, then place the core objects.",
+      ctaLabel: "Refine ceremony",
+      note: "The venue model defines the planning envelope.",
+      recommendation: "Choose the venue type before adjusting zones.",
       status: "Model selected"
+    },
+    vision: {
+      ctaHref: "/intake",
+      ctaLabel: "Answer 5 questions",
+      note: "A guided start gives you a useful plan immediately.",
+      recommendation: "Generate the first visual plan.",
+      status: "Missing first-use details"
     }
   };
 
   return panels[activeStep];
+}
+
+function getSmartRecommendations(capacity: WeddingStudioCapacity, plan: WeddingStudioPlan) {
+  const recommendations = [
+    `This layout comfortably seats ${capacity.totalCapacity} guests.`,
+    plan.accessibilitySeats > 0
+      ? "Keep accessibility seats near the entrance and aisle."
+      : "Add accessibility seats if guests need shorter routes.",
+    "Reserve front-row seats before finalizing ceremony decor."
+  ];
+
+  if (capacity.capacityStatus === "full") {
+    recommendations[0] = "The layout is close to full. Keep arrival and aisle flow precise.";
+  }
+
+  if (capacity.capacityStatus === "over_capacity") {
+    recommendations[0] = "The plan is over capacity. Switch venue model or reduce guest count.";
+  }
+
+  return recommendations;
 }
