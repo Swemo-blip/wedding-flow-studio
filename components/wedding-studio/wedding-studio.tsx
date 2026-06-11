@@ -7,11 +7,14 @@ import { StudioControls } from "@/components/wedding-studio/studio-controls";
 import { StudioQuickStrip } from "@/components/wedding-studio/studio-quick-strip";
 import { StudioSummary } from "@/components/wedding-studio/studio-summary";
 import { StudioToolkit } from "@/components/wedding-studio/studio-toolkit";
+import { clearStoredProject } from "@/lib/local-project-store";
+import { useLocalProject } from "@/lib/use-local-project";
 import { sampleWedding } from "@/lib/wedding-data";
-import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
+import { clearStoredWeddingStudioLayout, readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
   calculateWeddingStudioCapacity,
   clampSceneOffset,
+  createWeddingStudioPlanFromWedding,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
   getEditableObjectsForStep,
@@ -24,11 +27,14 @@ import {
 } from "@/lib/wedding-studio-plan";
 
 export function WeddingStudio() {
+  const localProject = useLocalProject();
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
   const [activeStep, setActiveStep] = useState<StudioPlanningStepId>("vision");
   const [viewMode, setViewMode] = useState<StudioViewMode>("3d");
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
+  const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
+  const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
   const activeCopy = studioStepCopy[activeStep];
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(activeStep), [activeStep]);
@@ -45,6 +51,25 @@ export function WeddingStudio() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!localProject.hasLocalProject) {
+      return;
+    }
+
+    const projectKey = `${localProject.wedding.id}:${localProject.updatedAt ?? "local"}`;
+    if (syncedProjectKey === projectKey) {
+      return;
+    }
+
+    queueMicrotask(() => {
+      const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, defaultWeddingStudioPlan);
+      setPlan(nextPlan);
+      setActiveStep("vision");
+      writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+      setSyncedProjectKey(projectKey);
+    });
+  }, [localProject.hasLocalProject, localProject.updatedAt, localProject.wedding, sceneEdits, syncedProjectKey]);
 
   function updatePlan(nextPlan: WeddingStudioPlan) {
     setPlan(nextPlan);
@@ -90,25 +115,57 @@ export function WeddingStudio() {
     });
   }
 
+  function resetGeneratedProject() {
+    clearStoredProject();
+    clearStoredWeddingStudioLayout();
+    localProject.resetLocalProject();
+    setPlan(defaultWeddingStudioPlan);
+    setActiveStep("vision");
+    setSceneEdits(defaultStudioSceneEdits);
+    setSelectedObjectId("focalPoint");
+    setSyncedProjectKey(null);
+  }
+
   return (
     <section className="wedding-planning-studio" aria-label="Wedding Planning Studio">
       <div className="wedding-studio-hero wedding-studio-focus-hero">
         <div>
-          <span>Wedding Planning Studio</span>
-          <h1>See your wedding before it happens.</h1>
-          <p>Plan the ceremony, reception, guests, timeline, and handoff in one calm visual studio with smart guidance.</p>
+          <span>{localProject.hasLocalProject ? "Visual Plan Ready" : "Wedding Planning Studio"}</span>
+          <h1>{localProject.hasLocalProject ? `${activeWedding.coupleNames}'s studio is ready.` : "See the day in one visual studio."}</h1>
+          <p>
+            {localProject.hasLocalProject
+              ? "Continue from the generated plan with guest count, venue direction, style, and readiness already connected."
+              : "Shape the ceremony, reception, guests, timeline, and handoff through one calm planning surface."}
+          </p>
         </div>
         <div className="studio-hero-actions" aria-label="Primary studio actions">
-          <Button href="/intake">Start with 5 questions</Button>
-          <Button href="/preview" variant="secondary">
-            Watch demo
-          </Button>
+          {localProject.hasLocalProject ? (
+            <>
+              <Button href="#studio-canvas">Continue in Studio</Button>
+              <button className="studio-text-action" onClick={resetGeneratedProject} type="button">
+                Start over
+              </button>
+            </>
+          ) : (
+            <Button href="/intake">Start with 5 questions</Button>
+          )}
         </div>
         <div className="studio-focus-meta" aria-label="Current studio context">
-          <span>{sampleWedding.coupleNames}</span>
+          <span>{activeWedding.coupleNames}</span>
           <span>{plan.guestCount} guests</span>
           <span>{activeCopy.sceneTitle}</span>
         </div>
+      </div>
+
+      <div className="studio-continuity-strip" aria-label="Guided product path">
+        {(localProject.hasLocalProject
+          ? ["Intake complete", "Studio active", "Preview next", "Export when ready"]
+          : ["Start with 5 questions", "Generate visual plan", "Preview the day", "Share when ready"]
+        ).map((step, index) => (
+          <span data-active={index === (localProject.hasLocalProject ? 1 : 0)} key={step}>
+            {step}
+          </span>
+        ))}
       </div>
 
       <div className="wedding-studio-focus-grid">
@@ -126,17 +183,17 @@ export function WeddingStudio() {
           selectedObjectId={activeSelectedObjectId}
         />
 
-        <main className="wedding-studio-stage" aria-label="3D wedding planning studio">
-          <div className="studio-stage-switcher" aria-label="Scene view controls">
-            <div>
-              <span>Visual Planning Canvas</span>
+        <main className="wedding-studio-stage" id="studio-canvas" aria-label="3D wedding planning studio">
+        <div className="studio-stage-switcher" aria-label="Scene view controls">
+          <div>
+              <span>Studio Canvas</span>
               <strong>{activeCopy.sceneTitle}</strong>
             </div>
             <div className="studio-view-switcher" role="group" aria-label="Choose scene view">
-              {renderViewButton("3d", "3D View")}
-              {renderViewButton("top", "Top View")}
-              {renderViewButton("guest", "Guest View")}
-              {renderViewButton("walkthrough", "Walkthrough")}
+              {renderViewButton("3d", "3D")}
+              {renderViewButton("top", "Plan")}
+              {renderViewButton("guest", "Guest")}
+              {renderViewButton("walkthrough", "Walk")}
             </div>
           </div>
           <CeremonyScene
@@ -152,7 +209,13 @@ export function WeddingStudio() {
             venueType={plan.venueType}
             viewMode={viewMode}
           />
-          <StudioQuickStrip onChange={updatePlan} plan={plan} />
+          <details className="studio-quick-drawer">
+            <summary>
+              <span>Quick adjustments</span>
+              <small>Guests, venue, style, decor, and accessibility.</small>
+            </summary>
+            <StudioQuickStrip onChange={updatePlan} plan={plan} />
+          </details>
         </main>
 
         <StudioSummary activeStep={activeStep} capacity={capacity} plan={plan} />

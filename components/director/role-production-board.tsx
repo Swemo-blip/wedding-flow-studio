@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
@@ -53,10 +52,10 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
           <p>{board.description}</p>
         </div>
         <div className="director-live-actions">
-          {hasLocalProject ? <Badge tone="confirmed">Live Project State</Badge> : <Badge>Sample Project</Badge>}
-          <Badge tone={board.readiness === "critical" ? "high" : board.readiness === "attention" ? "medium" : "confirmed"}>
+          <span className="director-state-line" data-tone="confirmed">{hasLocalProject ? "Live project state" : "Sample project"}</span>
+          <span className="director-state-line" data-tone={board.readiness === "critical" ? "high" : board.readiness === "attention" ? "medium" : "confirmed"}>
             {board.readinessLabel}
-          </Badge>
+          </span>
           <Button onClick={copyProductionBrief} size="small" variant={board.readyToBrief ? "primary" : "secondary"}>
             {board.readyToBrief ? "Copy Ready Brief" : "Copy Working Brief"}
           </Button>
@@ -96,7 +95,7 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
                 <p className="eyebrow">Production Queue</p>
                 <h3 className="card-title">Role-specific timeline</h3>
               </div>
-              <Badge>{board.timeline.length} moments</Badge>
+              <span className="director-count-line">{board.timeline.length} moments</span>
             </div>
             <ol className="director-production-queue">
               {board.timeline.map((item) => (
@@ -107,9 +106,9 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
                     <p>{item.location} - {item.owner}</p>
                     <small>{item.cue}</small>
                   </div>
-                  <div className="director-queue-badges">
-                    {item.isSecret ? <Badge tone="secret">Secret Layer</Badge> : null}
-                    {item.hasWarning ? <Badge tone="medium">Attention</Badge> : <Badge tone="confirmed">Clear</Badge>}
+                  <div className="director-queue-status">
+                    {item.isSecret ? <span data-tone="secret">Secret</span> : null}
+                    <span data-tone={item.hasWarning ? "medium" : "confirmed"}>{item.hasWarning ? "Attention" : "Clear"}</span>
                   </div>
                 </li>
               ))}
@@ -127,7 +126,7 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
                   <li key={handoff.id}>
                     <div className="summary-between">
                       <strong>{handoff.label}</strong>
-                      <Badge tone={handoff.severity === "clear" ? "confirmed" : handoff.severity}>{handoff.timing}</Badge>
+                      <span className="director-count-line" data-tone={handoff.severity === "clear" ? "confirmed" : handoff.severity}>{handoff.timing}</span>
                     </div>
                     <p>{handoff.detail}</p>
                     <small>
@@ -192,9 +191,9 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
                   <p className="eyebrow">Needs Attention</p>
                   <h3 className="card-title">{board.warnings.length > 0 ? "Role-specific warnings" : "This role is clear."}</h3>
                 </div>
-                <Badge tone={board.warnings.length > 0 ? "medium" : "confirmed"}>
+                <span className="director-count-line" data-tone={board.warnings.length > 0 ? "medium" : "confirmed"}>
                   {board.warnings.length > 0 ? `${board.warnings.length} active` : "Ready"}
-                </Badge>
+                </span>
               </div>
               {board.warnings.length > 0 ? (
                 <RiskList risks={board.warnings} />

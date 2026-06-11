@@ -147,7 +147,7 @@ export function CeremonyScene({
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
       <div className="ceremony-scene-toolbar">
         <div>
-          <span>3D Wedding Stage</span>
+          <span>Live Scene</span>
           <strong>{stageCopy.sceneTitle}</strong>
         </div>
         <span className="scene-status-label" data-tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>

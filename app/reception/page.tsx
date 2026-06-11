@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ReceptionPage() {
-  return (
-    <div className="page-grid">
-      <ReceptionStudio />
-    </div>
-  );
+  return <ReceptionStudio />;
 }

@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function CeremonyPage() {
-  return (
-    <div className="page-grid">
-      <CeremonyLayoutView />
-    </div>
-  );
+  return <CeremonyLayoutView />;
 }

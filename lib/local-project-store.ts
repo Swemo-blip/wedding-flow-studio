@@ -136,6 +136,16 @@ export function writeStoredProject(project: StoredWeddingProject) {
   return nextProject;
 }
 
+export function clearStoredProject() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(projectStorageKey);
+  window.localStorage.removeItem(timelineStorageKey);
+  window.localStorage.removeItem(riskResolutionStorageKey);
+}
+
 export function readStoredTimeline() {
   if (typeof window === "undefined") {
     return null;

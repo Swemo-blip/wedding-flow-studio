@@ -1,3 +1,5 @@
+import type { Wedding } from "@/lib/wedding-types";
+
 export type StudioVenueType = "church" | "garden" | "beach" | "hall";
 export type StudioStyle = "classic" | "romantic" | "modern" | "rustic";
 export type StudioBudgetLevel = "essential" | "elevated" | "signature";
@@ -357,6 +359,120 @@ export function mapDecorLevelToBudget(decorLevel: StudioDecorLevel): StudioBudge
   };
 
   return levels[decorLevel];
+}
+
+export function createWeddingStudioPlanFromWedding(wedding: Wedding, basePlan: WeddingStudioPlan = defaultWeddingStudioPlan): WeddingStudioPlan {
+  return {
+    ...basePlan,
+    budgetLevel: getBudgetLevelFromWedding(wedding, basePlan.budgetLevel),
+    colorDirection: getColorDirectionFromWedding(wedding, basePlan.colorDirection),
+    decorLevel: getDecorLevelFromWedding(wedding, basePlan.decorLevel),
+    guestCount: clampGuestCount(wedding.guestCount),
+    style: getStyleFromWedding(wedding, basePlan.style),
+    venueType: getVenueTypeFromWedding(wedding, basePlan.venueType)
+  };
+}
+
+function getVenueTypeFromWedding(wedding: Wedding, fallback: StudioVenueType): StudioVenueType {
+  const source = `${wedding.style} ${wedding.ceremonyLocation} ${wedding.receptionLocation}`.toLowerCase();
+
+  if (source.includes("garden") || source.includes("outdoor") || source.includes("estate")) {
+    return "garden";
+  }
+
+  if (source.includes("coastal") || source.includes("beach")) {
+    return "beach";
+  }
+
+  if (source.includes("hall") || source.includes("ballroom") || source.includes("city") || source.includes("civil")) {
+    return "hall";
+  }
+
+  if (source.includes("chapel") || source.includes("church")) {
+    return "church";
+  }
+
+  return fallback;
+}
+
+function getStyleFromWedding(wedding: Wedding, fallback: StudioStyle): StudioStyle {
+  const source = wedding.style.toLowerCase();
+
+  if (source.includes("modern") || source.includes("city")) {
+    return "modern";
+  }
+
+  if (source.includes("rustic") || source.includes("barn")) {
+    return "rustic";
+  }
+
+  if (source.includes("garden") || source.includes("romantic") || source.includes("coastal")) {
+    return "romantic";
+  }
+
+  if (source.includes("classic") || source.includes("ballroom") || source.includes("chapel")) {
+    return "classic";
+  }
+
+  return fallback;
+}
+
+function getColorDirectionFromWedding(wedding: Wedding, fallback: StudioColorDirection): StudioColorDirection {
+  const source = wedding.style.toLowerCase();
+
+  if (source.includes("coastal")) {
+    return "blue";
+  }
+
+  if (source.includes("garden")) {
+    return "green";
+  }
+
+  if (source.includes("romantic")) {
+    return "blush";
+  }
+
+  if (source.includes("ballroom") || source.includes("classic")) {
+    return "warm";
+  }
+
+  if (source.includes("modern")) {
+    return "neutral";
+  }
+
+  return fallback;
+}
+
+function getDecorLevelFromWedding(wedding: Wedding, fallback: StudioDecorLevel): StudioDecorLevel {
+  const source = wedding.style.toLowerCase();
+
+  if (source.includes("high-touch") || source.includes("signature") || source.includes("luxury")) {
+    return "statement";
+  }
+
+  if (source.includes("editorial") || source.includes("ballroom") || source.includes("weekend")) {
+    return "elevated";
+  }
+
+  if (source.includes("calm") || source.includes("simple")) {
+    return "simple";
+  }
+
+  return fallback;
+}
+
+function getBudgetLevelFromWedding(wedding: Wedding, fallback: StudioBudgetLevel): StudioBudgetLevel {
+  const source = wedding.style.toLowerCase();
+
+  if (source.includes("high-touch") || source.includes("signature") || source.includes("luxury")) {
+    return "signature";
+  }
+
+  if (source.includes("calm") || source.includes("simple")) {
+    return "essential";
+  }
+
+  return fallback;
 }
 
 function getCapacityStatus(guestCount: number): CapacityStatus {

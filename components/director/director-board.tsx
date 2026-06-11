@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RoleProductionBoard } from "@/components/director/role-production-board";
 import { RoleSelector } from "@/components/director/role-selector";
 import { StudioCommand } from "@/components/ui/studio-command";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
 import { buildRoleBriefs } from "@/lib/role-briefs";
 
@@ -25,7 +26,19 @@ export function DirectorBoard() {
   }, [briefs]);
 
   return (
-    <div className="page-grid director-mode-page">
+    <StudioRouteFrame
+      description="Switch roles and give each person the exact timing, handoff, warning, and brief they need."
+      eyebrow="Director Mode"
+      meta={[
+        { label: "Role", value: activeBrief.title },
+        { label: "Moments", value: `${activeBrief.relevantTimelineItemIds.length}` },
+        { label: "Checklist", value: `${activeBrief.checklistItems.length}` }
+      ]}
+      primaryAction={{ href: "/exports", label: "Prepare Brief" }}
+      secondaryAction={{ href: "/preview", label: "Preview Day" }}
+      title="Run the wedding day by role."
+    >
+    <div className="director-mode-page studio-route-content">
       <RoleSelector activeRole={activeRole} briefs={briefs} onChange={setActiveRole} />
       <RoleProductionBoard brief={activeBrief} />
 
@@ -55,5 +68,6 @@ export function DirectorBoard() {
         </div>
       </details>
     </div>
+    </StudioRouteFrame>
   );
 }

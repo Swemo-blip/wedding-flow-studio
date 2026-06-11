@@ -9,7 +9,9 @@ import {
   colorDirectionOptions,
   decorLevelOptions,
   mapDecorLevelToBudget,
+  planningSteps,
   studioEditableObjects,
+  studioStepCopy,
   styleOptions,
   venueOptions,
   type StudioBudgetLevel,
@@ -51,6 +53,10 @@ export function StudioControls({
   sceneEdits,
   selectedObjectId
 }: StudioControlsProps) {
+  const activeStepIndex = planningSteps.findIndex((step) => step.id === activeStep);
+  const activeStepLabel = planningSteps[activeStepIndex]?.label ?? "Studio";
+  const activeCopy = studioStepCopy[activeStep];
+
   function updatePlan(updates: Partial<WeddingStudioPlan>) {
     onChange({ ...plan, ...updates });
   }
@@ -66,12 +72,23 @@ export function StudioControls({
   return (
     <aside className="wedding-studio-panel studio-controls-panel" aria-label="Guided wedding studio controls">
       <div className="studio-panel-header">
-        <span>Guided Plan</span>
-        <h2>Start simple. Refine only what matters.</h2>
-        <p>Move through the plan step by step. The 3D scene stays in sync.</p>
+        <span>Guided Studio</span>
+        <h2>{activeStepLabel}</h2>
+        <p>{activeCopy.summaryTitle}</p>
       </div>
 
-      <PlanningStepper activeStep={activeStep} onChange={onStepChange} />
+      <div className="studio-active-step-summary" aria-label="Current planning step">
+        <span>Step {activeStepIndex + 1} of {planningSteps.length}</span>
+        <strong>{activeCopy.sceneTitle}</strong>
+      </div>
+
+      <details className="studio-step-drawer">
+        <summary>
+          <span>Change step</span>
+          <small>Open only when you want to jump ahead.</small>
+        </summary>
+        <PlanningStepper activeStep={activeStep} onChange={onStepChange} />
+      </details>
 
       <section className="studio-step-card" aria-label="Current planning step controls">
         {renderActiveStepControls()}
@@ -93,11 +110,19 @@ export function StudioControls({
         <div className="studio-control-stack">
           <div className="studio-step-intro">
             <span>Step 1</span>
-            <strong>Let the system create a useful first plan.</strong>
+            <strong>Choose the mood. The scene updates from there.</strong>
           </div>
           {renderSegmentedStyle()}
-          {renderColorDirection()}
-          {renderDecorLevel()}
+          <details className="studio-step-drawer studio-inline-drawer">
+            <summary>
+              <span>Refine look</span>
+              <small>Color and decor level.</small>
+            </summary>
+            <div className="studio-inline-drawer-content">
+              {renderColorDirection()}
+              {renderDecorLevel()}
+            </div>
+          </details>
         </div>
       );
     }

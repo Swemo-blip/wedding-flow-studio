@@ -29,11 +29,11 @@ const planningToolkits = [
 
 export function StudioToolkit() {
   return (
-    <section className="studio-toolkit-panel" aria-label="Connected planning toolkit">
-      <div className="studio-toolkit-heading">
+    <details className="studio-toolkit-panel" aria-label="Connected planning toolkit">
+      <summary className="studio-toolkit-heading">
         <span>Connected Toolkit</span>
-        <strong>One studio, linked planning layers.</strong>
-      </div>
+        <strong>Open linked planning layers</strong>
+      </summary>
 
       <div className="studio-toolkit-grid">
         {planningToolkits.map((toolkit) => (
@@ -44,6 +44,6 @@ export function StudioToolkit() {
           </Link>
         ))}
       </div>
-    </section>
+    </details>
   );
 }

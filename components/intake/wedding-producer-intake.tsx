@@ -23,13 +23,71 @@ const styleOptions = Object.entries(stylePresetLabels) as Array<[WeddingStylePre
 const ceremonyOptions = Object.entries(ceremonyFormatLabels) as Array<[CeremonyFormat, string]>;
 const receptionOptions = Object.entries(receptionFormatLabels) as Array<[ReceptionFormat, string]>;
 const complexityOptions = Object.entries(complexityLabels) as Array<[ProductionComplexity, string]>;
+const quickRolePresets = [
+  {
+    label: "Core team",
+    roles: ["Wedding Planner", "Toastmaster / MC", "Photographer", "DJ / Musician", "Catering", "Venue", "Officiant"]
+  },
+  {
+    label: "Planner-led",
+    roles: ["Wedding Planner", "Photographer", "DJ / Musician", "Catering", "Venue", "Florist"]
+  },
+  {
+    label: "Lean plan",
+    roles: ["Toastmaster / MC", "Photographer", "DJ / Musician", "Catering", "Venue"]
+  }
+];
+
+type IntakeQuestionId = "foundation" | "venue" | "guests" | "style" | "support";
+
+const intakeQuestions: Array<{
+  id: IntakeQuestionId;
+  kicker: string;
+  title: string;
+  summary: string;
+}> = [
+  {
+    id: "foundation",
+    kicker: "Question 1",
+    summary: "Names and date shape the first shareable plan.",
+    title: "Who is the wedding for?"
+  },
+  {
+    id: "venue",
+    kicker: "Question 2",
+    summary: "The venue model gives the digital twin its planning envelope.",
+    title: "Where does the day happen?"
+  },
+  {
+    id: "guests",
+    kicker: "Question 3",
+    summary: "Guest count drives seating, flow, timing, and comfort.",
+    title: "How many guests should the plan support?"
+  },
+  {
+    id: "style",
+    kicker: "Question 4",
+    summary: "Style and complexity decide how much detail the studio generates.",
+    title: "What should the day feel like?"
+  },
+  {
+    id: "support",
+    kicker: "Question 5",
+    summary: "Choose the collaborators who need a clean first handoff.",
+    title: "Who needs to be included?"
+  }
+];
 
 export function WeddingProducerIntake() {
   const router = useRouter();
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [intake, setIntake] = useState<WeddingProducerIntakeState>(defaultWeddingProducerIntake);
   const [status, setStatus] = useState<string | null>(null);
   const plan = useMemo(() => composeWeddingProducerPlan(intake), [intake]);
+  const activeQuestion = intakeQuestions[activeQuestionIndex];
   const coreRoleCount = intake.vendorRoles.length;
+  const readiness = getGeneratedReadiness(plan.generatedRisks.length, coreRoleCount);
+  const isFinalQuestion = activeQuestionIndex === intakeQuestions.length - 1;
 
   function updateIntake(updates: Partial<WeddingProducerIntakeState>) {
     setStatus(null);
@@ -51,7 +109,19 @@ export function WeddingProducerIntake() {
     });
   }
 
-  function createDigitalTwin() {
+  function setRolePreset(roles: string[]) {
+    updateIntake({ vendorRoles: roles });
+  }
+
+  function goToNextQuestion() {
+    setActiveQuestionIndex((currentIndex) => Math.min(intakeQuestions.length - 1, currentIndex + 1));
+  }
+
+  function goToPreviousQuestion() {
+    setActiveQuestionIndex((currentIndex) => Math.max(0, currentIndex - 1));
+  }
+
+  function createDigitalTwin(redirectTo?: string) {
     const storedProject = writeStoredProject(
       createStoredProjectDraft({
         dinnerTables: plan.dinnerTables,
@@ -64,150 +134,104 @@ export function WeddingProducerIntake() {
       })
     );
 
-    setStatus(
-      storedProject
-        ? "Your first wedding-day digital twin is ready in this browser."
-        : "The browser could not save this project yet. Review storage settings and try again."
-    );
+    if (!storedProject) {
+      setStatus("The browser could not save this project yet. Review storage settings and try again.");
+      return;
+    }
+
+    setStatus("Your first visual wedding plan is ready in this browser.");
+
+    if (redirectTo) {
+      router.push(redirectTo);
+    }
   }
 
   return (
-    <div className="intake-studio">
-      <section className="intake-hero" aria-labelledby="intake-title">
+    <div className="intake-studio guided-intake-studio">
+      <section className="intake-hero guided-intake-hero" aria-labelledby="intake-title">
         <div>
-          <p className="eyebrow">Wedding Producer Intake</p>
-          <h1 id="intake-title">Build the first digital twin in one calm pass.</h1>
+          <p className="eyebrow">Start with 5 questions</p>
+          <h1 id="intake-title">Get a first visual wedding plan before you start editing.</h1>
           <p>
-            Answer a few production questions. Wedding Flow Studio composes the first day flow, cue sheet, reception map, role handoffs, and rehearsal watch list.
+            Answer five calm questions. Wedding Flow Studio generates a first ceremony, reception, guest flow, cue sheet, and shareable planning summary.
           </p>
         </div>
         <div className="intake-hero-card" aria-label="Generated project readiness">
           <span>Generated readiness</span>
-          <strong>{getGeneratedReadiness(plan.generatedRisks.length, coreRoleCount)}%</strong>
+          <strong>{readiness}%</strong>
           <small>{plan.generatedRisks.length === 0 ? "Ready to preview" : `${plan.generatedRisks.length} watch notes`}</small>
         </div>
       </section>
 
-      <section className="intake-layout" aria-label="Wedding Producer Intake composer">
-        <form className="intake-form" onSubmit={(event) => event.preventDefault()}>
-          <div className="intake-section-heading">
-            <span>Foundation</span>
-            <strong>Who, when, and where?</strong>
-          </div>
+      <section className="guided-intake-shell" aria-label="Guided first wedding plan">
+        <aside className="guided-intake-steps" aria-label="Five question progress">
+          {intakeQuestions.map((question, index) => (
+            <button
+              aria-current={index === activeQuestionIndex ? "step" : undefined}
+              className="guided-intake-step"
+              data-active={index === activeQuestionIndex}
+              data-complete={index < activeQuestionIndex}
+              key={question.id}
+              onClick={() => setActiveQuestionIndex(index)}
+              type="button"
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{question.title}</strong>
+              <small>{index < activeQuestionIndex ? "Answered" : index === activeQuestionIndex ? "Now" : "Next"}</small>
+            </button>
+          ))}
 
-          <div className="intake-field-grid">
-            <label>
-              <span>Partner one</span>
-              <input
-                onChange={(event) => updateIntake({ partnerOneName: event.target.value })}
-                value={intake.partnerOneName}
-              />
-            </label>
-            <label>
-              <span>Partner two</span>
-              <input
-                onChange={(event) => updateIntake({ partnerTwoName: event.target.value })}
-                value={intake.partnerTwoName}
-              />
-            </label>
-            <label>
-              <span>Wedding date</span>
-              <input onChange={(event) => updateIntake({ date: event.target.value })} value={intake.date} />
-            </label>
-            <label>
-              <span>Guest count</span>
-              <input
-                inputMode="numeric"
-                min={2}
-                max={300}
-                onChange={(event) => updateIntake({ guestCount: Number(event.target.value) })}
-                type="number"
-                value={intake.guestCount}
-              />
-            </label>
-            <label>
-              <span>Ceremony venue</span>
-              <input
-                onChange={(event) => updateIntake({ ceremonyLocation: event.target.value })}
-                value={intake.ceremonyLocation}
-              />
-            </label>
-            <label>
-              <span>Reception venue</span>
-              <input
-                onChange={(event) => updateIntake({ receptionLocation: event.target.value })}
-                value={intake.receptionLocation}
-              />
-            </label>
+          <div className="guided-intake-save-state">
+            <span>Save status</span>
+            <strong>{status ?? "Not saved yet"}</strong>
           </div>
+        </aside>
 
-          <div className="intake-section-heading">
-            <span>Production style</span>
-            <strong>What kind of day should the studio compose?</strong>
-          </div>
-
-          <div className="intake-choice-grid">
-            <IntakeSegment
-              label="Wedding style"
-              onChange={(value) => updateIntake({ stylePreset: value as WeddingStylePreset })}
-              options={styleOptions}
-              value={intake.stylePreset}
-            />
-            <IntakeSegment
-              label="Ceremony format"
-              onChange={(value) => updateIntake({ ceremonyFormat: value as CeremonyFormat })}
-              options={ceremonyOptions}
-              value={intake.ceremonyFormat}
-            />
-            <IntakeSegment
-              label="Reception format"
-              onChange={(value) => updateIntake({ receptionFormat: value as ReceptionFormat })}
-              options={receptionOptions}
-              value={intake.receptionFormat}
-            />
-            <IntakeSegment
-              label="Production complexity"
-              onChange={(value) => updateIntake({ complexity: value as ProductionComplexity })}
-              options={complexityOptions}
-              value={intake.complexity}
-            />
-          </div>
-
-          <fieldset className="intake-role-fieldset">
-            <legend>Who is already involved?</legend>
-            <div>
-              {availableVendorRoles.map((role) => (
-                <label key={role}>
-                  <input
-                    checked={intake.vendorRoles.includes(role)}
-                    onChange={() => toggleVendorRole(role)}
-                    type="checkbox"
-                  />
-                  <span>{role}</span>
-                </label>
-              ))}
+        <main className="guided-intake-main" aria-labelledby="active-intake-question">
+          <div className="guided-question-card">
+            <div className="guided-question-heading">
+              <span>{activeQuestion.kicker}</span>
+              <h2 id="active-intake-question">{activeQuestion.title}</h2>
+              <p>{activeQuestion.summary}</p>
             </div>
-          </fieldset>
 
-          <div className="intake-create-card">
-            <div>
-              <span>Producer action</span>
-              <strong>Create the first wedding-day digital twin.</strong>
-              <p>
-                This saves a local project with generated timeline, cue sheet, speeches, guest journey, tables, and role handoffs.
-              </p>
+            {renderActiveQuestion()}
+
+            <div className="guided-question-actions">
+              <Button disabled={activeQuestionIndex === 0} onClick={goToPreviousQuestion} size="small" variant="secondary">
+                Back
+              </Button>
+              {isFinalQuestion ? (
+                <Button onClick={() => createDigitalTwin("/")} size="small">
+                  Create Visual Plan
+                </Button>
+              ) : (
+                <Button onClick={goToNextQuestion} size="small">
+                  Next Question
+                </Button>
+              )}
             </div>
-            <Button onClick={createDigitalTwin} size="small">
-              Create Digital Twin
-            </Button>
           </div>
 
-          <p aria-live="polite" className="copy-status">
-            {status ?? "Nothing is saved until you create the digital twin."}
-          </p>
-        </form>
+          <details className="guided-intake-details">
+            <summary>
+              <span>Advanced project details</span>
+              <small>Open only if you want to adjust exact venue names or all role choices.</small>
+            </summary>
+            {renderAdvancedDetails()}
+          </details>
+        </main>
 
-        <aside className="intake-preview-panel">
+        <aside className="guided-preview-panel" aria-label="Generated visual plan preview">
+          <div className="guided-preview-scene" aria-hidden="true">
+            <div className="guided-preview-aisle" />
+            <div className="guided-preview-focus">Ceremony</div>
+            {Array.from({ length: Math.min(10, Math.max(4, Math.ceil(intake.guestCount / 16))) }, (_, index) => (
+              <div className="guided-preview-row" data-side={index % 2 === 0 ? "left" : "right"} key={index} />
+            ))}
+            <div className="guided-preview-reception">Reception</div>
+          </div>
+
           <div className="intake-preview-header">
             <p className="eyebrow">Generated Twin Preview</p>
             <h2>{plan.wedding.coupleNames}</h2>
@@ -235,9 +259,15 @@ export function WeddingProducerIntake() {
             </div>
           </div>
 
-          <div className="intake-flow-preview">
+          <div className="guided-preview-next">
+            <span>What will be generated</span>
+            <strong>{getPreviewPromise(activeQuestion.id)}</strong>
+            <p>{getPreviewSupportCopy(activeQuestion.id, plan.generatedRisks.length)}</p>
+          </div>
+
+          <div className="intake-flow-preview guided-flow-preview">
             <span>First day flow</span>
-            {plan.timelineItems.slice(0, 8).map((item) => (
+            {plan.timelineItems.slice(0, 5).map((item) => (
               <article key={item.id}>
                 <small>{item.time}</small>
                 <strong>{item.phase}</strong>
@@ -246,40 +276,156 @@ export function WeddingProducerIntake() {
             ))}
           </div>
 
-          <div className="intake-notes-grid">
-            <div>
-              <span>Producer notes</span>
-              <ul>
-                {plan.producerNotes.map((note) => (
-                  <li key={note}>{note}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <span>Watch list</span>
-              <ul>
-                {(plan.generatedRisks.length > 0 ? plan.generatedRisks : ["No major setup gaps in the first generated twin."]).map((risk) => (
-                  <li key={risk}>{risk}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
           <div className="intake-next-actions">
-            <Button href="/preview" size="small" variant="secondary">
-              Preview Wedding Day
+            <Button onClick={() => createDigitalTwin("/preview")} size="small" variant="secondary">
+              Save and Preview
             </Button>
-            <Button href="/" size="small" variant="ghost">
-              Open Studio Cockpit
-            </Button>
-            <Button onClick={() => router.push("/day-flow")} size="small" variant="ghost">
-              Review Day Flow
+            <Button onClick={() => createDigitalTwin("/day-flow")} size="small" variant="ghost">
+              Save and Review Flow
             </Button>
           </div>
         </aside>
       </section>
     </div>
   );
+
+  function renderActiveQuestion() {
+    if (activeQuestion.id === "foundation") {
+      return (
+        <div className="guided-field-grid">
+          <label>
+            <span>Partner one</span>
+            <input onChange={(event) => updateIntake({ partnerOneName: event.target.value })} value={intake.partnerOneName} />
+          </label>
+          <label>
+            <span>Partner two</span>
+            <input onChange={(event) => updateIntake({ partnerTwoName: event.target.value })} value={intake.partnerTwoName} />
+          </label>
+          <label>
+            <span>Wedding date</span>
+            <input onChange={(event) => updateIntake({ date: event.target.value })} value={intake.date} />
+          </label>
+        </div>
+      );
+    }
+
+    if (activeQuestion.id === "venue") {
+      return (
+        <div className="guided-question-stack">
+          <IntakeSegment
+            label="Ceremony format"
+            onChange={(value) => updateIntake({ ceremonyFormat: value as CeremonyFormat })}
+            options={ceremonyOptions}
+            value={intake.ceremonyFormat}
+          />
+          <IntakeSegment
+            label="Reception format"
+            onChange={(value) => updateIntake({ receptionFormat: value as ReceptionFormat })}
+            options={receptionOptions}
+            value={intake.receptionFormat}
+          />
+        </div>
+      );
+    }
+
+    if (activeQuestion.id === "guests") {
+      return (
+        <div className="guided-guest-control">
+          <div className="summary-between">
+            <label htmlFor="intake-guest-count">Guest count</label>
+            <strong>{intake.guestCount}</strong>
+          </div>
+          <input
+            id="intake-guest-count"
+            max={300}
+            min={2}
+            onChange={(event) => updateIntake({ guestCount: Number(event.target.value) })}
+            type="range"
+            value={intake.guestCount}
+          />
+          <div className="guided-capacity-note">
+            <strong>{getGuestCapacityLabel(intake.guestCount)}</strong>
+            <span>{getGuestCapacityCopy(intake.guestCount)}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeQuestion.id === "style") {
+      return (
+        <div className="guided-question-stack">
+          <IntakeSegment
+            label="Wedding style"
+            onChange={(value) => updateIntake({ stylePreset: value as WeddingStylePreset })}
+            options={styleOptions}
+            value={intake.stylePreset}
+          />
+          <IntakeSegment
+            label="Production complexity"
+            onChange={(value) => updateIntake({ complexity: value as ProductionComplexity })}
+            options={complexityOptions}
+            value={intake.complexity}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="guided-question-stack">
+        <div className="guided-role-presets" role="group" aria-label="Choose a collaborator preset">
+          {quickRolePresets.map((preset) => (
+            <button
+              data-active={preset.roles.every((role) => intake.vendorRoles.includes(role)) && intake.vendorRoles.length === preset.roles.length}
+              key={preset.label}
+              onClick={() => setRolePreset(preset.roles)}
+              type="button"
+            >
+              <strong>{preset.label}</strong>
+              <span>{preset.roles.length} roles</span>
+            </button>
+          ))}
+        </div>
+
+        <fieldset className="intake-role-fieldset guided-role-fieldset">
+          <legend>Fine-tune included roles</legend>
+          <div>
+            {availableVendorRoles.map((role) => (
+              <label key={role}>
+                <input checked={intake.vendorRoles.includes(role)} onChange={() => toggleVendorRole(role)} type="checkbox" />
+                <span>{role}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+    );
+  }
+
+  function renderAdvancedDetails() {
+    return (
+      <div className="guided-advanced-grid">
+        <label>
+          <span>Ceremony venue</span>
+          <input onChange={(event) => updateIntake({ ceremonyLocation: event.target.value })} value={intake.ceremonyLocation} />
+        </label>
+        <label>
+          <span>Reception venue</span>
+          <input onChange={(event) => updateIntake({ receptionLocation: event.target.value })} value={intake.receptionLocation} />
+        </label>
+        <label>
+          <span>Guest count</span>
+          <input
+            inputMode="numeric"
+            max={300}
+            min={2}
+            onChange={(event) => updateIntake({ guestCount: Number(event.target.value) })}
+            type="number"
+            value={intake.guestCount}
+          />
+        </label>
+      </div>
+    );
+  }
 }
 
 type IntakeSegmentProps = {
@@ -291,7 +437,7 @@ type IntakeSegmentProps = {
 
 function IntakeSegment({ label, onChange, options, value }: IntakeSegmentProps) {
   return (
-    <div className="intake-segment">
+    <div className="intake-segment guided-intake-segment">
       <span>{label}</span>
       <div>
         {options.map(([optionValue, optionLabel]) => (
@@ -312,4 +458,56 @@ function IntakeSegment({ label, onChange, options, value }: IntakeSegmentProps) 
 
 function getGeneratedReadiness(watchCount: number, roleCount: number) {
   return Math.max(58, Math.min(96, 84 + roleCount - watchCount * 6));
+}
+
+function getGuestCapacityLabel(guestCount: number) {
+  if (guestCount <= 40) {
+    return "Intimate plan";
+  }
+
+  if (guestCount <= 120) {
+    return "Balanced plan";
+  }
+
+  if (guestCount <= 180) {
+    return "Large plan";
+  }
+
+  return "High-capacity plan";
+}
+
+function getGuestCapacityCopy(guestCount: number) {
+  if (guestCount <= 40) {
+    return "The generated layout will feel close, calm, and easy to host.";
+  }
+
+  if (guestCount <= 120) {
+    return "The generated layout will balance seating, aisle space, and service flow.";
+  }
+
+  if (guestCount <= 180) {
+    return "The generated layout will protect timing buffers, guest movement, and table spacing.";
+  }
+
+  return "The generated layout will flag capacity, vendor flow, and arrival management as early decisions.";
+}
+
+function getPreviewPromise(questionId: IntakeQuestionId) {
+  const promises: Record<IntakeQuestionId, string> = {
+    foundation: "A named plan that feels ready to personalize.",
+    guests: "A capacity-aware layout with tables, rows, and timing notes.",
+    style: "A visual direction that guides ceremony, reception, and briefs.",
+    support: "Role handoffs for the people who need to execute the day.",
+    venue: "A venue-aware ceremony and reception structure."
+  };
+
+  return promises[questionId];
+}
+
+function getPreviewSupportCopy(questionId: IntakeQuestionId, riskCount: number) {
+  if (questionId === "support") {
+    return riskCount > 0 ? `${riskCount} watch notes will be carried into the first plan.` : "The first plan has no major generated watch notes.";
+  }
+
+  return "The preview updates as you answer, so the plan starts feeling useful before you save.";
 }

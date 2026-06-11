@@ -60,6 +60,14 @@ export function writeStoredWeddingStudioLayout(plan: WeddingStudioPlan, sceneEdi
   return nextLayout;
 }
 
+export function clearStoredWeddingStudioLayout() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(weddingStudioLayoutStorageKey);
+}
+
 export function createStoredWeddingStudioLayoutDraft(source: Partial<StoredWeddingStudioLayout> = {}): StoredWeddingStudioLayout {
   return {
     activeStep: isStudioPlanningStepId(source.activeStep) ? source.activeStep : "vision",

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { MomentInspector } from "@/components/moment/moment-inspector";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buildMomentIntelligence } from "@/lib/moment-intelligence";
 import { buildPreviewCockpitContext } from "@/lib/preview-cockpit";
@@ -161,8 +160,12 @@ export function WeddingDayPlayer() {
           </div>
 
           <div className="preview-os-actions">
-            <Badge tone={hasLocalProject ? "confirmed" : "neutral"}>{hasLocalProject ? "Live project" : "Sample project"}</Badge>
-            <Badge tone={momentIntelligence.readinessTone}>{momentIntelligence.readinessLabel}</Badge>
+            <span className="preview-state-line" data-tone={hasLocalProject ? "confirmed" : "neutral"}>
+              {hasLocalProject ? "Live project" : "Sample project"}
+            </span>
+            <span className="preview-state-line" data-tone={momentIntelligence.readinessTone}>
+              {momentIntelligence.readinessLabel}
+            </span>
             <label className="preview-jump-control">
               <span>Moment</span>
               <select
@@ -209,7 +212,7 @@ export function WeddingDayPlayer() {
         ))}
       </ol>
 
-      <details className="preview-scene-details">
+      <details className="preview-scene-details" open>
         <summary>
           <span>Scene Board</span>
           <small>Open the map, owner, music, risks, and handoff details only when you need production depth.</small>
@@ -218,10 +221,10 @@ export function WeddingDayPlayer() {
         <div className="preview-command-layout">
           <div className="preview-cinema-stage" data-scene={cockpit.sceneKind}>
             <div className="preview-stage-topline">
-              <Badge>{phase.timeRange}</Badge>
-              <Badge tone={cockpit.primaryRisk ? cockpit.primaryRisk.severity : "confirmed"}>
+              <span className="preview-state-line">{phase.timeRange}</span>
+              <span className="preview-state-line" data-tone={cockpit.primaryRisk ? cockpit.primaryRisk.severity : "confirmed"}>
                 {cockpit.primaryRisk ? `${cockpit.primaryRisk.severity} risk` : "Scene clear"}
-              </Badge>
+              </span>
             </div>
 
             <div className="preview-location-card preview-stage-location">
@@ -302,9 +305,9 @@ export function WeddingDayPlayer() {
             <div className="preview-watch-card" data-clear={cockpit.primaryRisk ? "false" : "true"}>
               <div className="summary-between">
                 <strong>{cockpit.primaryRisk ? cockpit.primaryRisk.title : "Ready Signal"}</strong>
-                <Badge tone={cockpit.primaryRisk ? cockpit.primaryRisk.severity : "confirmed"}>
+                <span className="preview-state-line" data-tone={cockpit.primaryRisk ? cockpit.primaryRisk.severity : "confirmed"}>
                   {cockpit.primaryRisk ? cockpit.primaryRisk.severity : "clear"}
-                </Badge>
+                </span>
               </div>
               <p>{cockpit.primaryRisk ? cockpit.primaryRisk.description : cockpit.watchLine}</p>
               {cockpit.primaryRisk ? <span>{cockpit.watchLine}</span> : null}

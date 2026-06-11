@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ExportsPage() {
-  return (
-    <div className="page-grid">
-      <ExportStudio />
-    </div>
-  );
+  return <ExportStudio />;
 }

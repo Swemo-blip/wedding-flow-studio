@@ -30,22 +30,19 @@ export function StudioSummary({ activeStep, capacity, plan }: StudioSummaryProps
   return (
     <aside className="wedding-studio-panel studio-summary-panel studio-health-panel" aria-label="Wedding readiness and recommendations">
       <div className="studio-panel-header">
-        <span>Plan Health</span>
-        <h2>{activeCopy.summaryTitle}</h2>
+        <span>Next Move</span>
+        <h2>{decision.recommendation}</h2>
       </div>
 
-      <section className="studio-readiness-card" aria-label={`Wedding readiness ${readiness}%`}>
-        <div className="studio-readiness-topline">
-          <span>Wedding Readiness</span>
-          <strong>{readiness}%</strong>
-        </div>
-        <div className="studio-capacity-meter" aria-hidden="true">
-          <span style={{ width: `${readiness}%` }} />
-        </div>
-        <p>{decision.status}</p>
+      <section className="studio-next-decision studio-primary-decision" aria-label="Recommended next decision">
+        <span>{decision.status}</span>
+        <p>{decision.note}</p>
+        <Button href={decision.ctaHref} size="small">
+          {decision.ctaLabel}
+        </Button>
       </section>
 
-      <dl className="studio-plan-summary" aria-label="Current plan summary">
+      <dl className="studio-plan-summary studio-plan-summary-compact" aria-label="Current plan summary">
         <div>
           <dt>Venue</dt>
           <dd>{venueLabel}</dd>
@@ -64,41 +61,51 @@ export function StudioSummary({ activeStep, capacity, plan }: StudioSummaryProps
         </div>
       </dl>
 
-      <section className="studio-next-decision">
-        <span>Recommended next step</span>
-        <strong>{decision.recommendation}</strong>
-        <p>{decision.note}</p>
-        <Button href={decision.ctaHref} size="small">
-          {decision.ctaLabel}
-        </Button>
-      </section>
+      <details className="studio-side-drawer">
+        <summary>
+          <span>Plan intelligence</span>
+          <small>{readiness}% readiness</small>
+        </summary>
+        <div className="studio-side-drawer-content">
+          <section className="studio-readiness-card" aria-label={`Wedding readiness ${readiness}%`}>
+            <div className="studio-readiness-topline">
+              <span>Wedding Readiness</span>
+              <strong>{readiness}%</strong>
+            </div>
+            <div className="studio-capacity-meter" aria-hidden="true">
+              <span style={{ width: `${readiness}%` }} />
+            </div>
+            <p>{activeCopy.summaryTitle}</p>
+          </section>
 
-      <section className="studio-smart-recommendations" aria-label="Smart recommendations">
-        <span>Smart recommendations</span>
-        <ul>
-          {getSmartRecommendations(capacity, plan).map((recommendation) => (
-            <li key={recommendation}>{recommendation}</li>
-          ))}
-        </ul>
-      </section>
+          <section className="studio-smart-recommendations" aria-label="Smart recommendations">
+            <span>Smart recommendations</span>
+            <ul>
+              {getSmartRecommendations(capacity, plan).map((recommendation) => (
+                <li key={recommendation}>{recommendation}</li>
+              ))}
+            </ul>
+          </section>
 
-      <section className="studio-ai-panel" aria-label="AI planning assistant">
-        <div>
-          <span>AI Assistant</span>
-          <strong>Ask for one planning improvement.</strong>
+          <section className="studio-ai-panel" aria-label="AI planning assistant">
+            <div>
+              <span>AI Assistant</span>
+              <strong>Ask for one improvement.</strong>
+            </div>
+            <label>
+              <span className="sr-only">AI planning request</span>
+              <input placeholder="Example: improve guest flow" type="text" />
+            </label>
+            <div className="studio-ai-actions" role="group" aria-label="AI assistant suggested actions">
+              {["Optimize seating", "Improve timeline", "Check budget", "Create brief"].map((action) => (
+                <button key={action} type="button">
+                  {action}
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
-        <label>
-          <span className="sr-only">AI planning request</span>
-          <input placeholder="Example: optimize seating for elderly guests" type="text" />
-        </label>
-        <div className="studio-ai-actions" role="group" aria-label="AI assistant suggested actions">
-          {["Optimize seating", "Improve timeline", "Check budget", "Create vendor brief"].map((action) => (
-            <button key={action} type="button">
-              {action}
-            </button>
-          ))}
-        </div>
-      </section>
+      </details>
     </aside>
   );
 }
@@ -190,11 +197,11 @@ function getDecisionPanel(activeStep: StudioPlanningStepId, capacity: WeddingStu
       status: "Model selected"
     },
     vision: {
-      ctaHref: "/intake",
-      ctaLabel: "Answer 5 questions",
-      note: "A guided start gives you a useful plan immediately.",
-      recommendation: "Generate the first visual plan.",
-      status: "Missing first-use details"
+      ctaHref: "/preview",
+      ctaLabel: "Preview plan",
+      note: "The first visual model is ready. Tune style, venue feel, and guest density before deeper planning.",
+      recommendation: "Preview the day from this first studio model.",
+      status: "Studio ready"
     }
   };
 

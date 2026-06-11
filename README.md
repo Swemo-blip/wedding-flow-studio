@@ -37,10 +37,11 @@ npm run build
 
 - Guided Studio Canvas on the home route with step-based planning, one centered 3D planning experience, quick controls, plan health, and one recommended next decision
 - Wedding Planning Studio with responsive 3D scenes for church, garden, beach, and hall settings, plus guest-count controls, accessibility seats, style/decor/color direction, capacity modeling, optional zone editing, local layout persistence, and a concise AI assistant foundation
+- Generated Project Integration that maps the saved intake project into the home Studio Canvas, updates guest count, venue type, style, color direction, and decor level, and provides a local start-over path for testing
 - Route-aware studio shell with persistent navigation, mobile section switching, and a compact current-layer ribbon across the app
 - Connected Planning Toolkit linking guest intelligence, floor plan editing, vendor fit, and export settings without turning the studio into a generic dashboard
 - Focused command surfaces across Reception, Vendor Sourcing, Music, Speeches, Director, and Exports so each module presents one active decision before deeper detail
-- Wedding Producer Intake 1.0 with a guided project composer, generated digital twin preview, and local project creation
+- Wedding Producer Intake 1.1 with a five-question first-use wizard, generated digital twin preview, local project creation, and save-to-preview/save-to-flow actions
 - Studio Workspace on `/studio` with preview scene, readiness, role handoff, moment rail, and one unified next action
 - Studio Guide 1.0 with plain-English guidance, one best next move, confidence scoring, and a guided Preview-to-Brief path
 - Production Brain 1.0 with Wedding Graph context, impact preview, affected roles, affected briefs, dependency path, and rehearsal gate logic

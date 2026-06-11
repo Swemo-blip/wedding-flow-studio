@@ -3,10 +3,10 @@
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { TableCard } from "@/components/reception/table-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StudioCommand } from "@/components/ui/studio-command";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
+import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
@@ -113,37 +113,32 @@ export function ReceptionStudio() {
   }
 
   return (
-    <div className="reception-studio page-grid">
-      <StudioCommand
-        actions={[
-          { href: "/", label: "Open 3D Studio" },
-          { href: "/exports", label: "Export Seating Plan", variant: "secondary" }
-        ]}
-        description="Turn seating, meal notes, service paths, speeches, accessibility, and room flow into one calm production canvas."
-        eyebrow="Reception Room Digital Twin"
-        metrics={[
-          { label: "Tables", tone: "confirmed", value: `${dinnerTables.length}` },
-          { label: "Allergy notes", tone: allergyGuestCount > 0 ? "medium" : "confirmed", value: `${allergyGuestCount}` },
-          { label: "Accessibility", tone: accessibilityGuestCount > 0 ? "medium" : "confirmed", value: `${accessibilityGuestCount}` },
-          { label: "Child setup", value: `${childSetupCount}` }
-        ]}
-        status={{ label: saveStatus, tone: "confirmed" }}
-        title="Design the room around the guest journey."
-      >
-        <div className="module-decision-strip" aria-label="Best seating decision">
+    <StudioRouteFrame
+      description="Connect seating, meal notes, accessibility, service paths, speeches, and room flow in one reception canvas."
+      eyebrow="Reception Digital Twin"
+      meta={[
+        { label: "Tables", value: `${dinnerTables.length}` },
+        { label: "Allergies", value: `${allergyGuestCount}` },
+        { label: "Signals", value: `${receptionRisks.length}` }
+      ]}
+      primaryAction={{ href: "/", label: "Open 3D Studio" }}
+      secondaryAction={{ href: "/exports", label: "Export Seating" }}
+      title="Design the room around the guest journey."
+    >
+      <div className="reception-studio page-grid">
+        <section className="module-decision-strip studio-route-decision-strip" aria-label="Best seating decision">
           <div>
             <span>Best seating decision</span>
             <strong>{bestReceptionRisk?.title ?? "Reception flow is ready for review."}</strong>
             <p>{bestReceptionRisk?.suggestedFix ?? "Review the room once more before exporting the seating plan and venue setup brief."}</p>
           </div>
           {bestReceptionRisk ? <Button onClick={applyGuestJourneyFix} size="small">Apply Best Fix</Button> : null}
-        </div>
-      </StudioCommand>
+        </section>
 
       <details className="studio-detail-drawer reception-context-drawer">
         <summary>
           <span>Reception Signals</span>
-          <strong>Guest journey indicators</strong>
+          <strong>{saveStatus}</strong>
         </summary>
         <div className="reception-command-badges" aria-label="Reception planning signals">
           <span>{dinnerTables.length} tables</span>
@@ -157,73 +152,18 @@ export function ReceptionStudio() {
         {saveStatus}
       </div>
 
-      <div className="two-column">
-        <div className="canvas reception-canvas" aria-label="Reception seating plan preview">
-          <div className="reception-room-header">
-            <div>
-              <span>Rosewood Hall Ballroom</span>
-              <strong>Guest Journey Canvas</strong>
-            </div>
-            <Badge tone={receptionRisks.length > 0 ? "medium" : "confirmed"}>
-              {receptionRisks.length > 0 ? `${receptionRisks.length} signals` : "ready"}
-            </Badge>
-          </div>
-          <div className="reception-canvas-hud" aria-hidden="true">
-            <span>Entrance route</span>
-            <span>Service path</span>
-            <span>Dance transition</span>
-          </div>
-          <span className="reception-guest-route reception-guest-route-primary" aria-hidden="true" />
-          <span className="reception-guest-route reception-guest-route-dance" aria-hidden="true" />
-          <span className="reception-service-route" aria-hidden="true" />
-          {venueLayout.objects.map((object) => {
-            const style: CSSProperties = {
-              left: `${object.position.x}%`,
-              top: `${object.position.y}%`,
-              width: object.size ? `${object.size.width}%` : undefined,
-              height: object.size ? `${object.size.height}%` : undefined
-            };
-
-            return (
-              <div className={`room-object room-object-${object.type}`} key={object.id} style={style}>
-                {object.label}
-              </div>
-            );
-          })}
-          {dinnerTables.map((table) => (
-            <TableCard
-              guests={guests}
-              isSelected={table.id === selectedTable?.id}
-              key={table.id}
-              onSelect={(tableId) => {
-                const firstGuestAtTable = guests.find((guest) => guest.tableId === tableId);
-                if (firstGuestAtTable) {
-                  setSelectedGuestId(firstGuestAtTable.id);
-                }
-              }}
-              table={table}
-            />
-          ))}
-          <div className="reception-selected-table-card" aria-label="Selected table summary">
-            <span>Selected Table</span>
-            <strong>{selectedTable?.name}</strong>
-            <p>
-              {selectedTableGuests.length}/{selectedTable?.capacity ?? 0} guests ·{" "}
-              {selectedTableGuests.some((guest) => guest.allergies.length > 0) ? "allergy note attached" : "no allergy note"}
-            </p>
-          </div>
-        </div>
-
-        <aside className="page-grid">
-          <Card className="guest-inspector-card">
-            <CardContent>
-              <div className="summary-between">
-                <div>
-                  <p className="eyebrow">Guest Inspector</p>
-                  <h3 className="card-title">{selectedGuest?.name}</h3>
+      <StudioSceneSurface
+        aside={
+          <div className="reception-scene-side">
+            <Card className="guest-inspector-card">
+              <CardContent>
+                <div className="summary-between">
+                  <div>
+                    <p className="eyebrow">Guest Inspector</p>
+                    <h3 className="card-title">{selectedGuest?.name}</h3>
+                  </div>
+                  {selectedGuest?.accessibilityNotes ? <span className="reception-state-line" data-tone="medium">accessibility</span> : null}
                 </div>
-                {selectedGuest?.accessibilityNotes ? <Badge tone="medium">accessibility</Badge> : null}
-              </div>
 
               <label className="field reception-select-field">
                 <span>Active guest</span>
@@ -344,12 +284,78 @@ export function ReceptionStudio() {
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <FlowAnalysis risks={receptionRisks} title="Guest Journey Readiness" />
-        </aside>
-      </div>
+            <details className="studio-detail-drawer reception-readiness-drawer">
+              <summary>
+                <span>Readiness signals</span>
+                <strong>{receptionRisks.length > 0 ? `${receptionRisks.length} signals` : "Ready"}</strong>
+              </summary>
+              <FlowAnalysis risks={receptionRisks} title="Guest Journey Readiness" />
+            </details>
+          </div>
+        }
+        description={`${selectedTable?.name} selected. ${selectedTableGuests.length}/${selectedTable?.capacity ?? 0} seats assigned for this table.`}
+        eyebrow="Rosewood Hall Ballroom"
+        title="Reception room scene"
+      >
+        <div className="canvas reception-canvas" aria-label="Reception seating plan preview">
+          <div className="reception-room-header">
+            <div>
+              <span>Rosewood Hall Ballroom</span>
+              <strong>Guest Journey Canvas</strong>
+            </div>
+            <span className="reception-state-line" data-tone={receptionRisks.length > 0 ? "medium" : "confirmed"}>
+              {receptionRisks.length > 0 ? `${receptionRisks.length} signals` : "ready"}
+            </span>
+          </div>
+          <div className="reception-canvas-hud" aria-hidden="true">
+            <span>Entrance route</span>
+            <span>Service path</span>
+            <span>Dance transition</span>
+          </div>
+          <span className="reception-guest-route reception-guest-route-primary" aria-hidden="true" />
+          <span className="reception-guest-route reception-guest-route-dance" aria-hidden="true" />
+          <span className="reception-service-route" aria-hidden="true" />
+          {venueLayout.objects.map((object) => {
+            const style: CSSProperties = {
+              left: `${object.position.x}%`,
+              top: `${object.position.y}%`,
+              width: object.size ? `${object.size.width}%` : undefined,
+              height: object.size ? `${object.size.height}%` : undefined
+            };
+
+            return (
+              <div className={`room-object room-object-${object.type}`} key={object.id} style={style}>
+                {object.label}
+              </div>
+            );
+          })}
+          {dinnerTables.map((table) => (
+            <TableCard
+              guests={guests}
+              isSelected={table.id === selectedTable?.id}
+              key={table.id}
+              onSelect={(tableId) => {
+                const firstGuestAtTable = guests.find((guest) => guest.tableId === tableId);
+                if (firstGuestAtTable) {
+                  setSelectedGuestId(firstGuestAtTable.id);
+                }
+              }}
+              table={table}
+            />
+          ))}
+          <div className="reception-selected-table-card" aria-label="Selected table summary">
+            <span>Selected Table</span>
+            <strong>{selectedTable?.name}</strong>
+            <p>
+              {selectedTableGuests.length}/{selectedTable?.capacity ?? 0} guests ·{" "}
+              {selectedTableGuests.some((guest) => guest.allergies.length > 0) ? "allergy note attached" : "no allergy note"}
+            </p>
+          </div>
+        </div>
+      </StudioSceneSurface>
 
       <details className="reception-detail-drawer">
         <summary>
@@ -398,7 +404,8 @@ export function ReceptionStudio() {
           </Card>
         </div>
       </details>
-    </div>
+      </div>
+    </StudioRouteFrame>
   );
 }
 

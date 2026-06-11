@@ -7,6 +7,7 @@ import {
   createDinnerTableDraft,
   createGuestDraft,
   createVendorCandidateDraft,
+  clearStoredProject,
   createStoredProjectDraft,
   createTimelineDraft,
   readStoredProject,
@@ -277,6 +278,21 @@ export function useLocalProject() {
     });
   }
 
+  function resetLocalProject() {
+    clearStoredProject();
+    setState({
+      hasLocalProject: false,
+      wedding: sampleWedding,
+      timelineItems: createTimelineDraft(timelineItems),
+      musicCues: createMusicCueDraft(musicCues),
+      speeches: createSpeechDraft(speeches),
+      guests: createGuestDraft(guests),
+      dinnerTables: createDinnerTableDraft(dinnerTables),
+      vendorCandidates: [],
+      updatedAt: undefined
+    });
+  }
+
   return {
     ...state,
     updateTimelineItems,
@@ -289,6 +305,7 @@ export function useLocalProject() {
     assignGuestToTable,
     resetReception,
     addVendorCandidate,
-    updateVendorCandidate
+    updateVendorCandidate,
+    resetLocalProject
   };
 }
