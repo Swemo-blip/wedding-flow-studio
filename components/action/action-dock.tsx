@@ -18,14 +18,14 @@ export function ActionDock({ action, emphasis = "primary", onApply, status }: Ac
       <CardContent>
         <div className="summary-between">
           <div>
-            <p className="eyebrow">Unified Action Engine</p>
+            <p className="eyebrow">Quick action</p>
             <h3 className="card-title">{action.label}</h3>
           </div>
           <Badge tone={action.execution === "inline" ? "confirmed" : "neutral"}>{formatScope(action.scope)}</Badge>
         </div>
         <p className="card-copy">{action.detail}</p>
         <div className="action-dock-meta">
-          <span>{action.execution === "inline" ? "Can apply inside this studio" : "Opens the right studio view"}</span>
+          <span>{action.execution === "inline" ? "Applies right here" : "Opens the right view"}</span>
           {action.riskId ? <strong>{action.riskId}</strong> : <strong>moment action</strong>}
         </div>
         {canApply ? (

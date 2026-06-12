@@ -416,7 +416,7 @@ export function DayFlowEditor() {
             <CardContent>
               <div className="summary-between">
                 <div>
-                  <p className="eyebrow">Resolve Mode</p>
+                  <p className="eyebrow">Suggested fix</p>
                   <h3 className="card-title">{activeResolutionRecipe.title}</h3>
                 </div>
                 <Badge tone={isActiveRiskResolved ? "confirmed" : activeResolveRisk.severity}>

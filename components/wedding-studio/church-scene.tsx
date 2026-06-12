@@ -423,7 +423,7 @@ function WeddingStageInterior({
   const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
   const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
-  const showGuests = ["ceremony", "guests", "preview", "share", "timeline"].includes(activeStep);
+  const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
   const surface = getVenueSurface(venueType, palette);
 
   useFrame(({ clock }) => {

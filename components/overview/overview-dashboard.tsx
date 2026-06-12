@@ -16,8 +16,8 @@ import {
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SceneEditor } from "@/components/overview/scene-editor";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
-import { StudioControls } from "@/components/wedding-studio/studio-controls";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -57,13 +57,13 @@ export function OverviewDashboard() {
   const [lighting, setLighting] = useState<SceneLighting>("dusk");
   const [zoom, setZoom] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
-  const [editStep, setEditStep] = useState<StudioPlanningStepId>("vision");
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
   const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
-  const sceneStep: StudioPlanningStepId = isEditing ? editStep : heroScene === "reception" ? "reception" : "preview";
+  const sceneStep: StudioPlanningStepId = heroScene === "reception" ? "reception" : "preview";
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
   const venueLabel = venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue";
@@ -103,8 +103,15 @@ export function OverviewDashboard() {
         setPlan(storedLayout.plan);
         setSceneEdits(storedLayout.sceneEdits);
       }
+
+      setShowWelcome(window.localStorage.getItem("wfs-welcome-dismissed") !== "1");
     });
   }, []);
+
+  function dismissWelcome() {
+    window.localStorage.setItem("wfs-welcome-dismissed", "1");
+    setShowWelcome(false);
+  }
 
   useEffect(() => {
     if (!localProject.hasLocalProject) {
@@ -126,7 +133,7 @@ export function OverviewDashboard() {
 
   function updatePlan(nextPlan: WeddingStudioPlan) {
     setPlan(nextPlan);
-    writeStoredWeddingStudioLayout(nextPlan, sceneEdits, editStep);
+    writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
   }
 
   function moveSceneObject(objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) {
@@ -140,20 +147,7 @@ export function OverviewDashboard() {
         }
       };
 
-      writeStoredWeddingStudioLayout(plan, nextEdits, editStep);
-
-      return nextEdits;
-    });
-  }
-
-  function resetSelectedObject() {
-    setSceneEdits((currentEdits) => {
-      const nextEdits = {
-        ...currentEdits,
-        [activeSelectedObjectId]: defaultStudioSceneEdits[activeSelectedObjectId]
-      };
-
-      writeStoredWeddingStudioLayout(plan, nextEdits, editStep);
+      writeStoredWeddingStudioLayout(plan, nextEdits, "vision");
 
       return nextEdits;
     });
@@ -185,6 +179,21 @@ export function OverviewDashboard() {
 
   return (
     <div className="overview-page">
+      {!localProject.hasLocalProject && showWelcome ? (
+        <div className="overview-welcome" role="status">
+          <p>
+            <strong>You are viewing a sample wedding.</strong> Explore freely — then create your own in about two minutes.
+          </p>
+          <div className="overview-welcome-actions">
+            <Link className="button button-primary button-small" href="/intake">
+              Create your wedding
+            </Link>
+            <button aria-label="Dismiss welcome message" onClick={dismissWelcome} type="button">
+              <X aria-hidden="true" size={15} strokeWidth={1.8} />
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="overview-grid">
         <div className="overview-main">
           <section aria-label="3D venue preview" className="venue-hero" ref={heroRef}>
@@ -259,26 +268,14 @@ export function OverviewDashboard() {
             </div>
 
             {isEditing ? (
-              <div className="venue-edit-drawer" role="dialog" aria-label="3D studio controls">
+              <div className="venue-edit-drawer" role="dialog" aria-label="Style studio">
                 <div className="venue-edit-drawer-head">
-                  <strong>3D Studio</strong>
-                  <button aria-label="Close studio controls" onClick={() => setIsEditing(false)} type="button">
+                  <strong>Style Studio</strong>
+                  <button aria-label="Close style studio" onClick={() => setIsEditing(false)} type="button">
                     <X aria-hidden="true" size={16} strokeWidth={1.8} />
                   </button>
                 </div>
-                <StudioControls
-                  activeStep={editStep}
-                  capacity={capacity}
-                  editableObjectIds={editableObjectIds}
-                  onChange={updatePlan}
-                  onMoveSelectedObject={(deltaX, deltaZ) => moveSceneObject(activeSelectedObjectId, deltaX, deltaZ)}
-                  onResetSelectedObject={resetSelectedObject}
-                  onSelectObject={setSelectedObjectId}
-                  onStepChange={setEditStep}
-                  plan={plan}
-                  sceneEdits={sceneEdits}
-                  selectedObjectId={activeSelectedObjectId}
-                />
+                <SceneEditor capacity={capacity} onChange={updatePlan} plan={plan} />
               </div>
             ) : null}
           </section>
@@ -448,7 +445,7 @@ export function OverviewDashboard() {
       </div>
 
       <p className="overview-footnote">
-        Local studio preview · {readinessPercent}% ready · {seatedGuests} of {plan.guestCount} guests seated
+        Everything autosaves locally on this device.
       </p>
     </div>
   );
