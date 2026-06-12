@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import {
@@ -222,6 +222,19 @@ export function CeremonyScene({
             shadow-mapSize={[1024, 1024]}
           />
           <pointLight color="#ffca8c" decay={2} distance={10} intensity={budgetLevel === "signature" ? 34 : 24} position={[0, 3.1, -3.6]} />
+          <Environment frames={1} resolution={128}>
+            <Lightformer color="#ffd2a0" form="circle" intensity={lighting === "dusk" ? 3 : 1.9} position={[0, 2, -9]} scale={[7, 7, 1]} />
+            <Lightformer
+              color={lighting === "dusk" ? "#5a6190" : "#2e3552"}
+              form="rect"
+              intensity={1.1}
+              position={[0, 9, 0]}
+              rotation-x={Math.PI / 2}
+              scale={[14, 14, 1]}
+            />
+            <Lightformer color="#caa05f" form="rect" intensity={0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
+            <Lightformer color="#3c4258" form="rect" intensity={0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
+          </Environment>
           <ContactShadows blur={2.4} color="#050602" far={5} opacity={0.55} position={[0, -0.025, 0.25]} resolution={384} scale={13} />
           <EffectComposer multisampling={4}>
             <Bloom intensity={0.85} luminanceSmoothing={0.18} luminanceThreshold={1} mipmapBlur />
@@ -700,7 +713,7 @@ function Altar({ decorScale, palette }: { decorScale: number; palette: Palette }
       </mesh>
       <mesh castShadow position={[0, 0.63, 0]}>
         <boxGeometry args={[2.2, 0.05, 0.84]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.45} roughness={0.42} />
+        <meshStandardMaterial color={palette.accent} metalness={0.75} roughness={0.32} />
       </mesh>
       <FlowerCluster palette={palette} position={[-0.85, 0.74, 0.18]} radius={0.22} />
       <FlowerCluster palette={palette} position={[0.85, 0.74, 0.18]} radius={0.22} />
@@ -716,7 +729,7 @@ function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string
     <group position={position} scale={scale}>
       <mesh castShadow position={[0, 0.3, 0]}>
         <cylinderGeometry args={[0.016, 0.05, 0.6, 8]} />
-        <meshStandardMaterial color="#9c7b45" metalness={0.6} roughness={0.38} />
+        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.28} />
       </mesh>
       <mesh castShadow position={[0, 0.66, 0]}>
         <cylinderGeometry args={[0.035, 0.035, 0.13, 8]} />
@@ -777,7 +790,7 @@ function ArchChandelier({ candleColor }: { candleColor: string }) {
       </mesh>
       <mesh castShadow position={[0, -0.24, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.17, 0.015, 8, 26]} />
-        <meshStandardMaterial color="#9c7b45" metalness={0.7} roughness={0.32} />
+        <meshStandardMaterial color="#b08a45" metalness={0.9} roughness={0.24} />
       </mesh>
       {[0, 1, 2, 3, 4, 5].map((index) => {
         const angle = (index / 6) * Math.PI * 2;
@@ -803,7 +816,7 @@ function Dais({ palette }: { palette: Palette }) {
       </mesh>
       <mesh position={[0, 0.095, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.72, 1.8, 44]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.4} />
+        <meshStandardMaterial color={palette.accent} metalness={0.8} roughness={0.3} />
       </mesh>
     </group>
   );
@@ -840,7 +853,7 @@ function HallFocalPoint({ decorScale, palette }: { decorScale: number; palette: 
       </mesh>
       <mesh castShadow position={[0, 0.4, 0]}>
         <boxGeometry args={[2.7, 0.04, 0.82]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.4} />
+        <meshStandardMaterial color={palette.accent} metalness={0.8} roughness={0.3} />
       </mesh>
       <FlowerCluster palette={palette} position={[0, 0.56, 0.16]} radius={0.24} />
       {[-1.5, 1.5].map((xPosition) => (
@@ -967,9 +980,8 @@ function CeremonySeatBlock({ palette, position, venueType }: { palette: Palette;
   const frameMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: venueType === "hall" ? "#8a7a58" : "#b3955f",
-        metalness: 0.45,
-        roughness: 0.42
+        color: venueType === "hall" ? "#8a7a58" : "#b3955f",        metalness: 0.45,
+        roughness: 0.34
       }),
     [venueType]
   );

@@ -13296,3 +13296,54 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ============================================================
+   Inner routes aligned to the Overview card language
+   ============================================================ */
+
+.studio-command {
+  border: 1px solid rgba(146, 118, 73, 0.16);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.studio-command-main .eyebrow {
+  color: var(--subtle);
+  font-size: 0.66rem;
+  font-weight: 640;
+  letter-spacing: 0.15em;
+}
+
+.studio-command-main h2 {
+  font-size: clamp(1.35rem, 1.9vw, 1.85rem);
+  font-weight: 640;
+}
+
+.studio-command-metrics {
+  border-top: 1px solid rgba(146, 118, 73, 0.12);
+  background: rgba(250, 246, 236, 0.6);
+}
+
+.studio-command-metrics > div {
+  border-right: 1px solid rgba(146, 118, 73, 0.1);
+}
+
+.studio-command-control {
+  border-top: 1px solid rgba(146, 118, 73, 0.12);
+}
+
+.card {
+  border: 1px solid rgba(146, 118, 73, 0.16);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.studio-route-ribbon,
+.module-decision-strip {
+  border: 1px solid rgba(146, 118, 73, 0.16);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
