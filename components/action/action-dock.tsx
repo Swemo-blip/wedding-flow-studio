@@ -5,11 +5,12 @@ import { canApplyProductionAction, type ProductionAction } from "@/lib/action-en
 
 type ActionDockProps = {
   action: ProductionAction;
+  emphasis?: "primary" | "secondary";
   onApply?: (action: ProductionAction) => void;
   status?: string | null;
 };
 
-export function ActionDock({ action, onApply, status }: ActionDockProps) {
+export function ActionDock({ action, emphasis = "primary", onApply, status }: ActionDockProps) {
   const canApply = canApplyProductionAction(action) && Boolean(onApply);
 
   return (
@@ -28,11 +29,11 @@ export function ActionDock({ action, onApply, status }: ActionDockProps) {
           {action.riskId ? <strong>{action.riskId}</strong> : <strong>moment action</strong>}
         </div>
         {canApply ? (
-          <Button onClick={() => onApply?.(action)} size="small">
+          <Button onClick={() => onApply?.(action)} size="small" variant={emphasis}>
             Apply Action
           </Button>
         ) : (
-          <Button href={action.href} size="small">
+          <Button href={action.href} size="small" variant={emphasis}>
             Open Action
           </Button>
         )}

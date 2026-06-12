@@ -11,7 +11,6 @@ import {
   mapDecorLevelToBudget,
   planningSteps,
   studioEditableObjects,
-  studioStepCopy,
   styleOptions,
   venueOptions,
   type StudioBudgetLevel,
@@ -55,7 +54,6 @@ export function StudioControls({
 }: StudioControlsProps) {
   const activeStepIndex = planningSteps.findIndex((step) => step.id === activeStep);
   const activeStepLabel = planningSteps[activeStepIndex]?.label ?? "Studio";
-  const activeCopy = studioStepCopy[activeStep];
 
   function updatePlan(updates: Partial<WeddingStudioPlan>) {
     onChange({ ...plan, ...updates });
@@ -72,20 +70,13 @@ export function StudioControls({
   return (
     <aside className="wedding-studio-panel studio-controls-panel" aria-label="Guided wedding studio controls">
       <div className="studio-panel-header">
-        <span>Guided Studio</span>
-        <h2>{activeStepLabel}</h2>
-        <p>{activeCopy.summaryTitle}</p>
-      </div>
-
-      <div className="studio-active-step-summary" aria-label="Current planning step">
         <span>Step {activeStepIndex + 1} of {planningSteps.length}</span>
-        <strong>{activeCopy.sceneTitle}</strong>
+        <h2>{activeStepLabel}</h2>
       </div>
 
       <details className="studio-step-drawer">
         <summary>
-          <span>Change step</span>
-          <small>Open only when you want to jump ahead.</small>
+          <span>All steps</span>
         </summary>
         <PlanningStepper activeStep={activeStep} onChange={onStepChange} />
       </details>
@@ -97,7 +88,6 @@ export function StudioControls({
       <details className="studio-advanced-editor">
         <summary>
           <span>Advanced edit</span>
-          <small>Move zones only when you need planner-level control.</small>
         </summary>
         {renderSceneEditor()}
       </details>
@@ -108,15 +98,10 @@ export function StudioControls({
     if (activeStep === "vision") {
       return (
         <div className="studio-control-stack">
-          <div className="studio-step-intro">
-            <span>Step 1</span>
-            <strong>Choose the mood. The scene updates from there.</strong>
-          </div>
           {renderSegmentedStyle()}
           <details className="studio-step-drawer studio-inline-drawer">
             <summary>
               <span>Refine look</span>
-              <small>Color and decor level.</small>
             </summary>
             <div className="studio-inline-drawer-content">
               {renderColorDirection()}
@@ -304,10 +289,17 @@ export function StudioControls({
   }
 
   function renderSegmentedStyle() {
+    const swatches: Record<string, string> = {
+      classic: "#c9a767",
+      modern: "#aebdb0",
+      romantic: "#d8a79c",
+      rustic: "#b08a52"
+    };
+
     return (
       <fieldset className="studio-control-group">
         <legend>Style</legend>
-        <div className="studio-segmented-control" role="group" aria-label="Choose wedding style">
+        <div className="studio-segmented-control studio-style-swatches" role="group" aria-label="Choose wedding style">
           {styleOptions.map((option) => (
             <button
               aria-pressed={plan.style === option.value}
@@ -316,6 +308,7 @@ export function StudioControls({
               onClick={() => updatePlan({ style: option.value as StudioStyle })}
               type="button"
             >
+              <i aria-hidden="true" className="studio-swatch-dot" style={{ background: swatches[option.value] ?? "#c9a767" }} />
               {option.label}
             </button>
           ))}

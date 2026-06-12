@@ -1,5 +1,7 @@
+import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { Navigation } from "@/components/app-shell/navigation";
-import { RouteRibbon } from "@/components/app-shell/route-ribbon";
+import { TabBar } from "@/components/app-shell/tab-bar";
 import { TopBar } from "@/components/app-shell/top-bar";
 import type { Wedding } from "@/lib/wedding-types";
 
@@ -9,6 +11,12 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, wedding }: AppShellProps) {
+  const plannerInitials = wedding.plannerName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2);
+
   return (
     <div className="app-frame">
       <a className="skip-link" href="#main-content">
@@ -17,20 +25,26 @@ export function AppShell({ children, wedding }: AppShellProps) {
       <aside aria-label="Studio navigation" className="sidebar">
         <div className="brand-mark">
           <span className="brand-symbol" aria-hidden="true">WF</span>
-          <div>
-            <p className="brand-kicker">Wedding Flow Studio</p>
-            <h2 className="brand-title">Digital Twin Studio</h2>
-          </div>
+          <p className="brand-kicker">Wedding Flow Studio</p>
         </div>
         <Navigation />
-        <div className="sidebar-footer">
-          <strong>Director Mode</strong>
-          <span>Role briefs ready</span>
+        <div className="sidebar-callout">
+          <Sparkles aria-hidden="true" size={16} strokeWidth={1.7} />
+          <strong>Digital Twin Active</strong>
+          <span>All changes update your 3D preview.</span>
+          <Link href="/preview">View Walkthrough</Link>
+        </div>
+        <div className="sidebar-user">
+          <span aria-hidden="true" className="sidebar-avatar">{plannerInitials}</span>
+          <div>
+            <strong>{wedding.plannerName}</strong>
+            <span>Planner</span>
+          </div>
         </div>
       </aside>
       <div className="workspace">
         <TopBar wedding={wedding} />
-        <RouteRibbon />
+        <TabBar />
         <main className="page-shell" id="main-content" tabIndex={-1}>
           {children}
         </main>

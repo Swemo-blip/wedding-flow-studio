@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { CloudCheck, Eye, Share2 } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
@@ -11,20 +13,41 @@ type TopBarProps = {
 
 export function TopBar({ wedding }: TopBarProps) {
   const { hasLocalProject, wedding: localWedding } = useLocalProject();
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
   const activeWedding = hasLocalProject ? localWedding : wedding;
 
+  async function copyStudioLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus("Link copied");
+    } catch {
+      setShareStatus("Copy the address bar link");
+    }
+
+    window.setTimeout(() => setShareStatus(null), 2400);
+  }
+
   return (
-    <header className="topbar">
-      <div className="topbar-inner">
-        <div>
-          <p className="eyebrow">Wedding Day Digital Twin</p>
-          <p className="topbar-title">{activeWedding.coupleNames}</p>
-          <p className="topbar-meta">{activeWedding.date} · {activeWedding.receptionLocation}</p>
+    <header className="studio-header">
+      <div className="studio-header-inner">
+        <div className="studio-header-identity">
+          <h1>{activeWedding.coupleNames}</h1>
+          <p>
+            {activeWedding.date} · {activeWedding.receptionLocation}
+          </p>
         </div>
-        <div className="topbar-actions">
-          <div className="topbar-status">{hasLocalProject ? "Local twin active" : "Sample wedding"}</div>
-          <Link className="topbar-primary-action" href="/preview">
-            Preview
+        <div className="studio-header-actions">
+          <span className="studio-saved-chip">
+            <CloudCheck aria-hidden="true" size={16} strokeWidth={1.7} />
+            {hasLocalProject ? "All changes saved" : "Sample wedding"}
+          </span>
+          <button className="button button-secondary button-small studio-share-button" onClick={copyStudioLink} type="button">
+            <Share2 aria-hidden="true" size={15} strokeWidth={1.8} />
+            {shareStatus ?? "Share Studio"}
+          </button>
+          <Link className="button button-primary button-small studio-preview-button" href="/preview">
+            <Eye aria-hidden="true" size={15} strokeWidth={1.8} />
+            Preview Day
           </Link>
         </div>
       </div>

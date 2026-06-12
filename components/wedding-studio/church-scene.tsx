@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { ContactShadows } from "@react-three/drei";
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import {
-  studioStepCopy,
   venueOptions,
   type StudioBudgetLevel,
   type StudioColorDirection,
@@ -18,11 +19,14 @@ import {
   type WeddingStudioCapacity
 } from "@/lib/wedding-studio-plan";
 
+export type SceneLighting = "dusk" | "night";
+
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
   colorDirection: StudioColorDirection;
+  lighting?: SceneLighting;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   sceneEdits: StudioSceneEdits;
@@ -30,6 +34,48 @@ type CeremonySceneProps = {
   style: StudioStyle;
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
+  zoom?: number;
+};
+
+const lightingPresets: Record<
+  SceneLighting,
+  {
+    ambientColor: string;
+    ambientIntensity: number;
+    fogColor: string;
+    fogFar: number;
+    fogNear: number;
+    hemisphereGround: string;
+    hemisphereIntensity: number;
+    hemisphereSky: string;
+    keyIntensity: number;
+    rimIntensity: number;
+  }
+> = {
+  dusk: {
+    ambientColor: "#46455c",
+    ambientIntensity: 0.34,
+    fogColor: "#262230",
+    fogFar: 36,
+    fogNear: 14,
+    hemisphereGround: "#1b1812",
+    hemisphereIntensity: 0.62,
+    hemisphereSky: "#585a7c",
+    keyIntensity: 1.85,
+    rimIntensity: 0.55
+  },
+  night: {
+    ambientColor: "#2e3140",
+    ambientIntensity: 0.22,
+    fogColor: "#12130c",
+    fogFar: 33,
+    fogNear: 13,
+    hemisphereGround: "#13110a",
+    hemisphereIntensity: 0.5,
+    hemisphereSky: "#39405c",
+    keyIntensity: 1.45,
+    rimIntensity: 0.5
+  }
 };
 
 type GuestMarker = {
@@ -50,73 +96,73 @@ type Palette = {
 
 const palettes: Record<StudioStyle, Palette> = {
   classic: {
-    accent: "#d8c59a",
-    blush: "#ead8cf",
-    candle: "#f5dfad",
-    carpet: "#f1ede4",
-    floor: "#efe7d8",
-    guest: "#2f3430",
-    pew: "#6f5b44",
-    wall: "#f6f0e6"
+    accent: "#c9a767",
+    blush: "#dbb9a4",
+    candle: "#ffd9a0",
+    carpet: "#e9dcc0",
+    floor: "#262419",
+    guest: "#ecdfc2",
+    pew: "#5d4a33",
+    wall: "#2d2b1f"
   },
   modern: {
-    accent: "#c8d0c8",
-    blush: "#d9ddd8",
-    candle: "#f3e7c2",
-    carpet: "#edf0ec",
-    floor: "#e8e8e4",
-    guest: "#252b2a",
-    pew: "#4d5552",
-    wall: "#f7f7f3"
+    accent: "#aebdb0",
+    blush: "#bdc8be",
+    candle: "#f3e2b8",
+    carpet: "#dfe0d4",
+    floor: "#1f2320",
+    guest: "#dfe5da",
+    pew: "#3c443f",
+    wall: "#262b27"
   },
   romantic: {
-    accent: "#e7beb7",
-    blush: "#edd4d0",
-    candle: "#ffe1b5",
-    carpet: "#f5ece8",
-    floor: "#efe1dc",
-    guest: "#3b3030",
-    pew: "#6e504b",
-    wall: "#fbf1ee"
+    accent: "#d8a79c",
+    blush: "#e3bdb2",
+    candle: "#ffd9ae",
+    carpet: "#ecdcd0",
+    floor: "#282022",
+    guest: "#eed9d1",
+    pew: "#54403c",
+    wall: "#2f2628"
   },
   rustic: {
-    accent: "#c9b27f",
-    blush: "#e1d2bd",
-    candle: "#f0d39b",
-    carpet: "#ece2d3",
-    floor: "#dfd1be",
-    guest: "#34302a",
-    pew: "#6a5138",
-    wall: "#f4eadc"
+    accent: "#c2a065",
+    blush: "#d4b993",
+    candle: "#f5cf92",
+    carpet: "#e4d4b2",
+    floor: "#262018",
+    guest: "#e7d7b7",
+    pew: "#4f3c28",
+    wall: "#2c261c"
   }
 };
 
 const colorDirectionOverrides: Record<StudioColorDirection, Partial<Palette>> = {
   blue: {
-    accent: "#8aa0a6",
-    blush: "#dce6e9",
-    carpet: "#eef3f3"
+    accent: "#93acb4",
+    blush: "#c3d3d8",
+    carpet: "#dde6e6"
   },
   blush: {
     accent: "#d7a59b",
-    blush: "#f0d5cf",
-    carpet: "#f5ebe8"
+    blush: "#ecd0c8",
+    carpet: "#ecdcd5"
   },
   bold: {
-    accent: "#9a6935",
+    accent: "#c08648",
     blush: "#d7b7a6",
-    carpet: "#eadfd0"
+    carpet: "#e2d2b8"
   },
   green: {
-    accent: "#7f8f70",
-    blush: "#dfe8d8",
-    carpet: "#eef4ea"
+    accent: "#94a87f",
+    blush: "#ccd9c0",
+    carpet: "#dde6d2"
   },
   neutral: {},
   warm: {
-    accent: "#c29a63",
-    blush: "#ead4c1",
-    carpet: "#f2e5d5"
+    accent: "#cda367",
+    blush: "#e2c8a8",
+    carpet: "#ead9bc"
   }
 };
 
@@ -138,31 +184,51 @@ export function CeremonyScene({
   selectedObjectId,
   style,
   venueType,
-  viewMode
+  viewMode,
+  lighting = "dusk",
+  zoom = 1
 }: CeremonySceneProps) {
-  const stageCopy = studioStepCopy[activeStep];
   const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
+  const preset = lightingPresets[lighting];
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
-      <div className="ceremony-scene-toolbar">
-        <div>
-          <span>Live Scene</span>
-          <strong>{stageCopy.sceneTitle}</strong>
-        </div>
-        <span className="scene-status-label" data-tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>
-          {getSceneBadge(activeStep, capacity, venueType)}
-        </span>
-      </div>
-
       <div className="ceremony-canvas-frame">
-        <Canvas camera={{ fov: 42, near: 0.1, position: getCameraPosition(viewMode) }} dpr={[1, 1.8]} shadows={{ type: THREE.PCFShadowMap }}>
-          <CameraSetup viewMode={viewMode} />
-          <color args={["#fbf8f1"]} attach="background" />
-          <fog args={["#fbf8f1", 10, 21]} attach="fog" />
-          <ambientLight intensity={1.15} />
-          <directionalLight castShadow intensity={2.1} position={[3, 7, 4]} shadow-mapSize={[1024, 1024]} />
-          <pointLight color="#f6d8a8" intensity={budgetLevel === "signature" ? 16 : 10} position={[0, 3.2, -3.4]} />
+        <Canvas
+          camera={{ fov: 40, near: 0.1, position: getCameraPosition(viewMode) }}
+          dpr={[1, 1.8]}
+          gl={{ toneMappingExposure: 1.16 }}
+          shadows={{ type: THREE.PCFSoftShadowMap }}
+        >
+          <CameraSetup viewMode={viewMode} zoom={zoom} />
+          <color args={[preset.fogColor]} attach="background" />
+          <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
+          <SkyDome mode={lighting} />
+          {venueType === "garden" || venueType === "beach" ? <HillSilhouettes /> : null}
+          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, preset.hemisphereIntensity]} />
+          <ambientLight color={preset.ambientColor} intensity={preset.ambientIntensity} />
+          <directionalLight color="#aebdd6" intensity={preset.rimIntensity} position={[-6, 8, -7]} />
+          <directionalLight
+            castShadow
+            color="#ffd9a6"
+            intensity={preset.keyIntensity}
+            position={[4.5, 6.5, 5.5]}
+            shadow-bias={-0.0004}
+            shadow-camera-bottom={-8}
+            shadow-camera-far={26}
+            shadow-camera-left={-8}
+            shadow-camera-right={8}
+            shadow-camera-top={8}
+            shadow-mapSize={[1024, 1024]}
+          />
+          <pointLight color="#ffca8c" decay={2} distance={10} intensity={budgetLevel === "signature" ? 34 : 24} position={[0, 3.1, -3.6]} />
+          <ContactShadows blur={2.4} color="#050602" far={5} opacity={0.55} position={[0, -0.025, 0.25]} resolution={384} scale={13} />
+          <EffectComposer multisampling={4}>
+            <Bloom intensity={0.85} luminanceSmoothing={0.18} luminanceThreshold={1} mipmapBlur />
+            <Vignette darkness={0.58} eskil={false} offset={0.26} />
+          </EffectComposer>
+          <GlowHalo />
+          <DustMotes />
           <WeddingStageInterior
             activeStep={activeStep}
             budgetLevel={budgetLevel}
@@ -178,10 +244,143 @@ export function CeremonyScene({
       </div>
 
       <div className="ceremony-scene-caption" aria-live="polite">
-        <span>{getSceneSignal(activeStep, capacity, venueType)}</span>
+        <span data-tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>
+          {getSceneSignal(activeStep, capacity, venueType)}
+        </span>
         <strong>{getSceneCaption(activeStep, capacity, venueType)}</strong>
       </div>
     </section>
+  );
+}
+
+function GlowHalo() {
+  return (
+    <mesh position={[0, 1.7, -5.5]}>
+      <circleGeometry args={[2.8, 40]} />
+      <meshBasicMaterial blending={THREE.AdditiveBlending} color="#ffc98c" depthWrite={false} opacity={0.14} transparent />
+    </mesh>
+  );
+}
+
+function createSkyTexture(mode: SceneLighting) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 16;
+  canvas.height = 256;
+  const context = canvas.getContext("2d");
+
+  if (context) {
+    const gradient = context.createLinearGradient(0, 0, 0, 256);
+
+    if (mode === "dusk") {
+      gradient.addColorStop(0, "#222a4e");
+      gradient.addColorStop(0.42, "#3d3f63");
+      gradient.addColorStop(0.62, "#7c5a64");
+      gradient.addColorStop(0.74, "#cf9468");
+      gradient.addColorStop(0.82, "#edbd82");
+      gradient.addColorStop(0.9, "#5a4434");
+      gradient.addColorStop(1, "#1c1812");
+    } else {
+      gradient.addColorStop(0, "#0c1124");
+      gradient.addColorStop(0.5, "#192038");
+      gradient.addColorStop(0.74, "#37364e");
+      gradient.addColorStop(0.84, "#5c5050");
+      gradient.addColorStop(0.92, "#2c2520");
+      gradient.addColorStop(1, "#11100b");
+    }
+
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 16, 256);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  return texture;
+}
+
+function SkyDome({ mode }: { mode: SceneLighting }) {
+  const texture = useMemo(() => createSkyTexture(mode), [mode]);
+
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return (
+    <mesh position={[0, -1.5, 0]}>
+      <sphereGeometry args={[46, 28, 20]} />
+      <meshBasicMaterial fog={false} map={texture} side={THREE.BackSide} />
+    </mesh>
+  );
+}
+
+function HillSilhouettes() {
+  const hills: Array<[number, number, number, number]> = [
+    [-9, -16, 15, 3],
+    [8, -19, 19, 3.8],
+    [-1, -22, 25, 4.6]
+  ];
+
+  return (
+    <group>
+      {hills.map(([x, z, scaleX, scaleY], index) => (
+        <mesh key={index} position={[x, -0.5, z]} scale={[scaleX, scaleY, 5]}>
+          <sphereGeometry args={[1, 18, 12]} />
+          <meshStandardMaterial color="#202b18" roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+const DUST_COUNT = 90;
+
+function DustMotes() {
+  const pointsRef = useRef<THREE.Points>(null);
+  const { basePositions, positions } = useMemo(() => {
+    const base = new Float32Array(DUST_COUNT * 3);
+
+    for (let index = 0; index < DUST_COUNT; index += 1) {
+      const seed = index * 37.21;
+      base[index * 3] = Math.sin(seed) * 4;
+      base[index * 3 + 1] = 0.4 + Math.abs(Math.sin(seed * 1.7)) * 2.6;
+      base[index * 3 + 2] = -5 + Math.abs(Math.sin(seed * 2.3)) * 9;
+    }
+
+    return { basePositions: base, positions: base.slice() };
+  }, []);
+
+  useFrame(({ clock }) => {
+    const geometry = pointsRef.current?.geometry;
+    const attribute = geometry?.getAttribute("position") as THREE.BufferAttribute | undefined;
+
+    if (!attribute) {
+      return;
+    }
+
+    const time = clock.elapsedTime;
+
+    for (let index = 0; index < DUST_COUNT; index += 1) {
+      const drift = time * 0.12 + index;
+      attribute.setY(index, basePositions[index * 3 + 1] + Math.sin(drift) * 0.18);
+      attribute.setX(index, basePositions[index * 3] + Math.cos(drift * 0.6) * 0.1);
+    }
+
+    attribute.needsUpdate = true;
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute args={[positions, 3]} attach="attributes-position" />
+      </bufferGeometry>
+      <pointsMaterial
+        blending={THREE.AdditiveBlending}
+        color="#e9c688"
+        depthWrite={false}
+        opacity={0.42}
+        size={0.05}
+        sizeAttenuation
+        transparent
+      />
+    </points>
   );
 }
 
@@ -243,6 +442,7 @@ function WeddingStageInterior({
             objectId="ceremonyPath"
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
+            outlineCenter={[0, 0.45]}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             size={[1.35, 11.8]}
@@ -261,6 +461,7 @@ function WeddingStageInterior({
               objectId="focalPoint"
               onMoveObject={onMoveObject}
               onSelectObject={onSelectObject}
+              outlineCenter={[0, -4.4]}
               sceneEdits={sceneEdits}
               selectedObjectId={selectedObjectId}
               size={[2.65, 1.4]}
@@ -274,6 +475,7 @@ function WeddingStageInterior({
               objectId="lighting"
               onMoveObject={onMoveObject}
               onSelectObject={onSelectObject}
+              outlineCenter={[0, -0.5]}
               sceneEdits={sceneEdits}
               selectedObjectId={selectedObjectId}
               size={[6.4, 8.2]}
@@ -286,6 +488,7 @@ function WeddingStageInterior({
             objectId="guestSeating"
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
+            outlineCenter={[0, -2.4 + Math.max(0, visibleRows - 1) * 0.31]}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             size={[6.4, Math.max(2.4, visibleRows * 0.7)]}
@@ -317,6 +520,7 @@ function EditableSceneObject({
   objectId,
   onMoveObject,
   onSelectObject,
+  outlineCenter = [0, 0.3],
   sceneEdits,
   selectedObjectId,
   size
@@ -325,6 +529,7 @@ function EditableSceneObject({
   objectId: StudioSceneObjectId;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
+  outlineCenter?: [number, number];
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
   size: [number, number];
@@ -371,17 +576,17 @@ function EditableSceneObject({
       position={[offset.x, 0, offset.z]}
     >
       {children}
-      {isSelected ? <SelectionOutline size={size} /> : null}
+      {isSelected ? <SelectionOutline center={outlineCenter} size={size} /> : null}
     </group>
   );
 }
 
-function SelectionOutline({ size }: { size: [number, number] }) {
+function SelectionOutline({ center, size }: { center: [number, number]; size: [number, number] }) {
   const [width, depth] = size;
   const color = "#b69a5b";
 
   return (
-    <group position={[0, 0.035, 0.3]}>
+    <group position={[center[0], 0.13, center[1]]}>
       <mesh position={[0, 0, -depth / 2]}>
         <boxGeometry args={[width, 0.035, 0.045]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} roughness={0.46} />
@@ -431,7 +636,7 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
       {[-3.2, -1.05, 1.05, 3.2].map((xPosition) => (
         <mesh key={xPosition} position={[xPosition, 1.38, -5.62]}>
           <boxGeometry args={[0.72, 1.08, 0.08]} />
-          <meshStandardMaterial color="#fffaf0" emissive={palette.candle} emissiveIntensity={0.18} roughness={0.55} />
+          <meshStandardMaterial color="#3a3526" emissive={palette.candle} emissiveIntensity={0.55} roughness={0.5} toneMapped={false} />
         </mesh>
       ))}
     </group>
@@ -445,24 +650,34 @@ function OutdoorVenueFrame({ palette, venueType }: { palette: Palette; venueType
         <>
           <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, -5.1]}>
             <planeGeometry args={[10.4, 1.2]} />
-            <meshStandardMaterial color="#bcd8df" roughness={0.62} />
+            <meshStandardMaterial color="#2c4456" emissive="#243a4c" emissiveIntensity={0.4} roughness={0.34} />
           </mesh>
           {[-4.8, -3.2, -1.6, 0, 1.6, 3.2, 4.8].map((xPosition) => (
             <mesh key={xPosition} rotation={[-Math.PI / 2, 0, 0]} position={[xPosition, -0.015, -4.5]}>
               <planeGeometry args={[0.68, 0.08]} />
-              <meshStandardMaterial color="#fff8ee" transparent opacity={0.58} roughness={0.44} />
+              <meshStandardMaterial color="#d9ccab" transparent opacity={0.4} roughness={0.44} />
             </mesh>
           ))}
         </>
       ) : null}
 
       {[-4.25, 4.25].map((xPosition) => (
-        <group key={xPosition} position={[xPosition, 0.32, -2.2]}>
+        <group key={xPosition} position={[xPosition, 0, -2.2]}>
           {[-2.2, -0.6, 1.0, 2.6].map((zPosition) => (
-            <mesh castShadow key={zPosition} position={[0, 0, zPosition]}>
-              <sphereGeometry args={[0.42, 18, 18]} />
-              <meshStandardMaterial color={venueType === "beach" ? "#a9b890" : "#7f8f70"} roughness={0.76} />
-            </mesh>
+            <group key={zPosition} position={[0, 0, zPosition]}>
+              <mesh castShadow position={[0, 0.3, 0]}>
+                <cylinderGeometry args={[0.05, 0.08, 0.6, 10]} />
+                <meshStandardMaterial color="#75604a" roughness={0.78} />
+              </mesh>
+              <mesh castShadow position={[0, 0.78, 0]}>
+                <sphereGeometry args={[0.4, 18, 18]} />
+                <meshStandardMaterial color={venueType === "beach" ? "#a4b386" : "#74865f"} roughness={0.8} />
+              </mesh>
+              <mesh castShadow position={[0.12, 1.08, 0.05]}>
+                <sphereGeometry args={[0.26, 16, 16]} />
+                <meshStandardMaterial color={venueType === "beach" ? "#b3c096" : "#83936c"} roughness={0.8} />
+              </mesh>
+            </group>
           ))}
         </group>
       ))}
@@ -478,26 +693,39 @@ function OutdoorVenueFrame({ palette, venueType }: { palette: Palette; venueType
 function Altar({ decorScale, palette }: { decorScale: number; palette: Palette }) {
   return (
     <group position={[0, 0, -4.55]}>
-      <mesh castShadow receiveShadow position={[0, 0.28, 0]}>
-        <boxGeometry args={[2.25, 0.55, 0.82]} />
-        <meshStandardMaterial color="#fff8ee" roughness={0.58} />
+      <Dais palette={palette} />
+      <mesh castShadow receiveShadow position={[0, 0.34, 0]}>
+        <boxGeometry args={[2.1, 0.52, 0.76]} />
+        <meshStandardMaterial color={palette.carpet} roughness={0.66} />
       </mesh>
-      <mesh castShadow position={[0, 0.78, -0.18]}>
-        <boxGeometry args={[1.8, 0.08, 0.12]} />
-        <meshStandardMaterial color={palette.accent} roughness={0.5} />
+      <mesh castShadow position={[0, 0.63, 0]}>
+        <boxGeometry args={[2.2, 0.05, 0.84]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.45} roughness={0.42} />
       </mesh>
+      <FlowerCluster palette={palette} position={[-0.85, 0.74, 0.18]} radius={0.22} />
+      <FlowerCluster palette={palette} position={[0.85, 0.74, 0.18]} radius={0.22} />
       {[-1.45, 1.45].map((xPosition) => (
-        <group key={xPosition} position={[xPosition, 0.45, 0.05]} scale={decorScale}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.09, 0.12, 0.72, 18]} />
-            <meshStandardMaterial color="#7b876d" roughness={0.72} />
-          </mesh>
-          <mesh castShadow position={[0, 0.45, 0]}>
-            <sphereGeometry args={[0.24, 18, 18]} />
-            <meshStandardMaterial color={palette.blush} roughness={0.74} />
-          </mesh>
-        </group>
+        <CandleStand candleColor={palette.candle} key={xPosition} position={[xPosition, 0, 0.18]} scale={decorScale} />
       ))}
+    </group>
+  );
+}
+
+function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string; position: [number, number, number]; scale?: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh castShadow position={[0, 0.3, 0]}>
+        <cylinderGeometry args={[0.016, 0.05, 0.6, 8]} />
+        <meshStandardMaterial color="#9c7b45" metalness={0.6} roughness={0.38} />
+      </mesh>
+      <mesh castShadow position={[0, 0.66, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, 0.13, 8]} />
+        <meshStandardMaterial color="#efe3c4" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.75, 0]}>
+        <sphereGeometry args={[0.024, 8, 8]} />
+        <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={3} toneMapped={false} />
+      </mesh>
     </group>
   );
 }
@@ -515,32 +743,89 @@ function CeremonyFocalPoint({ decorScale, palette, venueType }: { decorScale: nu
 }
 
 function CeremonyArch({ decorScale, palette, venueType }: { decorScale: number; palette: Palette; venueType: StudioVenueType }) {
-  const baseColor = venueType === "beach" ? "#d9c39a" : "#7d8a63";
+  const baseColor = venueType === "beach" ? "#a98f63" : "#5d6a48";
 
   return (
     <group position={[0, 0, -4.45]} scale={decorScale}>
-      <mesh castShadow position={[-1.05, 0.85, 0]}>
-        <cylinderGeometry args={[0.045, 0.06, 1.7, 16]} />
-        <meshStandardMaterial color={baseColor} roughness={0.64} />
-      </mesh>
-      <mesh castShadow position={[1.05, 0.85, 0]}>
-        <cylinderGeometry args={[0.045, 0.06, 1.7, 16]} />
-        <meshStandardMaterial color={baseColor} roughness={0.64} />
-      </mesh>
-      <mesh castShadow position={[0, 1.7, 0]}>
-        <boxGeometry args={[2.18, 0.09, 0.12]} />
-        <meshStandardMaterial color={baseColor} roughness={0.64} />
-      </mesh>
-      {[-0.78, 0, 0.78].map((xPosition) => (
-        <mesh castShadow key={xPosition} position={[xPosition, 1.78, 0.03]}>
-          <sphereGeometry args={[0.22, 18, 18]} />
-          <meshStandardMaterial color={palette.blush} roughness={0.72} />
+      <Dais palette={palette} />
+      {[-1.05, 1.05].map((xPosition) => (
+        <mesh castShadow key={xPosition} position={[xPosition, 0.78, 0]}>
+          <cylinderGeometry args={[0.042, 0.055, 1.56, 12]} />
+          <meshStandardMaterial color={baseColor} roughness={0.6} />
         </mesh>
       ))}
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0.32]}>
-        <planeGeometry args={[2.7, 0.9]} />
-        <meshStandardMaterial color="#fff8ee" transparent opacity={0.58} roughness={0.76} />
+      <mesh castShadow position={[0, 1.56, 0]}>
+        <torusGeometry args={[1.05, 0.045, 10, 36, Math.PI]} />
+        <meshStandardMaterial color={baseColor} roughness={0.6} />
       </mesh>
+      <FlowerCluster palette={palette} position={[-1.02, 1.66, 0.05]} radius={0.3} />
+      <FlowerCluster palette={palette} position={[1.02, 1.66, 0.05]} radius={0.3} />
+      <FlowerCluster palette={palette} position={[-0.62, 2.32, 0.05]} radius={0.2} />
+      <FlowerCluster palette={palette} position={[0.62, 2.32, 0.05]} radius={0.2} />
+      <FlowerCluster palette={palette} position={[0, 2.58, 0.04]} radius={0.24} />
+      <ArchChandelier candleColor={palette.candle} />
+    </group>
+  );
+}
+
+function ArchChandelier({ candleColor }: { candleColor: string }) {
+  return (
+    <group position={[0, 2.52, 0]}>
+      <mesh position={[0, -0.04, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.34, 6]} />
+        <meshStandardMaterial color="#3a3225" roughness={0.7} />
+      </mesh>
+      <mesh castShadow position={[0, -0.24, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.17, 0.015, 8, 26]} />
+        <meshStandardMaterial color="#9c7b45" metalness={0.7} roughness={0.32} />
+      </mesh>
+      {[0, 1, 2, 3, 4, 5].map((index) => {
+        const angle = (index / 6) * Math.PI * 2;
+
+        return (
+          <mesh key={index} position={[Math.cos(angle) * 0.17, -0.17, Math.sin(angle) * 0.17]}>
+            <sphereGeometry args={[0.023, 8, 8]} />
+            <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={2.8} toneMapped={false} />
+          </mesh>
+        );
+      })}
+      <pointLight color={candleColor} decay={2} distance={3.2} intensity={1.6} position={[0, -0.18, 0]} />
+    </group>
+  );
+}
+
+function Dais({ palette }: { palette: Palette }) {
+  return (
+    <group position={[0, 0, 0.1]}>
+      <mesh receiveShadow position={[0, 0.045, 0]}>
+        <cylinderGeometry args={[1.85, 1.95, 0.09, 44]} />
+        <meshStandardMaterial color="#37332a" roughness={0.62} />
+      </mesh>
+      <mesh position={[0, 0.095, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.72, 1.8, 44]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
+  const blossoms: Array<[number, number, number, number, string]> = [
+    [0, 0, 0, radius * 0.62, palette.blush],
+    [radius * 0.5, radius * 0.18, 0.03, radius * 0.46, palette.carpet],
+    [-radius * 0.48, radius * 0.12, 0.02, radius * 0.44, palette.blush],
+    [radius * 0.16, -radius * 0.3, 0.04, radius * 0.4, palette.accent],
+    [-radius * 0.2, radius * 0.42, -0.02, radius * 0.36, "#7a8a5e"]
+  ];
+
+  return (
+    <group position={position}>
+      {blossoms.map(([x, y, z, size, color], index) => (
+        <mesh castShadow key={index} position={[x, y, z]}>
+          <sphereGeometry args={[size, 12, 12]} />
+          <meshStandardMaterial color={color} roughness={0.78} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -548,38 +833,105 @@ function CeremonyArch({ decorScale, palette, venueType }: { decorScale: number; 
 function HallFocalPoint({ decorScale, palette }: { decorScale: number; palette: Palette }) {
   return (
     <group position={[0, 0, -4.5]} scale={decorScale}>
-      <mesh castShadow receiveShadow position={[0, 0.16, 0]}>
-        <boxGeometry args={[2.8, 0.32, 0.82]} />
-        <meshStandardMaterial color={palette.pew} roughness={0.58} />
+      <Dais palette={palette} />
+      <mesh castShadow receiveShadow position={[0, 0.22, 0]}>
+        <boxGeometry args={[2.6, 0.3, 0.76]} />
+        <meshStandardMaterial color={palette.pew} roughness={0.5} />
       </mesh>
-      <mesh castShadow position={[0, 0.72, -0.16]}>
-        <boxGeometry args={[2.2, 0.08, 0.12]} />
-        <meshStandardMaterial color={palette.accent} roughness={0.52} />
+      <mesh castShadow position={[0, 0.4, 0]}>
+        <boxGeometry args={[2.7, 0.04, 0.82]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.4} />
       </mesh>
-      <mesh castShadow position={[-1.35, 0.46, 0.16]}>
-        <cylinderGeometry args={[0.04, 0.06, 0.82, 14]} />
-        <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={0.45} roughness={0.36} />
-      </mesh>
-      <mesh castShadow position={[1.35, 0.46, 0.16]}>
-        <cylinderGeometry args={[0.04, 0.06, 0.82, 14]} />
-        <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={0.45} roughness={0.36} />
-      </mesh>
+      <FlowerCluster palette={palette} position={[0, 0.56, 0.16]} radius={0.24} />
+      {[-1.5, 1.5].map((xPosition) => (
+        <CandleStand candleColor={palette.candle} key={xPosition} position={[xPosition, 0, 0.14]} />
+      ))}
     </group>
   );
 }
 
+const LANTERN_Z_POSITIONS = [-3.7, -2.1, -0.5, 1.1, 2.7];
+
 function LightingRibbon({ decorScale, palette, venueType }: { decorScale: number; palette: Palette; venueType?: StudioVenueType }) {
-  const height = venueType === "garden" || venueType === "beach" ? 1.72 : 2.15;
+  const poleHeight = venueType === "garden" || venueType === "beach" ? 1.18 : 1.34;
+  const poleColor = venueType === "beach" ? "#8a7757" : "#4d4636";
 
   return (
     <group>
-      {[-3.7, -2.1, -0.5, 1.1, 2.7].map((zPosition) => (
-        <group key={zPosition} position={[0, height, zPosition]} scale={decorScale}>
+      {LANTERN_Z_POSITIONS.map((zPosition) => (
+        <group key={zPosition} position={[0, 0, zPosition]} scale={decorScale}>
+          {[-0.95, 0.95].map((xPosition) => (
+            <group key={xPosition} position={[xPosition, 0, 0]}>
+              <mesh castShadow position={[0, poleHeight / 2, 0]}>
+                <cylinderGeometry args={[0.02, 0.032, poleHeight, 8]} />
+                <meshStandardMaterial color={poleColor} metalness={0.35} roughness={0.5} />
+              </mesh>
+              <mesh position={[0, poleHeight + 0.06, 0]}>
+                <sphereGeometry args={[0.06, 14, 14]} />
+                <meshStandardMaterial
+                  color={palette.candle}
+                  emissive={palette.candle}
+                  emissiveIntensity={2.4}
+                  roughness={0.3}
+                  toneMapped={false}
+                />
+              </mesh>
+            </group>
+          ))}
+          <pointLight color={palette.candle} decay={2} distance={3.4} intensity={1.5} position={[0, poleHeight + 0.25, 0]} />
+        </group>
+      ))}
+      <StringLights candleColor={palette.candle} poleHeight={poleHeight} scale={decorScale} />
+    </group>
+  );
+}
+
+function StringLights({ candleColor, poleHeight, scale }: { candleColor: string; poleHeight: number; scale: number }) {
+  const segments = useMemo(() => {
+    const built: Array<{ curve: THREE.QuadraticBezierCurve3; key: string }> = [];
+
+    for (const xPosition of [-0.95, 0.95]) {
+      for (let index = 0; index < LANTERN_Z_POSITIONS.length - 1; index += 1) {
+        const startZ = LANTERN_Z_POSITIONS[index];
+        const endZ = LANTERN_Z_POSITIONS[index + 1];
+        const top = poleHeight + 0.06;
+        const curve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(xPosition, top, startZ),
+          new THREE.Vector3(xPosition, top - 0.3, (startZ + endZ) / 2),
+          new THREE.Vector3(xPosition, top, endZ)
+        );
+
+        built.push({ curve, key: `${xPosition}-${index}` });
+      }
+    }
+
+    return built;
+  }, [poleHeight]);
+
+  return (
+    <group scale={scale}>
+      {segments.map((segment) => (
+        <group key={segment.key}>
           <mesh>
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={0.95} roughness={0.35} />
+            <tubeGeometry args={[segment.curve, 14, 0.0075, 5, false]} />
+            <meshStandardMaterial color="#241f14" roughness={0.8} />
           </mesh>
-          <pointLight color={palette.candle} distance={3.2} intensity={0.75} />
+          {[0.18, 0.36, 0.52, 0.68, 0.84].map((t) => {
+            const point = segment.curve.getPoint(t);
+
+            return (
+              <mesh key={t} position={[point.x, point.y - 0.045, point.z]}>
+                <sphereGeometry args={[0.026, 10, 10]} />
+                <meshStandardMaterial
+                  color={candleColor}
+                  emissive={candleColor}
+                  emissiveIntensity={2.6}
+                  roughness={0.3}
+                  toneMapped={false}
+                />
+              </mesh>
+            );
+          })}
         </group>
       ))}
     </group>
@@ -590,18 +942,46 @@ function Pew({ palette, position }: { palette: Palette; position: [number, numbe
   return (
     <group position={position}>
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[2.55, 0.18, 0.32]} />
-        <meshStandardMaterial color={palette.pew} roughness={0.62} />
+        <boxGeometry args={[2.55, 0.16, 0.34]} />
+        <meshStandardMaterial color={palette.pew} roughness={0.42} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.18, -0.13]}>
-        <boxGeometry args={[2.55, 0.28, 0.08]} />
-        <meshStandardMaterial color={palette.pew} roughness={0.64} />
+      <mesh castShadow receiveShadow position={[0, 0.2, -0.14]}>
+        <boxGeometry args={[2.55, 0.3, 0.07]} />
+        <meshStandardMaterial color={palette.pew} roughness={0.44} />
+      </mesh>
+      {[-1.26, 1.26].map((xPosition) => (
+        <mesh castShadow key={xPosition} position={[xPosition, 0.1, 0]}>
+          <boxGeometry args={[0.05, 0.38, 0.36]} />
+          <meshStandardMaterial color={palette.pew} roughness={0.4} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.085, 0.02]}>
+        <boxGeometry args={[2.4, 0.025, 0.3]} />
+        <meshStandardMaterial color={palette.carpet} roughness={0.78} />
       </mesh>
     </group>
   );
 }
 
 function CeremonySeatBlock({ palette, position, venueType }: { palette: Palette; position: [number, number, number]; venueType: StudioVenueType }) {
+  const frameMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: venueType === "hall" ? "#8a7a58" : "#b3955f",
+        metalness: 0.45,
+        roughness: 0.42
+      }),
+    [venueType]
+  );
+  const cushionMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: palette.carpet,
+        roughness: 0.74
+      }),
+    [palette.carpet]
+  );
+
   if (venueType === "church") {
     return <Pew palette={palette} position={position} />;
   }
@@ -610,13 +990,26 @@ function CeremonySeatBlock({ palette, position, venueType }: { palette: Palette;
     <group position={position}>
       {[-0.95, -0.32, 0.32, 0.95].map((xPosition) => (
         <group key={xPosition} position={[xPosition, 0, 0]}>
-          <mesh castShadow receiveShadow position={[0, 0, 0]}>
-            <boxGeometry args={[0.28, 0.12, 0.28]} />
-            <meshStandardMaterial color="#fff8ee" roughness={0.66} />
+          {[
+            [-0.1, -0.1],
+            [0.1, -0.1],
+            [-0.1, 0.09],
+            [0.1, 0.09]
+          ].map(([legX, legZ]) => (
+            <mesh castShadow key={`${legX}-${legZ}`} material={frameMaterial} position={[legX, -0.06, legZ]}>
+              <cylinderGeometry args={[0.011, 0.011, 0.22, 6]} />
+            </mesh>
+          ))}
+          <mesh castShadow material={cushionMaterial} position={[0, 0.06, 0]}>
+            <boxGeometry args={[0.25, 0.04, 0.25]} />
           </mesh>
-          <mesh castShadow receiveShadow position={[0, 0.2, -0.1]}>
-            <boxGeometry args={[0.28, 0.28, 0.06]} />
-            <meshStandardMaterial color={venueType === "hall" ? palette.pew : palette.accent} roughness={0.62} />
+          {[-0.09, 0.09].map((backX) => (
+            <mesh castShadow key={backX} material={frameMaterial} position={[backX, 0.21, -0.115]}>
+              <cylinderGeometry args={[0.01, 0.01, 0.3, 6]} />
+            </mesh>
+          ))}
+          <mesh castShadow material={frameMaterial} position={[0, 0.34, -0.115]}>
+            <boxGeometry args={[0.22, 0.025, 0.02]} />
           </mesh>
         </group>
       ))}
@@ -628,12 +1021,12 @@ function GuestDot({ palette, position }: { palette: Palette; position: [number, 
   return (
     <group position={position}>
       <mesh castShadow>
-        <sphereGeometry args={[0.095, 14, 14]} />
-        <meshStandardMaterial color={palette.guest} roughness={0.5} />
+        <sphereGeometry args={[0.085, 12, 12]} />
+        <meshStandardMaterial color={palette.guest} emissive={palette.guest} emissiveIntensity={0.12} roughness={0.4} />
       </mesh>
-      <mesh castShadow position={[0, -0.13, 0]}>
-        <cylinderGeometry args={[0.055, 0.065, 0.18, 12]} />
-        <meshStandardMaterial color={palette.accent} roughness={0.56} />
+      <mesh castShadow position={[0, -0.12, 0]}>
+        <cylinderGeometry args={[0.05, 0.062, 0.17, 10]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.3} roughness={0.5} />
       </mesh>
     </group>
   );
@@ -693,6 +1086,7 @@ function ReceptionInterior({
         objectId="danceFloor"
         onMoveObject={onMoveObject}
         onSelectObject={onSelectObject}
+        outlineCenter={[0, 0.9]}
         sceneEdits={sceneEdits}
         selectedObjectId={selectedObjectId}
         size={[2.9, 2.55]}
@@ -712,6 +1106,7 @@ function ReceptionInterior({
         objectId="dinnerTables"
         onMoveObject={onMoveObject}
         onSelectObject={onSelectObject}
+        outlineCenter={[0, 0.5]}
         sceneEdits={sceneEdits}
         selectedObjectId={selectedObjectId}
         size={[7.4, 7.4]}
@@ -725,6 +1120,7 @@ function ReceptionInterior({
         objectId="bar"
         onMoveObject={onMoveObject}
         onSelectObject={onSelectObject}
+        outlineCenter={[-3.65, -4.2]}
         sceneEdits={sceneEdits}
         selectedObjectId={selectedObjectId}
         size={[1.8, 1]}
@@ -767,7 +1163,7 @@ function ReceptionTable({
     <group position={position}>
       <mesh castShadow receiveShadow>
         <cylinderGeometry args={[0.58, 0.58, 0.12, 32]} />
-        <meshStandardMaterial color="#fff8ee" roughness={0.64} />
+        <meshStandardMaterial color="#f6eedb" roughness={0.64} />
       </mesh>
       <mesh castShadow position={[0, 0.09, 0]}>
         <cylinderGeometry args={[0.36, 0.4, 0.05, 32]} />
@@ -809,55 +1205,100 @@ function VenueShellMarkers({ palette, venueType }: { palette: Palette; venueType
 }
 
 function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Palette }) {
+  const petals = useMemo(
+    () =>
+      Array.from({ length: 30 }, (_, index) => {
+        const seed = index * 13.7;
+        const x = Math.sin(seed) * 0.78;
+        const z = -4 + Math.abs(Math.sin(seed * 1.9)) * 8.4;
+
+        return { key: index, rotation: Math.sin(seed * 3.1) * Math.PI, x, z };
+      }),
+    []
+  );
+
   return (
     <group scale={decorScale}>
       {[-3.2, -2.1, 2.1, 3.2].map((xPosition) => (
-        <group key={xPosition} position={[xPosition, 0.24, -3.25]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.045, 0.045, 0.5, 14]} />
-            <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={0.8} roughness={0.35} />
-          </mesh>
-          <pointLight color={palette.candle} distance={2.4} intensity={0.75} />
+        <group key={xPosition} position={[xPosition, 0, -3.25]}>
+          <CandleStand candleColor={palette.candle} position={[0, 0, 0]} />
         </group>
       ))}
+      <pointLight color={palette.candle} decay={2} distance={4.4} intensity={1.6} position={[-2.6, 1, -3.25]} />
+      <pointLight color={palette.candle} decay={2} distance={4.4} intensity={1.6} position={[2.6, 1, -3.25]} />
       {[-2.75, 2.75].map((xPosition) => (
         <group key={xPosition} position={[xPosition, 0.48, -4.48]}>
-          <mesh castShadow>
-            <sphereGeometry args={[0.34, 20, 20]} />
-            <meshStandardMaterial color={palette.blush} roughness={0.72} />
-          </mesh>
+          <FlowerCluster palette={palette} position={[0, 0, 0]} radius={0.32} />
           <mesh castShadow position={[0, -0.35, 0]}>
-            <cylinderGeometry args={[0.055, 0.08, 0.55, 16]} />
-            <meshStandardMaterial color="#7b876d" roughness={0.74} />
+            <cylinderGeometry args={[0.055, 0.08, 0.55, 12]} />
+            <meshStandardMaterial color="#55604a" roughness={0.74} />
           </mesh>
         </group>
+      ))}
+      {petals.map((petal) => (
+        <mesh key={petal.key} position={[petal.x, 0.005, petal.z]} rotation={[-Math.PI / 2, 0, petal.rotation]}>
+          <circleGeometry args={[0.035, 7]} />
+          <meshStandardMaterial color={palette.blush} roughness={0.85} side={THREE.DoubleSide} />
+        </mesh>
       ))}
     </group>
   );
 }
 
-function CameraSetup({ viewMode }: { viewMode: StudioViewMode }) {
+function CameraSetup({ viewMode, zoom = 1 }: { viewMode: StudioViewMode; zoom?: number }) {
   const { camera } = useThree();
+  const lookTargetRef = useRef(new THREE.Vector3(...getCameraTarget(viewMode)));
 
-  useEffect(() => {
-    const position = getCameraPosition(viewMode);
+  useFrame(({ clock }, delta) => {
+    const time = clock.elapsedTime;
+    const [rawX, rawY, rawZ] = getCameraPosition(viewMode);
+    const distanceScale = 1 / zoom;
+    const baseX = rawX * distanceScale;
+    const baseY = viewMode === "top" ? rawY * distanceScale : Math.max(1.1, rawY * distanceScale);
+    const baseZ = rawZ * distanceScale;
+    const drifting = viewMode === "3d";
+    const desiredX = baseX + (drifting ? Math.sin(time * 0.07) * 0.6 : 0);
+    const desiredY = baseY + (drifting ? Math.sin(time * 0.05) * 0.14 : 0);
+    const desiredZ = baseZ + (drifting ? Math.cos(time * 0.06) * 0.25 : 0);
+    const [targetX, targetY, targetZ] = getCameraTarget(viewMode);
+    const lambda = 2.4;
 
-    camera.position.set(...position);
-    camera.lookAt(0, viewMode === "guest" ? 0.75 : 0.34, viewMode === "walkthrough" ? -1.1 : -0.35);
-  }, [camera, viewMode]);
+    camera.position.set(
+      THREE.MathUtils.damp(camera.position.x, desiredX, lambda, delta),
+      THREE.MathUtils.damp(camera.position.y, desiredY, lambda, delta),
+      THREE.MathUtils.damp(camera.position.z, desiredZ, lambda, delta)
+    );
+    lookTargetRef.current.set(
+      THREE.MathUtils.damp(lookTargetRef.current.x, targetX, lambda, delta),
+      THREE.MathUtils.damp(lookTargetRef.current.y, targetY, lambda, delta),
+      THREE.MathUtils.damp(lookTargetRef.current.z, targetZ, lambda, delta)
+    );
+    camera.lookAt(lookTargetRef.current);
+  });
 
   return null;
 }
 
 function getCameraPosition(viewMode: StudioViewMode): [number, number, number] {
   const positions: Record<StudioViewMode, [number, number, number]> = {
-    "3d": [0, 6.7, 9.8],
-    guest: [0, 1.42, 5.4],
+    "3d": [0, 4.5, 8.6],
+    guest: [0, 1.35, 5.2],
     top: [0, 10.6, 0.5],
-    walkthrough: [2.9, 3.35, 6.4]
+    walkthrough: [2.7, 2.55, 5.7]
   };
 
   return positions[viewMode];
+}
+
+function getCameraTarget(viewMode: StudioViewMode): [number, number, number] {
+  const targets: Record<StudioViewMode, [number, number, number]> = {
+    "3d": [0, 0.42, -1.5],
+    guest: [0, 0.85, -1.2],
+    top: [0, 0, 0.2],
+    walkthrough: [0, 0.5, -1.5]
+  };
+
+  return targets[viewMode];
 }
 
 function buildReceptionTablePositions(tableCount: number): Array<[number, number, number]> {
@@ -900,8 +1341,8 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
   const surfaces: Record<StudioVenueType, { aisleWidth: number; floor: string; path: string }> = {
     beach: {
       aisleWidth: 1.25,
-      floor: "#eadbc0",
-      path: "#fff3df"
+      floor: "#494130",
+      path: "#e7d9b6"
     },
     church: {
       aisleWidth: 1.05,
@@ -910,13 +1351,13 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
     },
     garden: {
       aisleWidth: 1.18,
-      floor: "#dfe6d8",
-      path: "#f3ead8"
+      floor: "#232c1c",
+      path: "#e9dec3"
     },
     hall: {
       aisleWidth: 1.2,
-      floor: "#e7e3dc",
-      path: "#efe6d6"
+      floor: "#2a241d",
+      path: "#e6d9ba"
     }
   };
 
@@ -925,22 +1366,6 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
 
 function formatVenueLabel(venueType: StudioVenueType) {
   return venueOptions.find((option) => option.value === venueType)?.label ?? "Venue";
-}
-
-function getSceneBadge(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
-  const labels: Record<StudioPlanningStepId, string> = {
-    ceremony: `${capacity.renderedRows} rows`,
-    budget: "Spend impact",
-    guests: `${capacity.visibleGuestMarkers} guests`,
-    preview: "Live preview",
-    reception: `${Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)))} tables`,
-    share: "Brief ready",
-    timeline: "Flow layer",
-    venue: formatVenueLabel(venueType),
-    vision: "First plan"
-  };
-
-  return labels[activeStep];
 }
 
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {

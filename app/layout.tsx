@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { sampleWedding } from "@/lib/wedding-data";
 import "./globals.css";
+
+const displaySerif = Cormorant_Garamond({
+  display: "swap",
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["400", "500", "600", "700"]
+});
+
+const bodySans = Inter({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-body"
+});
 
 export const metadata: Metadata = {
   applicationName: "Wedding Flow Studio",
@@ -48,7 +63,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html className={`${displaySerif.variable} ${bodySans.variable}`} lang="en">
       <body>
         <AppShell wedding={sampleWedding}>{children}</AppShell>
       </body>

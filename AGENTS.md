@@ -148,6 +148,11 @@ Report any verification that could not be run and explain why.
 - Treat Vendor Intelligence as a decision layer, not a marketplace. It should help users find, shortlist, compare, and track real-world services while staying connected to the wedding digital twin.
 - Avoid cheap wedding cliches, cartoon icons, harsh colors, clutter, dense enterprise tables, and scattered button-heavy UI.
 - Prefer calm color, clear hierarchy, generous spacing, fine borders, readable typography, and polished responsive behavior.
+- The visual system is "light gallery, dark jewel": warm light chrome with bronze hairlines, plus deep evening-green jewel surfaces (sidebar, home hero band, 3D canvas, Preview cinema). Keep that contrast rhythm; do not make everything dark or everything light.
+- Typography discipline: Fraunces display serif only for couple names and one headline per surface; Inter for everything else; eyebrow labels rare and quiet.
+- Text restraint: one-line descriptions, no paragraph under a headline when one line works, ops terminology out of first viewports.
+- The 3D studio scene is an evening/golden-hour composition (dark venue palettes, string lights, lanterns, candles, dais, dust motes, slow camera drift). Keep new scene work in that register.
+- Prefer one framed surface with hairline-separated zones over collections of separate cards (see the home "atelier" panel).
 
 ## What Codex May Change
 

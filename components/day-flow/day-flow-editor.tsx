@@ -439,13 +439,12 @@ export function DayFlowEditor() {
         ) : null}
 
         {selectedMomentIntelligence ? (
-          <>
-            <ActionDock
-              action={selectedMomentIntelligence.primaryAction}
-              onApply={applyUnifiedAction}
-              status={formatActionStatus(actionStatus, selectedMomentIntelligence.primaryAction.id)}
-            />
-          </>
+          <ActionDock
+            action={selectedMomentIntelligence.primaryAction}
+            emphasis={activeResolutionRecipe && activeResolveRisk ? "secondary" : "primary"}
+            onApply={applyUnifiedAction}
+            status={formatActionStatus(actionStatus, selectedMomentIntelligence.primaryAction.id)}
+          />
         ) : null}
 
         <details className="day-flow-detail-drawer">

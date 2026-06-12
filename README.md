@@ -11,7 +11,7 @@ Core product promise:
 - Next.js App Router
 - React
 - TypeScript
-- Three.js via React Three Fiber for the multi-stage 3D Wedding Planning Studio
+- Three.js via React Three Fiber for the multi-stage 3D Wedding Planning Studio, with @react-three/drei (contact shadows) and @react-three/postprocessing (bloom, vignette) for the cinematic evening look
 - Tailwind CSS foundation with custom premium design tokens
 - Local mock data for the MVP
 - No backend, authentication, paid APIs, or music streaming in this first pass

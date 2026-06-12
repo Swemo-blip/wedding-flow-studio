@@ -130,18 +130,18 @@ export function WeddingStudio() {
     <section className="wedding-planning-studio" aria-label="Wedding Planning Studio">
       <div className="wedding-studio-hero wedding-studio-focus-hero">
         <div>
-          <span>{localProject.hasLocalProject ? "Visual Plan Ready" : "Wedding Planning Studio"}</span>
-          <h1>{localProject.hasLocalProject ? `${activeWedding.coupleNames}'s studio is ready.` : "See the day in one visual studio."}</h1>
-          <p>
-            {localProject.hasLocalProject
-              ? "Continue from the generated plan with guest count, venue direction, style, and readiness already connected."
-              : "Shape the ceremony, reception, guests, timeline, and handoff through one calm planning surface."}
-          </p>
+          <span>{localProject.hasLocalProject ? "Your wedding studio" : "Wedding Planning Studio"}</span>
+          <h1>{localProject.hasLocalProject ? activeWedding.coupleNames : "See the day before it unfolds."}</h1>
+          <div className="studio-focus-meta" aria-label="Wedding facts">
+            <span>{activeWedding.date}</span>
+            <span>{activeWedding.receptionLocation}</span>
+            <span>{plan.guestCount} guests</span>
+          </div>
         </div>
         <div className="studio-hero-actions" aria-label="Primary studio actions">
           {localProject.hasLocalProject ? (
             <>
-              <Button href="#studio-canvas">Continue in Studio</Button>
+              <Button href="/preview">Preview the day</Button>
               <button className="studio-text-action" onClick={resetGeneratedProject} type="button">
                 Start over
               </button>
@@ -150,22 +150,6 @@ export function WeddingStudio() {
             <Button href="/intake">Start with 5 questions</Button>
           )}
         </div>
-        <div className="studio-focus-meta" aria-label="Current studio context">
-          <span>{activeWedding.coupleNames}</span>
-          <span>{plan.guestCount} guests</span>
-          <span>{activeCopy.sceneTitle}</span>
-        </div>
-      </div>
-
-      <div className="studio-continuity-strip" aria-label="Guided product path">
-        {(localProject.hasLocalProject
-          ? ["Intake complete", "Studio active", "Preview next", "Export when ready"]
-          : ["Start with 5 questions", "Generate visual plan", "Preview the day", "Share when ready"]
-        ).map((step, index) => (
-          <span data-active={index === (localProject.hasLocalProject ? 1 : 0)} key={step}>
-            {step}
-          </span>
-        ))}
       </div>
 
       <div className="wedding-studio-focus-grid">

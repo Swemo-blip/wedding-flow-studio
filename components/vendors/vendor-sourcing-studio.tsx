@@ -64,10 +64,7 @@ export function VendorSourcingStudio() {
   return (
     <section className="sourcing-studio" aria-label="Production Sourcing">
       <StudioCommand
-        actions={[
-          { href: "/director", label: "Review Vendor Roles" },
-          { href: "/exports", label: "Prepare Vendor Brief", variant: "secondary" }
-        ]}
+        actions={[{ href: "/exports", label: "Prepare Vendor Brief" }]}
         description="Turn party needs into location-aware searches, save vendor candidates, and keep every sourcing decision connected to the wedding-day digital twin."
         eyebrow="Production Sourcing"
         metrics={[

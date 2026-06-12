@@ -30,14 +30,12 @@ export function StudioSummary({ activeStep, capacity, plan }: StudioSummaryProps
   return (
     <aside className="wedding-studio-panel studio-summary-panel studio-health-panel" aria-label="Wedding readiness and recommendations">
       <div className="studio-panel-header">
-        <span>Next Move</span>
+        <span>Next move</span>
         <h2>{decision.recommendation}</h2>
       </div>
 
       <section className="studio-next-decision studio-primary-decision" aria-label="Recommended next decision">
-        <span>{decision.status}</span>
-        <p>{decision.note}</p>
-        <Button href={decision.ctaHref} size="small">
+        <Button href={decision.ctaHref} size="small" variant="secondary">
           {decision.ctaLabel}
         </Button>
       </section>

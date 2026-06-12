@@ -2,49 +2,59 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { getNavigationItemForPath, navigationItems, type AppNavigationItem } from "@/lib/app-navigation";
+import {
+  CalendarClock,
+  Church,
+  Clapperboard,
+  FileText,
+  LayoutGrid,
+  Mic2,
+  Music2,
+  Play,
+  Store,
+  UtensilsCrossed,
+  Wand2,
+  type LucideIcon
+} from "lucide-react";
+import { getNavigationItemForPath, navigationItems } from "@/lib/app-navigation";
+
+type SideNavItem = {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+};
+
+const sideNavItems: SideNavItem[] = [
+  { href: "/", icon: LayoutGrid, label: "Overview" },
+  { href: "/preview", icon: Play, label: "Preview Day" },
+  { href: "/ceremony", icon: Church, label: "Ceremony" },
+  { href: "/reception", icon: UtensilsCrossed, label: "Reception" },
+  { href: "/day-flow", icon: CalendarClock, label: "Timeline" },
+  { href: "/music", icon: Music2, label: "Music" },
+  { href: "/speeches", icon: Mic2, label: "Speeches" },
+  { href: "/director", icon: Clapperboard, label: "Director" },
+  { href: "/vendors", icon: Store, label: "Vendors" },
+  { href: "/exports", icon: FileText, label: "Exports" },
+  { href: "/intake", icon: Wand2, label: "New Project" }
+];
 
 export function Navigation() {
   const pathname = usePathname();
-  const coreItems = navigationItems.filter((item) => item.group === "Core");
-  const detailItems = navigationItems.filter((item) => item.group === "Details");
-  const detailIsActive = detailItems.some((item) => pathname.startsWith(item.href));
 
   return (
-    <nav aria-label="Primary navigation" className="nav-list">
-      <div className="nav-group">
-        <span className="nav-group-title">Studio Flow</span>
-        {coreItems.map((item) => renderNavLink(item, pathname))}
-      </div>
+    <nav aria-label="Primary navigation" className="side-nav">
+      {sideNavItems.map((item) => {
+        const isActive = item.href === "/" ? pathname === "/" || pathname.startsWith("/studio") : pathname.startsWith(item.href);
+        const Icon = item.icon;
 
-      <details className="nav-details" open={detailIsActive}>
-        <summary>
-          <span>Planning Layers</span>
-          <small>{detailIsActive ? "Active" : "Open when needed"}</small>
-        </summary>
-        <div className="nav-group nav-group-collapsed">
-          {detailItems.map((item) => renderNavLink(item, pathname))}
-        </div>
-      </details>
+        return (
+          <Link aria-current={isActive ? "page" : undefined} className="side-nav-link" data-active={isActive} href={item.href} key={item.href}>
+            <Icon aria-hidden="true" size={17} strokeWidth={1.7} />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
     </nav>
-  );
-}
-
-function renderNavLink(item: AppNavigationItem, pathname: string) {
-  const isActive = item.href === "/" ? pathname === "/" || pathname.startsWith("/studio") : pathname.startsWith(item.href);
-
-  return (
-    <Link
-      aria-current={isActive ? "page" : undefined}
-      className="nav-link"
-      data-active={isActive}
-      data-primary={item.href === "/"}
-      href={item.href}
-      key={item.href}
-    >
-      <span>{item.label}</span>
-      <small>{item.shortDescription}</small>
-    </Link>
   );
 }
 

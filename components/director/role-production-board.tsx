@@ -12,9 +12,10 @@ import type { RoleBrief } from "@/lib/wedding-types";
 
 type RoleProductionBoardProps = {
   brief: RoleBrief;
+  roleSelector?: React.ReactNode;
 };
 
-export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
+export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoardProps) {
   const [copyStatus, setCopyStatus] = useState("Ready to brief");
   const [showManualCopy, setShowManualCopy] = useState(false);
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
@@ -52,6 +53,7 @@ export function RoleProductionBoard({ brief }: RoleProductionBoardProps) {
           <p>{board.description}</p>
         </div>
         <div className="director-live-actions">
+          {roleSelector}
           <span className="director-state-line" data-tone="confirmed">{hasLocalProject ? "Live project state" : "Sample project"}</span>
           <span className="director-state-line" data-tone={board.readiness === "critical" ? "high" : board.readiness === "attention" ? "medium" : "confirmed"}>
             {board.readinessLabel}

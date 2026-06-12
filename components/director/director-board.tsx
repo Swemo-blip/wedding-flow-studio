@@ -39,8 +39,10 @@ export function DirectorBoard() {
       title="Run the wedding day by role."
     >
     <div className="director-mode-page studio-route-content">
-      <RoleSelector activeRole={activeRole} briefs={briefs} onChange={setActiveRole} />
-      <RoleProductionBoard brief={activeBrief} />
+      <RoleProductionBoard
+        brief={activeBrief}
+        roleSelector={<RoleSelector activeRole={activeRole} briefs={briefs} onChange={setActiveRole} />}
+      />
 
       <details className="director-detail-drawer">
         <summary>
