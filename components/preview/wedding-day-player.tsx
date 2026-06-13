@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { MomentInspector } from "@/components/moment/moment-inspector";
+import { PreviewWalkthrough } from "@/components/preview/preview-walkthrough";
 import { Button } from "@/components/ui/button";
 import { buildMomentIntelligence } from "@/lib/moment-intelligence";
 import { buildPreviewCockpitContext } from "@/lib/preview-cockpit";
@@ -107,6 +108,31 @@ export function WeddingDayPlayer() {
 
   return (
     <section className="preview-day-player preview-command-center" aria-label="Preview Wedding Day Command Center">
+      <div className="preview-walkthrough-band" aria-label="Cinematic walkthrough of the wedding day">
+        <PreviewWalkthrough phaseIndex={index} />
+        <div className="preview-walkthrough-overlay">
+          <span>{phase.timeRange}</span>
+          <strong>{phase.title}</strong>
+        </div>
+        <div className="preview-walkthrough-transport" role="group" aria-label="Walkthrough transport">
+          <button aria-label="Previous moment" disabled={!canGoPrevious} onClick={goToPreviousMoment} type="button">
+            ‹
+          </button>
+          <button
+            aria-label={isPlaying ? "Pause walkthrough" : "Play walkthrough"}
+            className="preview-walkthrough-play"
+            data-playing={isPlaying}
+            onClick={() => setIsPlaying((value) => !value)}
+            type="button"
+          >
+            {isPlaying ? "Pause" : "Play the day"}
+          </button>
+          <button aria-label="Next moment" disabled={!canGoNext} onClick={goToNextMoment} type="button">
+            ›
+          </button>
+        </div>
+      </div>
+
       <div className="preview-simulator-hero">
         <div className="preview-simulator-copy">
           <span>Wedding Day Simulator</span>

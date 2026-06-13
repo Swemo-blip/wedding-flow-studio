@@ -13590,3 +13590,129 @@ a {
     order: 3;
   }
 }
+
+/* ============================================================
+   Preview cinematic walkthrough band
+   ============================================================ */
+
+.preview-walkthrough-band {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(146, 118, 73, 0.24);
+  border-radius: 16px;
+  background: #101207;
+  box-shadow: var(--shadow-float);
+  margin-bottom: 16px;
+}
+
+.preview-walkthrough-band .ceremony-scene-shell {
+  min-height: 0;
+}
+
+.preview-walkthrough-band .ceremony-scene-shell {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.preview-walkthrough-band .ceremony-canvas-frame {
+  min-height: 540px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.preview-walkthrough-band .ceremony-scene-caption {
+  display: none;
+}
+
+.preview-walkthrough-overlay {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.preview-walkthrough-overlay span {
+  color: rgba(240, 234, 216, 0.72);
+  font-size: 0.66rem;
+  font-weight: 640;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.preview-walkthrough-overlay strong {
+  color: #f6efdc;
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+  font-weight: 540;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-shadow: 0 6px 28px rgba(0, 0, 0, 0.55);
+}
+
+.preview-walkthrough-transport {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-walkthrough-transport button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid rgba(240, 234, 216, 0.24);
+  border-radius: 10px;
+  background: rgba(16, 18, 7, 0.62);
+  color: #f0ead8;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 640;
+  padding: 0 12px;
+  backdrop-filter: blur(8px);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.preview-walkthrough-transport button:hover:not(:disabled) {
+  border-color: rgba(231, 201, 140, 0.6);
+  transform: translateY(-1px);
+}
+
+.preview-walkthrough-transport button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preview-walkthrough-play {
+  font-family: var(--font-sans);
+  font-size: 0.86rem !important;
+  font-weight: 640;
+  letter-spacing: 0.01em;
+}
+
+.preview-walkthrough-play[data-playing="true"] {
+  border-color: rgba(231, 201, 140, 0.7) !important;
+  background: linear-gradient(172deg, #e7c98c, #cfa861) !important;
+  color: #33270f !important;
+}
+
+@media (max-width: 680px) {
+  .preview-walkthrough-band .ceremony-canvas-frame {
+    min-height: 360px;
+  }
+
+  .preview-walkthrough-overlay strong {
+    font-size: 1.5rem;
+  }
+}

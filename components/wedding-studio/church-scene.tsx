@@ -21,9 +21,15 @@ import {
 
 export type SceneLighting = "day" | "dusk";
 
+export type SceneCameraOverride = {
+  position: [number, number, number];
+  target: [number, number, number];
+};
+
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
+  cameraOverride?: SceneCameraOverride | null;
   capacity: WeddingStudioCapacity;
   colorDirection: StudioColorDirection;
   lighting?: SceneLighting;
@@ -185,6 +191,7 @@ export function CeremonyScene({
   style,
   venueType,
   viewMode,
+  cameraOverride = null,
   lighting = "dusk",
   zoom = 1
 }: CeremonySceneProps) {
@@ -201,7 +208,7 @@ export function CeremonyScene({
           gl={{ toneMappingExposure: 1.16 }}
           shadows={{ type: THREE.PCFSoftShadowMap }}
         >
-          <CameraSetup viewMode={viewMode} zoom={zoom} />
+          <CameraSetup cameraOverride={cameraOverride} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
@@ -1264,23 +1271,29 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
   );
 }
 
-function CameraSetup({ viewMode, zoom = 1 }: { viewMode: StudioViewMode; zoom?: number }) {
+function CameraSetup({ cameraOverride = null, viewMode, zoom = 1 }: { cameraOverride?: SceneCameraOverride | null; viewMode: StudioViewMode; zoom?: number }) {
   const { camera } = useThree();
   const lookTargetRef = useRef(new THREE.Vector3(...getCameraTarget(viewMode)));
 
   useFrame(({ clock }, delta) => {
     const time = clock.elapsedTime;
-    const [rawX, rawY, rawZ] = getCameraPosition(viewMode);
-    const distanceScale = 1 / zoom;
+    // A camera override (used by the Preview walkthrough) flies to an explicit
+    // waypoint with a gentle living sway; otherwise fall back to the view-mode rig.
+    const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode);
+    const distanceScale = cameraOverride ? 1 : 1 / zoom;
     const baseX = rawX * distanceScale;
-    const baseY = viewMode === "top" ? rawY * distanceScale : Math.max(1.1, rawY * distanceScale);
+    const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawY * distanceScale);
     const baseZ = rawZ * distanceScale;
-    const drifting = viewMode === "3d";
-    const desiredX = baseX + (drifting ? Math.sin(time * 0.07) * 0.6 : 0);
-    const desiredY = baseY + (drifting ? Math.sin(time * 0.05) * 0.14 : 0);
-    const desiredZ = baseZ + (drifting ? Math.cos(time * 0.06) * 0.25 : 0);
-    const [targetX, targetY, targetZ] = getCameraTarget(viewMode);
-    const lambda = 2.4;
+    const drifting = cameraOverride ? true : viewMode === "3d";
+    const swayX = cameraOverride ? 0.18 : 0.6;
+    const swayY = cameraOverride ? 0.06 : 0.14;
+    const swayZ = cameraOverride ? 0.08 : 0.25;
+    const desiredX = baseX + (drifting ? Math.sin(time * 0.07) * swayX : 0);
+    const desiredY = baseY + (drifting ? Math.sin(time * 0.05) * swayY : 0);
+    const desiredZ = baseZ + (drifting ? Math.cos(time * 0.06) * swayZ : 0);
+    const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode);
+    // Slower lambda on override so the fly-between-moments reads as a cinematic glide.
+    const lambda = cameraOverride ? 1.5 : 2.4;
 
     camera.position.set(
       THREE.MathUtils.damp(camera.position.x, desiredX, lambda, delta),
