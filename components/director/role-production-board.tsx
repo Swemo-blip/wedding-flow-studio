@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { useTranslation } from "@/lib/i18n";
 import { buildRoleProductionBoard } from "@/lib/role-production";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -16,7 +17,8 @@ type RoleProductionBoardProps = {
 };
 
 export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoardProps) {
-  const [copyStatus, setCopyStatus] = useState("Ready to brief");
+  const { t } = useTranslation();
+  const [copyStatus, setCopyStatus] = useState(t("Ready to brief"));
   const [showManualCopy, setShowManualCopy] = useState(false);
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
@@ -36,10 +38,10 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
   async function copyProductionBrief() {
     try {
       await copyTextToClipboard(board.copyText);
-      setCopyStatus("Production brief copied");
+      setCopyStatus(t("Production brief copied"));
       setShowManualCopy(false);
     } catch {
-      setCopyStatus("Brief text ready below");
+      setCopyStatus(t("Brief text ready below"));
       setShowManualCopy(true);
     }
   }
@@ -48,18 +50,18 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
     <section className="director-production-board" aria-label={`${board.title} production board`}>
       <div className="director-live-hero">
         <div>
-          <p className="eyebrow">Live Role Production Board</p>
+          <p className="eyebrow">{t("Live Role Production Board")}</p>
           <h3>{board.title}</h3>
           <p>{board.description}</p>
         </div>
         <div className="director-live-actions">
           {roleSelector}
-          <span className="director-state-line" data-tone="confirmed">{hasLocalProject ? "Live project state" : "Sample project"}</span>
+          <span className="director-state-line" data-tone="confirmed">{hasLocalProject ? t("Live project state") : t("Sample project")}</span>
           <span className="director-state-line" data-tone={board.readiness === "critical" ? "high" : board.readiness === "attention" ? "medium" : "confirmed"}>
             {board.readinessLabel}
           </span>
           <Button onClick={copyProductionBrief} size="small" variant={board.readyToBrief ? "primary" : "secondary"}>
-            {board.readyToBrief ? "Copy Ready Brief" : "Copy Working Brief"}
+            {board.readyToBrief ? t("Copy Ready Brief") : t("Copy Working Brief")}
           </Button>
           <span aria-live="polite" className="copy-status">{copyStatus}</span>
         </div>
@@ -68,7 +70,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
       {showManualCopy ? (
         <div className="director-copy-fallback">
           <label className="field">
-            <span>Manual copy brief</span>
+            <span>{t("Manual copy brief")}</span>
             <textarea readOnly rows={7} value={board.copyText} />
           </label>
         </div>
@@ -76,16 +78,16 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
       <div className="director-command-strip">
         <div>
-          <span>Current phase</span>
+          <span>{t("Current phase")}</span>
           <strong>{board.currentPhase}</strong>
         </div>
         <div>
-          <span>Next up</span>
+          <span>{t("Next up")}</span>
           <strong>{board.nextUp}</strong>
         </div>
         <div>
-          <span>Ready to brief</span>
-          <strong>{board.readyToBrief ? "Yes" : "Review first"}</strong>
+          <span>{t("Ready to brief")}</span>
+          <strong>{board.readyToBrief ? t("Yes") : t("Review first")}</strong>
         </div>
       </div>
 
@@ -94,10 +96,10 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
           <CardContent>
             <div className="summary-between">
               <div>
-                <p className="eyebrow">Production Queue</p>
-                <h3 className="card-title">Role-specific timeline</h3>
+                <p className="eyebrow">{t("Production Queue")}</p>
+                <h3 className="card-title">{t("Role-specific timeline")}</h3>
               </div>
-              <span className="director-count-line">{board.timeline.length} moments</span>
+              <span className="director-count-line">{board.timeline.length} {t("moments")}</span>
             </div>
             <ol className="director-production-queue">
               {board.timeline.map((item) => (
@@ -109,8 +111,8 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
                     <small>{item.cue}</small>
                   </div>
                   <div className="director-queue-status">
-                    {item.isSecret ? <span data-tone="secret">Secret</span> : null}
-                    <span data-tone={item.hasWarning ? "medium" : "confirmed"}>{item.hasWarning ? "Attention" : "Clear"}</span>
+                    {item.isSecret ? <span data-tone="secret">{t("Secret")}</span> : null}
+                    <span data-tone={item.hasWarning ? "medium" : "confirmed"}>{item.hasWarning ? t("Attention") : t("Clear")}</span>
                   </div>
                 </li>
               ))}
@@ -121,8 +123,8 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
         <aside className="director-side-stack">
           <Card>
             <CardContent>
-              <p className="eyebrow">Handoffs</p>
-              <h3 className="card-title">What this role needs next</h3>
+              <p className="eyebrow">{t("Handoffs")}</p>
+              <h3 className="card-title">{t("What this role needs next")}</h3>
               <ul className="director-handoff-list">
                 {board.handoffs.map((handoff) => (
                   <li key={handoff.id}>
@@ -132,7 +134,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
                     </div>
                     <p>{handoff.detail}</p>
                     <small>
-                      {handoff.from} to {handoff.to}
+                      {handoff.from} {t("to")} {handoff.to}
                     </small>
                   </li>
                 ))}
@@ -142,10 +144,10 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
           <Card>
             <CardContent>
-              <p className="eyebrow">Primary Contact</p>
+              <p className="eyebrow">{t("Primary Contact")}</p>
               <h3 className="card-title">{board.contacts[0]}</h3>
               <div className="contact-list">
-                <span>{board.readyToBrief ? "Brief can be sent after final review." : "Review warnings before sending the brief."}</span>
+                <span>{board.readyToBrief ? t("Brief can be sent after final review.") : t("Review warnings before sending the brief.")}</span>
               </div>
             </CardContent>
           </Card>
@@ -154,15 +156,15 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
       <details className="director-role-detail-drawer">
         <summary>
-          <span>Brief Details</span>
-          <small>Open checklist, contacts, and role-specific warnings when preparing the final handoff.</small>
+          <span>{t("Brief Details")}</span>
+          <small>{t("Open checklist, contacts, and role-specific warnings when preparing the final handoff.")}</small>
         </summary>
 
         <div className="director-role-detail-grid">
           <Card>
             <CardContent>
-              <p className="eyebrow">Checklist</p>
-              <h3 className="card-title">Day-of checks</h3>
+              <p className="eyebrow">{t("Checklist")}</p>
+              <h3 className="card-title">{t("Day-of checks")}</h3>
               <ul className="check-list">
                 {board.checklistItems.map((item) => (
                   <li key={item}>
@@ -176,8 +178,8 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
           <Card>
             <CardContent>
-              <p className="eyebrow">Contacts</p>
-              <h3 className="card-title">Important contacts</h3>
+              <p className="eyebrow">{t("Contacts")}</p>
+              <h3 className="card-title">{t("Important contacts")}</h3>
               <div className="contact-list">
                 {board.contacts.map((contact, index) => (
                   index === 0 ? <strong key={contact}>{contact}</strong> : <span key={contact}>{contact}</span>
@@ -190,17 +192,17 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
             <CardContent>
               <div className="summary-between">
                 <div>
-                  <p className="eyebrow">Needs Attention</p>
-                  <h3 className="card-title">{board.warnings.length > 0 ? "Role-specific warnings" : "This role is clear."}</h3>
+                  <p className="eyebrow">{t("Needs Attention")}</p>
+                  <h3 className="card-title">{board.warnings.length > 0 ? t("Role-specific warnings") : t("This role is clear.")}</h3>
                 </div>
                 <span className="director-count-line" data-tone={board.warnings.length > 0 ? "medium" : "confirmed"}>
-                  {board.warnings.length > 0 ? `${board.warnings.length} active` : "Ready"}
+                  {board.warnings.length > 0 ? `${board.warnings.length} ${t("active")}` : t("Ready")}
                 </span>
               </div>
               {board.warnings.length > 0 ? (
                 <RiskList risks={board.warnings} />
               ) : (
-                <p className="card-copy">No active warnings remain for this role. The brief is ready to send.</p>
+                <p className="card-copy">{t("No active warnings remain for this role. The brief is ready to send.")}</p>
               )}
             </CardContent>
           </Card>

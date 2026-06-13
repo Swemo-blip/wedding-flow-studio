@@ -17,6 +17,7 @@ import {
   type WeddingProducerIntake as WeddingProducerIntakeState,
   type WeddingStylePreset
 } from "@/lib/project-composer";
+import { useTranslation } from "@/lib/i18n";
 import { createStoredProjectDraft, writeStoredProject } from "@/lib/local-project-store";
 
 const styleOptions = Object.entries(stylePresetLabels) as Array<[WeddingStylePreset, string]>;
@@ -79,6 +80,7 @@ const intakeQuestions: Array<{
 ];
 
 export function WeddingProducerIntake() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [intake, setIntake] = useState<WeddingProducerIntakeState>(defaultWeddingProducerIntake);
@@ -150,21 +152,21 @@ export function WeddingProducerIntake() {
     <div className="intake-studio guided-intake-studio">
       <section className="intake-hero guided-intake-hero" aria-labelledby="intake-title">
         <div>
-          <p className="eyebrow">Start with 5 questions</p>
-          <h1 id="intake-title">Get a first visual wedding plan before you start editing.</h1>
+          <p className="eyebrow">{t("Start with 5 questions")}</p>
+          <h1 id="intake-title">{t("Get a first visual wedding plan before you start editing.")}</h1>
           <p>
-            Answer five calm questions. Wedding Flow Studio generates a first ceremony, reception, guest flow, cue sheet, and shareable planning summary.
+            {t("Answer five calm questions. Wedding Flow Studio generates a first ceremony, reception, guest flow, cue sheet, and shareable planning summary.")}
           </p>
         </div>
-        <div className="intake-hero-card" aria-label="Generated project readiness">
-          <span>Generated readiness</span>
+        <div className="intake-hero-card" aria-label={t("Generated readiness")}>
+          <span>{t("Generated readiness")}</span>
           <strong>{readiness}%</strong>
-          <small>{plan.generatedRisks.length === 0 ? "Ready to preview" : `${plan.generatedRisks.length} watch notes`}</small>
+          <small>{plan.generatedRisks.length === 0 ? t("Ready to preview") : `${plan.generatedRisks.length} ${t("watch notes")}`}</small>
         </div>
       </section>
 
-      <section className="guided-intake-shell" aria-label="Guided first wedding plan">
-        <aside className="guided-intake-steps" aria-label="Five question progress">
+      <section className="guided-intake-shell" aria-label={t("Guided first wedding plan")}>
+        <aside className="guided-intake-steps" aria-label={t("Five question progress")}>
           {intakeQuestions.map((question, index) => (
             <button
               aria-current={index === activeQuestionIndex ? "step" : undefined}
@@ -176,38 +178,38 @@ export function WeddingProducerIntake() {
               type="button"
             >
               <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{question.title}</strong>
-              <small>{index < activeQuestionIndex ? "Answered" : index === activeQuestionIndex ? "Now" : "Next"}</small>
+              <strong>{t(question.title)}</strong>
+              <small>{index < activeQuestionIndex ? t("Answered") : index === activeQuestionIndex ? t("Now") : t("Next")}</small>
             </button>
           ))}
 
           <div className="guided-intake-save-state">
-            <span>Save status</span>
-            <strong>{status ?? "Not saved yet"}</strong>
+            <span>{t("Save status")}</span>
+            <strong>{status ?? t("Not saved yet")}</strong>
           </div>
         </aside>
 
         <main className="guided-intake-main" aria-labelledby="active-intake-question">
           <div className="guided-question-card">
             <div className="guided-question-heading">
-              <span>{activeQuestion.kicker}</span>
-              <h2 id="active-intake-question">{activeQuestion.title}</h2>
-              <p>{activeQuestion.summary}</p>
+              <span>{t(activeQuestion.kicker)}</span>
+              <h2 id="active-intake-question">{t(activeQuestion.title)}</h2>
+              <p>{t(activeQuestion.summary)}</p>
             </div>
 
             {renderActiveQuestion()}
 
             <div className="guided-question-actions">
               <Button disabled={activeQuestionIndex === 0} onClick={goToPreviousQuestion} size="small" variant="secondary">
-                Back
+                {t("Back")}
               </Button>
               {isFinalQuestion ? (
                 <Button onClick={() => createDigitalTwin("/")} size="small">
-                  Create Visual Plan
+                  {t("Create Visual Plan")}
                 </Button>
               ) : (
                 <Button onClick={goToNextQuestion} size="small">
-                  Next Question
+                  {t("Next Question")}
                 </Button>
               )}
             </div>
@@ -215,58 +217,58 @@ export function WeddingProducerIntake() {
 
           <details className="guided-intake-details">
             <summary>
-              <span>Advanced project details</span>
-              <small>Open only if you want to adjust exact venue names or all role choices.</small>
+              <span>{t("Advanced project details")}</span>
+              <small>{t("Open only if you want to adjust exact venue names or all role choices.")}</small>
             </summary>
             {renderAdvancedDetails()}
           </details>
         </main>
 
-        <aside className="guided-preview-panel" aria-label="Generated visual plan preview">
+        <aside className="guided-preview-panel" aria-label={t("Generated Twin Preview")}>
           <div className="guided-preview-scene" aria-hidden="true">
             <div className="guided-preview-aisle" />
-            <div className="guided-preview-focus">Ceremony</div>
+            <div className="guided-preview-focus">{t("Ceremony")}</div>
             {Array.from({ length: Math.min(10, Math.max(4, Math.ceil(intake.guestCount / 16))) }, (_, index) => (
               <div className="guided-preview-row" data-side={index % 2 === 0 ? "left" : "right"} key={index} />
             ))}
-            <div className="guided-preview-reception">Reception</div>
+            <div className="guided-preview-reception">{t("Reception")}</div>
           </div>
 
           <div className="intake-preview-header">
-            <p className="eyebrow">Generated Twin Preview</p>
+            <p className="eyebrow">{t("Generated Twin Preview")}</p>
             <h2>{plan.wedding.coupleNames}</h2>
             <p>
-              {plan.wedding.date} at {plan.wedding.ceremonyLocation} and {plan.wedding.receptionLocation}
+              {plan.wedding.date} {t("at")} {plan.wedding.ceremonyLocation} {t("and")} {plan.wedding.receptionLocation}
             </p>
           </div>
 
           <div className="intake-preview-metrics">
             <div>
-              <span>Moments</span>
+              <span>{t("Moments")}</span>
               <strong>{plan.timelineItems.length}</strong>
             </div>
             <div>
-              <span>Cues</span>
+              <span>{t("Cues")}</span>
               <strong>{plan.musicCues.length}</strong>
             </div>
             <div>
-              <span>Tables</span>
+              <span>{t("Tables")}</span>
               <strong>{plan.dinnerTables.length}</strong>
             </div>
             <div>
-              <span>Roles</span>
+              <span>{t("Roles")}</span>
               <strong>{coreRoleCount}</strong>
             </div>
           </div>
 
           <div className="guided-preview-next">
-            <span>What will be generated</span>
-            <strong>{getPreviewPromise(activeQuestion.id)}</strong>
-            <p>{getPreviewSupportCopy(activeQuestion.id, plan.generatedRisks.length)}</p>
+            <span>{t("What will be generated")}</span>
+            <strong>{t(getPreviewPromise(activeQuestion.id))}</strong>
+            <p>{t(getPreviewSupportCopy(activeQuestion.id, plan.generatedRisks.length))}</p>
           </div>
 
           <div className="intake-flow-preview guided-flow-preview">
-            <span>First day flow</span>
+            <span>{t("First day flow")}</span>
             {plan.timelineItems.slice(0, 5).map((item) => (
               <article key={item.id}>
                 <small>{item.time}</small>
@@ -294,15 +296,15 @@ export function WeddingProducerIntake() {
       return (
         <div className="guided-field-grid">
           <label>
-            <span>Partner one</span>
+            <span>{t("Partner one")}</span>
             <input onChange={(event) => updateIntake({ partnerOneName: event.target.value })} value={intake.partnerOneName} />
           </label>
           <label>
-            <span>Partner two</span>
+            <span>{t("Partner two")}</span>
             <input onChange={(event) => updateIntake({ partnerTwoName: event.target.value })} value={intake.partnerTwoName} />
           </label>
           <label>
-            <span>Wedding date</span>
+            <span>{t("Wedding date")}</span>
             <input onChange={(event) => updateIntake({ date: event.target.value })} value={intake.date} />
           </label>
         </div>
@@ -313,13 +315,13 @@ export function WeddingProducerIntake() {
       return (
         <div className="guided-question-stack">
           <IntakeSegment
-            label="Ceremony format"
+            label={t("Ceremony format")}
             onChange={(value) => updateIntake({ ceremonyFormat: value as CeremonyFormat })}
             options={ceremonyOptions}
             value={intake.ceremonyFormat}
           />
           <IntakeSegment
-            label="Reception format"
+            label={t("Reception format")}
             onChange={(value) => updateIntake({ receptionFormat: value as ReceptionFormat })}
             options={receptionOptions}
             value={intake.receptionFormat}
@@ -332,7 +334,7 @@ export function WeddingProducerIntake() {
       return (
         <div className="guided-guest-control">
           <div className="summary-between">
-            <label htmlFor="intake-guest-count">Guest count</label>
+            <label htmlFor="intake-guest-count">{t("Guest count")}</label>
             <strong>{intake.guestCount}</strong>
           </div>
           <input
@@ -344,8 +346,8 @@ export function WeddingProducerIntake() {
             value={intake.guestCount}
           />
           <div className="guided-capacity-note">
-            <strong>{getGuestCapacityLabel(intake.guestCount)}</strong>
-            <span>{getGuestCapacityCopy(intake.guestCount)}</span>
+            <strong>{t(getGuestCapacityLabel(intake.guestCount))}</strong>
+            <span>{t(getGuestCapacityCopy(intake.guestCount))}</span>
           </div>
         </div>
       );
@@ -355,13 +357,13 @@ export function WeddingProducerIntake() {
       return (
         <div className="guided-question-stack">
           <IntakeSegment
-            label="Wedding style"
+            label={t("Wedding style")}
             onChange={(value) => updateIntake({ stylePreset: value as WeddingStylePreset })}
             options={styleOptions}
             value={intake.stylePreset}
           />
           <IntakeSegment
-            label="Production complexity"
+            label={t("Production complexity")}
             onChange={(value) => updateIntake({ complexity: value as ProductionComplexity })}
             options={complexityOptions}
             value={intake.complexity}
@@ -372,7 +374,7 @@ export function WeddingProducerIntake() {
 
     return (
       <div className="guided-question-stack">
-        <div className="guided-role-presets" role="group" aria-label="Choose a collaborator preset">
+        <div className="guided-role-presets" role="group" aria-label={t("Choose a collaborator preset")}>
           {quickRolePresets.map((preset) => (
             <button
               data-active={preset.roles.every((role) => intake.vendorRoles.includes(role)) && intake.vendorRoles.length === preset.roles.length}
@@ -380,14 +382,14 @@ export function WeddingProducerIntake() {
               onClick={() => setRolePreset(preset.roles)}
               type="button"
             >
-              <strong>{preset.label}</strong>
-              <span>{preset.roles.length} roles</span>
+              <strong>{t(preset.label)}</strong>
+              <span>{preset.roles.length} {t("roles")}</span>
             </button>
           ))}
         </div>
 
         <fieldset className="intake-role-fieldset guided-role-fieldset">
-          <legend>Fine-tune included roles</legend>
+          <legend>{t("Fine-tune included roles")}</legend>
           <div>
             {availableVendorRoles.map((role) => (
               <label key={role}>
@@ -405,15 +407,15 @@ export function WeddingProducerIntake() {
     return (
       <div className="guided-advanced-grid">
         <label>
-          <span>Ceremony venue</span>
+          <span>{t("Ceremony venue")}</span>
           <input onChange={(event) => updateIntake({ ceremonyLocation: event.target.value })} value={intake.ceremonyLocation} />
         </label>
         <label>
-          <span>Reception venue</span>
+          <span>{t("Reception venue")}</span>
           <input onChange={(event) => updateIntake({ receptionLocation: event.target.value })} value={intake.receptionLocation} />
         </label>
         <label>
-          <span>Guest count</span>
+          <span>{t("Guest count")}</span>
           <input
             inputMode="numeric"
             max={300}
@@ -436,6 +438,8 @@ type IntakeSegmentProps = {
 };
 
 function IntakeSegment({ label, onChange, options, value }: IntakeSegmentProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="intake-segment guided-intake-segment">
       <span>{label}</span>
@@ -448,7 +452,7 @@ function IntakeSegment({ label, onChange, options, value }: IntakeSegmentProps) 
             onClick={() => onChange(optionValue)}
             type="button"
           >
-            {optionLabel}
+            {t(optionLabel)}
           </button>
         ))}
       </div>
