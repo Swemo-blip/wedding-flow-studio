@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
 
 const tabItems = [
   { href: "/", label: "Overview" },
@@ -16,6 +17,7 @@ const tabItems = [
 
 export function TabBar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <nav aria-label="Planning sections" className="studio-tab-bar">
@@ -24,7 +26,7 @@ export function TabBar() {
 
         return (
           <Link aria-current={isActive ? "page" : undefined} data-active={isActive} href={item.href} key={item.href}>
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}

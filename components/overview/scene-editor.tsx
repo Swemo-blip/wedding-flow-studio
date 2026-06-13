@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
+import { useTranslation } from "@/lib/i18n";
 import {
   clampAccessibilitySeats,
   clampGuestCount,
@@ -31,6 +32,8 @@ type SceneEditorProps = {
 };
 
 export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
+  const { t } = useTranslation();
+
   function updatePlan(updates: Partial<WeddingStudioPlan>) {
     onChange({ ...plan, ...updates });
   }
@@ -42,8 +45,8 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
   return (
     <div className="scene-editor">
       <fieldset className="scene-editor-group">
-        <legend>Venue</legend>
-        <div className="scene-editor-venues" role="group" aria-label="Choose venue type">
+        <legend>{t("Venue")}</legend>
+        <div className="scene-editor-venues" role="group" aria-label={t("Choose venue type")}>
           {venueOptions.map((option) => (
             <button
               aria-pressed={plan.venueType === option.value}
@@ -52,15 +55,15 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
               onClick={() => updatePlan({ venueType: option.value as StudioVenueType })}
               type="button"
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
       </fieldset>
 
       <fieldset className="scene-editor-group">
-        <legend>Style</legend>
-        <div className="scene-editor-styles" role="group" aria-label="Choose wedding style">
+        <legend>{t("Style")}</legend>
+        <div className="scene-editor-styles" role="group" aria-label={t("Choose wedding style")}>
           {styleOptions.map((option) => (
             <button
               aria-pressed={plan.style === option.value}
@@ -70,30 +73,30 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
               type="button"
             >
               <i aria-hidden="true" style={{ background: styleSwatches[option.value] ?? "#c9a767" }} />
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
       </fieldset>
 
       <fieldset className="scene-editor-group">
-        <legend>Color direction</legend>
+        <legend>{t("Color direction")}</legend>
         <select
-          aria-label="Choose color direction"
+          aria-label={t("Choose color direction")}
           onChange={(event) => updatePlan({ colorDirection: event.target.value as StudioColorDirection })}
           value={plan.colorDirection}
         >
           {colorDirectionOptions.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.label)}
             </option>
           ))}
         </select>
       </fieldset>
 
       <fieldset className="scene-editor-group">
-        <legend>Decor level</legend>
-        <div className="scene-editor-decor" role="group" aria-label="Choose decor level">
+        <legend>{t("Decor level")}</legend>
+        <div className="scene-editor-decor" role="group" aria-label={t("Choose decor level")}>
           {decorLevelOptions.map((option) => (
             <button
               aria-pressed={plan.decorLevel === option.value}
@@ -107,7 +110,7 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
               }
               type="button"
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
@@ -115,20 +118,20 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
 
       <fieldset className="scene-editor-group">
         <legend>
-          Guests
+          {t("Guests")}
           <strong>{plan.guestCount}</strong>
         </legend>
-        <input aria-label="Guest count" max={180} min={10} onChange={updateGuestCount} type="range" value={plan.guestCount} />
+        <input aria-label={t("Guest count")} max={180} min={10} onChange={updateGuestCount} type="range" value={plan.guestCount} />
         <p className="scene-editor-note">{capacity.capacityLabel}</p>
       </fieldset>
 
       <fieldset className="scene-editor-group">
         <legend>
-          Accessible seats
+          {t("Accessible seats")}
           <strong>{plan.accessibilitySeats}</strong>
         </legend>
         <input
-          aria-label="Accessible seats"
+          aria-label={t("Accessible seats")}
           max={24}
           min={0}
           onChange={(event) => updatePlan({ accessibilitySeats: clampAccessibilitySeats(Number(event.target.value)) })}

@@ -17,6 +17,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { getNavigationItemForPath, navigationItems } from "@/lib/app-navigation";
+import { useTranslation } from "@/lib/i18n";
 
 type SideNavItem = {
   href: string;
@@ -40,6 +41,7 @@ const sideNavItems: SideNavItem[] = [
 
 export function Navigation() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <nav aria-label="Primary navigation" className="side-nav">
@@ -50,7 +52,7 @@ export function Navigation() {
         return (
           <Link aria-current={isActive ? "page" : undefined} className="side-nav-link" data-active={isActive} href={item.href} key={item.href}>
             <Icon aria-hidden="true" size={17} strokeWidth={1.7} />
-            <span>{item.label}</span>
+            <span>{t(item.label)}</span>
           </Link>
         );
       })}

@@ -13557,3 +13557,36 @@ a {
   color: var(--subtle);
   font-size: 0.76rem;
 }
+
+/* Language toggle (EN/SV) */
+.studio-lang-toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid rgba(146, 118, 73, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.7);
+}
+
+.studio-lang-toggle button {
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.studio-lang-toggle button[data-active="true"] {
+  background: linear-gradient(172deg, #e7c98c, #cfa861);
+  color: #33270f;
+}
+
+@media (max-width: 680px) {
+  .studio-lang-toggle {
+    order: 3;
+  }
+}

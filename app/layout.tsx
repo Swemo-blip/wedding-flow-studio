@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import { AppShell } from "@/components/app-shell/app-shell";
+import { LanguageProvider } from "@/lib/i18n";
 import { sampleWedding } from "@/lib/wedding-data";
 import "./globals.css";
 
@@ -65,7 +66,9 @@ export default function RootLayout({
   return (
     <html className={`${displaySerif.variable} ${bodySans.variable}`} lang="en">
       <body>
-        <AppShell wedding={sampleWedding}>{children}</AppShell>
+        <LanguageProvider>
+          <AppShell wedding={sampleWedding}>{children}</AppShell>
+        </LanguageProvider>
       </body>
     </html>
   );

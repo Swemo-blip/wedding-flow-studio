@@ -20,9 +20,9 @@ Core promise: **Don't just plan your wedding. Preview the day before it unfolds.
 
 ## Language Requirement
 
-All product UI, mock data, route labels, documentation, comments, component names, accessibility labels, export previews, warnings, and user-facing text must be written in English.
+The product is bilingual: English is the default UI language and Swedish is available via the EN/SV toggle in the header. All source strings (component literals, mock data, comments, route labels, docs) are written in English; Swedish is provided only as translations in the central locale file `lib/i18n.tsx` and surfaced through the `useTranslation` `t()` helper.
 
-Do not introduce Swedish copy into the product, code comments, docs, routes, mock data, accessibility text, or UI.
+Do not hardcode Swedish copy into components, comments, docs, routes, mock data, or accessibility text. Add new user-facing strings in English and translate them by adding a key to the `sv` dictionary in `lib/i18n.tsx`. Missing keys fall back to English, so the app stays readable while translation coverage expands.
 
 ## Important Folders And Files
 
@@ -104,10 +104,10 @@ Before a final report, run the relevant checks for the change:
 - Always run `npm run lint` and `npm run typecheck` for TypeScript, React, or styling work.
 - Run `npm run build` for route changes, App Router changes, data model changes, or anything that may affect production rendering.
 - For frontend changes, open the affected route in the browser and check visible behavior, responsive layout when relevant, and console errors.
-- For product copy or documentation changes, run a search for Swedish characters and forbidden Swedish terms:
+- For product copy or documentation changes, confirm Swedish only lives in the locale file. The scan below excludes `lib/i18n.tsx` (the intentional translation dictionary); any hit elsewhere is a hardcoded-Swedish regression to fix:
 
 ```bash
-rg -n "\\x{00E5}|\\x{00E4}|\\x{00F6}|\\x{00C5}|\\x{00C4}|\\x{00D6}|Swedish" app components lib README.md AGENTS.md package.json
+rg -n "\\x{00E5}|\\x{00E4}|\\x{00F6}|\\x{00C5}|\\x{00C4}|\\x{00D6}" app components lib README.md package.json --glob '!lib/i18n.tsx'
 ```
 
 Report any verification that could not be run and explain why.

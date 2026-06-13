@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SceneEditor } from "@/components/overview/scene-editor";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -49,6 +50,7 @@ const styleSwatches: Record<string, string[]> = {
 
 export function OverviewDashboard() {
   const localProject = useLocalProject();
+  const { t } = useTranslation();
   const heroRef = useRef<HTMLDivElement>(null);
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
@@ -66,8 +68,8 @@ export function OverviewDashboard() {
   const sceneStep: StudioPlanningStepId = heroScene === "reception" ? "reception" : "preview";
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
-  const venueLabel = venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue";
-  const styleLabel = styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic";
+  const venueLabel = t(venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue");
+  const styleLabel = t(styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic");
   const themeColors = styleSwatches[plan.style] ?? styleSwatches.classic;
 
   const risks = useMemo(
@@ -182,13 +184,13 @@ export function OverviewDashboard() {
       {!localProject.hasLocalProject && showWelcome ? (
         <div className="overview-welcome" role="status">
           <p>
-            <strong>You are viewing a sample wedding.</strong> Explore freely — then create your own in about two minutes.
+            <strong>{t("You are viewing a sample wedding.")}</strong> {t("Explore freely — then create your own in about two minutes.")}
           </p>
           <div className="overview-welcome-actions">
             <Link className="button button-primary button-small" href="/intake">
-              Create your wedding
+              {t("Create your wedding")}
             </Link>
-            <button aria-label="Dismiss welcome message" onClick={dismissWelcome} type="button">
+            <button aria-label={t("Dismiss welcome message")} onClick={dismissWelcome} type="button">
               <X aria-hidden="true" size={15} strokeWidth={1.8} />
             </button>
           </div>
@@ -199,18 +201,18 @@ export function OverviewDashboard() {
           <section aria-label="3D venue preview" className="venue-hero" ref={heroRef}>
             <div className="venue-hero-topline">
               <div className="venue-hero-label">
-                <span>3D Venue Preview</span>
+                <span>{t("3D Venue Preview")}</span>
                 <select
-                  aria-label="Choose preview scene"
+                  aria-label={t("Choose preview scene")}
                   onChange={(event) => setHeroScene(event.target.value as HeroScene)}
                   value={heroScene}
                 >
-                  <option value="ceremony">Ceremony – {venueLabel}</option>
-                  <option value="reception">Reception – {venueLabel}</option>
+                  <option value="ceremony">{t("Ceremony")} – {venueLabel}</option>
+                  <option value="reception">{t("Reception")} – {venueLabel}</option>
                 </select>
               </div>
               <div className="venue-hero-tools">
-                <div className="venue-dimension-toggle" role="group" aria-label="Choose 2D or 3D view">
+                <div className="venue-dimension-toggle" role="group" aria-label={t("Choose 2D or 3D view")}>
                   <button aria-pressed={dimension === "2d"} data-active={dimension === "2d"} onClick={() => setDimension("2d")} type="button">
                     2D
                   </button>
@@ -219,7 +221,7 @@ export function OverviewDashboard() {
                   </button>
                 </div>
                 <button
-                  aria-label={lighting === "day" ? "Switch to golden-hour lighting" : "Switch to daylight"}
+                  aria-label={lighting === "day" ? t("Switch to golden-hour lighting") : t("Switch to daylight")}
                   className="venue-tool-button"
                   onClick={() => setLighting((value) => (value === "day" ? "dusk" : "day"))}
                   type="button"
@@ -230,7 +232,7 @@ export function OverviewDashboard() {
                     <SunMedium aria-hidden="true" size={15} strokeWidth={1.8} />
                   )}
                 </button>
-                <button aria-label="Toggle fullscreen preview" className="venue-tool-button" onClick={toggleFullscreen} type="button">
+                <button aria-label={t("Toggle fullscreen preview")} className="venue-tool-button" onClick={toggleFullscreen} type="button">
                   <Expand aria-hidden="true" size={15} strokeWidth={1.8} />
                 </button>
               </div>
@@ -253,25 +255,25 @@ export function OverviewDashboard() {
             />
 
             <div className="venue-hero-bottomline">
-              <div className="venue-zoom-tools" role="group" aria-label="Zoom controls">
-                <button aria-label="Zoom out" onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.15).toFixed(2))))} type="button">
+              <div className="venue-zoom-tools" role="group" aria-label={t("Zoom controls")}>
+                <button aria-label={t("Zoom out")} onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.15).toFixed(2))))} type="button">
                   <Minus aria-hidden="true" size={15} strokeWidth={2} />
                 </button>
-                <button aria-label="Zoom in" onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.15).toFixed(2))))} type="button">
+                <button aria-label={t("Zoom in")} onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.15).toFixed(2))))} type="button">
                   <Plus aria-hidden="true" size={15} strokeWidth={2} />
                 </button>
               </div>
               <button className="venue-edit-button" onClick={() => setIsEditing((value) => !value)} type="button">
                 <PencilRuler aria-hidden="true" size={15} strokeWidth={1.8} />
-                {isEditing ? "Close 3D Studio" : "Edit in 3D Studio"}
+                {isEditing ? t("Close 3D Studio") : t("Edit in 3D Studio")}
               </button>
             </div>
 
             {isEditing ? (
-              <div className="venue-edit-drawer" role="dialog" aria-label="Style studio">
+              <div className="venue-edit-drawer" role="dialog" aria-label={t("Style Studio")}>
                 <div className="venue-edit-drawer-head">
-                  <strong>Style Studio</strong>
-                  <button aria-label="Close style studio" onClick={() => setIsEditing(false)} type="button">
+                  <strong>{t("Style Studio")}</strong>
+                  <button aria-label={t("Close style studio")} onClick={() => setIsEditing(false)} type="button">
                     <X aria-hidden="true" size={16} strokeWidth={1.8} />
                   </button>
                 </div>
@@ -281,8 +283,8 @@ export function OverviewDashboard() {
           </section>
 
           <div className="glance-row">
-            <section aria-label="Timeline at a glance" className="glance-card">
-              <h3>Timeline at a Glance</h3>
+            <section aria-label={t("Timeline at a Glance")} className="glance-card">
+              <h3>{t("Timeline at a Glance")}</h3>
               <ul className="glance-timeline">
                 {glanceTimeline.map((item) => (
                   <li key={item.id}>
@@ -292,26 +294,26 @@ export function OverviewDashboard() {
                 ))}
               </ul>
               <Button className="glance-action" href="/day-flow" size="small" variant="secondary">
-                View Full Timeline
+                {t("View Full Timeline")}
               </Button>
             </section>
 
-            <section aria-label="Guest count" className="glance-card">
-              <h3>Guest Count</h3>
+            <section aria-label={t("Guest Count")} className="glance-card">
+              <h3>{t("Guest Count")}</h3>
               <div className="glance-donut-wrap">
                 <Donut percent={Math.min(100, Math.round((plan.guestCount / Math.max(1, capacity.totalCapacity)) * 100))} tone="sage">
                   <strong>{plan.guestCount}</strong>
-                  <span>Expected</span>
+                  <span>{t("Expected")}</span>
                 </Donut>
               </div>
               <Button className="glance-action" href="/reception" size="small" variant="secondary">
-                Manage Guests
+                {t("Manage Guests")}
               </Button>
             </section>
 
-            <section aria-label="Seating overview" className="glance-card">
-              <h3>Seating Overview</h3>
-              <div aria-label={`${seatedGuests} guests seated across ${localProject.dinnerTables.length} tables`} className="glance-seating">
+            <section aria-label={t("Seating Overview")} className="glance-card">
+              <h3>{t("Seating Overview")}</h3>
+              <div className="glance-seating">
                 {localProject.dinnerTables.slice(0, 8).map((table) => (
                   <div className="glance-table" key={table.id} title={table.name}>
                     {Array.from({ length: Math.min(10, table.capacity) }, (_, seatIndex) => (
@@ -321,59 +323,59 @@ export function OverviewDashboard() {
                 ))}
               </div>
               <Button className="glance-action" href="/reception" size="small" variant="secondary">
-                Open Seating Plan
+                {t("Open Seating Plan")}
               </Button>
             </section>
 
-            <section aria-label="Style and design" className="glance-card">
-              <h3>Style &amp; Design</h3>
-              <div className="glance-style-tiles" aria-label={`${styleLabel} palette`}>
+            <section aria-label={t("Style & Design")} className="glance-card">
+              <h3>{t("Style & Design")}</h3>
+              <div className="glance-style-tiles">
                 {themeColors.slice(0, 4).map((color, index) => (
                   <span key={index} style={{ background: `linear-gradient(160deg, ${color}, ${themeColors[(index + 1) % themeColors.length]})` }} />
                 ))}
               </div>
               <Button className="glance-action" onClick={() => setIsEditing(true)} size="small" variant="secondary">
-                Open Style Studio
+                {t("Open Style Studio")}
               </Button>
             </section>
           </div>
         </div>
 
-        <aside className="overview-rail" aria-label="Wedding overview">
+        <aside className="overview-rail" aria-label={t("Wedding Overview")}>
           <section className="rail-card">
             <div className="rail-card-head">
-              <h3>Wedding Overview</h3>
+              <h3>{t("Wedding Overview")}</h3>
               <button className="rail-edit" onClick={() => setIsEditing(true)} type="button">
-                Edit
+                {t("Edit")}
               </button>
             </div>
             <ul className="rail-facts">
               <li>
                 <CalendarDays aria-hidden="true" size={16} strokeWidth={1.7} />
-                <span>Date</span>
+                <span>{t("Date")}</span>
                 <strong>{activeWedding.date}</strong>
               </li>
               <li>
                 <MapPin aria-hidden="true" size={16} strokeWidth={1.7} />
-                <span>Venue</span>
+                <span>{t("Venue")}</span>
                 <strong>{activeWedding.receptionLocation}</strong>
               </li>
               <li>
                 <Users aria-hidden="true" size={16} strokeWidth={1.7} />
-                <span>Guests</span>
+                <span>{t("Guests")}</span>
                 <strong>
-                  {plan.guestCount} invited · {capacity.totalCapacity} seats
+                  {plan.guestCount} {t("invited")} · {capacity.totalCapacity} {t("seats")}
                 </strong>
               </li>
               <li>
                 <Palette aria-hidden="true" size={16} strokeWidth={1.7} />
-                <span>Style</span>
+                <span>{t("Style")}</span>
                 <strong>
                   {styleLabel} {venueLabel}
                 </strong>
               </li>
               <li className="rail-theme-row">
-                <span>Theme Colors</span>
+                <span>{t("Theme Colors")}</span>
                 <span className="rail-theme-dots">
                   {themeColors.map((color, index) => (
                     <i key={index} style={{ background: color }} />
@@ -383,47 +385,47 @@ export function OverviewDashboard() {
             </ul>
             {localProject.hasLocalProject ? (
               <button className="rail-reset" onClick={startOver} type="button">
-                Start over with a new project
+                {t("Start over with a new project")}
               </button>
             ) : null}
           </section>
 
           <section className="rail-card">
             <div className="rail-card-head">
-              <h3>Plan Readiness</h3>
+              <h3>{t("Plan Readiness")}</h3>
             </div>
             <div className="rail-progress">
               <Donut percent={readinessPercent} tone={readinessPercent >= 70 ? "sage" : "gold"}>
                 <strong>{readinessPercent}%</strong>
-                <span>{readinessPercent >= 70 ? "On Track" : "In Review"}</span>
+                <span>{readinessPercent >= 70 ? t("On Track") : t("In Review")}</span>
               </Donut>
               <ul className="rail-progress-rows">
                 <li>
-                  <span>Ready moments</span>
+                  <span>{t("Ready moments")}</span>
                   <strong>{readyMoments}</strong>
                 </li>
                 <li>
-                  <span>Needs review</span>
+                  <span>{t("Needs review")}</span>
                   <strong>{reviewRisks}</strong>
                 </li>
                 <li>
-                  <span>Needs attention</span>
+                  <span>{t("Needs attention")}</span>
                   <strong>{attentionRisks}</strong>
                 </li>
               </ul>
             </div>
             <Button className="glance-action" href="/day-flow" size="small" variant="secondary">
-              View Timeline
+              {t("View Timeline")}
             </Button>
           </section>
 
           <section className="rail-card">
             <div className="rail-card-head">
-              <h3>Cue Sheet</h3>
+              <h3>{t("Cue Sheet")}</h3>
             </div>
             <div className="rail-budget">
               <div className="rail-budget-topline">
-                <span>Confirmed cues</span>
+                <span>{t("Confirmed cues")}</span>
                 <strong>
                   {confirmedCues} / {totalCues}
                 </strong>
@@ -431,22 +433,15 @@ export function OverviewDashboard() {
               <div aria-hidden="true" className="rail-meter">
                 <span style={{ width: `${Math.round((confirmedCues / totalCues) * 100)}%` }} />
               </div>
-              <p>
-                {totalCues - confirmedCues > 0
-                  ? `${totalCues - confirmedCues} cues still need confirmation before the rehearsal.`
-                  : "Every music cue is confirmed and rehearsal-ready."}
-              </p>
             </div>
             <Button className="glance-action" href="/music" size="small" variant="secondary">
-              View Cue Sheet
+              {t("View Cue Sheet")}
             </Button>
           </section>
         </aside>
       </div>
 
-      <p className="overview-footnote">
-        Everything autosaves locally on this device.
-      </p>
+      <p className="overview-footnote">{t("Everything autosaves locally on this device.")}</p>
     </div>
   );
 }

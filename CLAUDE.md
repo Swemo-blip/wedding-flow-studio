@@ -38,7 +38,7 @@ Then read:
 
 ## Non-Negotiables
 
-- All product UI, documentation, comments, mock data, accessibility labels, and route copy must be in English.
+- The product is bilingual: English is the default and Swedish is available via the header EN/SV toggle. Write all source strings, docs, comments, and mock data in English; add Swedish only as translations in `lib/i18n.tsx` (`useTranslation`/`t()`), where missing keys fall back to English.
 - Keep the app a premium visual wedding-day production studio, not a checklist app, marketplace, registry, or generic dashboard.
 - Do not add backend, authentication, payments, paid APIs, real music streaming, or database work unless explicitly requested.
 - Do not scatter mock data across components.
