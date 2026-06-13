@@ -11,6 +11,7 @@ import {
   formatVendorStatus,
   type VendorDecisionEntry
 } from "@/lib/vendor-intelligence";
+import { useTranslation } from "@/lib/i18n";
 import { buildVendorSearchSuggestions, getVendorSourcingSummary, vendorSourcingCategories } from "@/lib/vendor-sourcing";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { SourcingPriority, VendorCandidate, VendorCandidateStatus, VendorPriceTier, VendorSearchSuggestion } from "@/lib/wedding-types";
@@ -19,6 +20,7 @@ const vendorStatusOptions: VendorCandidateStatus[] = ["shortlisted", "contacted"
 const priceTierOptions: VendorPriceTier[] = ["unknown", "budget", "standard", "premium", "luxury"];
 
 export function VendorSourcingStudio() {
+  const { t } = useTranslation();
   const { addVendorCandidate, updateVendorCandidate, vendorCandidates, wedding } = useLocalProject();
   const suggestions = useMemo(() => buildVendorSearchSuggestions(wedding), [wedding]);
   const summary = getVendorSourcingSummary(suggestions);
@@ -77,9 +79,9 @@ export function VendorSourcingStudio() {
         title="Find, shortlist, and compare the real-world services behind the wedding flow."
       >
         {intelligence.bestNextDecision ? (
-          <div className="module-decision-strip" aria-label="Best next vendor decision">
+          <div className="module-decision-strip" aria-label={t("Best vendor decision")}>
             <div>
-              <span>Best vendor decision</span>
+              <span>{t("Best vendor decision")}</span>
               <strong>{intelligence.bestNextDecision.nextAction}</strong>
               <p>
                 {intelligence.bestNextDecision.category.label} affects {intelligence.bestNextDecision.impactLabel.toLowerCase()} and is based on{" "}
@@ -94,18 +96,18 @@ export function VendorSourcingStudio() {
               }}
               type="button"
             >
-              Focus Decision
+              {t("Focus Decision")}
             </button>
           </div>
         ) : null}
       </StudioCommand>
 
       <div className="sourcing-layout">
-        <aside className="sourcing-queue" aria-label="Sourcing categories">
+        <aside className="sourcing-queue" aria-label={t("Sourcing categories")}>
           <div>
-            <span>Location basis</span>
+            <span>{t("Location basis")}</span>
             <strong>{wedding.receptionLocation}</strong>
-            <small>Search links use ceremony and reception locations from the digital twin.</small>
+            <small>{t("Search links use ceremony and reception locations from the digital twin.")}</small>
           </div>
 
           <div className="sourcing-category-list">
@@ -120,7 +122,7 @@ export function VendorSourcingStudio() {
                 }}
                 type="button"
               >
-                <span>{formatPriority(entry.category.priority)}</span>
+                <span>{t(formatPriority(entry.category.priority))}</span>
                 <strong>{entry.category.label}</strong>
                 <small>
                   {entry.readinessLabel} · {entry.suggestion.locationLabel}
@@ -133,32 +135,32 @@ export function VendorSourcingStudio() {
         <article className="sourcing-detail">
           <div className="sourcing-detail-header">
             <div>
-              <Badge tone={getPriorityTone(selectedSuggestion.priority)}>{formatPriority(selectedSuggestion.priority)}</Badge>
+              <Badge tone={getPriorityTone(selectedSuggestion.priority)}>{t(formatPriority(selectedSuggestion.priority))}</Badge>
               <h2>{selectedSuggestion.label}</h2>
               <p>{selectedSuggestion.reason}</p>
             </div>
             <div className="sourcing-role-card">
-              <span>Decision status</span>
+              <span>{t("Decision status")}</span>
               <strong>{selectedDecision.readinessLabel}</strong>
-              <small>{selectedDecision.readinessScore}% ready</small>
+              <small>{selectedDecision.readinessScore}% {t("ready")}</small>
             </div>
           </div>
 
           <div className="sourcing-search-card">
-            <span>Suggested local search</span>
+            <span>{t("Suggested local search")}</span>
             <strong>{selectedSuggestion.query}</strong>
             <p>
-              Open live external results, save a candidate after review, then track fit, quote progress, and booking status inside Wedding Flow Studio.
+              {t("Open live external results, save a candidate after review, then track fit, quote progress, and booking status inside Wedding Flow Studio.")}
             </p>
             <div className="sourcing-action-row">
               <a className="button button-primary" href={selectedSuggestion.mapsUrl} rel="noreferrer" target="_blank">
-                Open Map Search
+                {t("Open Map Search")}
               </a>
               <button className="button button-secondary" onClick={() => saveCandidate(selectedSuggestion)} type="button">
-                Save Candidate
+                {t("Save Candidate")}
               </button>
               <a className="sourcing-text-link" href={selectedSuggestion.webUrl} rel="noreferrer" target="_blank">
-                Search Web
+                {t("Search Web")}
               </a>
             </div>
             {copyStatus ? <p className="sourcing-copy-status">{copyStatus}</p> : null}
@@ -167,11 +169,11 @@ export function VendorSourcingStudio() {
           <div className="vendor-intelligence-panel">
             <div className="vendor-panel-header">
               <div>
-                <span>Candidate intelligence</span>
+                <span>{t("Candidate intelligence")}</span>
                 <strong>{selectedDecision.nextAction}</strong>
               </div>
               <button className="button button-ghost" onClick={() => copySourcingBrief(selectedSuggestion)} type="button">
-                Copy Brief
+                {t("Copy Brief")}
               </button>
             </div>
 
@@ -181,21 +183,21 @@ export function VendorSourcingStudio() {
                   <article className="vendor-candidate-card" key={candidate.id}>
                     <div className="vendor-candidate-main">
                       <div>
-                        <span>{formatVendorStatus(candidate.status)}</span>
+                        <span>{t(formatVendorStatus(candidate.status))}</span>
                         <strong>{candidate.name}</strong>
                         <p>{candidate.notes}</p>
                       </div>
                       <div className="vendor-fit-score">
-                        <span>Fit</span>
+                        <span>{t("Fit")}</span>
                         <strong>{candidate.fitScore}%</strong>
                       </div>
                     </div>
 
                     <div className="vendor-candidate-controls">
                       <label>
-                        Status
+                        {t("Status")}
                         <select
-                          aria-label={`Status for ${candidate.name}`}
+                          aria-label={`${t("Status")} – ${candidate.name}`}
                           onChange={(event) =>
                             updateVendorCandidate(candidate.id, { status: event.target.value as VendorCandidateStatus })
                           }
@@ -203,27 +205,27 @@ export function VendorSourcingStudio() {
                         >
                           {vendorStatusOptions.map((status) => (
                             <option key={status} value={status}>
-                              {formatVendorStatus(status)}
+                              {t(formatVendorStatus(status))}
                             </option>
                           ))}
                         </select>
                       </label>
                       <label>
-                        Price tier
+                        {t("Price tier")}
                         <select
-                          aria-label={`Price tier for ${candidate.name}`}
+                          aria-label={`${t("Price tier")} – ${candidate.name}`}
                           onChange={(event) => updateVendorCandidate(candidate.id, { priceTier: event.target.value as VendorPriceTier })}
                           value={candidate.priceTier}
                         >
                           {priceTierOptions.map((tier) => (
                             <option key={tier} value={tier}>
-                              {formatPriceTier(tier)}
+                              {t(formatPriceTier(tier))}
                             </option>
                           ))}
                         </select>
                       </label>
                       <button className="button button-ghost" onClick={() => copyCandidateBrief(candidate, selectedDecision)} type="button">
-                        Copy Candidate
+                        {t("Copy Candidate")}
                       </button>
                     </div>
                   </article>
@@ -231,15 +233,15 @@ export function VendorSourcingStudio() {
               </div>
             ) : (
               <div className="vendor-empty-state">
-                <strong>No candidate saved yet.</strong>
-                <p>Open the map search, review real local options, then save the strongest candidate into this decision studio.</p>
+                <strong>{t("No candidate saved yet.")}</strong>
+                <p>{t("Open the map search, review real local options, then save the strongest candidate into this decision studio.")}</p>
               </div>
             )}
           </div>
 
           <div className="sourcing-detail-grid">
             <div>
-              <span>Needed for</span>
+              <span>{t("Needed for")}</span>
               <ul>
                 {selectedDecision.category.neededFor.map((item) => (
                   <li key={item}>{item}</li>
@@ -247,7 +249,7 @@ export function VendorSourcingStudio() {
               </ul>
             </div>
             <div>
-              <span>Ask before booking</span>
+              <span>{t("Ask before booking")}</span>
               <ul>
                 {selectedSuggestion.checklist.map((item) => (
                   <li key={item}>{item}</li>
@@ -260,8 +262,8 @@ export function VendorSourcingStudio() {
 
       <details className="sourcing-full-list">
         <summary>
-          <span>All sourcing decisions</span>
-          <small>Open the complete party and production sourcing list.</small>
+          <span>{t("All sourcing decisions")}</span>
+          <small>{t("Open the complete party and production sourcing list.")}</small>
         </summary>
         <div>
           {intelligence.entries.map((entry) => (

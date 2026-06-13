@@ -404,7 +404,42 @@ const sv: Record<string, string> = {
   "secret layers": "hemliga lager",
   "minutes before cake": "minuter före tårtan",
   "Ask the Toastmaster to group speeches and protect dinner service breaks.": "Be toastmastern gruppera talen och skydda pauserna i middagsserveringen.",
-  "Keep the item hidden from the couple but visible to Director Mode.": "Håll punkten dold för paret men synlig i regissörsläget."
+  "Keep the item hidden from the couple but visible to Director Mode.": "Håll punkten dold för paret men synlig i regissörsläget.",
+  // Vendors body
+  "Sourcing categories": "Upphandlingskategorier",
+  "Location basis": "Platsunderlag",
+  "Search links use ceremony and reception locations from the digital twin.": "Söklänkar använder vigsel- och mottagningsplatser från den digitala tvillingen.",
+  "Decision status": "Beslutsstatus",
+  "Suggested local search": "Föreslagen lokal sökning",
+  "Open live external results, save a candidate after review, then track fit, quote progress, and booking status inside Wedding Flow Studio.": "Öppna live-resultat externt, spara en kandidat efter granskning och spåra sedan passning, offertstatus och bokning i Wedding Flow Studio.",
+  "Open Map Search": "Öppna kartsökning",
+  "Save Candidate": "Spara kandidat",
+  "Search Web": "Sök på webben",
+  "Candidate intelligence": "Kandidatanalys",
+  "Copy Brief": "Kopiera brief",
+  "Fit": "Passning",
+  "Price tier": "Prisnivå",
+  "Copy Candidate": "Kopiera kandidat",
+  "No candidate saved yet.": "Ingen kandidat sparad än.",
+  "Open the map search, review real local options, then save the strongest candidate into this decision studio.": "Öppna kartsökningen, granska verkliga lokala alternativ och spara sedan den starkaste kandidaten i den här beslutsstudion.",
+  "Needed for": "Behövs för",
+  "Ask before booking": "Fråga innan bokning",
+  "All sourcing decisions": "Alla upphandlingsbeslut",
+  "Open the complete party and production sourcing list.": "Öppna hela listan för fest- och produktionsupphandling.",
+  // Vendor priorities / statuses / price tiers
+  "Required": "Krävs",
+  "Recommended": "Rekommenderas",
+  "Optional": "Valfri",
+  "Shortlisted": "Gallrad",
+  "Contacted": "Kontaktad",
+  "Quote Requested": "Offert begärd",
+  "Booked": "Bokad",
+  "Rejected": "Avvisad",
+  "Price not set": "Pris ej satt",
+  "Budget": "Budget",
+  "Standard": "Standard",
+  "Premium": "Premium",
+  "Luxury": "Lyx"
 };
 
 const dictionaries: Record<Language, Record<string, string>> = { en: {}, sv };
