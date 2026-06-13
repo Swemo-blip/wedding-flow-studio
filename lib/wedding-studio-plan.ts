@@ -374,7 +374,29 @@ export function createWeddingStudioPlanFromWedding(wedding: Wedding, basePlan: W
 }
 
 function getVenueTypeFromWedding(wedding: Wedding, fallback: StudioVenueType): StudioVenueType {
-  const source = `${wedding.style} ${wedding.ceremonyLocation} ${wedding.receptionLocation}`.toLowerCase();
+  // The ceremony location defines the venue structure we render, so it takes
+  // priority over style adjectives like "garden wedding".
+  const ceremony = wedding.ceremonyLocation.toLowerCase();
+
+  if (ceremony.includes("chapel") || ceremony.includes("church") || ceremony.includes("cathedral") || ceremony.includes("basilica")) {
+    return "church";
+  }
+
+  if (ceremony.includes("beach") || ceremony.includes("coast") || ceremony.includes("shore")) {
+    return "beach";
+  }
+
+  if (ceremony.includes("garden") || ceremony.includes("outdoor") || ceremony.includes("estate") || ceremony.includes("vineyard") || ceremony.includes("orchard")) {
+    return "garden";
+  }
+
+  if (ceremony.includes("hall") || ceremony.includes("ballroom") || ceremony.includes("hotel") || ceremony.includes("loft")) {
+    return "hall";
+  }
+
+  // Fall back to the broader style/reception signal only when the ceremony
+  // location is unspecific.
+  const source = `${wedding.style} ${wedding.receptionLocation}`.toLowerCase();
 
   if (source.includes("garden") || source.includes("outdoor") || source.includes("estate")) {
     return "garden";
@@ -384,12 +406,12 @@ function getVenueTypeFromWedding(wedding: Wedding, fallback: StudioVenueType): S
     return "beach";
   }
 
-  if (source.includes("hall") || source.includes("ballroom") || source.includes("city") || source.includes("civil")) {
-    return "hall";
-  }
-
   if (source.includes("chapel") || source.includes("church")) {
     return "church";
+  }
+
+  if (source.includes("hall") || source.includes("ballroom") || source.includes("city") || source.includes("civil")) {
+    return "hall";
   }
 
   return fallback;

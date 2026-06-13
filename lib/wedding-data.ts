@@ -20,7 +20,7 @@ export const sampleWedding: Wedding = {
   ceremonyLocation: "St. James Chapel",
   receptionLocation: "Rosewood Hall",
   guestCount: 112,
-  style: "Editorial garden wedding, warm ivory, soft champagne, black tie optional, classic but modern",
+  style: "Classic church elegance, warm ivory, soft champagne, candlelit, black tie optional",
   plannerName: "Olivia Hart",
   status: "Production map in progress"
 };

@@ -209,12 +209,12 @@ export function CeremonyScene({
         style={{ background: `linear-gradient(180deg, ${preset.hemisphereSky}, ${preset.fogColor} 60%)` }}
       >
         <Canvas
-          camera={{ fov: 40, near: 0.1, position: getCameraPosition(viewMode) }}
+          camera={{ fov: 40, near: 0.1, position: getCameraPosition(viewMode, venueType, activeStep) }}
           dpr={[1, 1.8]}
           gl={{ toneMappingExposure: 1.16 }}
           shadows={{ type: THREE.PCFSoftShadowMap }}
         >
-          <CameraSetup cameraOverride={cameraOverride} viewMode={viewMode} zoom={zoom} />
+          <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} venueType={venueType} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
@@ -239,7 +239,17 @@ export function CeremonyScene({
             color="#ffca8c"
             decay={2}
             distance={10}
-            intensity={isDay ? 7 : budgetLevel === "signature" ? 32 : 22}
+            intensity={
+              venueType === "church"
+                ? isDay
+                  ? 2.5
+                  : 12
+                : isDay
+                  ? 7
+                  : budgetLevel === "signature"
+                    ? 32
+                    : 22
+            }
             position={[0, 3.1, -3.6]}
           />
           <Environment frames={1} resolution={128}>
@@ -272,6 +282,7 @@ export function CeremonyScene({
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             venueType={venueType}
+            viewMode={viewMode}
           />
         </Canvas>
       </div>
@@ -426,7 +437,8 @@ function WeddingStageInterior({
   palette,
   sceneEdits,
   selectedObjectId,
-  venueType
+  venueType,
+  viewMode
 }: {
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
@@ -437,11 +449,16 @@ function WeddingStageInterior({
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
   venueType: StudioVenueType;
+  viewMode: StudioViewMode;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const guestMarkers = useMemo(() => buildGuestMarkers(capacity), [capacity]);
   const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
   const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
+  const churchSeatedGuests = useMemo(
+    () => (venueType === "church" ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers) : []),
+    [capacity.visibleGuestMarkers, venueType, visibleRows]
+  );
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
   const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
   const surface = getVenueSurface(venueType, palette);
@@ -463,6 +480,7 @@ function WeddingStageInterior({
           sceneEdits={sceneEdits}
           selectedObjectId={selectedObjectId}
           venueType={venueType}
+          viewMode={viewMode}
         />
       ) : (
         <>
@@ -486,8 +504,11 @@ function WeddingStageInterior({
             </mesh>
           </EditableSceneObject>
 
-          <VenueBoundary palette={palette} venueType={venueType} />
+          <VenueBoundary palette={palette} venueType={venueType} viewMode={viewMode} />
           {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
+          {venueType === "church" && activeStep !== "venue" && rowIndexes.length > 0 ? (
+            <ChurchAisleMarkers palette={palette} rowZs={rowIndexes.map((index) => -2.4 + index * 0.62)} />
+          ) : null}
 
           {activeStep !== "venue" ? (
             <EditableSceneObject
@@ -537,8 +558,16 @@ function WeddingStageInterior({
               );
             })}
 
-            {showGuests ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />) : null}
-            {showGuests && capacity.overflowGuests > 0 ? <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} /> : null}
+            {venueType === "church"
+              ? activeStep !== "venue"
+                ? churchSeatedGuests.map((guest) => <SeatedGuest hair={guest.hair} key={guest.id} position={guest.position} tone={guest.tone} />)
+                : null
+              : showGuests
+                ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />)
+                : null}
+            {showGuests && venueType !== "church" && capacity.overflowGuests > 0 ? (
+              <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} />
+            ) : null}
           </EditableSceneObject>
 
           {activeStep === "budget" || activeStep === "preview" ? <DetailLayer decorScale={decorScale} palette={palette} /> : null}
@@ -640,9 +669,13 @@ function SelectionOutline({ center, size }: { center: [number, number]; size: [n
   );
 }
 
-function VenueBoundary({ palette, venueType }: { palette: Palette; venueType: StudioVenueType }) {
+function VenueBoundary({ palette, venueType, viewMode }: { palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
   if (venueType === "garden" || venueType === "beach") {
     return <OutdoorVenueFrame palette={palette} venueType={venueType} />;
+  }
+
+  if (venueType === "church") {
+    return <ChurchNave palette={palette} viewMode={viewMode} />;
   }
 
   return <RoomFrame palette={palette} venueType={venueType} />;
@@ -672,6 +705,363 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
           <meshStandardMaterial color="#f6eed6" emissive="#fff2cf" emissiveIntensity={0.9} roughness={0.4} toneMapped={false} />
         </mesh>
       ))}
+    </group>
+  );
+}
+
+// ----- Church interior: a warm Catholic nave (reference look) -----
+
+const STAINED_GLASS_COLORS = ["#2f4f86", "#8c3b34", "#b1894a", "#3f6b54", "#4a4072", "#356b74"];
+
+function StainedGlassWindow({
+  position,
+  rotationY = 0,
+  width = 1,
+  rectHeight = 1.7,
+  seed = 0
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  width?: number;
+  rectHeight?: number;
+  seed?: number;
+}) {
+  const halfWidth = width / 2;
+  const paneWidth = width / 3;
+  const frameHeight = rectHeight + halfWidth;
+  const glassColor = (offset: number) => STAINED_GLASS_COLORS[(seed + offset) % STAINED_GLASS_COLORS.length];
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, halfWidth / 2, -0.07]}>
+        <boxGeometry args={[width + 0.2, frameHeight + 0.22, 0.12]} />
+        <meshStandardMaterial color="#cabfa0" roughness={0.9} />
+      </mesh>
+      {[-1, 0, 1].map((col, index) => (
+        <mesh key={col} position={[col * paneWidth, 0, 0]}>
+          <planeGeometry args={[paneWidth - 0.04, rectHeight]} />
+          <meshStandardMaterial
+            color={glassColor(index)}
+            emissive={glassColor(index)}
+            emissiveIntensity={0.6}
+            roughness={0.45}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+      <mesh position={[0, rectHeight / 2, 0]}>
+        <circleGeometry args={[halfWidth, 18, 0, Math.PI]} />
+        <meshStandardMaterial
+          color={glassColor(3)}
+          emissive={glassColor(3)}
+          emissiveIntensity={0.66}
+          roughness={0.45}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+      {[-0.5, 0.5].map((mullion) => (
+        <mesh key={mullion} position={[mullion * paneWidth, 0, 0.012]}>
+          <boxGeometry args={[0.025, rectHeight, 0.04]} />
+          <meshStandardMaterial color="#4f4632" roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function ChurchCeiling({ wallTopY, color }: { wallTopY: number; color: string }) {
+  const halfW = 4.95;
+  const ridgeY = wallTopY + 1.1;
+  const slopeLength = Math.hypot(halfW, ridgeY - wallTopY);
+  const angle = Math.atan2(ridgeY - wallTopY, halfW);
+  const depth = 12.4;
+
+  return (
+    <group position={[0, 0, 0.1]}>
+      <mesh position={[-halfW / 2, (wallTopY + ridgeY) / 2, 0]} rotation={[0, 0, angle]}>
+        <boxGeometry args={[slopeLength, 0.08, depth]} />
+        <meshStandardMaterial color={color} roughness={0.95} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[halfW / 2, (wallTopY + ridgeY) / 2, 0]} rotation={[0, 0, -angle]}>
+        <boxGeometry args={[slopeLength, 0.08, depth]} />
+        <meshStandardMaterial color={color} roughness={0.95} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, ridgeY, 0]}>
+        <boxGeometry args={[0.16, 0.16, depth]} />
+        <meshStandardMaterial color="#5a4a33" roughness={0.7} />
+      </mesh>
+      {[-4, -1.4, 1.2, 3.6].map((z) => (
+        <mesh key={z} position={[0, wallTopY - 0.12, z]}>
+          <boxGeometry args={[halfW * 2 - 0.1, 0.1, 0.14]} />
+          <meshStandardMaterial color="#5a4a33" roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Crucifix({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh castShadow>
+        <boxGeometry args={[0.1, 1.1, 0.08]} />
+        <meshStandardMaterial color="#9c7b3f" metalness={0.7} roughness={0.4} />
+      </mesh>
+      <mesh castShadow position={[0, 0.26, 0]}>
+        <boxGeometry args={[0.6, 0.1, 0.08]} />
+        <meshStandardMaterial color="#9c7b3f" metalness={0.7} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+function Candelabra({ candleColor, position, scale = 1 }: { candleColor: string; position: [number, number, number]; scale?: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh castShadow position={[0, 0.55, 0]}>
+        <cylinderGeometry args={[0.03, 0.08, 1.1, 10]} />
+        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.28} />
+      </mesh>
+      <mesh position={[0, 1.1, 0]}>
+        <boxGeometry args={[0.62, 0.03, 0.03]} />
+        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.3} />
+      </mesh>
+      {[-0.28, 0, 0.28].map((x, index) => {
+        const topY = 1.1 + (index === 1 ? 0.16 : 0);
+
+        return (
+          <group key={x}>
+            <mesh position={[x, topY + 0.08, 0]}>
+              <cylinderGeometry args={[0.022, 0.022, 0.16, 8]} />
+              <meshStandardMaterial color="#efe3c4" roughness={0.6} />
+            </mesh>
+            <mesh position={[x, topY + 0.2, 0]}>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={3} toneMapped={false} />
+            </mesh>
+          </group>
+        );
+      })}
+      <pointLight color={candleColor} decay={2} distance={3.2} intensity={1.1} position={[0, 1.4, 0]} />
+    </group>
+  );
+}
+
+function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Palette }) {
+  return (
+    <group position={[0, 0, -4.55]}>
+      <Dais palette={palette} />
+      <mesh castShadow receiveShadow position={[0, 0.34, 0]}>
+        <boxGeometry args={[2.1, 0.52, 0.78]} />
+        <meshStandardMaterial color="#f3ead7" roughness={0.7} />
+      </mesh>
+      <mesh castShadow position={[0, 0.63, 0]}>
+        <boxGeometry args={[2.24, 0.05, 0.88]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.7} roughness={0.32} />
+      </mesh>
+      <FlowerCluster palette={palette} position={[-0.7, 0.74, 0.2]} radius={0.22} />
+      <FlowerCluster palette={palette} position={[0.7, 0.74, 0.2]} radius={0.22} />
+      {[-1.55, 1.55].map((x) => (
+        <Candelabra candleColor={palette.candle} key={x} position={[x, 0.1, 0]} scale={decorScale} />
+      ))}
+    </group>
+  );
+}
+
+function ChurchPendant({ candleColor, position }: { candleColor: string; position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.5, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 1, 6]} />
+        <meshStandardMaterial color="#2c2519" roughness={0.8} />
+      </mesh>
+      <mesh position={[0, -0.02, 0]}>
+        <cylinderGeometry args={[0.11, 0.13, 0.3, 8]} />
+        <meshStandardMaterial color="#3a2f20" metalness={0.5} roughness={0.5} />
+      </mesh>
+      <mesh position={[0, -0.02, 0]}>
+        <sphereGeometry args={[0.075, 12, 12]} />
+        <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={2.6} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function ChurchPendantRow({ candleColor }: { candleColor: string }) {
+  return (
+    <group>
+      {[-3.2, -1, 1.2, 3.2].map((z) =>
+        [-3.4, 3.4].map((x) => <ChurchPendant candleColor={candleColor} key={`${x}-${z}`} position={[x, 2.75, z]} />)
+      )}
+    </group>
+  );
+}
+
+function ChurchAisleMarkers({ rowZs, palette }: { rowZs: number[]; palette: Palette }) {
+  return (
+    <group>
+      {rowZs.map((z, rowIndex) =>
+        [-0.72, 0.72].map((x) => (
+          <group key={`${x}-${z}`} position={[x, 0, z]}>
+            {rowIndex % 2 === 0 ? (
+              <group>
+                <mesh castShadow position={[0, 0.3, 0]}>
+                  <cylinderGeometry args={[0.04, 0.06, 0.6, 8]} />
+                  <meshStandardMaterial color="#e9ddc4" roughness={0.7} />
+                </mesh>
+                {(
+                  [
+                    [0, 0.64, 0, 0.1],
+                    [0.07, 0.68, 0.04, 0.07],
+                    [-0.07, 0.67, 0.03, 0.07],
+                    [0, 0.72, -0.02, 0.06]
+                  ] as Array<[number, number, number, number]>
+                ).map(([fx, fy, fz, fs], blossomIndex) => (
+                  <mesh castShadow key={blossomIndex} position={[fx, fy, fz]}>
+                    <sphereGeometry args={[fs, 10, 10]} />
+                    <meshStandardMaterial color={blossomIndex % 2 === 0 ? "#f3ece0" : "#e7d8cf"} roughness={0.82} />
+                  </mesh>
+                ))}
+              </group>
+            ) : (
+              <group>
+                <mesh position={[0, 0.2, 0]}>
+                  <cylinderGeometry args={[0.07, 0.07, 0.4, 12]} />
+                  <meshStandardMaterial color="#fff6e2" metalness={0} opacity={0.3} roughness={0.1} transparent />
+                </mesh>
+                <mesh position={[0, 0.16, 0]}>
+                  <sphereGeometry args={[0.035, 8, 8]} />
+                  <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={3} toneMapped={false} />
+                </mesh>
+              </group>
+            )}
+          </group>
+        ))
+      )}
+    </group>
+  );
+}
+
+// Mostly dark formalwear with a few champagne/grey dresses, like a real
+// congregation seen from the back of the nave.
+const GUEST_TONES = ["#262a33", "#2f3540", "#3a3128", "#1f232c", "#46403a", "#cdbba2", "#94867a"];
+const GUEST_HAIR = ["#2a211a", "#3d2f22", "#1c1814", "#5a4a36", "#8a7250"];
+
+function SeatedGuest({ position, tone, hair }: { position: [number, number, number]; tone: string; hair: string }) {
+  return (
+    <group position={position}>
+      <mesh castShadow position={[0, 0.32, 0]}>
+        <capsuleGeometry args={[0.088, 0.3, 4, 8]} />
+        <meshStandardMaterial color={tone} roughness={0.74} />
+      </mesh>
+      <mesh castShadow position={[0, 0.45, 0]}>
+        <boxGeometry args={[0.28, 0.13, 0.15]} />
+        <meshStandardMaterial color={tone} roughness={0.74} />
+      </mesh>
+      <mesh castShadow position={[0, 0.57, 0]}>
+        <sphereGeometry args={[0.068, 12, 12]} />
+        <meshStandardMaterial color="#dcb892" roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0, 0.6, -0.02]}>
+        <sphereGeometry args={[0.072, 12, 12]} />
+        <meshStandardMaterial color={hair} roughness={0.78} />
+      </mesh>
+    </group>
+  );
+}
+
+function buildChurchSeatedGuests(
+  visibleRows: number,
+  maxGuests: number
+): Array<{ id: string; position: [number, number, number]; tone: string; hair: string }> {
+  const result: Array<{ id: string; position: [number, number, number]; tone: string; hair: string }> = [];
+  const seatOffsets = [-0.85, -0.28, 0.28, 0.85];
+  let count = 0;
+
+  for (let row = 0; row < visibleRows; row += 1) {
+    const z = -2.4 + row * 0.62;
+
+    for (const sideCenter of [-1.82, 1.82]) {
+      for (let seat = 0; seat < seatOffsets.length; seat += 1) {
+        if (count >= maxGuests) {
+          return result;
+        }
+
+        const variant = row * 4 + seat + (sideCenter < 0 ? 0 : 3);
+        result.push({
+          id: `church-guest-${row}-${sideCenter}-${seat}`,
+          position: [sideCenter + seatOffsets[seat], 0, z + 0.02],
+          tone: GUEST_TONES[variant % GUEST_TONES.length],
+          hair: GUEST_HAIR[variant % GUEST_HAIR.length]
+        });
+        count += 1;
+      }
+    }
+  }
+
+  return result;
+}
+
+function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
+  const wallHeight = 3.4;
+  const windowZs = [-3.2, -0.7, 1.8];
+  const columnZs = [-4.5, -1.95, 0.55, 3.1];
+  // The 2D plan view looks straight down, so the vaulted ceiling would hide
+  // everything — drop it (and keep the open nave readable from above).
+  const showCeiling = viewMode !== "top";
+
+  return (
+    <group>
+      {[-4.95, 4.95].map((x) => (
+        <mesh key={x} receiveShadow position={[x, wallHeight / 2, 0.1]}>
+          <boxGeometry args={[0.2, wallHeight, 12.4]} />
+          <meshStandardMaterial color={palette.wall} roughness={0.92} />
+        </mesh>
+      ))}
+
+      <mesh receiveShadow position={[0, 2.4, -5.85]}>
+        <boxGeometry args={[10.1, 4.8, 0.22]} />
+        <meshStandardMaterial color={palette.wall} roughness={0.92} />
+      </mesh>
+
+      {/* Reredos: a framed backdrop behind the altar so the crucifix reads
+          against depth instead of a blown-out wall. */}
+      <mesh position={[0, 1.95, -5.72]}>
+        <boxGeometry args={[2.95, 3.7, 0.08]} />
+        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.5} />
+      </mesh>
+      <mesh receiveShadow position={[0, 1.95, -5.69]}>
+        <boxGeometry args={[2.6, 3.34, 0.1]} />
+        <meshStandardMaterial color="#d3bf97" roughness={0.82} />
+      </mesh>
+
+      {showCeiling ? <ChurchCeiling color={palette.wall} wallTopY={wallHeight} /> : null}
+
+      {[-4.6, 4.6].map((x) =>
+        columnZs.map((z) => (
+          <mesh castShadow key={`${x}-${z}`} position={[x, wallHeight / 2, z]}>
+            <boxGeometry args={[0.34, wallHeight, 0.34]} />
+            <meshStandardMaterial color="#ddd1b6" roughness={0.85} />
+          </mesh>
+        ))
+      )}
+
+      {windowZs.map((z, index) => (
+        <group key={z}>
+          <StainedGlassWindow position={[-4.84, 1.75, z]} rotationY={Math.PI / 2} seed={index} />
+          <StainedGlassWindow position={[4.84, 1.75, z]} rotationY={-Math.PI / 2} seed={index + 2} />
+        </group>
+      ))}
+
+      <StainedGlassWindow position={[-2.5, 2, -5.73]} rectHeight={1.5} seed={4} width={0.95} />
+      <StainedGlassWindow position={[2.5, 2, -5.73]} rectHeight={1.5} seed={1} width={0.95} />
+      <Crucifix position={[0, 2.3, -5.6]} />
+
+      <pointLight color="#ffdca0" decay={2} distance={8} intensity={1.3} position={[0, 2.9, -1]} />
+      <pointLight color="#ffe7bc" decay={2} distance={8} intensity={1.2} position={[0, 2.7, 3]} />
+      <hemisphereLight args={["#fff1d2", "#cdb792", 0.6]} />
     </group>
   );
 }
@@ -770,6 +1160,10 @@ function CeremonyFocalPoint({ decorScale, palette, venueType }: { decorScale: nu
 
   if (venueType === "hall") {
     return <HallFocalPoint decorScale={decorScale} palette={palette} />;
+  }
+
+  if (venueType === "church") {
+    return <ChurchAltar decorScale={decorScale} palette={palette} />;
   }
 
   return <Altar decorScale={decorScale} palette={palette} />;
@@ -886,6 +1280,10 @@ function HallFocalPoint({ decorScale, palette }: { decorScale: number; palette: 
 const LANTERN_Z_POSITIONS = [-3.7, -2.1, -0.5, 1.1, 2.7];
 
 function LightingRibbon({ decorScale, palette, venueType }: { decorScale: number; palette: Palette; venueType?: StudioVenueType }) {
+  if (venueType === "church") {
+    return <ChurchPendantRow candleColor={palette.candle} />;
+  }
+
   const poleHeight = venueType === "garden" || venueType === "beach" ? 1.18 : 1.34;
   const poleColor = venueType === "beach" ? "#8a7757" : "#4d4636";
 
@@ -1091,7 +1489,8 @@ function ReceptionInterior({
   palette,
   sceneEdits,
   selectedObjectId,
-  venueType
+  venueType,
+  viewMode
 }: {
   capacity: WeddingStudioCapacity;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
@@ -1100,10 +1499,15 @@ function ReceptionInterior({
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
   venueType: StudioVenueType;
+  viewMode: StudioViewMode;
 }) {
   const tableCount = Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
   const tablePositions = buildReceptionTablePositions(tableCount);
-  const surface = getVenueSurface(venueType, palette);
+  // The reception is held away from the ceremony venue, so a church ceremony
+  // still flows into an open evening reception rather than seating dinner
+  // tables inside the nave.
+  const receptionVenue: StudioVenueType = venueType === "church" ? "garden" : venueType;
+  const surface = getVenueSurface(receptionVenue, palette);
 
   return (
     <group>
@@ -1112,7 +1516,7 @@ function ReceptionInterior({
         <meshStandardMaterial color={surface.floor} roughness={0.76} />
       </mesh>
 
-      <VenueBoundary palette={palette} venueType={venueType} />
+      <VenueBoundary palette={palette} venueType={receptionVenue} viewMode={viewMode} />
 
       <EditableSceneObject
         objectId="danceFloor"
@@ -1277,15 +1681,27 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
   );
 }
 
-function CameraSetup({ cameraOverride = null, viewMode, zoom = 1 }: { cameraOverride?: SceneCameraOverride | null; viewMode: StudioViewMode; zoom?: number }) {
+function CameraSetup({
+  activeStep,
+  cameraOverride = null,
+  venueType,
+  viewMode,
+  zoom = 1
+}: {
+  activeStep: StudioPlanningStepId;
+  cameraOverride?: SceneCameraOverride | null;
+  venueType: StudioVenueType;
+  viewMode: StudioViewMode;
+  zoom?: number;
+}) {
   const { camera } = useThree();
-  const lookTargetRef = useRef(new THREE.Vector3(...getCameraTarget(viewMode)));
+  const lookTargetRef = useRef(new THREE.Vector3(...getCameraTarget(viewMode, venueType, activeStep)));
 
   useFrame(({ clock }, delta) => {
     const time = clock.elapsedTime;
     // A camera override (used by the Preview walkthrough) flies to an explicit
     // waypoint with a gentle living sway; otherwise fall back to the view-mode rig.
-    const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode);
+    const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode, venueType, activeStep);
     const distanceScale = cameraOverride ? 1 : 1 / zoom;
     const baseX = rawX * distanceScale;
     const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawY * distanceScale);
@@ -1297,7 +1713,7 @@ function CameraSetup({ cameraOverride = null, viewMode, zoom = 1 }: { cameraOver
     const desiredX = baseX + (drifting ? Math.sin(time * 0.07) * swayX : 0);
     const desiredY = baseY + (drifting ? Math.sin(time * 0.05) * swayY : 0);
     const desiredZ = baseZ + (drifting ? Math.cos(time * 0.06) * swayZ : 0);
-    const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode);
+    const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode, venueType, activeStep);
     // Slower lambda on override so the fly-between-moments reads as a cinematic glide.
     const lambda = cameraOverride ? 1.5 : 2.4;
 
@@ -1317,7 +1733,21 @@ function CameraSetup({ cameraOverride = null, viewMode, zoom = 1 }: { cameraOver
   return null;
 }
 
-function getCameraPosition(viewMode: StudioViewMode): [number, number, number] {
+function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
+  // The church is an enclosed nave, so the eye sits inside it looking down the
+  // aisle toward the altar (matching the reference one-point perspective). The
+  // reception flows to an open venue, so it keeps the standard wide rig.
+  if (venueType === "church" && activeStep !== "reception") {
+    const churchPositions: Record<StudioViewMode, [number, number, number]> = {
+      "3d": [0, 1.95, 5.4],
+      guest: [0, 1.45, 4.2],
+      top: [0, 11, 0.4],
+      walkthrough: [0, 1.85, 4.8]
+    };
+
+    return churchPositions[viewMode];
+  }
+
   const positions: Record<StudioViewMode, [number, number, number]> = {
     "3d": [0, 4.5, 8.6],
     guest: [0, 1.35, 5.2],
@@ -1328,7 +1758,18 @@ function getCameraPosition(viewMode: StudioViewMode): [number, number, number] {
   return positions[viewMode];
 }
 
-function getCameraTarget(viewMode: StudioViewMode): [number, number, number] {
+function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
+  if (venueType === "church" && activeStep !== "reception") {
+    const churchTargets: Record<StudioViewMode, [number, number, number]> = {
+      "3d": [0, 1.05, -4.4],
+      guest: [0, 1, -4.4],
+      top: [0, 0, -1.4],
+      walkthrough: [0, 1, -4.4]
+    };
+
+    return churchTargets[viewMode];
+  }
+
   const targets: Record<StudioViewMode, [number, number, number]> = {
     "3d": [0, 0.42, -1.5],
     guest: [0, 0.85, -1.2],

@@ -22,12 +22,12 @@ type Waypoint = {
 // Ceremony moments fly the aisle in daylight; the day warms to dusk as the
 // reception unfolds, so the camera literally walks the day before it happens.
 const walkthrough: Waypoint[] = [
-  { camera: { position: [0, 5, 9.2], target: [0, 0.5, -1.6] }, lighting: "day", step: "preview" }, // Guest arrival
-  { camera: { position: [0, 2, 6], target: [0, 0.9, -3.6] }, lighting: "day", step: "preview" }, // Prelude
-  { camera: { position: [0, 1.35, 3.6], target: [0, 1, -4.4] }, lighting: "day", step: "preview" }, // Processional
-  { camera: { position: [0, 1.85, 0.8], target: [0, 1.3, -4.6] }, lighting: "day", step: "preview" }, // Vows
-  { camera: { position: [0, 1.55, 4.8], target: [0, 0.95, -1.8] }, lighting: "day", step: "preview" }, // Recessional
-  { camera: { position: [3.6, 2.5, 5.6], target: [-0.4, 0.7, -3] }, lighting: "day", step: "preview" }, // Group photos
+  { camera: { position: [0, 1.95, 5.3], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Guest arrival — back of the nave
+  { camera: { position: [0, 1.85, 3.9], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Prelude — down the aisle
+  { camera: { position: [0, 1.7, 2.3], target: [0, 1.1, -4.5] }, lighting: "day", step: "preview" }, // Processional
+  { camera: { position: [0, 1.62, 1.2], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Vows — framing the altar
+  { camera: { position: [0, 1.75, 2.6], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
+  { camera: { position: [2.4, 1.95, 3], target: [0, 1, -4.2] }, lighting: "day", step: "preview" }, // Group photos — side angle
   { camera: { position: [0, 4.6, 9], target: [0, 0.5, -1.2] }, lighting: "dusk", step: "reception" }, // Cocktail hour
   { camera: { position: [0, 5, 9], target: [0, 0.4, -1] }, lighting: "dusk", step: "reception" }, // Reception entrance
   { camera: { position: [0, 3.3, 6.4], target: [0, 0.4, -0.6] }, lighting: "dusk", step: "reception" }, // Dinner
