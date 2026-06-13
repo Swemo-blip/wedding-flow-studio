@@ -225,7 +225,29 @@ const sv: Record<string, string> = {
   "Best seating decision": "Bästa placeringsbeslut",
   "Best vendor decision": "Bästa leverantörsbeslut",
   "Suggested fix": "Föreslagen åtgärd",
-  "Focused moment": "Fokuserat moment"
+  "Focused moment": "Fokuserat moment",
+  // Music studio body
+  "Choose music cue": "Välj musik-cue",
+  "Production trigger": "Produktionssignal",
+  "Offline fallback": "Offline-reserv",
+  "Missing": "Saknas",
+  "Best Cue Fix": "Bästa cue-åtgärd",
+  "Apply Fix": "Tillämpa åtgärd",
+  "Cue Readiness": "Cue-status",
+  "This cue is ready for the production map.": "Den här cuen är redo för produktionskartan.",
+  "Preview, Director Mode, and Exports can use this cue without an active music warning.": "Förhandsvisning, Regissörsläge och Export kan använda cuen utan en aktiv musikvarning.",
+  "Edit selected cue details": "Redigera vald cue",
+  "Song title": "Låttitel",
+  "Artist or composer": "Artist eller kompositör",
+  "Responsible person": "Ansvarig person",
+  "Status": "Status",
+  "Planning link": "Planeringslänk",
+  "Backup plan": "Reservplan",
+  "Production notes": "Produktionsanteckningar",
+  "Confirmed": "Bekräftad",
+  "Needs Confirmation": "Behöver bekräftas",
+  "Needs Backup": "Behöver reserv",
+  "Needs Cue": "Behöver cue"
 };
 
 const dictionaries: Record<Language, Record<string, string>> = { en: {}, sv };
