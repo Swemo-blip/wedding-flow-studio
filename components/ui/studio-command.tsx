@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 type CommandAction = {
   label: string;
@@ -28,19 +31,20 @@ type StudioCommandProps = {
 };
 
 export function StudioCommand({ actions = [], children, eyebrow, title }: StudioCommandProps) {
+  const { t } = useTranslation();
   const primaryAction = actions[0];
 
   return (
     <section className="studio-command" aria-label={`${eyebrow} command surface`}>
       <div className="studio-command-main">
         <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h2>{title}</h2>
+          <p className="eyebrow">{t(eyebrow)}</p>
+          <h2>{t(title)}</h2>
         </div>
         {primaryAction ? (
           <div className="studio-command-actions">
             <Button href={primaryAction.href} onClick={primaryAction.onClick} size="small" variant={primaryAction.variant}>
-              {primaryAction.label}
+              {t(primaryAction.label)}
             </Button>
           </div>
         ) : null}

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 type StudioRouteAction = {
   href?: string;
@@ -31,30 +32,31 @@ export function StudioRouteFrame({
   primaryAction,
   title
 }: StudioRouteFrameProps) {
+  const { t } = useTranslation();
+
   return (
-    <section className="studio-route-frame" aria-label={title}>
+    <section className="studio-route-frame" aria-label={t(title)}>
       <header className="studio-route-ribbon">
         <div className="studio-route-copy">
-          <span>{eyebrow}</span>
-          <h1>{title}</h1>
+          <span>{t(eyebrow)}</span>
+          <h1>{t(title)}</h1>
         </div>
 
         {primaryAction ? (
           <div className="studio-route-actions" aria-label="Route actions">
-            {renderAction(primaryAction, "primary")}
+            <Button
+              href={primaryAction.href}
+              onClick={primaryAction.onClick}
+              size="small"
+              variant={primaryAction.variant ?? "primary"}
+            >
+              {t(primaryAction.label)}
+            </Button>
           </div>
         ) : null}
       </header>
 
       {children}
     </section>
-  );
-}
-
-function renderAction(action: StudioRouteAction, fallbackVariant: "primary" | "secondary") {
-  return (
-    <Button href={action.href} onClick={action.onClick} size="small" variant={action.variant ?? fallbackVariant}>
-      {action.label}
-    </Button>
   );
 }
