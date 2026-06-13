@@ -25,6 +25,7 @@ import {
 import { buildMomentIntelligence, type MomentIntelligence } from "@/lib/moment-intelligence";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { applyRiskResolutionToTimeline, getRiskResolutionRecipeForRisk } from "@/lib/risk-resolution";
+import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases, timelineItems } from "@/lib/wedding-data";
@@ -38,6 +39,7 @@ type AppliedActionStatus = {
 };
 
 export function DayFlowEditor() {
+  const { t } = useTranslation();
   const hasLoadedStoredProject = useRef(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [project, setProject] = useState(() => createSampleProjectState());
@@ -325,7 +327,7 @@ export function DayFlowEditor() {
           title="Repair the wedding day from one selected moment."
         >
           {fixQueue.length > 0 ? (
-            <div className="day-flow-best-repair" aria-label="Highest impact moment repair">
+            <div className="day-flow-best-repair" aria-label={t("Highest impact moment repair")}>
               <button
                 className="studio-command-queue-item"
                 onClick={() => selectMomentFromQueue(fixQueue[0].phase)}
@@ -333,12 +335,12 @@ export function DayFlowEditor() {
               >
                 <span>{String(fixQueue[0].phaseIndex + 1).padStart(2, "0")}</span>
                 <strong>{fixQueue[0].phase.title}</strong>
-                <small>{fixQueue[0].intelligence.primaryAction.label}</small>
+                <small>{t(fixQueue[0].intelligence.primaryAction.label)}</small>
               </button>
-              <small>{fixQueue.length - 1 > 0 ? `${fixQueue.length - 1} more moments in the repair queue` : "This is the only moment that needs review."}</small>
+              <small>{fixQueue.length - 1 > 0 ? `${fixQueue.length - 1} ${t("more moments in the repair queue")}` : t("This is the only moment that needs review.")}</small>
             </div>
           ) : (
-            <p className="card-copy">Every preview moment is ready to rehearse from the current local plan.</p>
+            <p className="card-copy">{t("Every preview moment is ready to rehearse from the current local plan.")}</p>
           )}
         </StudioCommand>
 
@@ -388,8 +390,8 @@ export function DayFlowEditor() {
 
         <details className="day-flow-detail-drawer">
           <summary>
-            <span>Studio Workflow</span>
-            <small>Open the full planning sequence when you want to see how this repair fits the wider studio.</small>
+            <span>{t("Studio Workflow")}</span>
+            <small>{t("Open the full planning sequence when you want to see how this repair fits the wider studio.")}</small>
           </summary>
           <div className="day-flow-detail-drawer-content">
             <StudioWorkflow activeStep="flow" />
@@ -403,19 +405,19 @@ export function DayFlowEditor() {
             <CardContent>
               <div className="summary-between">
                 <div>
-                  <p className="eyebrow">Suggested fix</p>
-                  <h3 className="card-title">{activeResolutionRecipe.title}</h3>
+                  <p className="eyebrow">{t("Suggested fix")}</p>
+                  <h3 className="card-title">{t(activeResolutionRecipe.title)}</h3>
                 </div>
                 <Badge tone={isActiveRiskResolved ? "confirmed" : activeResolveRisk.severity}>
-                  {isActiveRiskResolved ? "resolved" : activeResolveRisk.severity}
+                  {isActiveRiskResolved ? t("resolved") : t(activeResolveRisk.severity)}
                 </Badge>
               </div>
-              <p className="card-copy">{activeResolutionRecipe.description}</p>
+              <p className="card-copy">{t(activeResolutionRecipe.description)}</p>
               <Button disabled={isActiveRiskResolved} onClick={applyActiveResolution} size="small">
-                {isActiveRiskResolved ? activeResolutionRecipe.resolvedLabel : activeResolutionRecipe.primaryActionLabel}
+                {isActiveRiskResolved ? t(activeResolutionRecipe.resolvedLabel) : t(activeResolutionRecipe.primaryActionLabel)}
               </Button>
               <span aria-live="polite" className="copy-status">
-                {resolutionStatus ?? "Saves locally and updates the connected views."}
+                {resolutionStatus ?? t("Saves locally and updates the connected views.")}
               </span>
             </CardContent>
           </Card>
@@ -429,8 +431,8 @@ export function DayFlowEditor() {
 
         <details className="day-flow-detail-drawer">
           <summary>
-            <span>Moment Details</span>
-            <small>Open readiness details, editing fields, and full flow analysis only when you need deeper control.</small>
+            <span>{t("Moment Details")}</span>
+            <small>{t("Open readiness details, editing fields, and full flow analysis only when you need deeper control.")}</small>
           </summary>
 
           <div className="day-flow-detail-drawer-content">
@@ -443,25 +445,25 @@ export function DayFlowEditor() {
             {selectedItem ? (
               <Card className="timeline-editor-card">
                 <CardContent>
-                  <p className="eyebrow">Selected Moment</p>
+                  <p className="eyebrow">{t("Selected Moment")}</p>
                   <h3 className="card-title">{selectedItem.title}</h3>
                   <div className="form-grid timeline-editor-form">
                     <label className="field">
-                      <span>Time</span>
+                      <span>{t("Time")}</span>
                       <input
                         onChange={(event) => updateSelectedItem({ time: event.target.value })}
                         value={selectedItem.time}
                       />
                     </label>
                     <label className="field">
-                      <span>Title</span>
+                      <span>{t("Title")}</span>
                       <input
                         onChange={(event) => updateSelectedItem({ title: event.target.value })}
                         value={selectedItem.title}
                       />
                     </label>
                     <label className="field">
-                      <span>Phase</span>
+                      <span>{t("Phase")}</span>
                       <input
                         list="timeline-phases"
                         onChange={(event) => updateSelectedItem({ phase: event.target.value })}
@@ -474,41 +476,41 @@ export function DayFlowEditor() {
                       </datalist>
                     </label>
                     <label className="field">
-                      <span>Location</span>
+                      <span>{t("Location")}</span>
                       <input
                         onChange={(event) => updateSelectedItem({ location: event.target.value })}
                         value={selectedItem.location}
                       />
                     </label>
                     <label className="field">
-                      <span>Responsible role</span>
+                      <span>{t("Responsible role")}</span>
                       <input
                         onChange={(event) => updateSelectedItem({ responsibleRole: event.target.value })}
                         value={selectedItem.responsibleRole}
                       />
                     </label>
                     <label className="field">
-                      <span>Responsible person</span>
+                      <span>{t("Responsible person")}</span>
                       <input
                         onChange={(event) => updateSelectedItem({ responsiblePerson: event.target.value })}
                         value={selectedItem.responsiblePerson}
                       />
                     </label>
                     <label className="field">
-                      <span>Visibility</span>
+                      <span>{t("Visibility")}</span>
                       <select
                         onChange={(event) => updateSelectedItem({ visibility: event.target.value as Visibility })}
                         value={selectedItem.visibility}
                       >
                         {visibilityOptions.map((option) => (
                           <option key={option} value={option}>
-                            {formatOption(option)}
+                            {t(formatOption(option))}
                           </option>
                         ))}
                       </select>
                     </label>
                     <label className="field">
-                      <span>Risk level</span>
+                      <span>{t("Risk level")}</span>
                       <select
                         onChange={(event) => {
                           const value = event.target.value as RiskSeverity | "none";
@@ -518,13 +520,13 @@ export function DayFlowEditor() {
                       >
                         {riskOptions.map((option) => (
                           <option key={option} value={option}>
-                            {formatOption(option)}
+                            {t(formatOption(option))}
                           </option>
                         ))}
                       </select>
                     </label>
                     <label className="field">
-                      <span>Duration minutes</span>
+                      <span>{t("Duration minutes")}</span>
                       <input
                         min={0}
                         onChange={(event) =>
@@ -537,7 +539,7 @@ export function DayFlowEditor() {
                       />
                     </label>
                     <label className="field timeline-notes-field">
-                      <span>Production notes</span>
+                      <span>{t("Production notes")}</span>
                       <textarea
                         onChange={(event) => updateSelectedItem({ notes: event.target.value })}
                         rows={5}
