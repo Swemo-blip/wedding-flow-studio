@@ -27,11 +27,8 @@ type StudioRouteFrameProps = {
 
 export function StudioRouteFrame({
   children,
-  description,
   eyebrow,
-  meta = [],
   primaryAction,
-  secondaryAction,
   title
 }: StudioRouteFrameProps) {
   return (
@@ -40,24 +37,11 @@ export function StudioRouteFrame({
         <div className="studio-route-copy">
           <span>{eyebrow}</span>
           <h1>{title}</h1>
-          <p>{description}</p>
         </div>
 
-        {meta.length > 0 ? (
-          <dl className="studio-route-meta" aria-label="Route context">
-            {meta.map((item) => (
-              <div key={`${item.label}-${item.value}`}>
-                <dt>{item.label}</dt>
-                <dd>{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : null}
-
-        {primaryAction || secondaryAction ? (
+        {primaryAction ? (
           <div className="studio-route-actions" aria-label="Route actions">
-            {primaryAction ? renderAction(primaryAction, "primary") : null}
-            {secondaryAction ? renderAction(secondaryAction, "secondary") : null}
+            {renderAction(primaryAction, "primary")}
           </div>
         ) : null}
       </header>

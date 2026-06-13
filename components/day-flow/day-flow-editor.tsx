@@ -27,7 +27,7 @@ import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { applyRiskResolutionToTimeline, getRiskResolutionRecipeForRisk } from "@/lib/risk-resolution";
 import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
-import { musicCues, previewPhases, speeches as sampleSpeeches, timelineItems } from "@/lib/wedding-data";
+import { previewPhases, timelineItems } from "@/lib/wedding-data";
 import type { PreviewPhase, RiskItem, RiskSeverity, TimelineItem, Visibility } from "@/lib/wedding-types";
 
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
@@ -346,11 +346,6 @@ export function DayFlowEditor() {
           {project.items.map((item) => {
             const isSelected = item.id === selectedItem?.id;
             const itemIntelligence = timelineMomentMap.get(item.id);
-            const cue = item.musicCueId ? localMusicCues.find((musicCue) => musicCue.id === item.musicCueId) ?? musicCues.find((musicCue) => musicCue.id === item.musicCueId) : null;
-            const speech = item.speechId
-              ? localSpeeches.find((speechItem) => speechItem.id === item.speechId) ??
-                sampleSpeeches.find((speechItem) => speechItem.id === item.speechId)
-              : null;
 
             return (
               <button
@@ -378,21 +373,13 @@ export function DayFlowEditor() {
                 <span className="editable-timeline-body">
                   <span className="summary-between">
                     <strong>{item.title}</strong>
-                    <span className="timeline-health-badges">
-                      {itemIntelligence ? (
-                        <Badge tone={itemIntelligence.readinessTone}>{itemIntelligence.readinessScore}% ready</Badge>
-                      ) : null}
-                      {item.riskLevel ? <Badge tone={item.riskLevel}>risk: {item.riskLevel}</Badge> : null}
-                    </span>
+                    {itemIntelligence ? (
+                      <Badge tone={itemIntelligence.readinessTone}>{itemIntelligence.readinessScore}%</Badge>
+                    ) : null}
                   </span>
                   <span className="timeline-meta">
-                    <Badge>{item.phase}</Badge>
-                    <Badge>{item.location}</Badge>
-                    <Badge>{item.responsiblePerson}</Badge>
-                    {cue ? <Badge tone={cue.status === "confirmed" ? "confirmed" : "medium"}>{cue.songTitle}</Badge> : null}
-                    {speech ? <Badge tone={speech.isSecret ? "secret" : "neutral"}>{speech.title}</Badge> : null}
+                    {item.location} · {item.responsiblePerson}
                   </span>
-                  <span className="timeline-notes">{item.notes}</span>
                 </span>
               </button>
             );
@@ -424,24 +411,17 @@ export function DayFlowEditor() {
                 </Badge>
               </div>
               <p className="card-copy">{activeResolutionRecipe.description}</p>
-              <div className="resolve-mode-focus">
-                <span>Focused moment</span>
-                <strong>{getTimelineTitle(project.items, activeResolutionRecipe.timelineItemId)}</strong>
-              </div>
               <Button disabled={isActiveRiskResolved} onClick={applyActiveResolution} size="small">
                 {isActiveRiskResolved ? activeResolutionRecipe.resolvedLabel : activeResolutionRecipe.primaryActionLabel}
               </Button>
               <span aria-live="polite" className="copy-status">
-                {resolutionStatus ?? "This will save locally and update the connected studio views."}
+                {resolutionStatus ?? "Saves locally and updates the connected views."}
               </span>
             </CardContent>
           </Card>
-        ) : null}
-
-        {selectedMomentIntelligence ? (
+        ) : selectedMomentIntelligence ? (
           <ActionDock
             action={selectedMomentIntelligence.primaryAction}
-            emphasis={activeResolutionRecipe && activeResolveRisk ? "secondary" : "primary"}
             onApply={applyUnifiedAction}
             status={formatActionStatus(actionStatus, selectedMomentIntelligence.primaryAction.id)}
           />

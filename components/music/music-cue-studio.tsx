@@ -249,26 +249,6 @@ export function MusicCueStudio() {
 
       <aside className="page-grid">
         <FlowAnalysis risks={musicRisks} title="Music Readiness" />
-        <Card>
-          <CardContent>
-            <p className="eyebrow">Connected Studio Views</p>
-            <h3 className="card-title">One cue sheet, many outputs.</h3>
-            <ul className="clean-list">
-              <li className="analysis-item">
-                <strong>Preview Wedding Day</strong>
-                <p className="analysis-copy">Shows the edited song, status, and cue in the Wedding Day Player.</p>
-              </li>
-              <li className="analysis-item">
-                <strong>Director Mode</strong>
-                <p className="analysis-copy">Uses the same cue in DJ, Officiant, Toastmaster, and Planner boards.</p>
-              </li>
-              <li className="analysis-item">
-                <strong>Exports</strong>
-                <p className="analysis-copy">Print-style briefs use the current cue sheet instead of static mock data.</p>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
       </aside>
     </div>
   );
