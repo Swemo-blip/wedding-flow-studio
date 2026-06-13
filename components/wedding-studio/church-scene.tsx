@@ -201,7 +201,13 @@ export function CeremonyScene({
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
-      <div className="ceremony-canvas-frame">
+      <div
+        className="ceremony-canvas-frame"
+        // Back the canvas with the current sky so a cold start or a dropped
+        // frame during the day→dusk transition reveals scene-matched light,
+        // never a loading flash.
+        style={{ background: `linear-gradient(180deg, ${preset.hemisphereSky}, ${preset.fogColor} 60%)` }}
+      >
         <Canvas
           camera={{ fov: 40, near: 0.1, position: getCameraPosition(viewMode) }}
           dpr={[1, 1.8]}

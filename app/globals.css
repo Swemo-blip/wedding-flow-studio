@@ -13425,20 +13425,6 @@ a {
   color: var(--ink);
 }
 
-.ceremony-canvas-frame::before {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: grid;
-  place-items: center;
-  color: rgba(240, 234, 216, 0.4);
-  content: "Preparing your venue…";
-  font-size: 0.78rem;
-  font-weight: 560;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .ceremony-canvas-frame canvas {
   position: relative;
   z-index: 1;
