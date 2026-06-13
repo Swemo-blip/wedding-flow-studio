@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
 import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
+import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
 import { sampleWedding } from "@/lib/wedding-data";
@@ -16,7 +17,8 @@ type ExportPreviewProps = {
 };
 
 export function ExportPreview({ exportType }: ExportPreviewProps) {
-  const [copyStatus, setCopyStatus] = useState("Ready to copy");
+  const { t } = useTranslation();
+  const [copyStatus, setCopyStatus] = useState(t("Ready to copy"));
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const items = useMemo(
@@ -53,9 +55,9 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
   async function copyBrief() {
     try {
       await navigator.clipboard.writeText(briefText);
-      setCopyStatus("Brief copied");
+      setCopyStatus(t("Brief copied"));
     } catch {
-      setCopyStatus("Copy unavailable");
+      setCopyStatus(t("Copy unavailable"));
     }
   }
 
@@ -65,22 +67,22 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
         <article className="export-sheet">
           <div className="summary-between">
             <div>
-              <p className="eyebrow">Export Preview</p>
+              <p className="eyebrow">{t("Export Preview")}</p>
               <h3 className="card-title">{exportType.title}</h3>
               <p className="card-copy">
                 {sampleWedding.coupleNames} - {sampleWedding.date}
               </p>
             </div>
             <div className="export-contact">
-              <span>Contact person</span>
+              <span>{t("Contact person")}</span>
               <strong>{exportType.contactPerson}</strong>
-              {hasLocalProject ? <em>Using local project edits</em> : null}
+              {hasLocalProject ? <em>{t("Using local project edits")}</em> : null}
             </div>
           </div>
           <p className="card-copy">{exportType.description}</p>
 
           <div className="export-section">
-            <h4>Relevant Timeline</h4>
+            <h4>{t("Relevant Timeline")}</h4>
             <ol className="export-timeline">
               {items.map((item) => (
                 <li key={item.id}>
@@ -98,7 +100,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
           {relatedSpeeches.length > 0 ? (
             <div className="export-section">
-              <h4>Program Notes</h4>
+              <h4>{t("Program Notes")}</h4>
               <ul className="clean-list">
                 {relatedSpeeches.map((speech) => (
                   <li className="analysis-item" key={speech.id}>
@@ -114,7 +116,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
           {relatedCues.length > 0 ? (
             <div className="export-section">
-              <h4>Music Cues</h4>
+              <h4>{t("Music Cues")}</h4>
               <ul className="clean-list">
                 {relatedCues.map((cue) => (
                   <li className="analysis-item" key={cue.id}>
@@ -130,7 +132,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
           {shouldShowGuestNotes ? (
             <div className="export-section">
-              <h4>Guest Journey Notes</h4>
+              <h4>{t("Guest Journey Notes")}</h4>
               <ul className="clean-list">
                 {guestNotes.map((guest) => (
                   <li className="analysis-item" key={guest.id}>
@@ -147,13 +149,13 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
           {risks.length > 0 ? (
             <div className="export-section">
-              <h4>Warnings</h4>
+              <h4>{t("Warnings")}</h4>
               <RiskList risks={risks} />
             </div>
           ) : null}
         </article>
         <div className="button-row no-print">
-          <Button onClick={copyBrief} size="small" variant="secondary">Copy Brief</Button>
+          <Button onClick={copyBrief} size="small" variant="secondary">{t("Copy Brief")}</Button>
           <span aria-live="polite" className="copy-status">{copyStatus}</span>
         </div>
       </CardContent>

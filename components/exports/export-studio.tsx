@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
+import { useTranslation } from "@/lib/i18n";
 import { exportTypes } from "@/lib/wedding-data";
 
 export function ExportStudio() {
+  const { t } = useTranslation();
   const [selectedExportId, setSelectedExportId] = useState(exportTypes[0].id);
   const selectedExport = exportTypes.find((exportType) => exportType.id === selectedExportId) ?? exportTypes[0];
 
@@ -29,10 +31,10 @@ export function ExportStudio() {
       <div className="export-studio">
         <details className="studio-detail-drawer export-brief-library">
           <summary>
-            <span>Brief library</span>
-            <strong>{exportTypes.length} export types</strong>
+            <span>{t("Brief library")}</span>
+            <strong>{exportTypes.length} {t("export types")}</strong>
           </summary>
-          <div className="export-brief-board" aria-label="Export brief selector">
+          <div className="export-brief-board" aria-label={t("Export brief selector")}>
             {exportTypes.map((exportType, index) => (
               <button
                 aria-pressed={exportType.id === selectedExport.id}
@@ -52,8 +54,8 @@ export function ExportStudio() {
 
         <details className="studio-detail-drawer export-context-drawer">
           <summary>
-            <span>Export Workflow</span>
-            <strong>Open planning context</strong>
+            <span>{t("Export Workflow")}</span>
+            <strong>{t("Open planning context")}</strong>
           </summary>
           <StudioWorkflow activeStep="exports" />
         </details>
@@ -63,8 +65,8 @@ export function ExportStudio() {
             <Card>
               <CardContent>
                 <label className="field export-select-field">
-                  <span>Brief type</span>
-                  <select aria-label="Choose export brief type" onChange={(event) => setSelectedExportId(event.target.value)} value={selectedExportId}>
+                  <span>{t("Brief type")}</span>
+                  <select aria-label={t("Choose export brief type")} onChange={(event) => setSelectedExportId(event.target.value)} value={selectedExportId}>
                     {exportTypes.map((exportType) => (
                       <option key={exportType.id} value={exportType.id}>
                         {exportType.title}
@@ -73,9 +75,9 @@ export function ExportStudio() {
                   </select>
                 </label>
 
-                <p className="eyebrow">Reference</p>
-                <h3 className="card-title">Full Run of Show</h3>
-                <p className="card-copy">A compact source view for the selected brief.</p>
+                <p className="eyebrow">{t("Reference")}</p>
+                <h3 className="card-title">{t("Full Run of Show")}</h3>
+                <p className="card-copy">{t("A compact source view for the selected brief.")}</p>
                 <RunOfShow />
               </CardContent>
             </Card>

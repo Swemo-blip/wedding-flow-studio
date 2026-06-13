@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
+import { useTranslation } from "@/lib/i18n";
 import { ceremonyLayout, musicCues } from "@/lib/wedding-data";
 import { percent } from "@/lib/utils";
 
 export function CeremonyLayoutView() {
+  const { t } = useTranslation();
   const [guestCount, setGuestCount] = useState(ceremonyLayout.guestCount);
   const [rows, setRows] = useState(ceremonyLayout.rows);
   const [seatsPerSide, setSeatsPerSide] = useState(ceremonyLayout.seatsPerSidePerRow);
@@ -56,27 +58,27 @@ export function CeremonyLayoutView() {
           <div className="ceremony-scene-side">
             <Card className="ceremony-control-card">
               <CardContent>
-                <p className="eyebrow">Scene Controls</p>
+                <p className="eyebrow">{t("Scene Controls")}</p>
                 <h3 className="card-title">{moment}</h3>
                 <div className="form-grid" style={{ marginTop: 16 }}>
                   <label className="field">
-                    <span>Guest count</span>
+                    <span>{t("Guest count")}</span>
                     <input min={1} max={capacity} onChange={(event) => setGuestCount(Number(event.target.value))} type="number" value={guestCount} />
                   </label>
                   <label className="field">
-                    <span>Rows</span>
+                    <span>{t("Rows")}</span>
                     <input min={8} max={28} onChange={(event) => setRows(Number(event.target.value))} type="number" value={rows} />
                   </label>
                   <label className="field">
-                    <span>Seats per pew side</span>
+                    <span>{t("Seats per pew side")}</span>
                     <input min={3} max={8} onChange={(event) => setSeatsPerSide(Number(event.target.value))} type="number" value={seatsPerSide} />
                   </label>
                   <label className="field">
-                    <span>Reserved family rows</span>
+                    <span>{t("Reserved family rows")}</span>
                     <input min={0} max={rows} onChange={(event) => setReservedRows(Number(event.target.value))} type="number" value={reservedRows} />
                   </label>
                   <label className="field">
-                    <span>Ceremony moment</span>
+                    <span>{t("Ceremony moment")}</span>
                     <select onChange={(event) => setMoment(event.target.value)} value={moment}>
                       {musicCues.slice(0, 4).map((cue) => (
                         <option key={cue.id} value={cue.moment}>
@@ -91,33 +93,33 @@ export function CeremonyLayoutView() {
 
             <details className="studio-detail-drawer ceremony-scene-drawer">
               <summary>
-                <span>Capacity and flow</span>
-                <strong>{Math.max(0, capacity - guestCount)} open seats</strong>
+                <span>{t("Capacity and flow")}</span>
+                <strong>{Math.max(0, capacity - guestCount)} {t("open seats")}</strong>
               </summary>
               <div className="ceremony-scene-drawer-content">
                 <div className="metric-grid ceremony-metrics">
                   <div className="metric-card">
-                    <span className="metric-label">Capacity</span>
+                    <span className="metric-label">{t("Capacity")}</span>
                     <p className="metric-value">{capacity}</p>
                   </div>
                   <div className="metric-card">
-                    <span className="metric-label">Used</span>
+                    <span className="metric-label">{t("Used")}</span>
                     <p className="metric-value">{usedPercent}%</p>
                   </div>
                   <div className="metric-card">
-                    <span className="metric-label">Reserved</span>
+                    <span className="metric-label">{t("Reserved")}</span>
                     <p className="metric-value">{reservedSeats}</p>
                   </div>
                   <div className="metric-card">
-                    <span className="metric-label">Open seats</span>
+                    <span className="metric-label">{t("Open seats")}</span>
                     <p className="metric-value">{Math.max(0, capacity - guestCount)}</p>
                   </div>
                 </div>
                 <div className="timeline-meta" style={{ marginTop: 14 }}>
-                  <Badge>Guest count uses {usedPercent}% of chapel capacity</Badge>
-                  <Badge tone="medium">Reserved family rows occupy {reservedSeats} seats</Badge>
-                  <Badge tone="medium">Recessional music is missing a backup plan</Badge>
-                  <Badge tone="low">Photographer balcony position requires venue approval</Badge>
+                  <Badge>{t("Guest count uses")} {usedPercent}% {t("of chapel capacity")}</Badge>
+                  <Badge tone="medium">{t("Reserved family rows occupy")} {reservedSeats} {t("seats")}</Badge>
+                  <Badge tone="medium">{t("Recessional music is missing a backup plan")}</Badge>
+                  <Badge tone="low">{t("Photographer balcony position requires venue approval")}</Badge>
                 </div>
                 <CeremonyFlow />
               </div>
@@ -128,17 +130,17 @@ export function CeremonyLayoutView() {
         eyebrow={ceremonyLayout.name}
         title="Ceremony scene"
       >
-        <div className="canvas ceremony-canvas" aria-label="Interactive ceremony layout preview">
+        <div className="canvas ceremony-canvas" aria-label={t("Interactive ceremony layout preview")}>
           <div className="altar">
-            <span>Altar</span>
-            <strong>Emma & James</strong>
+            <span>{t("Altar")}</span>
+            <strong>Emma &amp; James</strong>
             <em>{ceremonyLayout.officiantName}</em>
           </div>
-          <div className="musician-marker">Organist + Soloist</div>
-          <div className="photographer-marker left">Photographer: Left aisle</div>
-          <div className="photographer-marker back">Photographer: Back center</div>
-          <div className="photographer-marker balcony">Balcony approval needed</div>
-          <div className="wedding-party">Wedding Party</div>
+          <div className="musician-marker">{t("Organist + Soloist")}</div>
+          <div className="photographer-marker left">{t("Photographer: Left aisle")}</div>
+          <div className="photographer-marker back">{t("Photographer: Back center")}</div>
+          <div className="photographer-marker balcony">{t("Balcony approval needed")}</div>
+          <div className="wedding-party">{t("Wedding Party")}</div>
           <div className="pew-map">
             {rowFill.map((row) => (
               <PewRow
