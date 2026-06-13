@@ -31,9 +31,11 @@ export function TopBar({ wedding }: TopBarProps) {
     <header className="studio-header">
       <div className="studio-header-inner">
         <div className="studio-header-identity">
-          <h1>{activeWedding.coupleNames}</h1>
+          <h1>{hasLocalProject ? activeWedding.coupleNames : "Your Wedding Studio"}</h1>
           <p>
-            {activeWedding.date} · {activeWedding.receptionLocation}
+            {hasLocalProject
+              ? `${activeWedding.date} · ${activeWedding.receptionLocation}`
+              : "Preview your wedding day before it unfolds"}
           </p>
         </div>
         <div className="studio-header-actions">

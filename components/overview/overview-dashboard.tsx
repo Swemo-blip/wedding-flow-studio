@@ -7,10 +7,10 @@ import {
   Expand,
   MapPin,
   Minus,
-  MoonStar,
   Palette,
   PencilRuler,
   Plus,
+  Sunrise,
   SunMedium,
   Users,
   X
@@ -54,7 +54,7 @@ export function OverviewDashboard() {
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   const [heroScene, setHeroScene] = useState<HeroScene>("ceremony");
   const [dimension, setDimension] = useState<"2d" | "3d">("3d");
-  const [lighting, setLighting] = useState<SceneLighting>("dusk");
+  const [lighting, setLighting] = useState<SceneLighting>("day");
   const [zoom, setZoom] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
@@ -219,15 +219,15 @@ export function OverviewDashboard() {
                   </button>
                 </div>
                 <button
-                  aria-label={lighting === "dusk" ? "Switch to night lighting" : "Switch to golden-hour lighting"}
+                  aria-label={lighting === "day" ? "Switch to golden-hour lighting" : "Switch to daylight"}
                   className="venue-tool-button"
-                  onClick={() => setLighting((value) => (value === "dusk" ? "night" : "dusk"))}
+                  onClick={() => setLighting((value) => (value === "day" ? "dusk" : "day"))}
                   type="button"
                 >
-                  {lighting === "dusk" ? (
-                    <SunMedium aria-hidden="true" size={15} strokeWidth={1.8} />
+                  {lighting === "day" ? (
+                    <Sunrise aria-hidden="true" size={15} strokeWidth={1.8} />
                   ) : (
-                    <MoonStar aria-hidden="true" size={15} strokeWidth={1.8} />
+                    <SunMedium aria-hidden="true" size={15} strokeWidth={1.8} />
                   )}
                 </button>
                 <button aria-label="Toggle fullscreen preview" className="venue-tool-button" onClick={toggleFullscreen} type="button">

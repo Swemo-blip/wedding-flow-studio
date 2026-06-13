@@ -19,7 +19,7 @@ import {
   type WeddingStudioCapacity
 } from "@/lib/wedding-studio-plan";
 
-export type SceneLighting = "dusk" | "night";
+export type SceneLighting = "day" | "dusk";
 
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
@@ -52,29 +52,29 @@ const lightingPresets: Record<
     rimIntensity: number;
   }
 > = {
-  dusk: {
-    ambientColor: "#46455c",
-    ambientIntensity: 0.34,
-    fogColor: "#262230",
-    fogFar: 36,
-    fogNear: 14,
-    hemisphereGround: "#1b1812",
-    hemisphereIntensity: 0.62,
-    hemisphereSky: "#585a7c",
-    keyIntensity: 1.85,
-    rimIntensity: 0.55
-  },
-  night: {
-    ambientColor: "#2e3140",
-    ambientIntensity: 0.22,
-    fogColor: "#12130c",
-    fogFar: 33,
-    fogNear: 13,
-    hemisphereGround: "#13110a",
-    hemisphereIntensity: 0.5,
-    hemisphereSky: "#39405c",
-    keyIntensity: 1.45,
+  day: {
+    ambientColor: "#dfe6ef",
+    ambientIntensity: 0.85,
+    fogColor: "#e7eef3",
+    fogFar: 44,
+    fogNear: 20,
+    hemisphereGround: "#9a9277",
+    hemisphereIntensity: 1.15,
+    hemisphereSky: "#cfe0f0",
+    keyIntensity: 2.2,
     rimIntensity: 0.5
+  },
+  dusk: {
+    ambientColor: "#5a5868",
+    ambientIntensity: 0.46,
+    fogColor: "#3a3340",
+    fogFar: 38,
+    fogNear: 15,
+    hemisphereGround: "#2a2419",
+    hemisphereIntensity: 0.72,
+    hemisphereSky: "#6c6e90",
+    keyIntensity: 2,
+    rimIntensity: 0.55
   }
 };
 
@@ -97,43 +97,43 @@ type Palette = {
 const palettes: Record<StudioStyle, Palette> = {
   classic: {
     accent: "#c9a767",
-    blush: "#dbb9a4",
+    blush: "#e7c6b3",
     candle: "#ffd9a0",
-    carpet: "#e9dcc0",
-    floor: "#262419",
-    guest: "#ecdfc2",
-    pew: "#5d4a33",
-    wall: "#2d2b1f"
+    carpet: "#ede0c6",
+    floor: "#d8cab0",
+    guest: "#f1e7d2",
+    pew: "#a07f57",
+    wall: "#efe7d6"
   },
   modern: {
-    accent: "#aebdb0",
-    blush: "#bdc8be",
+    accent: "#9fb0a3",
+    blush: "#cdd6cd",
     candle: "#f3e2b8",
-    carpet: "#dfe0d4",
-    floor: "#1f2320",
-    guest: "#dfe5da",
-    pew: "#3c443f",
-    wall: "#262b27"
+    carpet: "#e4e5da",
+    floor: "#dcdcd2",
+    guest: "#eef0ea",
+    pew: "#7d877f",
+    wall: "#eef0ea"
   },
   romantic: {
     accent: "#d8a79c",
-    blush: "#e3bdb2",
+    blush: "#f0d2c8",
     candle: "#ffd9ae",
-    carpet: "#ecdcd0",
-    floor: "#282022",
-    guest: "#eed9d1",
-    pew: "#54403c",
-    wall: "#2f2628"
+    carpet: "#f1e2d8",
+    floor: "#e3d3cf",
+    guest: "#f6e7df",
+    pew: "#9c7a72",
+    wall: "#f3e8e4"
   },
   rustic: {
     accent: "#c2a065",
-    blush: "#d4b993",
+    blush: "#e2cba9",
     candle: "#f5cf92",
-    carpet: "#e4d4b2",
-    floor: "#262018",
-    guest: "#e7d7b7",
-    pew: "#4f3c28",
-    wall: "#2c261c"
+    carpet: "#e9dabc",
+    floor: "#d6c2a0",
+    guest: "#efe2c8",
+    pew: "#8a6a45",
+    wall: "#e7dcc6"
   }
 };
 
@@ -190,6 +190,7 @@ export function CeremonyScene({
 }: CeremonySceneProps) {
   const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
   const preset = lightingPresets[lighting];
+  const isDay = lighting === "day";
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
@@ -221,27 +222,33 @@ export function CeremonyScene({
             shadow-camera-top={8}
             shadow-mapSize={[1024, 1024]}
           />
-          <pointLight color="#ffca8c" decay={2} distance={10} intensity={budgetLevel === "signature" ? 34 : 24} position={[0, 3.1, -3.6]} />
+          <pointLight
+            color="#ffca8c"
+            decay={2}
+            distance={10}
+            intensity={isDay ? 7 : budgetLevel === "signature" ? 32 : 22}
+            position={[0, 3.1, -3.6]}
+          />
           <Environment frames={1} resolution={128}>
-            <Lightformer color="#ffd2a0" form="circle" intensity={lighting === "dusk" ? 3 : 1.9} position={[0, 2, -9]} scale={[7, 7, 1]} />
+            <Lightformer color={isDay ? "#fff6e2" : "#ffd2a0"} form="circle" intensity={isDay ? 4.2 : 3} position={[0, 2, -9]} scale={[7, 7, 1]} />
             <Lightformer
-              color={lighting === "dusk" ? "#5a6190" : "#2e3552"}
+              color={isDay ? "#c2d8ee" : "#5a6190"}
               form="rect"
-              intensity={1.1}
+              intensity={isDay ? 1.7 : 1.1}
               position={[0, 9, 0]}
               rotation-x={Math.PI / 2}
-              scale={[14, 14, 1]}
+              scale={[16, 16, 1]}
             />
-            <Lightformer color="#caa05f" form="rect" intensity={0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
-            <Lightformer color="#3c4258" form="rect" intensity={0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
+            <Lightformer color={isDay ? "#eef1ea" : "#caa05f"} form="rect" intensity={isDay ? 1 : 0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
+            <Lightformer color={isDay ? "#d6e2ee" : "#3c4258"} form="rect" intensity={isDay ? 0.8 : 0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
           </Environment>
-          <ContactShadows blur={2.4} color="#050602" far={5} opacity={0.55} position={[0, -0.025, 0.25]} resolution={384} scale={13} />
+          <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.025, 0.25]} resolution={384} scale={13} />
           <EffectComposer multisampling={4}>
-            <Bloom intensity={0.85} luminanceSmoothing={0.18} luminanceThreshold={1} mipmapBlur />
-            <Vignette darkness={0.58} eskil={false} offset={0.26} />
+            <Bloom intensity={isDay ? 0.42 : 0.85} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.05 : 1} mipmapBlur />
+            <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
           </EffectComposer>
-          <GlowHalo />
-          <DustMotes />
+          {isDay ? null : <GlowHalo />}
+          <DustMotes intensity={isDay ? 0.18 : 0.42} />
           <WeddingStageInterior
             activeStep={activeStep}
             budgetLevel={budgetLevel}
@@ -284,21 +291,21 @@ function createSkyTexture(mode: SceneLighting) {
   if (context) {
     const gradient = context.createLinearGradient(0, 0, 0, 256);
 
-    if (mode === "dusk") {
-      gradient.addColorStop(0, "#222a4e");
-      gradient.addColorStop(0.42, "#3d3f63");
-      gradient.addColorStop(0.62, "#7c5a64");
-      gradient.addColorStop(0.74, "#cf9468");
-      gradient.addColorStop(0.82, "#edbd82");
-      gradient.addColorStop(0.9, "#5a4434");
-      gradient.addColorStop(1, "#1c1812");
+    if (mode === "day") {
+      gradient.addColorStop(0, "#8db4dd");
+      gradient.addColorStop(0.4, "#a9cae5");
+      gradient.addColorStop(0.68, "#d3e4ef");
+      gradient.addColorStop(0.84, "#eef2ec");
+      gradient.addColorStop(0.94, "#dfe6d8");
+      gradient.addColorStop(1, "#c8d2bc");
     } else {
-      gradient.addColorStop(0, "#0c1124");
-      gradient.addColorStop(0.5, "#192038");
-      gradient.addColorStop(0.74, "#37364e");
-      gradient.addColorStop(0.84, "#5c5050");
-      gradient.addColorStop(0.92, "#2c2520");
-      gradient.addColorStop(1, "#11100b");
+      gradient.addColorStop(0, "#33396a");
+      gradient.addColorStop(0.42, "#52507e");
+      gradient.addColorStop(0.62, "#9a6e74");
+      gradient.addColorStop(0.74, "#e0a06f");
+      gradient.addColorStop(0.82, "#f4c88c");
+      gradient.addColorStop(0.9, "#8a6a4a");
+      gradient.addColorStop(1, "#3a2e22");
     }
 
     context.fillStyle = gradient;
@@ -336,7 +343,7 @@ function HillSilhouettes() {
       {hills.map(([x, z, scaleX, scaleY], index) => (
         <mesh key={index} position={[x, -0.5, z]} scale={[scaleX, scaleY, 5]}>
           <sphereGeometry args={[1, 18, 12]} />
-          <meshStandardMaterial color="#202b18" roughness={1} />
+          <meshStandardMaterial color="#7c8c5c" roughness={1} />
         </mesh>
       ))}
     </group>
@@ -345,7 +352,7 @@ function HillSilhouettes() {
 
 const DUST_COUNT = 90;
 
-function DustMotes() {
+function DustMotes({ intensity = 0.42 }: { intensity?: number }) {
   const pointsRef = useRef<THREE.Points>(null);
   const { basePositions, positions } = useMemo(() => {
     const base = new Float32Array(DUST_COUNT * 3);
@@ -388,7 +395,7 @@ function DustMotes() {
         blending={THREE.AdditiveBlending}
         color="#e9c688"
         depthWrite={false}
-        opacity={0.42}
+        opacity={intensity}
         size={0.05}
         sizeAttenuation
         transparent
@@ -647,9 +654,9 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
         <meshStandardMaterial color={palette.wall} roughness={0.88} />
       </mesh>
       {[-3.2, -1.05, 1.05, 3.2].map((xPosition) => (
-        <mesh key={xPosition} position={[xPosition, 1.38, -5.62]}>
-          <boxGeometry args={[0.72, 1.08, 0.08]} />
-          <meshStandardMaterial color="#3a3526" emissive={palette.candle} emissiveIntensity={0.55} roughness={0.5} toneMapped={false} />
+        <mesh key={xPosition} position={[xPosition, 1.5, -5.62]}>
+          <boxGeometry args={[0.72, 1.5, 0.08]} />
+          <meshStandardMaterial color="#f6eed6" emissive="#fff2cf" emissiveIntensity={0.9} roughness={0.4} toneMapped={false} />
         </mesh>
       ))}
     </group>
@@ -1353,8 +1360,8 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
   const surfaces: Record<StudioVenueType, { aisleWidth: number; floor: string; path: string }> = {
     beach: {
       aisleWidth: 1.25,
-      floor: "#494130",
-      path: "#e7d9b6"
+      floor: "#dcc89e",
+      path: "#f1e6cb"
     },
     church: {
       aisleWidth: 1.05,
@@ -1363,13 +1370,13 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
     },
     garden: {
       aisleWidth: 1.18,
-      floor: "#232c1c",
-      path: "#e9dec3"
+      floor: "#8fa06a",
+      path: "#ece1c8"
     },
     hall: {
       aisleWidth: 1.2,
-      floor: "#2a241d",
-      path: "#e6d9ba"
+      floor: "#cdbd9d",
+      path: "#ece0c2"
     }
   };
 
