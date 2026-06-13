@@ -176,7 +176,56 @@ const sv: Record<string, string> = {
   "Open Studio": "Öppna studion",
   "Repair Active Moment": "Åtgärda aktivt moment",
   "Find risks before they become problems": "Hitta risker innan de blir problem",
-  "Flow Analysis": "Flödesanalys"
+  "Flow Analysis": "Flödesanalys",
+  // Risk severities
+  "low": "låg",
+  "medium": "medel",
+  "high": "hög",
+  // Risk titles
+  "Group photos may need more time.": "Gruppfotona kan behöva mer tid.",
+  "A music cue is missing a backup plan.": "En musik-cue saknar reservplan.",
+  "A music cue needs an exact start cue.": "En musik-cue behöver en exakt startsignal.",
+  "A ceremony music cue still needs confirmation.": "En vigselmusik-cue behöver fortfarande bekräftas.",
+  "Speech timing may make the reception feel long.": "Talens tider kan få mottagningen att kännas lång.",
+  "Catering needs final allergy details.": "Cateringen behöver slutgiltiga allergiuppgifter.",
+  "Meal preferences need final confirmation.": "Måltidsönskemål behöver slutbekräftas.",
+  "Child meals need setup notes.": "Barnmåltider behöver upplägg.",
+  "Review accessibility seating and guest flow.": "Se över tillgänglighetsplatser och gästflöde.",
+  "Seating conflict detected.": "Placeringskonflikt upptäckt.",
+  "Secret item requires vendor coordination.": "Hemlig punkt kräver samordning med leverantör.",
+  "Photographer balcony position requires venue approval.": "Fotografens balkongposition kräver lokalens godkännande.",
+  "Keep the catering service path clear.": "Håll cateringens serveringsväg fri.",
+  // Static risk descriptions
+  "The ceremony plan includes a balcony photographer position that should be approved by the chapel.": "Vigselplanen innehåller en balkongposition för fotografen som bör godkännas av kyrkan.",
+  "The east wall service path must remain open during dinner and speeches.": "Serveringsvägen längs östra väggen måste hållas öppen under middag och tal.",
+  // Quick action (ActionDock)
+  "Quick action": "Snabbåtgärd",
+  "Applies right here": "Tillämpas direkt här",
+  "Opens the right view": "Öppnar rätt vy",
+  "Open Action": "Öppna åtgärd",
+  "Ready to apply inside the local wedding plan.": "Redo att tillämpas i den lokala bröllopsplanen.",
+  "Opens the connected studio view.": "Öppnar den kopplade studiovyn.",
+  "moment action": "momentåtgärd",
+  // Music selected cue
+  "Active cue": "Aktiv cue",
+  "Selected cue": "Vald cue",
+  "Moment": "Moment",
+  "Responsible": "Ansvarig",
+  "Start cue": "Startsignal",
+  "Backup": "Reserv",
+  "Cue readiness": "Cue-status",
+  // Reception guest inspector
+  "Guest Inspector": "Gästinspektör",
+  "Accessibility": "Tillgänglighet",
+  "Active guest": "Aktiv gäst",
+  "Arrival": "Ankomst",
+  "Table": "Bord",
+  "Meal": "Måltid",
+  "Notes": "Anteckningar",
+  "Best seating decision": "Bästa placeringsbeslut",
+  "Best vendor decision": "Bästa leverantörsbeslut",
+  "Suggested fix": "Föreslagen åtgärd",
+  "Focused moment": "Fokuserat moment"
 };
 
 const dictionaries: Record<Language, Record<string, string>> = { en: {}, sv };

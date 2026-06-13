@@ -24,10 +24,10 @@ export function FlowAnalysis({ limit = 6, risks, title = "Flow Analysis" }: Flow
           {visibleRisks.map((risk) => (
             <li className="analysis-item" key={risk.id}>
               <div className="summary-between">
-                <p className="analysis-title">{risk.title}</p>
-                <Badge tone={risk.severity}>{risk.severity}</Badge>
+                <p className="analysis-title">{t(risk.title)}</p>
+                <Badge tone={risk.severity}>{t(risk.severity)}</Badge>
               </div>
-              <p className="analysis-copy">{risk.description}</p>
+              <p className="analysis-copy">{t(risk.description)}</p>
             </li>
           ))}
         </ul>
