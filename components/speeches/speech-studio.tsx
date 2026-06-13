@@ -9,6 +9,7 @@ import { StudioCommand } from "@/components/ui/studio-command";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
+import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Speech, Visibility } from "@/lib/wedding-types";
 
@@ -16,6 +17,7 @@ const speechRiskIds = ["risk-speech-length", "risk-secret-technical"];
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
 
 export function SpeechStudio() {
+  const { t } = useTranslation();
   const { hasLocalProject, resetSpeeches, speeches, timelineItems, updateSpeech, updatedAt } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
@@ -94,8 +96,8 @@ export function SpeechStudio() {
           title="Shape the program without exposing surprises too early."
         >
           <label className="field speech-select-field">
-            <span>Active speech</span>
-            <select aria-label="Choose speech" onChange={(event) => setSelectedSpeechId(event.target.value)} value={selectedSpeech?.id ?? ""}>
+            <span>{t("Active speech")}</span>
+            <select aria-label={t("Choose speech")} onChange={(event) => setSelectedSpeechId(event.target.value)} value={selectedSpeech?.id ?? ""}>
               {speeches.map((speech) => (
                 <option key={speech.id} value={speech.id}>
                   {speech.timing} - {speech.title}
@@ -107,7 +109,7 @@ export function SpeechStudio() {
 
         {selectedSpeech ? (
           <>
-            <div className="speech-program-canvas" aria-label="Speech program canvas">
+            <div className="speech-program-canvas" aria-label={t("Speech program canvas")}>
               <div className="speech-program-track">
                 {speeches.map((speech, index) => {
                   const isSelected = speech.id === selectedSpeech.id;
@@ -139,48 +141,48 @@ export function SpeechStudio() {
                 <CardContent>
                   <div className="summary-between">
                     <div>
-                      <p className="eyebrow">Selected Program Moment</p>
+                      <p className="eyebrow">{t("Selected Program Moment")}</p>
                       <h3 className="card-title">{selectedSpeech.title}</h3>
                     </div>
                     <SecretLayerBadge isSecret={selectedSpeech.isSecret} />
                   </div>
                   <div className="speech-selected-grid">
                     <div>
-                      <span>Speaker</span>
+                      <span>{t("Speaker")}</span>
                       <strong>{selectedSpeech.speakerName}</strong>
                       <small>{selectedSpeech.relation}</small>
                     </div>
                     <div>
-                      <span>Timing</span>
+                      <span>{t("Timing")}</span>
                       <strong>{selectedSpeech.timing}</strong>
-                      <small>{selectedSpeech.durationMinutes} minutes</small>
+                      <small>{selectedSpeech.durationMinutes} {t("minutes")}</small>
                     </div>
                     <div>
-                      <span>Intro</span>
+                      <span>{t("Intro")}</span>
                       <strong>{selectedSpeech.introPerson}</strong>
-                      <small>Toastmaster handoff</small>
+                      <small>{t("Toastmaster handoff")}</small>
                     </div>
                     <div>
-                      <span>Technical</span>
-                      <strong>{selectedSpeech.technicalNeeds.join(", ") || "None"}</strong>
-                      <small>{selectedSpeech.visibility === "secret" ? "Director Mode only" : formatOption(selectedSpeech.visibility)}</small>
+                      <span>{t("Technical")}</span>
+                      <strong>{selectedSpeech.technicalNeeds.join(", ") || t("None")}</strong>
+                      <small>{selectedSpeech.visibility === "secret" ? t("Director Mode only") : t(formatOption(selectedSpeech.visibility))}</small>
                     </div>
                   </div>
                   {selectedSpeechRisks.length > 0 ? (
                     <div className="speech-smart-fix">
                       <div>
-                        <p className="eyebrow">Best Program Fix</p>
-                        <strong>{selectedSpeechRisks[0].title}</strong>
-                        <span>{selectedSpeechRisks[0].suggestedFix}</span>
+                        <p className="eyebrow">{t("Best Program Fix")}</p>
+                        <strong>{t(selectedSpeechRisks[0].title)}</strong>
+                        <span>{t(selectedSpeechRisks[0].suggestedFix)}</span>
                       </div>
-                      <Button onClick={applySmartProgramFix} size="small">Apply Fix</Button>
+                      <Button onClick={applySmartProgramFix} size="small">{t("Apply Fix")}</Button>
                     </div>
                   ) : (
                     <div className="speech-smart-fix" data-clear="true">
                       <div>
-                        <p className="eyebrow">Program Readiness</p>
-                        <strong>This speech layer is ready for Director Mode.</strong>
-                        <span>Timing, visibility, technical needs, and notes are connected to the production map.</span>
+                        <p className="eyebrow">{t("Program Readiness")}</p>
+                        <strong>{t("This speech layer is ready for Director Mode.")}</strong>
+                        <span>{t("Timing, visibility, technical needs, and notes are connected to the production map.")}</span>
                       </div>
                     </div>
                   )}
@@ -190,30 +192,30 @@ export function SpeechStudio() {
 
             <details className="studio-detail-drawer">
               <summary>
-                <span>Edit selected speech details</span>
+                <span>{t("Edit selected speech details")}</span>
                 <strong>{selectedSpeech.title}</strong>
               </summary>
               <Card className="speech-editor-card">
                 <CardContent>
                   <div className="form-grid speech-editor-form">
                     <label className="field">
-                      <span>Title</span>
+                      <span>{t("Title")}</span>
                       <input onChange={(event) => updateSelectedSpeech({ title: event.target.value })} value={selectedSpeech.title} />
                     </label>
                     <label className="field">
-                      <span>Speaker name</span>
+                      <span>{t("Speaker name")}</span>
                       <input onChange={(event) => updateSelectedSpeech({ speakerName: event.target.value })} value={selectedSpeech.speakerName} />
                     </label>
                     <label className="field">
-                      <span>Relation</span>
+                      <span>{t("Relation")}</span>
                       <input onChange={(event) => updateSelectedSpeech({ relation: event.target.value })} value={selectedSpeech.relation} />
                     </label>
                     <label className="field">
-                      <span>Timing</span>
+                      <span>{t("Timing")}</span>
                       <input onChange={(event) => updateSelectedSpeech({ timing: event.target.value })} value={selectedSpeech.timing} />
                     </label>
                     <label className="field">
-                      <span>Duration minutes</span>
+                      <span>{t("Duration minutes")}</span>
                       <input
                         min={1}
                         onChange={(event) => updateSelectedSpeech({ durationMinutes: Number(event.target.value) })}
@@ -222,7 +224,7 @@ export function SpeechStudio() {
                       />
                     </label>
                     <label className="field">
-                      <span>Visibility</span>
+                      <span>{t("Visibility")}</span>
                       <select
                         onChange={(event) => {
                           const visibility = event.target.value as Visibility;
@@ -232,17 +234,17 @@ export function SpeechStudio() {
                       >
                         {visibilityOptions.map((visibility) => (
                           <option key={visibility} value={visibility}>
-                            {formatOption(visibility)}
+                            {t(formatOption(visibility))}
                           </option>
                         ))}
                       </select>
                     </label>
                     <label className="field">
-                      <span>Intro person</span>
+                      <span>{t("Intro person")}</span>
                       <input onChange={(event) => updateSelectedSpeech({ introPerson: event.target.value })} value={selectedSpeech.introPerson} />
                     </label>
                     <label className="field">
-                      <span>Technical needs</span>
+                      <span>{t("Technical needs")}</span>
                       <input
                         onChange={(event) =>
                           updateSelectedSpeech({
@@ -256,7 +258,7 @@ export function SpeechStudio() {
                       />
                     </label>
                     <label className="field speech-wide-field">
-                      <span>Program notes</span>
+                      <span>{t("Program notes")}</span>
                       <textarea onChange={(event) => updateSelectedSpeech({ notes: event.target.value })} rows={5} value={selectedSpeech.notes} />
                     </label>
                   </div>
@@ -271,14 +273,14 @@ export function SpeechStudio() {
         <FlowAnalysis risks={speechRisks} title="Speech Readiness" />
         <Card>
           <CardContent>
-            <p className="eyebrow">Secret Layers</p>
-            <h3 className="card-title">Surprises stay operational without becoming visible too early.</h3>
+            <p className="eyebrow">{t("Secret Layers")}</p>
+            <h3 className="card-title">{t("Surprises stay operational without becoming visible too early.")}</h3>
             <p className="card-copy">
-              Locked items remain visible in Director Mode and exportable briefs while preserving the emotional reveal for the couple.
+              {t("Locked items remain visible in Director Mode and exportable briefs while preserving the emotional reveal for the couple.")}
             </p>
             <div className="timeline-meta">
-              <Badge tone="secret">{secretCount} secret layers</Badge>
-              <Badge>{totalSpeechMinutesBeforeCake} minutes before cake</Badge>
+              <Badge tone="secret">{secretCount} {t("secret layers")}</Badge>
+              <Badge>{totalSpeechMinutesBeforeCake} {t("minutes before cake")}</Badge>
             </div>
           </CardContent>
         </Card>

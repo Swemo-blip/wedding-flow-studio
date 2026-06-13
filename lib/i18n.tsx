@@ -376,7 +376,35 @@ const sv: Record<string, string> = {
   "Request balcony position approval.": "Begär godkännande av balkongposition.",
   "The ceremony photographer position needs chapel approval before rehearsal.": "Vigselfotografens position behöver kyrkans godkännande innan repetitionen.",
   "Add venue approval note": "Lägg till notering om lokalgodkännande",
-  "Venue approval note added": "Notering om lokalgodkännande tillagd"
+  "Venue approval note added": "Notering om lokalgodkännande tillagd",
+  // Speeches body
+  "Active speech": "Aktivt tal",
+  "Choose speech": "Välj tal",
+  "Speech program canvas": "Talprogramkarta",
+  "Selected Program Moment": "Valt programmoment",
+  "Speaker": "Talare",
+  "minutes": "minuter",
+  "Intro": "Introduktion",
+  "Toastmaster handoff": "Toastmaster-överlämning",
+  "Technical": "Tekniskt",
+  "Director Mode only": "Endast regissörsläge",
+  "Best Program Fix": "Bästa programåtgärd",
+  "Program Readiness": "Programstatus",
+  "This speech layer is ready for Director Mode.": "Det här tallagret är redo för regissörsläget.",
+  "Timing, visibility, technical needs, and notes are connected to the production map.": "Tider, synlighet, tekniska behov och anteckningar är kopplade till produktionskartan.",
+  "Edit selected speech details": "Redigera valt tal",
+  "Speaker name": "Talarens namn",
+  "Relation": "Relation",
+  "Timing": "Tidpunkt",
+  "Intro person": "Introduktionsperson",
+  "Technical needs": "Tekniska behov",
+  "Program notes": "Programanteckningar",
+  "Surprises stay operational without becoming visible too early.": "Överraskningar förblir operativa utan att synas för tidigt.",
+  "Locked items remain visible in Director Mode and exportable briefs while preserving the emotional reveal for the couple.": "Låsta punkter förblir synliga i regissörsläget och i exporterbara briefer samtidigt som den känslomässiga överraskningen bevaras för paret.",
+  "secret layers": "hemliga lager",
+  "minutes before cake": "minuter före tårtan",
+  "Ask the Toastmaster to group speeches and protect dinner service breaks.": "Be toastmastern gruppera talen och skydda pauserna i middagsserveringen.",
+  "Keep the item hidden from the couple but visible to Director Mode.": "Håll punkten dold för paret men synlig i regissörsläget."
 };
 
 const dictionaries: Record<Language, Record<string, string>> = { en: {}, sv };
