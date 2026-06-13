@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
+import { useTranslation } from "@/lib/i18n";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -24,6 +25,7 @@ const receptionRiskIds = [
 ];
 
 export function ReceptionStudio() {
+  const { t } = useTranslation();
   const {
     assignGuestToTable,
     dinnerTables,
@@ -126,25 +128,25 @@ export function ReceptionStudio() {
       title="Design the room around the guest journey."
     >
       <div className="reception-studio page-grid">
-        <section className="module-decision-strip studio-route-decision-strip" aria-label="Best seating decision">
+        <section className="module-decision-strip studio-route-decision-strip" aria-label={t("Best seating decision")}>
           <div>
-            <span>Best seating decision</span>
-            <strong>{bestReceptionRisk?.title ?? "Reception flow is ready for review."}</strong>
-            <p>{bestReceptionRisk?.suggestedFix ?? "Review the room once more before exporting the seating plan and venue setup brief."}</p>
+            <span>{t("Best seating decision")}</span>
+            <strong>{bestReceptionRisk ? t(bestReceptionRisk.title) : t("Reception flow is ready for review.")}</strong>
+            <p>{bestReceptionRisk ? t(bestReceptionRisk.suggestedFix) : t("Review the room once more before exporting the seating plan and venue setup brief.")}</p>
           </div>
-          {bestReceptionRisk ? <Button onClick={applyGuestJourneyFix} size="small">Apply Best Fix</Button> : null}
+          {bestReceptionRisk ? <Button onClick={applyGuestJourneyFix} size="small">{t("Apply Best Fix")}</Button> : null}
         </section>
 
       <details className="studio-detail-drawer reception-context-drawer">
         <summary>
-          <span>Reception Signals</span>
+          <span>{t("Reception Signals")}</span>
           <strong>{saveStatus}</strong>
         </summary>
-        <div className="reception-command-badges" aria-label="Reception planning signals">
-          <span>{dinnerTables.length} tables</span>
-          <span>{allergyGuestCount} allergy notes</span>
-          <span>{accessibilityGuestCount} accessibility note</span>
-          <span>{childSetupCount} child setup notes</span>
+        <div className="reception-command-badges" aria-label={t("Reception Signals")}>
+          <span>{dinnerTables.length} {t("tables")}</span>
+          <span>{allergyGuestCount} {t("allergy notes")}</span>
+          <span>{accessibilityGuestCount} {t("accessibility notes")}</span>
+          <span>{childSetupCount} {t("child setup notes")}</span>
         </div>
       </details>
 
@@ -159,15 +161,15 @@ export function ReceptionStudio() {
               <CardContent>
                 <div className="summary-between">
                   <div>
-                    <p className="eyebrow">Guest Inspector</p>
+                    <p className="eyebrow">{t("Guest Inspector")}</p>
                     <h3 className="card-title">{selectedGuest?.name}</h3>
                   </div>
-                  {selectedGuest?.accessibilityNotes ? <span className="reception-state-line" data-tone="medium">accessibility</span> : null}
+                  {selectedGuest?.accessibilityNotes ? <span className="reception-state-line" data-tone="medium">{t("accessibility")}</span> : null}
                 </div>
 
               <label className="field reception-select-field">
-                <span>Active guest</span>
-                <select aria-label="Choose guest" onChange={(event) => setSelectedGuestId(event.target.value)} value={selectedGuest?.id ?? ""}>
+                <span>{t("Active guest")}</span>
+                <select aria-label={t("Choose guest")} onChange={(event) => setSelectedGuestId(event.target.value)} value={selectedGuest?.id ?? ""}>
                   {guests.map((guest) => (
                     <option key={guest.id} value={guest.id}>
                       {guest.name} - {guest.tableId}
@@ -178,41 +180,41 @@ export function ReceptionStudio() {
 
               {selectedGuest ? (
                 <>
-                  <div className="selected-guest-journey" aria-label="Selected guest journey">
+                  <div className="selected-guest-journey" aria-label={t("Selected guest journey")}>
                     <div>
-                      <span>Arrival</span>
-                      <strong>{selectedGuest.accessibilityNotes ? "Needs clear route" : "Standard route"}</strong>
+                      <span>{t("Arrival")}</span>
+                      <strong>{selectedGuest.accessibilityNotes ? t("Needs clear route") : t("Standard route")}</strong>
                     </div>
                     <div>
-                      <span>Table</span>
-                      <strong>{selectedTable?.name ?? "Unassigned"}</strong>
+                      <span>{t("Table")}</span>
+                      <strong>{selectedTable?.name ?? t("Unassigned")}</strong>
                     </div>
                     <div>
-                      <span>Meal</span>
+                      <span>{t("Meal")}</span>
                       <strong>{selectedGuest.mealChoice}</strong>
                     </div>
                     <div>
-                      <span>Notes</span>
-                      <strong>{selectedGuest.allergies[0] ?? selectedGuest.tags[0] ?? "Clear"}</strong>
+                      <span>{t("Notes")}</span>
+                      <strong>{selectedGuest.allergies[0] ?? selectedGuest.tags[0] ?? t("Clear")}</strong>
                     </div>
                   </div>
 
                   <details className="reception-guest-details">
                     <summary>
-                      <span>Edit Guest Details</span>
-                      <small>Open only when you need to adjust meal, tags, table, or accessibility notes.</small>
+                      <span>{t("Edit Guest Details")}</span>
+                      <small>{t("Open only when you need to adjust meal, tags, table, or accessibility notes.")}</small>
                     </summary>
                     <div className="form-grid reception-guest-form">
                       <label className="field">
-                        <span>Name</span>
+                        <span>{t("Name")}</span>
                         <input onChange={(event) => updateSelectedGuest({ name: event.target.value })} value={selectedGuest.name} />
                       </label>
                       <label className="field">
-                        <span>Meal choice</span>
+                        <span>{t("Meal choice")}</span>
                         <input onChange={(event) => updateSelectedGuest({ mealChoice: event.target.value })} value={selectedGuest.mealChoice} />
                       </label>
                       <label className="field">
-                        <span>Table</span>
+                        <span>{t("Table")}</span>
                         <select onChange={(event) => assignGuestToTable(selectedGuest.id, event.target.value)} value={selectedGuest.tableId}>
                           {dinnerTables.map((table) => (
                             <option key={table.id} value={table.id}>
@@ -222,11 +224,11 @@ export function ReceptionStudio() {
                         </select>
                       </label>
                       <label className="field">
-                        <span>Language</span>
+                        <span>{t("Language")}</span>
                         <input onChange={(event) => updateSelectedGuest({ language: event.target.value })} value={selectedGuest.language} />
                       </label>
                       <label className="field reception-wide-field">
-                        <span>Allergies</span>
+                        <span>{t("Allergies")}</span>
                         <input
                           onChange={(event) =>
                             updateSelectedGuest({
@@ -240,7 +242,7 @@ export function ReceptionStudio() {
                         />
                       </label>
                       <label className="field reception-wide-field">
-                        <span>Tags</span>
+                        <span>{t("Tags")}</span>
                         <input
                           onChange={(event) =>
                             updateSelectedGuest({
@@ -254,7 +256,7 @@ export function ReceptionStudio() {
                         />
                       </label>
                       <label className="field reception-wide-field">
-                        <span>Accessibility notes</span>
+                        <span>{t("Accessibility notes")}</span>
                         <textarea
                           onChange={(event) => updateSelectedGuest({ accessibilityNotes: event.target.value })}
                           rows={3}
@@ -269,18 +271,18 @@ export function ReceptionStudio() {
               {selectedGuestRisks.length > 0 ? (
                 <div className="guest-smart-fix">
                   <div>
-                    <p className="eyebrow">Smart Guest Fix</p>
-                    <strong>{selectedGuestRisks[0].title}</strong>
-                    <span>{selectedGuestRisks[0].suggestedFix}</span>
+                    <p className="eyebrow">{t("Smart Guest Fix")}</p>
+                    <strong>{t(selectedGuestRisks[0].title)}</strong>
+                    <span>{t(selectedGuestRisks[0].suggestedFix)}</span>
                   </div>
-                  <Button onClick={applyGuestJourneyFix} size="small">Apply Guest Fix</Button>
+                  <Button onClick={applyGuestJourneyFix} size="small">{t("Apply Guest Fix")}</Button>
                 </div>
               ) : (
                 <div className="guest-smart-fix" data-clear="true">
                   <div>
-                    <p className="eyebrow">Guest Journey</p>
-                    <strong>This guest is clear for the current reception plan.</strong>
-                    <span>Meal, table, accessibility, and service notes are connected to the production map.</span>
+                    <p className="eyebrow">{t("Guest Journey")}</p>
+                    <strong>{t("This guest is clear for the current reception plan.")}</strong>
+                    <span>{t("Meal, table, accessibility, and service notes are connected to the production map.")}</span>
                   </div>
                 </div>
               )}
@@ -289,8 +291,8 @@ export function ReceptionStudio() {
 
             <details className="studio-detail-drawer reception-readiness-drawer">
               <summary>
-                <span>Readiness signals</span>
-                <strong>{receptionRisks.length > 0 ? `${receptionRisks.length} signals` : "Ready"}</strong>
+                <span>{t("Readiness signals")}</span>
+                <strong>{receptionRisks.length > 0 ? `${receptionRisks.length} ${t("signals")}` : t("Ready")}</strong>
               </summary>
               <FlowAnalysis risks={receptionRisks} title="Guest Journey Readiness" />
             </details>
@@ -300,20 +302,20 @@ export function ReceptionStudio() {
         eyebrow="Rosewood Hall Ballroom"
         title="Reception room scene"
       >
-        <div className="canvas reception-canvas" aria-label="Reception seating plan preview">
+        <div className="canvas reception-canvas" aria-label={t("Reception room scene")}>
           <div className="reception-room-header">
             <div>
               <span>Rosewood Hall Ballroom</span>
-              <strong>Guest Journey Canvas</strong>
+              <strong>{t("Guest Journey Canvas")}</strong>
             </div>
             <span className="reception-state-line" data-tone={receptionRisks.length > 0 ? "medium" : "confirmed"}>
-              {receptionRisks.length > 0 ? `${receptionRisks.length} signals` : "ready"}
+              {receptionRisks.length > 0 ? `${receptionRisks.length} ${t("signals")}` : t("ready")}
             </span>
           </div>
           <div className="reception-canvas-hud" aria-hidden="true">
-            <span>Entrance route</span>
-            <span>Service path</span>
-            <span>Dance transition</span>
+            <span>{t("Entrance route")}</span>
+            <span>{t("Service path")}</span>
+            <span>{t("Dance transition")}</span>
           </div>
           <span className="reception-guest-route reception-guest-route-primary" aria-hidden="true" />
           <span className="reception-guest-route reception-guest-route-dance" aria-hidden="true" />
@@ -346,12 +348,12 @@ export function ReceptionStudio() {
               table={table}
             />
           ))}
-          <div className="reception-selected-table-card" aria-label="Selected table summary">
-            <span>Selected Table</span>
+          <div className="reception-selected-table-card" aria-label={t("Selected Table")}>
+            <span>{t("Selected Table")}</span>
             <strong>{selectedTable?.name}</strong>
             <p>
-              {selectedTableGuests.length}/{selectedTable?.capacity ?? 0} guests ·{" "}
-              {selectedTableGuests.some((guest) => guest.allergies.length > 0) ? "allergy note attached" : "no allergy note"}
+              {selectedTableGuests.length}/{selectedTable?.capacity ?? 0} {t("guests")} ·{" "}
+              {selectedTableGuests.some((guest) => guest.allergies.length > 0) ? t("allergy note attached") : t("no allergy note")}
             </p>
           </div>
         </div>
@@ -359,16 +361,16 @@ export function ReceptionStudio() {
 
       <details className="reception-detail-drawer">
         <summary>
-          <span>Room Intelligence</span>
-          <small>Open autosave, guest journey, readiness metrics, and reset controls when you need the deeper setup layer.</small>
+          <span>{t("Room Intelligence")}</span>
+          <small>{t("Open autosave, guest journey, readiness metrics, and reset controls when you need the deeper setup layer.")}</small>
         </summary>
 
         <div className="reception-detail-drawer-content">
-          <div className="reception-journey-strip" aria-label="Guest journey sequence">
+          <div className="reception-journey-strip" aria-label={t("Guest journey sequence")}>
             {["Entrance", "Table", "Dinner", "Speeches", "Cake", "Dance Floor"].map((step, stepIndex) => (
               <div key={step}>
                 <span>{String(stepIndex + 1).padStart(2, "0")}</span>
-                <strong>{step}</strong>
+                <strong>{t(step)}</strong>
               </div>
             ))}
           </div>
@@ -377,26 +379,26 @@ export function ReceptionStudio() {
             <CardContent>
               <div className="summary-between">
                 <div>
-                  <p className="eyebrow">Guest Journey Studio</p>
-                  <h3 className="card-title">Reception data autosaves in this browser.</h3>
-                  <p className="card-copy">Guests, tables, meal notes, accessibility, and seating risks now feed the same digital twin.</p>
+                  <p className="eyebrow">{t("Guest Journey Studio")}</p>
+                  <h3 className="card-title">{t("Reception data autosaves in this browser.")}</h3>
+                  <p className="card-copy">{t("Guests, tables, meal notes, accessibility, and seating risks now feed the same digital twin.")}</p>
                 </div>
                 <div className="timeline-meta">
                   <span className="copy-status">{saveStatus}</span>
-                  <Button onClick={resetReception} size="small" variant="secondary">Reset reception</Button>
+                  <Button onClick={resetReception} size="small" variant="secondary">{t("Reset reception")}</Button>
                 </div>
               </div>
               <div className="reception-metrics">
                 <div>
-                  <span>Tracked guests</span>
+                  <span>{t("Tracked guests")}</span>
                   <strong>{guests.length}</strong>
                 </div>
                 <div>
-                  <span>Tables</span>
+                  <span>{t("Tables")}</span>
                   <strong>{dinnerTables.length}</strong>
                 </div>
                 <div>
-                  <span>Warnings</span>
+                  <span>{t("Warnings")}</span>
                   <strong>{receptionRisks.length}</strong>
                 </div>
               </div>

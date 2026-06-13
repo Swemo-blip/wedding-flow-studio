@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 type StudioSceneSurfaceProps = {
   aside?: ReactNode;
@@ -9,12 +12,14 @@ type StudioSceneSurfaceProps = {
 };
 
 export function StudioSceneSurface({ aside, children, description, eyebrow, title }: StudioSceneSurfaceProps) {
+  const { t } = useTranslation();
+
   return (
-    <section className="studio-scene-surface" aria-label={title}>
+    <section className="studio-scene-surface" aria-label={t(title)}>
       <div className="studio-scene-main">
         <div className="studio-scene-heading">
-          <span>{eyebrow}</span>
-          <strong>{title}</strong>
+          <span>{t(eyebrow)}</span>
+          <strong>{t(title)}</strong>
           <p>{description}</p>
         </div>
         <div className="studio-scene-visual">{children}</div>
