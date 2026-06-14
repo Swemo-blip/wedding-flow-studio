@@ -201,6 +201,9 @@ const sv: Record<string, string> = {
   "Program Layer": "Programlager",
   "Context Links": "Kontextlänkar",
   "No speech or secret layer is attached to this phase.": "Inget tal eller hemligt lager är kopplat till denna fas.",
+  "Planning Layers": "Planeringslager",
+  "Open the workflow map and digital twin graph when you want deeper context.":
+    "Öppna arbetsflödeskartan och den digitala tvillingen när du vill ha djupare kontext.",
   "Everything autosaves locally on this device.": "Allt sparas automatiskt lokalt på den här enheten.",
   // Language toggle
   "Language": "Språk",

@@ -72,12 +72,9 @@ export function WeddingDayPlayer() {
       }),
     [dinnerTables, guests, index, musicCues, nextPhase, phase, relatedTimeline, risks, speeches]
   );
-  const progress = Math.round(((index + 1) / previewPhases.length) * 100);
   const resolvedCount = resolvedRiskIds.length;
   const canGoPrevious = index > 0;
   const canGoNext = index < previewPhases.length - 1;
-  const phaseRisks = cockpit.phaseRisks.length;
-  const affectedRoles = momentIntelligence.affectedRoles.slice(0, 3);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -135,107 +132,24 @@ export function WeddingDayPlayer() {
         </div>
       </div>
 
-      <div className="preview-simulator-hero">
-        <div className="preview-simulator-copy">
-          <span>{t("Wedding Day Simulator")}</span>
-          <h2>{t(phase.title)}</h2>
-          <p>{cockpit.feelingLine}</p>
-          <div className="preview-simulator-roles" aria-label="Active role handoff">
-            {affectedRoles.map((role) => (
-              <span key={role.id}>{role.label}</span>
-            ))}
-          </div>
-        </div>
-
-        <div className="preview-simulator-board" aria-label="Current preview state">
-          <div>
-            <span>Now</span>
-            <strong>{phase.location}</strong>
-            <small>{phase.timeRange}</small>
-          </div>
-          <div>
-            <span>Next</span>
-            <strong>{nextPhase?.title ?? "Final briefs"}</strong>
-            <small>{nextPhase?.responsiblePerson ?? "Production team"}</small>
-          </div>
-          <div>
-            <span>Watch</span>
-            <strong>{cockpit.primaryRisk?.title ?? "Clean handoff"}</strong>
-            <small>{phaseRisks > 0 ? `${phaseRisks} connected risk signals` : "No active scene risk"}</small>
-          </div>
-        </div>
-
-        <div className="preview-hero-action" aria-label="Recommended preview action">
-          <div>
-            <span>Next Best Move</span>
-            <strong>{momentIntelligence.primaryAction.label}</strong>
-            <p>{momentIntelligence.primaryAction.detail}</p>
-          </div>
-          <Button href={momentIntelligence.primaryAction.href ?? "/day-flow"} size="small">
-            Open Fix
-          </Button>
-        </div>
-
-        <div className="preview-os-controls" aria-label="Preview controls">
-          <div className="preview-os-progress">
-            <span>{progress}% {t("previewed")}</span>
-            <strong>
-              {index + 1} / {previewPhases.length}: {t(phase.title)}
-            </strong>
-            <span className="preview-os-progress-bar" aria-hidden="true">
-              <span style={{ width: `${progress}%` }} />
-            </span>
-          </div>
-
-          <div className="preview-os-actions">
-            <span className="preview-state-line" data-tone={hasLocalProject ? "confirmed" : "neutral"}>
-              {hasLocalProject ? t("Live project") : t("Sample project")}
-            </span>
-            <span className="preview-state-line" data-tone={momentIntelligence.readinessTone}>
-              {momentIntelligence.readinessLabel}
-            </span>
-            <label className="preview-jump-control">
-              <span>Moment</span>
-              <select
-                aria-label="Choose preview moment"
-                onChange={(event) => {
-                  setIndex(Number(event.target.value));
-                  setIsPlaying(false);
-                }}
-                value={index}
-              >
-                {previewPhases.map((previewPhase, phaseIndex) => (
-                  <option key={previewPhase.id} value={phaseIndex}>
-                    {t(previewPhase.title)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="preview-transport-actions">
-              <button className="button button-secondary button-small" disabled={!canGoPrevious} onClick={goToPreviousMoment} type="button">
-                {t("Previous")}
-              </button>
-              <button
-                aria-label={isPlaying ? "Pause wedding day preview" : "Play wedding day preview"}
-                className={`button ${isPlaying ? "button-secondary" : "button-primary"} button-small`}
-                onClick={() => setIsPlaying((currentValue) => !currentValue)}
-                type="button"
-              >
-                {isPlaying ? t("Pause") : t("Play")}
-              </button>
-              <button className="button button-secondary button-small" disabled={!canGoNext} onClick={goToNextMoment} type="button">
-                {t("Next")}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="preview-day-caption">
+        <span className="eyebrow">{t("Wedding Day Simulator")}</span>
+        <p>{cockpit.feelingLine}</p>
       </div>
 
       <ol className="preview-moment-rail preview-command-rail" aria-label="Wedding day preview sequence">
         {previewPhases.map((previewPhase, phaseIndex) => (
           <li data-active={phaseIndex === index} data-complete={phaseIndex < index} key={previewPhase.id}>
-            <span>{phaseIndex + 1}</span>
-            <small>{t(previewPhase.title)}</small>
+            <button
+              onClick={() => {
+                setIndex(phaseIndex);
+                setIsPlaying(false);
+              }}
+              type="button"
+            >
+              <span>{phaseIndex + 1}</span>
+              <small>{t(previewPhase.title)}</small>
+            </button>
           </li>
         ))}
       </ol>

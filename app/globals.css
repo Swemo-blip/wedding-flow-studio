@@ -7936,6 +7936,43 @@ a {
   overflow-wrap: anywhere;
 }
 
+.preview-moment-rail li button {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.preview-moment-rail li button:focus-visible {
+  outline: 2px solid rgba(159, 121, 59, 0.55);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+/* Calm placard beneath the cinematic band — one quiet line, the day's feeling. */
+.preview-day-caption {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding: clamp(20px, 3vw, 32px) 20px clamp(14px, 2vw, 20px);
+  text-align: center;
+}
+
+.preview-day-caption p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.06rem;
+  line-height: 1.55;
+}
+
 .preview-player-body {
   display: grid;
   grid-template-columns: minmax(0, 1.16fr) minmax(340px, 0.84fr);
