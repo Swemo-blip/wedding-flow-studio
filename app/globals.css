@@ -7567,6 +7567,33 @@ a {
   font-weight: 680;
 }
 
+.budget-table-wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .export-sheet {
+    padding: 16px;
+  }
+
+  .budget-table {
+    font-size: 0.84rem;
+  }
+
+  .budget-table th,
+  .budget-table td {
+    padding: 8px 6px;
+  }
+
+  /* Drop the Allocated column on phones — Total Budget is shown above and
+     Allocated = Spent + Remaining, so Spent/Remaining tell the story and the
+     three columns fit without horizontal scroll. Print keeps all four. */
+  .budget-table th:nth-child(2),
+  .budget-table td:nth-child(2) {
+    display: none;
+  }
+}
+
 .print-only {
   display: none;
 }
@@ -10742,6 +10769,7 @@ a {
 
 .export-studio {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 

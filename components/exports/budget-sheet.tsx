@@ -24,7 +24,8 @@ export function BudgetSheet() {
         </div>
       </div>
 
-      <table className="budget-table">
+      <div className="budget-table-wrap">
+        <table className="budget-table">
         <thead>
           <tr>
             <th scope="col">{t("Category")}</th>
@@ -51,7 +52,8 @@ export function BudgetSheet() {
             <td>{formatCurrency(summary.remaining)}</td>
           </tr>
         </tfoot>
-      </table>
+        </table>
+      </div>
     </article>
   );
 }
