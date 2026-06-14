@@ -201,6 +201,8 @@ const sv: Record<string, string> = {
   "Program Layer": "Programlager",
   "Context Links": "Kontextlänkar",
   "No speech or secret layer is attached to this phase.": "Inget tal eller hemligt lager är kopplat till denna fas.",
+  "Reception Signals": "Mottagningssignaler",
+  "Photographer balcony position requires venue approval": "Fotografens balkongposition kräver godkännande av lokalen",
   "Planning Layers": "Planeringslager",
   "Open the workflow map and digital twin graph when you want deeper context.":
     "Öppna arbetsflödeskartan och den digitala tvillingen när du vill ha djupare kontext.",
