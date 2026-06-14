@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BudgetSheet } from "@/components/exports/budget-sheet";
 import { ExportPreview } from "@/components/exports/export-preview";
 import { RunOfShow } from "@/components/exports/run-of-show";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,6 +89,12 @@ export function ExportStudio() {
         >
           <ExportPreview exportType={selectedExport} />
         </StudioSceneSurface>
+
+        <Card className="export-budget-card">
+          <CardContent>
+            <BudgetSheet />
+          </CardContent>
+        </Card>
       </div>
     </StudioRouteFrame>
   );

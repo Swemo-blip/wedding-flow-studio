@@ -7525,6 +7525,48 @@ a {
   color: #4d4636;
 }
 
+.export-budget-card {
+  margin-top: 16px;
+}
+
+.budget-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.budget-table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(80, 63, 45, 0.32);
+  text-align: right;
+  color: #8a6d3c;
+  font-size: 0.68rem;
+  font-weight: 640;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.budget-table th:first-child,
+.budget-table td:first-child {
+  text-align: left;
+}
+
+.budget-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(80, 63, 45, 0.14);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-table tfoot td {
+  padding-top: 12px;
+  border-top: 1.5px solid rgba(80, 63, 45, 0.4);
+  border-bottom: 0;
+  color: #2a261c;
+  font-weight: 680;
+}
+
 .print-only {
   display: none;
 }
