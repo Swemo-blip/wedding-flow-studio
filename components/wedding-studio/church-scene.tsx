@@ -209,7 +209,7 @@ export function CeremonyScene({
         style={{ background: `linear-gradient(180deg, ${preset.hemisphereSky}, ${preset.fogColor} 60%)` }}
       >
         <Canvas
-          camera={{ fov: 40, near: 0.1, position: getCameraPosition(viewMode, venueType, activeStep) }}
+          camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, venueType, activeStep) }}
           dpr={[1, 1.8]}
           gl={{ toneMappingExposure: 1.16 }}
           shadows={{ type: THREE.PCFSoftShadowMap }}
@@ -1014,16 +1014,18 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
 
   return (
     <group>
+      {/* polygonOffset biases the walls back in the depth buffer so the windows
+          and reredos mounted flush against them never z-fight (flicker). */}
       {[-4.95, 4.95].map((x) => (
         <mesh key={x} receiveShadow position={[x, wallHeight / 2, 0.1]}>
           <boxGeometry args={[0.2, wallHeight, 12.4]} />
-          <meshStandardMaterial color={palette.wall} roughness={0.92} />
+          <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
         </mesh>
       ))}
 
       <mesh receiveShadow position={[0, 2.4, -5.85]}>
         <boxGeometry args={[10.1, 4.8, 0.22]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.92} />
+        <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
       </mesh>
 
       {/* Reredos: a framed backdrop behind the altar so the crucifix reads
