@@ -109,6 +109,11 @@ const sv: Record<string, string> = {
   "Cue Sheet": "Cue-lista",
   "Confirmed cues": "Bekräftade cues",
   "View Cue Sheet": "Se cue-lista",
+  "Budget Snapshot": "Budgetöversikt",
+  "Total Budget": "Total budget",
+  "Spent": "Spenderat",
+  "Remaining": "Kvar",
+  "View Budget": "Se budget",
   "Everything autosaves locally on this device.": "Allt sparas automatiskt lokalt på den här enheten.",
   // Language toggle
   "Language": "Språk",

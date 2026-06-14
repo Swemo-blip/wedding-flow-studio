@@ -22,6 +22,7 @@ import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
+import { calculateBudgetSummary, formatCurrency } from "@/lib/wedding-budget";
 import { sampleWedding } from "@/lib/wedding-data";
 import { clearStoredWeddingStudioLayout, readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
@@ -91,8 +92,7 @@ export function OverviewDashboard() {
   const attentionRisks = risks.filter((risk) => risk.severity === "high").length;
   const reviewRisks = risks.length - attentionRisks;
 
-  const confirmedCues = localProject.musicCues.filter((cue) => cue.status === "confirmed").length;
-  const totalCues = Math.max(1, localProject.musicCues.length);
+  const budget = useMemo(() => calculateBudgetSummary(), []);
 
   const glanceTimeline = localProject.timelineItems.slice(0, 4);
   const seatedGuests = localProject.dinnerTables.reduce((sum, table) => sum + table.assignedGuestIds.length, 0);
@@ -421,21 +421,29 @@ export function OverviewDashboard() {
 
           <section className="rail-card">
             <div className="rail-card-head">
-              <h3>{t("Cue Sheet")}</h3>
+              <h3>{t("Budget Snapshot")}</h3>
             </div>
             <div className="rail-budget">
               <div className="rail-budget-topline">
-                <span>{t("Confirmed cues")}</span>
-                <strong>
-                  {confirmedCues} / {totalCues}
-                </strong>
+                <span>{t("Total Budget")}</span>
+                <strong>{formatCurrency(budget.total)}</strong>
               </div>
               <div aria-hidden="true" className="rail-meter">
-                <span style={{ width: `${Math.round((confirmedCues / totalCues) * 100)}%` }} />
+                <span style={{ width: `${budget.spentPercent}%` }} />
               </div>
+              <ul className="rail-progress-rows">
+                <li>
+                  <span>{t("Spent")}</span>
+                  <strong>{formatCurrency(budget.spent)}</strong>
+                </li>
+                <li>
+                  <span>{t("Remaining")}</span>
+                  <strong>{formatCurrency(budget.remaining)}</strong>
+                </li>
+              </ul>
             </div>
-            <Button className="glance-action" href="/music" size="small" variant="secondary">
-              {t("View Cue Sheet")}
+            <Button className="glance-action" href="/exports" size="small" variant="secondary">
+              {t("View Budget")}
             </Button>
           </section>
         </aside>
