@@ -6,6 +6,7 @@ import { PreviewWalkthrough } from "@/components/preview/preview-walkthrough";
 import { Button } from "@/components/ui/button";
 import { buildMomentIntelligence } from "@/lib/moment-intelligence";
 import { buildPreviewCockpitContext } from "@/lib/preview-cockpit";
+import { useTranslation } from "@/lib/i18n";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
@@ -24,6 +25,7 @@ const scenePositions = [
 export function WeddingDayPlayer() {
   const [index, setIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const { t } = useTranslation();
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const risks = useMemo(
@@ -112,7 +114,7 @@ export function WeddingDayPlayer() {
         <PreviewWalkthrough phaseIndex={index} />
         <div className="preview-walkthrough-overlay">
           <span>{phase.timeRange}</span>
-          <strong>{phase.title}</strong>
+          <strong>{t(phase.title)}</strong>
         </div>
         <div className="preview-walkthrough-transport" role="group" aria-label="Walkthrough transport">
           <button aria-label="Previous moment" disabled={!canGoPrevious} onClick={goToPreviousMoment} type="button">
@@ -125,7 +127,7 @@ export function WeddingDayPlayer() {
             onClick={() => setIsPlaying((value) => !value)}
             type="button"
           >
-            {isPlaying ? "Pause" : "Play the day"}
+            {isPlaying ? t("Pause") : t("Play the day")}
           </button>
           <button aria-label="Next moment" disabled={!canGoNext} onClick={goToNextMoment} type="button">
             ›

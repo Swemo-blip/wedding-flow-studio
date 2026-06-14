@@ -288,7 +288,7 @@ export function OverviewDashboard() {
               <ul className="glance-timeline">
                 {glanceTimeline.map((item) => (
                   <li key={item.id}>
-                    <span>{item.title}</span>
+                    <span>{t(item.title)}</span>
                     <strong>{item.time}</strong>
                   </li>
                 ))}
