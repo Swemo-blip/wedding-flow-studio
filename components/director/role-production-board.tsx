@@ -52,7 +52,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
         <div>
           <p className="eyebrow">{t("Live Role Production Board")}</p>
           <h3>{board.title}</h3>
-          <p>{board.description}</p>
+          <p>{t(board.description)}</p>
         </div>
         <div className="director-live-actions">
           {roleSelector}
@@ -79,7 +79,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
       <div className="director-command-strip">
         <div>
           <span>{t("Current phase")}</span>
-          <strong>{board.currentPhase}</strong>
+          <strong>{t(board.currentPhase)}</strong>
         </div>
         <div>
           <span>{t("Next up")}</span>

@@ -203,6 +203,35 @@ const sv: Record<string, string> = {
   "No speech or secret layer is attached to this phase.": "Inget tal eller hemligt lager är kopplat till denna fas.",
   "Reception Signals": "Mottagningssignaler",
   "Photographer balcony position requires venue approval": "Fotografens balkongposition kräver godkännande av lokalen",
+  "Full reception flow, speeches, secret layers, microphone cues, and timing control.":
+    "Hela mottagningsflödet, tal, hemliga lager, mikrofon-cues och tidsstyrning.",
+  "Ceremony positions, family photo list, chapel exit, golden hour, and key people.":
+    "Ceremonipositioner, familjefotolista, kapelluttåg, gyllene timme och nyckelpersoner.",
+  "Ceremony cues, reception entrance, first dance, party start, and music backup needs.":
+    "Ceremoni-cues, intåg till mottagningen, första dansen, feststart och behov av musikbackup.",
+  "Dinner timing, allergies, meal preferences, child meals, and speech service pauses.":
+    "Middagstiming, allergier, måltidsönskemål, barnmenyer och serveringspauser för tal.",
+  "Room layout, guest flow, bar position, dance floor, service path, and accessibility setup.":
+    "Rumslayout, gästflöde, barplacering, dansgolv, serveringsväg och tillgänglighet.",
+  "Ceremony order, processional sequence, ring exchange timing, music moments, and recessional.":
+    "Ceremoniordning, intågsföljd, ringväxlingens timing, musikögonblick och uttåg.",
+  "Full production map, all risks, vendors, secret layers, setup dependencies, and timeline health.":
+    "Hela produktionskartan, alla risker, leverantörer, hemliga lager, beroenden och tidslinjehälsa.",
+  "Protect the dinner rhythm while keeping the surprise performance hidden.":
+    "Skydda middagsrytmen samtidigt som överraskningsnumret hålls dolt.",
+  "Prepare the family photo list and confirm chapel garden timing.":
+    "Förbered familjefotolistan och bekräfta tiderna i kapellträdgården.",
+  "Prepare a recessional backup and confirm first dance timestamp.":
+    "Förbered en uttågsbackup och bekräfta tidpunkten för första dansen.",
+  "Confirm final allergy details and vegan meal markers.":
+    "Bekräfta slutliga allergiuppgifter och veganska måltidsmarkeringar.",
+  "Confirm the accessible route from entrance to immediate family seating.":
+    "Bekräfta den tillgängliga vägen från entrén till närmaste familjens platser.",
+  "Review vows, ring exchange timing, and final recessional cue.":
+    "Gå igenom löften, ringväxlingens timing och sista uttågs-cuen.",
+  "Review all medium and high risks before rehearsal.":
+    "Gå igenom alla medel- och högrisker före repetitionen.",
+  "Review role flow": "Gå igenom rollflödet",
   "Planning Layers": "Planeringslager",
   "Open the workflow map and digital twin graph when you want deeper context.":
     "Öppna arbetsflödeskartan och den digitala tvillingen när du vill ha djupare kontext.",
