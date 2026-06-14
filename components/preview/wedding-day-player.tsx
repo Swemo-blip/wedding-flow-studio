@@ -137,8 +137,8 @@ export function WeddingDayPlayer() {
 
       <div className="preview-simulator-hero">
         <div className="preview-simulator-copy">
-          <span>Wedding Day Simulator</span>
-          <h2>{phase.title}</h2>
+          <span>{t("Wedding Day Simulator")}</span>
+          <h2>{t(phase.title)}</h2>
           <p>{cockpit.feelingLine}</p>
           <div className="preview-simulator-roles" aria-label="Active role handoff">
             {affectedRoles.map((role) => (
@@ -178,9 +178,9 @@ export function WeddingDayPlayer() {
 
         <div className="preview-os-controls" aria-label="Preview controls">
           <div className="preview-os-progress">
-            <span>{progress}% previewed</span>
+            <span>{progress}% {t("previewed")}</span>
             <strong>
-              {index + 1} of {previewPhases.length}: {phase.title}
+              {index + 1} / {previewPhases.length}: {t(phase.title)}
             </strong>
             <span className="preview-os-progress-bar" aria-hidden="true">
               <span style={{ width: `${progress}%` }} />
@@ -189,7 +189,7 @@ export function WeddingDayPlayer() {
 
           <div className="preview-os-actions">
             <span className="preview-state-line" data-tone={hasLocalProject ? "confirmed" : "neutral"}>
-              {hasLocalProject ? "Live project" : "Sample project"}
+              {hasLocalProject ? t("Live project") : t("Sample project")}
             </span>
             <span className="preview-state-line" data-tone={momentIntelligence.readinessTone}>
               {momentIntelligence.readinessLabel}
@@ -206,14 +206,14 @@ export function WeddingDayPlayer() {
               >
                 {previewPhases.map((previewPhase, phaseIndex) => (
                   <option key={previewPhase.id} value={phaseIndex}>
-                    {previewPhase.title}
+                    {t(previewPhase.title)}
                   </option>
                 ))}
               </select>
             </label>
             <div className="preview-transport-actions">
               <button className="button button-secondary button-small" disabled={!canGoPrevious} onClick={goToPreviousMoment} type="button">
-                Previous
+                {t("Previous")}
               </button>
               <button
                 aria-label={isPlaying ? "Pause wedding day preview" : "Play wedding day preview"}
@@ -221,10 +221,10 @@ export function WeddingDayPlayer() {
                 onClick={() => setIsPlaying((currentValue) => !currentValue)}
                 type="button"
               >
-                {isPlaying ? "Pause" : "Play"}
+                {isPlaying ? t("Pause") : t("Play")}
               </button>
               <button className="button button-secondary button-small" disabled={!canGoNext} onClick={goToNextMoment} type="button">
-                Next
+                {t("Next")}
               </button>
             </div>
           </div>
@@ -235,15 +235,15 @@ export function WeddingDayPlayer() {
         {previewPhases.map((previewPhase, phaseIndex) => (
           <li data-active={phaseIndex === index} data-complete={phaseIndex < index} key={previewPhase.id}>
             <span>{phaseIndex + 1}</span>
-            <small>{previewPhase.title}</small>
+            <small>{t(previewPhase.title)}</small>
           </li>
         ))}
       </ol>
 
-      <details className="preview-scene-details" open>
+      <details className="preview-scene-details">
         <summary>
-          <span>Scene Board</span>
-          <small>Open the map, owner, music, risks, and handoff details only when you need production depth.</small>
+          <span>{t("Scene Board")}</span>
+          <small>{t("Open the map, owner, music, risks, and handoff details only when you need production depth.")}</small>
         </summary>
 
         <div className="preview-command-layout">
@@ -296,7 +296,7 @@ export function WeddingDayPlayer() {
           <aside className="preview-command-stack">
             <div className="preview-current-moment preview-command-moment">
               <p className="eyebrow">{phase.timeRange}</p>
-              <h2>{phase.title}</h2>
+              <h2>{t(phase.title)}</h2>
               <p>{phase.summary}</p>
             </div>
 
@@ -351,8 +351,8 @@ export function WeddingDayPlayer() {
 
       <details className="preview-deep-layers">
         <summary>
-          <span>Production intelligence</span>
-          <small>Open role, risk, cue, and timeline context only when you need the deeper layers.</small>
+          <span>{t("Production intelligence")}</span>
+          <small>{t("Open role, risk, cue, and timeline context only when you need the deeper layers.")}</small>
         </summary>
 
         <div className="preview-deep-layers-content">
