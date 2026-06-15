@@ -713,6 +713,8 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
 
 const STAINED_GLASS_COLORS = ["#2f4f86", "#8c3b34", "#b1894a", "#3f6b54", "#4a4072", "#356b74"];
 
+const LEAD_COLOR = "#33301f";
+
 function StainedGlassWindow({
   position,
   rotationY = 0,
@@ -727,46 +729,72 @@ function StainedGlassWindow({
   seed?: number;
 }) {
   const halfWidth = width / 2;
-  const paneWidth = width / 3;
+  const panes = 4;
+  const paneStep = width / panes;
   const frameHeight = rectHeight + halfWidth;
-  const glassColor = (offset: number) => STAINED_GLASS_COLORS[(seed + offset) % STAINED_GLASS_COLORS.length];
+  const transomY = rectHeight * 0.08;
+  const glassColor = (offset: number) => STAINED_GLASS_COLORS[((seed + offset) % STAINED_GLASS_COLORS.length + STAINED_GLASS_COLORS.length) % STAINED_GLASS_COLORS.length];
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh position={[0, halfWidth / 2, -0.07]}>
-        <boxGeometry args={[width + 0.2, frameHeight + 0.22, 0.12]} />
+      {/* stone reveal */}
+      <mesh position={[0, halfWidth / 2, -0.08]}>
+        <boxGeometry args={[width + 0.24, frameHeight + 0.26, 0.12]} />
         <meshStandardMaterial color="#cabfa0" roughness={0.9} />
       </mesh>
-      {[-1, 0, 1].map((col, index) => (
-        <mesh key={col} position={[col * paneWidth, 0, 0]}>
-          <planeGeometry args={[paneWidth - 0.04, rectHeight]} />
-          <meshStandardMaterial
-            color={glassColor(index)}
-            emissive={glassColor(index)}
-            emissiveIntensity={0.6}
-            roughness={0.45}
-            side={THREE.DoubleSide}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-      <mesh position={[0, rectHeight / 2, 0]}>
-        <circleGeometry args={[halfWidth, 18, 0, Math.PI]} />
-        <meshStandardMaterial
-          color={glassColor(3)}
-          emissive={glassColor(3)}
-          emissiveIntensity={0.66}
-          roughness={0.45}
-          side={THREE.DoubleSide}
-          toneMapped={false}
-        />
+      {/* dark lead backing — gaps between panes read as leading */}
+      <mesh position={[0, 0, -0.02]}>
+        <planeGeometry args={[width + 0.02, rectHeight + 0.02]} />
+        <meshStandardMaterial color={LEAD_COLOR} roughness={0.82} side={THREE.DoubleSide} />
       </mesh>
-      {[-0.5, 0.5].map((mullion) => (
-        <mesh key={mullion} position={[mullion * paneWidth, 0, 0.012]}>
-          <boxGeometry args={[0.025, rectHeight, 0.04]} />
-          <meshStandardMaterial color="#4f4632" roughness={0.7} />
-        </mesh>
-      ))}
+      {/* leaded jewel panes: 4 columns × 2 rows split by a transom */}
+      {Array.from({ length: panes }).map((_, col) =>
+        [0, 1].map((row) => {
+          const x = -halfWidth + paneStep / 2 + col * paneStep;
+          const lowerTop = transomY - 0.02;
+          const lowerH = lowerTop - -rectHeight / 2;
+          const upperBottom = transomY + 0.02;
+          const upperH = rectHeight / 2 - upperBottom;
+          const h = row === 0 ? lowerH : upperH;
+          const y = row === 0 ? (-rectHeight / 2 + lowerTop) / 2 : (upperBottom + rectHeight / 2) / 2;
+
+          return (
+            <mesh key={`${col}-${row}`} position={[x, y, 0]}>
+              <planeGeometry args={[paneStep - 0.05, h]} />
+              <meshStandardMaterial
+                color={glassColor(col + row * 2)}
+                emissive={glassColor(col + row * 2)}
+                emissiveIntensity={0.6}
+                roughness={0.45}
+                side={THREE.DoubleSide}
+                toneMapped={false}
+              />
+            </mesh>
+          );
+        })
+      )}
+      {/* transom lead bar */}
+      <mesh position={[0, transomY, 0.012]}>
+        <boxGeometry args={[width, 0.03, 0.05]} />
+        <meshStandardMaterial color={LEAD_COLOR} roughness={0.7} />
+      </mesh>
+      {/* arched top: lead backing + jewel + rose medallion */}
+      <mesh position={[0, rectHeight / 2, -0.01]}>
+        <circleGeometry args={[halfWidth + 0.01, 22, 0, Math.PI]} />
+        <meshStandardMaterial color={LEAD_COLOR} roughness={0.82} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, rectHeight / 2, 0]}>
+        <circleGeometry args={[halfWidth - 0.025, 22, 0, Math.PI]} />
+        <meshStandardMaterial color={glassColor(3)} emissive={glassColor(3)} emissiveIntensity={0.64} roughness={0.45} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.014]}>
+        <circleGeometry args={[halfWidth * 0.3, 18]} />
+        <meshStandardMaterial color={glassColor(5)} emissive={glassColor(5)} emissiveIntensity={0.85} roughness={0.4} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.012]}>
+        <ringGeometry args={[halfWidth * 0.3, halfWidth * 0.35, 18]} />
+        <meshStandardMaterial color={LEAD_COLOR} roughness={0.7} side={THREE.DoubleSide} />
+      </mesh>
     </group>
   );
 }
