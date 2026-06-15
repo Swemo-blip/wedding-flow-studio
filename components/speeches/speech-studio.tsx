@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StudioCommand } from "@/components/ui/studio-command";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
+import { findSpeechGuest } from "@/lib/guest-identity";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
@@ -18,10 +19,12 @@ const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "p
 
 export function SpeechStudio() {
   const { t } = useTranslation();
-  const { hasLocalProject, resetSpeeches, speeches, timelineItems, updateSpeech, updatedAt } = useLocalProject();
+  const { dinnerTables, guests, hasLocalProject, resetSpeeches, speeches, timelineItems, updateSpeech, updatedAt } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
+  const speakerGuest = selectedSpeech ? findSpeechGuest(selectedSpeech, guests) : null;
+  const speakerTable = speakerGuest ? dinnerTables.find((table) => table.id === speakerGuest.tableId) ?? null : null;
   const speechRisks = useMemo(
     () =>
       filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, speechItems: speeches }), resolvedRiskIds).filter((risk) =>
@@ -150,7 +153,7 @@ export function SpeechStudio() {
                     <div>
                       <span>{t("Speaker")}</span>
                       <strong>{selectedSpeech.speakerName}</strong>
-                      <small>{selectedSpeech.relation}</small>
+                      <small>{speakerTable ? `${selectedSpeech.relation} · ${speakerTable.name}` : selectedSpeech.relation}</small>
                     </div>
                     <div>
                       <span>{t("Timing")}</span>

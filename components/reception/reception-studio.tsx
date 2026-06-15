@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
+import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
@@ -32,6 +33,7 @@ export function ReceptionStudio() {
     guests,
     hasLocalProject,
     resetReception,
+    speeches,
     timelineItems,
     updateGuest,
     updatedAt
@@ -40,6 +42,9 @@ export function ReceptionStudio() {
   const [selectedGuestId, setSelectedGuestId] = useState("anna-carter");
   const selectedGuest = guests.find((guest) => guest.id === selectedGuestId) ?? guests[0];
   const selectedTable = dinnerTables.find((table) => table.id === selectedGuest?.tableId) ?? dinnerTables[0];
+  const guestProfile = selectedGuest
+    ? buildGuestProfile(selectedGuest, { guests, tables: dinnerTables, speeches })
+    : null;
   const receptionRisks = useMemo(
     () =>
       filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, guestItems: guests, tables: dinnerTables }), resolvedRiskIds).filter(
@@ -161,10 +166,19 @@ export function ReceptionStudio() {
               <CardContent>
                 <div className="summary-between">
                   <div>
-                    <p className="eyebrow">{t("Guest Inspector")}</p>
+                    <p className="eyebrow">{t("Guest Identity")}</p>
                     <h3 className="card-title">{selectedGuest?.name}</h3>
+                    {guestProfile ? (
+                      <p className="reception-guest-relation">
+                        {guestProfile.relationToCouple} · {t(rsvpLabel(guestProfile.rsvpStatus))}
+                      </p>
+                    ) : null}
                   </div>
-                  {selectedGuest?.accessibilityNotes ? <span className="reception-state-line" data-tone="medium">{t("accessibility")}</span> : null}
+                  {guestProfile?.isSpeaker ? (
+                    <span className="reception-state-line" data-tone="confirmed">{t("Speaking")}</span>
+                  ) : selectedGuest?.accessibilityNotes ? (
+                    <span className="reception-state-line" data-tone="medium">{t("accessibility")}</span>
+                  ) : null}
                 </div>
 
               <label className="field reception-select-field">
@@ -172,7 +186,7 @@ export function ReceptionStudio() {
                 <select aria-label={t("Choose guest")} onChange={(event) => setSelectedGuestId(event.target.value)} value={selectedGuest?.id ?? ""}>
                   {guests.map((guest) => (
                     <option key={guest.id} value={guest.id}>
-                      {guest.name} - {guest.tableId}
+                      {guest.name} · {guest.relationship}
                     </option>
                   ))}
                 </select>
@@ -180,24 +194,35 @@ export function ReceptionStudio() {
 
               {selectedGuest ? (
                 <>
-                  <div className="selected-guest-journey" aria-label={t("Selected guest journey")}>
+                  <div className="selected-guest-journey" aria-label={t("Guest identity")}>
                     <div>
-                      <span>{t("Arrival")}</span>
-                      <strong>{selectedGuest.accessibilityNotes ? t("Needs clear route") : t("Standard route")}</strong>
-                    </div>
-                    <div>
-                      <span>{t("Table")}</span>
-                      <strong>{selectedTable?.name ?? t("Unassigned")}</strong>
+                      <span>{t("Seat")}</span>
+                      <strong>{guestProfile?.table ? guestProfile.seatLabel : t("Unassigned")}</strong>
                     </div>
                     <div>
                       <span>{t("Meal")}</span>
                       <strong>{selectedGuest.mealChoice}</strong>
                     </div>
                     <div>
-                      <span>{t("Notes")}</span>
-                      <strong>{selectedGuest.allergies[0] ?? selectedGuest.tags[0] ?? t("Clear")}</strong>
+                      <span>{t("Speech")}</span>
+                      <strong>
+                        {guestProfile?.speech
+                          ? `${guestProfile.speech.title} · ${guestProfile.speech.timing}`
+                          : t("Not speaking")}
+                      </strong>
+                    </div>
+                    <div data-tone={guestProfile?.hasAllergies ? "alert" : undefined}>
+                      <span>{t("Allergies")}</span>
+                      <strong>{guestProfile?.hasAllergies ? guestProfile.allergies.join(", ") : t("None")}</strong>
                     </div>
                   </div>
+
+                  {guestProfile && guestProfile.tablemates.length > 0 ? (
+                    <p className="reception-tablemates">
+                      <span>{t("Seated with")}</span>
+                      {formatTablemates(guestProfile.tablemates)}
+                    </p>
+                  ) : null}
 
                   <details className="reception-guest-details">
                     <summary>
@@ -208,6 +233,13 @@ export function ReceptionStudio() {
                       <label className="field">
                         <span>{t("Name")}</span>
                         <input onChange={(event) => updateSelectedGuest({ name: event.target.value })} value={selectedGuest.name} />
+                      </label>
+                      <label className="field">
+                        <span>{t("Relationship to couple")}</span>
+                        <input
+                          onChange={(event) => updateSelectedGuest({ relationship: event.target.value })}
+                          value={selectedGuest.relationship}
+                        />
                       </label>
                       <label className="field">
                         <span>{t("Meal choice")}</span>
@@ -409,6 +441,26 @@ export function ReceptionStudio() {
       </div>
     </StudioRouteFrame>
   );
+}
+
+function rsvpLabel(status: Guest["rsvpStatus"]) {
+  if (status === "attending") {
+    return "Attending";
+  }
+
+  if (status === "declined") {
+    return "Declined";
+  }
+
+  return "Pending";
+}
+
+function formatTablemates(tablemates: Guest[]) {
+  const firstNames = tablemates.map((guest) => guest.name.split(" ")[0]);
+  const shown = firstNames.slice(0, 3).join(", ");
+  const remaining = firstNames.length - 3;
+
+  return remaining > 0 ? `${shown} +${remaining}` : shown;
 }
 
 function formatSavedAt(value: string) {

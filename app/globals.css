@@ -9983,6 +9983,41 @@ a {
   line-height: 1.14;
 }
 
+.reception-guest-relation {
+  margin-top: 5px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: rgba(33, 29, 20, 0.62);
+  letter-spacing: 0.01em;
+}
+
+.selected-guest-journey > div[data-tone="alert"] {
+  border-color: rgba(150, 70, 45, 0.32);
+  background: rgba(150, 70, 45, 0.07);
+}
+
+.selected-guest-journey > div[data-tone="alert"] strong {
+  color: #8a3f28;
+}
+
+.reception-tablemates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-top: 13px;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.reception-tablemates span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(33, 29, 20, 0.55);
+}
+
 .reception-guest-details {
   overflow: hidden;
   margin-top: 16px;
