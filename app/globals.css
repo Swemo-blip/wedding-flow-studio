@@ -5974,12 +5974,7 @@ a {
   display: block;
   width: 100% !important;
   height: 100% !important;
-  cursor: grab;
   touch-action: pan-y;
-}
-
-.ceremony-canvas-frame canvas:active {
-  cursor: grabbing;
 }
 
 .ceremony-scene-caption {

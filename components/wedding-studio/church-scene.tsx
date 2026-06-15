@@ -580,93 +580,23 @@ function WeddingStageInterior({
 function EditableSceneObject({
   children,
   objectId,
-  onMoveObject,
-  onSelectObject,
-  outlineCenter = [0, 0.3],
-  sceneEdits,
-  selectedObjectId,
-  size
+  sceneEdits
 }: {
   children: ReactNode;
   objectId: StudioSceneObjectId;
-  onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
-  onSelectObject: (objectId: StudioSceneObjectId) => void;
-  outlineCenter?: [number, number];
   sceneEdits: StudioSceneEdits;
-  selectedObjectId: StudioSceneObjectId;
-  size: [number, number];
+  // Accepted for caller compatibility but no longer used — the scene is a
+  // placed preview, not a draggable editor.
+  onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
+  onSelectObject?: (objectId: StudioSceneObjectId) => void;
+  outlineCenter?: [number, number];
+  selectedObjectId?: StudioSceneObjectId;
+  size?: [number, number];
 }) {
+  // The 3D scene is a calm preview, not an editor — objects are placed, not draggable.
   const offset = sceneEdits[objectId];
-  const isSelected = selectedObjectId === objectId;
-  const isDraggingRef = useRef(false);
 
-  return (
-    <group
-      onClick={(event) => {
-        event.stopPropagation();
-        onSelectObject(objectId);
-      }}
-      onPointerCancel={(event) => {
-        event.stopPropagation();
-        isDraggingRef.current = false;
-      }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        onSelectObject(objectId);
-        isDraggingRef.current = true;
-        const eventTarget = event.target as Element | null;
-        eventTarget?.setPointerCapture?.(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        if (!isDraggingRef.current) {
-          return;
-        }
-
-        event.stopPropagation();
-
-        const nativeEvent = event.nativeEvent as PointerEvent;
-        const dragScale = nativeEvent.shiftKey ? 0.006 : 0.014;
-
-        onMoveObject(objectId, nativeEvent.movementX * dragScale, nativeEvent.movementY * dragScale);
-      }}
-      onPointerUp={(event) => {
-        event.stopPropagation();
-        isDraggingRef.current = false;
-        const eventTarget = event.target as Element | null;
-        eventTarget?.releasePointerCapture?.(event.pointerId);
-      }}
-      position={[offset.x, 0, offset.z]}
-    >
-      {children}
-      {isSelected ? <SelectionOutline center={outlineCenter} size={size} /> : null}
-    </group>
-  );
-}
-
-function SelectionOutline({ center, size }: { center: [number, number]; size: [number, number] }) {
-  const [width, depth] = size;
-  const color = "#b69a5b";
-
-  return (
-    <group position={[center[0], 0.13, center[1]]}>
-      <mesh position={[0, 0, -depth / 2]}>
-        <boxGeometry args={[width, 0.035, 0.045]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} roughness={0.46} />
-      </mesh>
-      <mesh position={[0, 0, depth / 2]}>
-        <boxGeometry args={[width, 0.035, 0.045]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} roughness={0.46} />
-      </mesh>
-      <mesh position={[-width / 2, 0, 0]}>
-        <boxGeometry args={[0.045, 0.035, depth]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} roughness={0.46} />
-      </mesh>
-      <mesh position={[width / 2, 0, 0]}>
-        <boxGeometry args={[0.045, 0.035, depth]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.18} roughness={0.46} />
-      </mesh>
-    </group>
-  );
+  return <group position={[offset.x, 0, offset.z]}>{children}</group>;
 }
 
 function VenueBoundary({ palette, venueType, viewMode }: { palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
@@ -1776,7 +1706,7 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
   // reception flows to an open venue, so it keeps the standard wide rig.
   if (venueType === "church" && activeStep !== "reception") {
     const churchPositions: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 1.95, 5.4],
+      "3d": [0, 3.6, 8.8],
       guest: [0, 1.45, 4.2],
       top: [0, 11, 0.4],
       walkthrough: [0, 1.85, 4.8]
@@ -1798,7 +1728,7 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
 function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
   if (venueType === "church" && activeStep !== "reception") {
     const churchTargets: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 1.05, -4.4],
+      "3d": [0, 0.55, -2.4],
       guest: [0, 1, -4.4],
       top: [0, 0, -1.4],
       walkthrough: [0, 1, -4.4]
