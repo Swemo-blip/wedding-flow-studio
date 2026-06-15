@@ -93,7 +93,7 @@ export function MusicCueStudio() {
             <select aria-label={t("Choose music cue")} onChange={(event) => setSelectedCueId(event.target.value)} value={selectedCue?.id ?? ""}>
               {musicCues.map((cue) => (
                 <option key={cue.id} value={cue.id}>
-                  {cue.moment} - {cue.songTitle}
+                  {t(cue.moment)} - {cue.songTitle}
                 </option>
               ))}
             </select>
@@ -120,7 +120,7 @@ export function MusicCueStudio() {
                       type="button"
                     >
                       <span>{String(index + 1).padStart(2, "0")}</span>
-                      <strong>{cue.moment}</strong>
+                      <strong>{t(cue.moment)}</strong>
                       <small>{cue.songTitle}</small>
                     </button>
                   );
@@ -139,7 +139,7 @@ export function MusicCueStudio() {
                   <div className="music-selected-grid">
                     <div>
                       <span>{t("Moment")}</span>
-                      <strong>{selectedCue.moment}</strong>
+                      <strong>{t(selectedCue.moment)}</strong>
                       <small>{selectedCue.artist}</small>
                     </div>
                     <div>
@@ -184,7 +184,7 @@ export function MusicCueStudio() {
             <details className="studio-detail-drawer">
               <summary>
                 <span>{t("Edit selected cue details")}</span>
-                <strong>{selectedCue.moment}</strong>
+                <strong>{t(selectedCue.moment)}</strong>
               </summary>
               <Card className="music-cue-editor-card">
                 <CardContent>

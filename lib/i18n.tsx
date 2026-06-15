@@ -232,6 +232,8 @@ const sv: Record<string, string> = {
   "Review all medium and high risks before rehearsal.":
     "Gå igenom alla medel- och högrisker före repetitionen.",
   "Review role flow": "Gå igenom rollflödet",
+  "Couple Entrance": "Parets intåg",
+  "Wedding Party Entrance": "Bröllopsföljets intåg",
   "Planning Layers": "Planeringslager",
   "Open the workflow map and digital twin graph when you want deeper context.":
     "Öppna arbetsflödeskartan och den digitala tvillingen när du vill ha djupare kontext.",
