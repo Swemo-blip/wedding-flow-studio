@@ -1862,8 +1862,8 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
     },
     church: {
       aisleWidth: 1.05,
-      floor: palette.floor,
-      path: palette.carpet
+      floor: "#c8b58c",
+      path: "#e4d5b7"
     },
     garden: {
       aisleWidth: 1.18,
