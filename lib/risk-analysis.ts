@@ -10,6 +10,33 @@ type RiskSource = {
   tables?: DinnerTable[];
 };
 
+// Produces the resolved English `description` (so non-display consumers keep
+// working) plus a {placeholder} template + params so display surfaces can
+// translate the sentence.
+function localizedDescription(template: string, params: Record<string, string | number>) {
+  const description = template.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match));
+
+  return { description, descriptionKey: template, descriptionParams: params };
+}
+
+// Resolve a risk's description in the active language: translate the template,
+// and translate any string params that are themselves translatable (e.g. a
+// ceremony moment like "Recessional"), leaving plain data (names) untouched.
+export function localizeRiskDescription(
+  t: (source: string, params?: Record<string, string | number>) => string,
+  risk: RiskItem
+): string {
+  if (!risk.descriptionKey) {
+    return t(risk.description);
+  }
+
+  const params = risk.descriptionParams
+    ? Object.fromEntries(Object.entries(risk.descriptionParams).map(([key, value]) => [key, typeof value === "string" ? t(value) : value]))
+    : undefined;
+
+  return t(risk.descriptionKey, params);
+}
+
 export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   const wedding = source.wedding ?? sampleWedding;
   const timeline = source.timeline ?? timelineItems;
@@ -25,7 +52,10 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-group-photo-time",
       severity: "medium",
       title: "Group photos may need more time.",
-      description: `Group photos are scheduled for ${groupPhotos.durationMinutes} minutes. Consider 35 minutes for ${wedding.guestCount} guests.`,
+      ...localizedDescription("Group photos are scheduled for {minutes} minutes. Consider 35 minutes for {guests} guests.", {
+        minutes: groupPhotos.durationMinutes,
+        guests: wedding.guestCount
+      }),
       relatedEntityType: "timeline",
       relatedEntityId: groupPhotos.id,
       suggestedFix: "Add a family photo captain and extend the photo window."
@@ -38,7 +68,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-music-backup",
       severity: "medium",
       title: "A music cue is missing a backup plan.",
-      description: `${cueWithoutBackup.moment} music is missing a backup plan.`,
+      ...localizedDescription("{moment} music is missing a backup plan.", { moment: cueWithoutBackup.moment }),
       relatedEntityType: "musicCue",
       relatedEntityId: cueWithoutBackup.id,
       suggestedFix: "Ask the responsible musician or DJ to prepare a local backup file."
@@ -51,7 +81,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-music-start-cue",
       severity: "medium",
       title: "A music cue needs an exact start cue.",
-      description: `${cueWithoutExactStart.moment} is missing an exact start cue.`,
+      ...localizedDescription("{moment} is missing an exact start cue.", { moment: cueWithoutExactStart.moment }),
       relatedEntityType: "musicCue",
       relatedEntityId: cueWithoutExactStart.id,
       suggestedFix: "Confirm the exact timestamp and fade plan with the DJ."
@@ -64,7 +94,10 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-couple-entrance-confirmation",
       severity: "low",
       title: "A ceremony music cue still needs confirmation.",
-      description: `${unconfirmedCue.moment} still needs confirmation with ${unconfirmedCue.responsiblePerson}.`,
+      ...localizedDescription("{moment} still needs confirmation with {person}.", {
+        moment: unconfirmedCue.moment,
+        person: unconfirmedCue.responsiblePerson
+      }),
       relatedEntityType: "musicCue",
       relatedEntityId: unconfirmedCue.id,
       suggestedFix: "Confirm the arrangement length and cue point before rehearsal."
@@ -80,7 +113,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-speech-length",
       severity: "medium",
       title: "Speech timing may make the reception feel long.",
-      description: `Total speech time before cake is ${speechMinutesBeforeCake} minutes. Add buffer.`,
+      ...localizedDescription("Total speech time before cake is {minutes} minutes. Add buffer.", { minutes: speechMinutesBeforeCake }),
       relatedEntityType: "speech",
       relatedEntityId: "all-speeches",
       suggestedFix: "Ask the Toastmaster to group speeches and protect dinner service breaks."
@@ -93,7 +126,10 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-catering-allergy",
       severity: "high",
       title: "Catering needs final allergy details.",
-      description: `${guestWithAllergy.name} has a ${guestWithAllergy.allergies.join(", ").toLowerCase()} - notify catering.`,
+      ...localizedDescription("{name} has a {allergy} - notify catering.", {
+        name: guestWithAllergy.name,
+        allergy: guestWithAllergy.allergies.join(", ").toLowerCase()
+      }),
       relatedEntityType: "guest",
       relatedEntityId: guestWithAllergy.id,
       suggestedFix: "Send final allergy details to the catering lead and mark the guest seat."
@@ -106,7 +142,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-vegan-meal",
       severity: "low",
       title: "Meal preferences need final confirmation.",
-      description: `${veganGuest.name} has a vegan meal preference.`,
+      ...localizedDescription("{name} has a vegan meal preference.", { name: veganGuest.name }),
       relatedEntityType: "guest",
       relatedEntityId: veganGuest.id,
       suggestedFix: "Confirm plated meal markers with catering."
@@ -121,7 +157,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-child-meal",
       severity: "low",
       title: "Child meals need setup notes.",
-      description: `${childMealGuest.name} needs a child meal and Table 5 requires one child seat.`,
+      ...localizedDescription("{name} needs a child meal and Table 5 requires one child seat.", { name: childMealGuest.name }),
       relatedEntityType: "guest",
       relatedEntityId: childMealGuest.id,
       suggestedFix: "Confirm child meal count and chair setup with catering and venue."
@@ -134,7 +170,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-accessibility",
       severity: "medium",
       title: "Review accessibility seating and guest flow.",
-      description: `${accessibleGuest.name} should be seated close to the entrance with a clear route.`,
+      ...localizedDescription("{name} should be seated close to the entrance with a clear route.", { name: accessibleGuest.name }),
       relatedEntityType: "guest",
       relatedEntityId: accessibleGuest.id,
       suggestedFix: "Move the assigned table closer to the entrance or confirm a clear path."
@@ -147,7 +183,11 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-seating-conflict",
       severity: "high",
       title: "Seating conflict detected.",
-      description: `${conflict.guest.name} and ${conflict.conflictGuest.name} are marked as a seating conflict at ${conflict.table.name}.`,
+      ...localizedDescription("{guest} and {conflictGuest} are marked as a seating conflict at {table}.", {
+        guest: conflict.guest.name,
+        conflictGuest: conflict.conflictGuest.name,
+        table: conflict.table.name
+      }),
       relatedEntityType: "dinnerTable",
       relatedEntityId: conflict.table.id,
       suggestedFix: "Move one guest to a different table before exporting the seating plan."
@@ -165,7 +205,10 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
       id: "risk-secret-technical",
       severity: "medium",
       title: "Secret item requires vendor coordination.",
-      description: `${secretTechnical.title} requires ${secretTechnical.technicalNeeds.join(", ").toLowerCase()} support.`,
+      ...localizedDescription("{title} requires {needs} support.", {
+        title: secretTechnical.title,
+        needs: secretTechnical.technicalNeeds.join(", ").toLowerCase()
+      }),
       relatedEntityType: "speech",
       relatedEntityId: secretTechnical.id,
       suggestedFix: "Keep the item hidden from the couple but visible to Director Mode."

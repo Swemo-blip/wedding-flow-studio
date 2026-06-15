@@ -203,6 +203,11 @@ export type RiskItem = {
   severity: RiskSeverity;
   title: string;
   description: string;
+  // Optional localizable form of `description`: a template with {placeholders}
+  // plus its params. `description` stays the resolved English string so every
+  // other consumer keeps working; display surfaces translate via the template.
+  descriptionKey?: string;
+  descriptionParams?: Record<string, string | number>;
   relatedEntityType: string;
   relatedEntityId: string;
   suggestedFix: string;

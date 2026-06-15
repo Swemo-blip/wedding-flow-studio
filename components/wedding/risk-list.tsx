@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/lib/i18n";
+import { localizeRiskDescription } from "@/lib/risk-analysis";
 import type { RiskItem } from "@/lib/wedding-types";
 
 type RiskListProps = {
@@ -19,7 +20,7 @@ export function RiskList({ risks }: RiskListProps) {
             <p className="analysis-title">{t(risk.title)}</p>
             <Badge tone={risk.severity}>{t(risk.severity)}</Badge>
           </div>
-          <p className="analysis-copy">{t(risk.description)}</p>
+          <p className="analysis-copy">{localizeRiskDescription(t, risk)}</p>
           <p className="analysis-copy">
             <strong>{t("Suggested fix:")}</strong> {t(risk.suggestedFix)}
           </p>

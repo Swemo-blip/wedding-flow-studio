@@ -234,6 +234,19 @@ const sv: Record<string, string> = {
   "Review role flow": "Gå igenom rollflödet",
   "Couple Entrance": "Parets intåg",
   "Wedding Party Entrance": "Bröllopsföljets intåg",
+  "Group photos are scheduled for {minutes} minutes. Consider 35 minutes for {guests} guests.":
+    "Gruppfoton är inplanerade på {minutes} minuter. Överväg 35 minuter för {guests} gäster.",
+  "{moment} music is missing a backup plan.": "Musiken för {moment} saknar en reservplan.",
+  "{moment} is missing an exact start cue.": "{moment} saknar en exakt startsignal.",
+  "{moment} still needs confirmation with {person}.": "{moment} behöver fortfarande bekräftas med {person}.",
+  "Total speech time before cake is {minutes} minutes. Add buffer.": "Total taltid före tårtan är {minutes} minuter. Lägg in marginal.",
+  "{name} has a {allergy} - notify catering.": "{name} har {allergy} – meddela cateringen.",
+  "{name} has a vegan meal preference.": "{name} har önskemål om vegansk måltid.",
+  "{name} needs a child meal and Table 5 requires one child seat.": "{name} behöver en barnmåltid och bord 5 kräver en barnstol.",
+  "{name} should be seated close to the entrance with a clear route.": "{name} bör placeras nära entrén med en tydlig väg.",
+  "{guest} and {conflictGuest} are marked as a seating conflict at {table}.":
+    "{guest} och {conflictGuest} är markerade som en placeringskonflikt vid {table}.",
+  "{title} requires {needs} support.": "{title} kräver stöd för {needs}.",
   "Planning Layers": "Planeringslager",
   "Open the workflow map and digital twin graph when you want deeper context.":
     "Öppna arbetsflödeskartan och den digitala tvillingen när du vill ha djupare kontext.",
@@ -753,10 +766,20 @@ const sv: Record<string, string> = {
 
 const dictionaries: Record<Language, Record<string, string>> = { en: {}, sv };
 
+type TranslateParams = Record<string, string | number>;
+
+function applyTemplate(value: string, params?: TranslateParams) {
+  if (!params) {
+    return value;
+  }
+
+  return value.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match));
+}
+
 type LanguageContextValue = {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (source: string) => string;
+  t: (source: string, params?: TranslateParams) => string;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -781,7 +804,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (source: string) => dictionaries[language][source] ?? source,
+    (source: string, params?: TranslateParams) => applyTemplate(dictionaries[language][source] ?? source, params),
     [language]
   );
 
@@ -792,7 +815,7 @@ export function useTranslation() {
   const context = useContext(LanguageContext);
 
   if (!context) {
-    return { language: "en" as Language, setLanguage: () => {}, t: (source: string) => source };
+    return { language: "en" as Language, setLanguage: () => {}, t: (source: string, params?: TranslateParams) => applyTemplate(source, params) };
   }
 
   return context;

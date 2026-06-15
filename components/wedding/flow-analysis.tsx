@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/lib/i18n";
+import { localizeRiskDescription } from "@/lib/risk-analysis";
 import type { RiskItem } from "@/lib/wedding-types";
 
 type FlowAnalysisProps = {
@@ -27,7 +28,7 @@ export function FlowAnalysis({ limit = 6, risks, title = "Flow Analysis" }: Flow
                 <p className="analysis-title">{t(risk.title)}</p>
                 <Badge tone={risk.severity}>{t(risk.severity)}</Badge>
               </div>
-              <p className="analysis-copy">{t(risk.description)}</p>
+              <p className="analysis-copy">{localizeRiskDescription(t, risk)}</p>
             </li>
           ))}
         </ul>
