@@ -219,13 +219,13 @@ export function CeremonyScene({
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
           {venueType === "garden" || venueType === "beach" ? <HillSilhouettes /> : null}
-          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, preset.hemisphereIntensity]} />
-          <ambientLight color={preset.ambientColor} intensity={preset.ambientIntensity} />
+          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, venueType === "church" ? 0.72 : preset.hemisphereIntensity]} />
+          <ambientLight color={preset.ambientColor} intensity={venueType === "church" ? 0.5 : preset.ambientIntensity} />
           <directionalLight color="#aebdd6" intensity={preset.rimIntensity} position={[-6, 8, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={preset.keyIntensity}
+            intensity={venueType === "church" ? 2.7 : preset.keyIntensity}
             position={[4.5, 6.5, 5.5]}
             shadow-bias={-0.0004}
             shadow-camera-bottom={-8}
