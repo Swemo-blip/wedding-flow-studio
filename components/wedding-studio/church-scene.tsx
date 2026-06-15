@@ -1267,20 +1267,27 @@ function Dais({ palette }: { palette: Palette }) {
 }
 
 function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
+  // A fuller arrangement: many small ivory/blush blooms over a couple of green
+  // foliage spheres, rather than a few flat puffs.
   const blossoms: Array<[number, number, number, number, string]> = [
-    [0, 0, 0, radius * 0.62, palette.blush],
-    [radius * 0.5, radius * 0.18, 0.03, radius * 0.46, palette.carpet],
-    [-radius * 0.48, radius * 0.12, 0.02, radius * 0.44, palette.blush],
-    [radius * 0.16, -radius * 0.3, 0.04, radius * 0.4, palette.accent],
-    [-radius * 0.2, radius * 0.42, -0.02, radius * 0.36, "#7a8a5e"]
+    [radius * 0.05, -radius * 0.32, -0.03, radius * 0.34, "#6f7f56"],
+    [-radius * 0.4, -radius * 0.3, -0.03, radius * 0.28, "#7a8a5e"],
+    [0, 0.04, 0.02, radius * 0.46, "#f3ece0"],
+    [radius * 0.44, radius * 0.1, 0.02, radius * 0.38, palette.blush],
+    [-radius * 0.44, radius * 0.08, 0.02, radius * 0.36, "#efe6d6"],
+    [radius * 0.18, radius * 0.4, 0, radius * 0.34, palette.blush],
+    [-radius * 0.22, radius * 0.36, 0.02, radius * 0.32, "#f3ece0"],
+    [0, radius * 0.56, -0.01, radius * 0.28, palette.carpet],
+    [radius * 0.34, -radius * 0.18, 0.05, radius * 0.3, "#e7d8cf"],
+    [-radius * 0.32, -radius * 0.16, 0.05, radius * 0.28, palette.blush]
   ];
 
   return (
     <group position={position}>
       {blossoms.map(([x, y, z, size, color], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
-          <sphereGeometry args={[size, 12, 12]} />
-          <meshStandardMaterial color={color} roughness={0.78} />
+          <sphereGeometry args={[size, 10, 10]} />
+          <meshStandardMaterial color={color} roughness={0.82} />
         </mesh>
       ))}
     </group>
