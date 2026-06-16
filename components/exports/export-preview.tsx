@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
+import { buildGuestProfile } from "@/lib/guest-identity";
 import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
@@ -14,6 +15,17 @@ import type { ExportType } from "@/lib/wedding-types";
 
 type ExportPreviewProps = {
   exportType: ExportType;
+};
+
+type GuestBriefRow = {
+  accessibility: string;
+  allergies: string[];
+  id: string;
+  meal: string;
+  name: string;
+  relation: string;
+  seat: string;
+  speech: string;
 };
 
 export function ExportPreview({ exportType }: ExportPreviewProps) {
@@ -47,9 +59,30 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
       guest.accessibilityNotes ||
       guest.tags.some((tag) => tag.toLowerCase().includes("conflict"))
   );
+  // Resolve each flagged guest to one identity (seat, relation, speaking role)
+  // so the brief reads the same as the seating and speech studios.
+  const guestBriefRows = useMemo<GuestBriefRow[]>(
+    () =>
+      shouldShowGuestNotes
+        ? guestNotes.map((guest) => {
+            const profile = buildGuestProfile(guest, { guests, speeches, tables: dinnerTables });
+            return {
+              accessibility: guest.accessibilityNotes,
+              allergies: guest.allergies,
+              id: guest.id,
+              meal: guest.mealChoice,
+              name: guest.name,
+              relation: profile.relationToCouple,
+              seat: profile.table ? profile.seatLabel : "Unassigned",
+              speech: profile.speech ? `${profile.speech.title} (${profile.speech.timing})` : ""
+            };
+          })
+        : [],
+    [dinnerTables, guestNotes, guests, shouldShowGuestNotes, speeches]
+  );
   const briefText = useMemo(
-    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, shouldShowGuestNotes ? guestNotes : []),
-    [exportType, guestNotes, items, relatedCues, relatedSpeeches, risks, shouldShowGuestNotes]
+    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows),
+    [exportType, guestBriefRows, items, relatedCues, relatedSpeeches, risks]
   );
 
   async function copyBrief() {
@@ -134,12 +167,14 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
             <div className="export-section">
               <h4>{t("Guest Journey Notes")}</h4>
               <ul className="clean-list">
-                {guestNotes.map((guest) => (
-                  <li className="analysis-item" key={guest.id}>
-                    <strong>{guest.name}</strong>
+                {guestBriefRows.map((row) => (
+                  <li className="analysis-item" key={row.id}>
+                    <strong>{row.name} · {row.relation}</strong>
                     <p className="analysis-copy">
-                      {guest.mealChoice}. Table: {guest.tableId}. {guest.allergies.length > 0 ? `Allergies: ${guest.allergies.join(", ")}. ` : ""}
-                      {guest.accessibilityNotes || guest.tags.join(", ")}
+                      {row.seat === "Unassigned" ? t("Unassigned") : row.seat} · {row.meal}
+                      {row.allergies.length > 0 ? ` · ${t("Allergies")}: ${row.allergies.join(", ")}` : ""}
+                      {row.speech ? ` · ${t("Speech")}: ${row.speech}` : ""}
+                      {row.accessibility ? ` · ${row.accessibility}` : ""}
                     </p>
                   </li>
                 ))}
@@ -169,7 +204,7 @@ function buildExportBriefText(
   risks: Array<{ title: string; description: string; suggestedFix: string }>,
   relatedSpeeches: Array<{ title: string; speakerName: string; durationMinutes: number; technicalNeeds: string[] }>,
   relatedCues: Array<{ moment: string; songTitle: string; artist: string; startCue: string; backupPlan: string }>,
-  guestNotes: Array<{ name: string; mealChoice: string; tableId: string; allergies: string[]; accessibilityNotes: string; tags: string[] }>
+  guestRows: GuestBriefRow[]
 ) {
   const timelineText = items
     .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.responsiblePerson}\n  Notes: ${item.notes}`)
@@ -183,12 +218,12 @@ function buildExportBriefText(
   const riskText = risks
     .map((risk) => `- ${risk.title} ${risk.description} Suggested fix: ${risk.suggestedFix}`)
     .join("\n");
-  const guestText = guestNotes
+  const guestText = guestRows
     .map(
-      (guest) =>
-        `- ${guest.name}: ${guest.mealChoice}, table ${guest.tableId}. Allergies: ${guest.allergies.join(", ") || "none"}. Notes: ${
-          guest.accessibilityNotes || guest.tags.join(", ") || "none"
-        }`
+      (row) =>
+        `- ${row.name} (${row.relation}): ${row.seat}, ${row.meal}. Allergies: ${row.allergies.join(", ") || "none"}.${
+          row.speech ? ` Speaking: ${row.speech}.` : ""
+        }${row.accessibility ? ` ${row.accessibility}` : ""}`
     )
     .join("\n");
 
