@@ -779,38 +779,6 @@ function Crucifix({ position }: { position: [number, number, number] }) {
   );
 }
 
-function Candelabra({ candleColor, position, scale = 1 }: { candleColor: string; position: [number, number, number]; scale?: number }) {
-  return (
-    <group position={position} scale={scale}>
-      <mesh castShadow position={[0, 0.55, 0]}>
-        <cylinderGeometry args={[0.03, 0.08, 1.1, 10]} />
-        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.28} />
-      </mesh>
-      <mesh position={[0, 1.1, 0]}>
-        <boxGeometry args={[0.62, 0.03, 0.03]} />
-        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.3} />
-      </mesh>
-      {[-0.28, 0, 0.28].map((x, index) => {
-        const topY = 1.1 + (index === 1 ? 0.16 : 0);
-
-        return (
-          <group key={x}>
-            <mesh position={[x, topY + 0.08, 0]}>
-              <cylinderGeometry args={[0.022, 0.022, 0.16, 8]} />
-              <meshStandardMaterial color="#efe3c4" roughness={0.6} />
-            </mesh>
-            <mesh position={[x, topY + 0.2, 0]}>
-              <sphereGeometry args={[0.03, 8, 8]} />
-              <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={3} toneMapped={false} />
-            </mesh>
-          </group>
-        );
-      })}
-      <pointLight color={candleColor} decay={2} distance={3.2} intensity={1.1} position={[0, 1.4, 0]} />
-    </group>
-  );
-}
-
 function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Palette }) {
   return (
     <group position={[0, 0, -4.55]}>
@@ -823,11 +791,13 @@ function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Pal
         <boxGeometry args={[2.24, 0.05, 0.88]} />
         <meshStandardMaterial color={palette.accent} metalness={0.7} roughness={0.32} />
       </mesh>
-      <FlowerCluster palette={palette} position={[-0.7, 0.74, 0.2]} radius={0.22} />
-      <FlowerCluster palette={palette} position={[0.7, 0.74, 0.2]} radius={0.22} />
-      {[-1.55, 1.55].map((x) => (
-        <Candelabra candleColor={palette.candle} key={x} position={[x, 0.1, 0]} scale={decorScale} />
-      ))}
+      <Suspense fallback={null}>
+        <AltarArrangement palette={palette} position={[-0.86, 0.655, 0.24]} />
+        <AltarArrangement palette={palette} position={[0.86, 0.655, 0.24]} />
+        {[-1.5, 1.5].map((x) => (
+          <AltarCandle key={x} position={[x, 0.1, 0]} scale={decorScale} />
+        ))}
+      </Suspense>
     </group>
   );
 }
@@ -978,6 +948,63 @@ function ChurchCongregation({ seats }: { seats: CongregationSeat[] }) {
       {CONGREGATION_MODELS.map((url, variant) => (
         <CongregationVariant key={url} seats={seats.filter((seat) => seat.variant === variant)} url={url} />
       ))}
+    </group>
+  );
+}
+
+// Real CC0 dais props (Poly Pizza, see CREDITS.md). Loaded as-is and
+// size-normalized at runtime so we never depend on the model's authored scale.
+const DAIS_PROP_MODELS = ["/models/altar_vase.glb", "/models/altar_candlestick.glb"];
+
+if (typeof window !== "undefined") {
+  DAIS_PROP_MODELS.forEach((url) => useGLTF.preload(url));
+}
+
+function useNormalizedModel(url: string, targetHeight: number) {
+  const { scene } = useGLTF(url);
+  return useMemo(() => {
+    const clone = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(clone);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const factor = targetHeight / Math.max(size.y, 0.001);
+    clone.scale.setScalar(factor);
+    // center on x/z, drop the base to the group origin
+    clone.position.set(-((box.min.x + box.max.x) / 2) * factor, -box.min.y * factor, -((box.min.z + box.max.z) / 2) * factor);
+    clone.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (mesh.isMesh) {
+        mesh.castShadow = true;
+      }
+    });
+    const wrapper = new THREE.Group();
+    wrapper.add(clone);
+    return wrapper;
+  }, [scene, targetHeight]);
+}
+
+// A real gold vase (CC0) holding the soft ivory blooms — reads as a wedding
+// arrangement, where the bare CC0 flower meshes looked like loose stems.
+function AltarArrangement({ palette, position }: { palette: Palette; position: [number, number, number] }) {
+  const vase = useNormalizedModel("/models/altar_vase.glb", 0.22);
+  return (
+    <group position={position}>
+      <primitive object={vase} />
+      <FlowerCluster palette={palette} position={[0, 0.2, 0]} radius={0.17} />
+    </group>
+  );
+}
+
+function AltarCandle({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
+  const model = useNormalizedModel("/models/altar_candlestick.glb", 0.56);
+  return (
+    <group position={position} scale={scale}>
+      <primitive object={model} />
+      <mesh position={[0, 0.7, 0]}>
+        <sphereGeometry args={[0.022, 8, 8]} />
+        <meshStandardMaterial color="#ffd99a" emissive="#ffb95e" emissiveIntensity={3} toneMapped={false} />
+      </mesh>
+      <pointLight color="#ffca8c" decay={2} distance={2.4} intensity={2} position={[0, 0.72, 0]} />
     </group>
   );
 }
