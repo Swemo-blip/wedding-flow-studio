@@ -1,11 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { useTranslation } from "@/lib/i18n";
 import {
   venueOptions,
   type StudioBudgetLevel,
@@ -198,6 +200,13 @@ export function CeremonyScene({
   const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
   const preset = lightingPresets[lighting];
   const isDay = lighting === "day";
+  const { t } = useTranslation();
+  const [processionalPlaying, setProcessionalPlaying] = useState(false);
+  const [processionalKey, setProcessionalKey] = useState(0);
+  const [showSinger, setShowSinger] = useState(false);
+  // The processional is a hands-on ceremony rehearsal, so only offer it on the
+  // interactive church view (not the auto-flown Preview walkthrough).
+  const showCeremonyControls = venueType === "church" && !cameraOverride && activeStep !== "venue";
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
@@ -279,12 +288,35 @@ export function CeremonyScene({
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
             palette={palette}
+            processionalKey={processionalKey}
+            processionalPlaying={processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
+            showSinger={showSinger}
             venueType={venueType}
             viewMode={viewMode}
           />
         </Canvas>
+
+        {showCeremonyControls ? (
+          <div className="ceremony-processional-controls">
+            <button onClick={() => setProcessionalPlaying((playing) => !playing)} type="button">
+              {processionalPlaying ? t("Pause") : t("Play processional")}
+            </button>
+            <button
+              onClick={() => {
+                setProcessionalKey((key) => key + 1);
+                setProcessionalPlaying(false);
+              }}
+              type="button"
+            >
+              {t("Restart")}
+            </button>
+            <button data-active={showSinger} onClick={() => setShowSinger((value) => !value)} type="button">
+              {showSinger ? t("Remove singer") : t("Add singer")}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="ceremony-scene-caption" aria-live="polite">
@@ -435,8 +467,11 @@ function WeddingStageInterior({
   onMoveObject,
   onSelectObject,
   palette,
+  processionalKey,
+  processionalPlaying,
   sceneEdits,
   selectedObjectId,
+  showSinger,
   venueType,
   viewMode
 }: {
@@ -446,8 +481,11 @@ function WeddingStageInterior({
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
+  processionalKey: number;
+  processionalPlaying: boolean;
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
+  showSinger: boolean;
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
 }) {
@@ -506,9 +544,6 @@ function WeddingStageInterior({
 
           <VenueBoundary palette={palette} venueType={venueType} viewMode={viewMode} />
           {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
-          {venueType === "church" && activeStep !== "venue" && rowIndexes.length > 0 ? (
-            <ChurchAisleMarkers palette={palette} rowZs={rowIndexes.map((index) => -2.4 + index * 0.62)} />
-          ) : null}
 
           {activeStep !== "venue" ? (
             <EditableSceneObject
@@ -573,6 +608,14 @@ function WeddingStageInterior({
               <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} />
             ) : null}
           </EditableSceneObject>
+
+          {venueType === "church" && activeStep !== "venue" ? (
+            <Suspense fallback={null}>
+              <Celebrant />
+              <Processional key={processionalKey} playing={processionalPlaying} />
+              {showSinger ? <Singer /> : null}
+            </Suspense>
+          ) : null}
 
           {activeStep === "budget" || activeStep === "preview" ? <DetailLayer decorScale={decorScale} palette={palette} /> : null}
         </>
@@ -831,51 +874,6 @@ function ChurchPendantRow({ candleColor }: { candleColor: string }) {
   );
 }
 
-function ChurchAisleMarkers({ rowZs, palette }: { rowZs: number[]; palette: Palette }) {
-  return (
-    <group>
-      {rowZs.map((z, rowIndex) =>
-        [-0.72, 0.72].map((x) => (
-          <group key={`${x}-${z}`} position={[x, 0, z]}>
-            {rowIndex % 2 === 0 ? (
-              <group>
-                <mesh castShadow position={[0, 0.3, 0]}>
-                  <cylinderGeometry args={[0.04, 0.06, 0.6, 8]} />
-                  <meshStandardMaterial color="#e9ddc4" roughness={0.7} />
-                </mesh>
-                {(
-                  [
-                    [0, 0.64, 0, 0.1],
-                    [0.07, 0.68, 0.04, 0.07],
-                    [-0.07, 0.67, 0.03, 0.07],
-                    [0, 0.72, -0.02, 0.06]
-                  ] as Array<[number, number, number, number]>
-                ).map(([fx, fy, fz, fs], blossomIndex) => (
-                  <mesh castShadow key={blossomIndex} position={[fx, fy, fz]}>
-                    <sphereGeometry args={[fs, 10, 10]} />
-                    <meshStandardMaterial color={blossomIndex % 2 === 0 ? "#f3ece0" : "#e7d8cf"} roughness={0.82} />
-                  </mesh>
-                ))}
-              </group>
-            ) : (
-              <group>
-                <mesh position={[0, 0.2, 0]}>
-                  <cylinderGeometry args={[0.07, 0.07, 0.4, 12]} />
-                  <meshStandardMaterial color="#fff6e2" metalness={0} opacity={0.3} roughness={0.1} transparent />
-                </mesh>
-                <mesh position={[0, 0.16, 0]}>
-                  <sphereGeometry args={[0.035, 8, 8]} />
-                  <meshStandardMaterial color={palette.candle} emissive={palette.candle} emissiveIntensity={3} toneMapped={false} />
-                </mesh>
-              </group>
-            )}
-          </group>
-        ))
-      )}
-    </group>
-  );
-}
-
 // Real low-poly guests (CC0, baked to a static seated pose — see
 // public/models/CREDITS.md) instanced across the pews so the whole
 // congregation is a handful of draw calls.
@@ -1006,6 +1004,153 @@ function AltarCandle({ position, scale = 1 }: { position: [number, number, numbe
       </mesh>
       <pointLight color="#ffca8c" decay={2} distance={2.4} intensity={2} position={[0, 0.72, 0]} />
     </group>
+  );
+}
+
+// --- Ceremony figures: priest, processional couple, optional singer ---------
+// Animated CC0 characters (Quaternius, see CREDITS.md), cloned + recolored per
+// role and driven by their Walk/Idle clips. Only a handful, so skinned
+// animation is well within budget.
+const FIGURE_MAN = "/models/figure_man.glb";
+const FIGURE_WOMAN = "/models/figure_woman.glb";
+
+if (typeof window !== "undefined") {
+  useGLTF.preload(FIGURE_MAN);
+  useGLTF.preload(FIGURE_WOMAN);
+}
+
+const FIGURE_SCALE = 0.235;
+
+type Recolor = Record<string, string>;
+const GROOM_COLORS: Recolor = { Pants: "#26262d", Shirt: "#2c2c33", Socks: "#26262d" };
+const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Shoes: "#e9dfcf" };
+const PRIEST_COLORS: Recolor = { Pants: "#1b1b1f", Shirt: "#1d1d22", Socks: "#1b1b1f" };
+const SINGER_COLORS: Recolor = { Dress: "#7d3b46" };
+
+function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; recolor?: Recolor; rotationY?: number; url: string }) {
+  const { animations, scene } = useGLTF(url);
+  const object = useMemo(() => {
+    const copy = cloneSkinned(scene);
+    copy.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      mesh.castShadow = true;
+      const recolorOne = (material: THREE.Material) => {
+        const cloned = (material as THREE.MeshStandardMaterial).clone();
+        const next = recolor?.[cloned.name];
+        if (next) {
+          cloned.color = new THREE.Color(next);
+        }
+        return cloned;
+      };
+      mesh.material = Array.isArray(mesh.material) ? mesh.material.map(recolorOne) : recolorOne(mesh.material);
+    });
+    return copy;
+  }, [recolor, scene]);
+  const mixer = useMemo(() => new THREE.AnimationMixer(object), [object]);
+
+  useEffect(() => {
+    const match = animations.find((animation) => animation.name.toLowerCase().includes(clip));
+    if (!match) {
+      return undefined;
+    }
+
+    const action = mixer.clipAction(match);
+    action.reset().fadeIn(0.3).play();
+    return () => {
+      action.fadeOut(0.3);
+    };
+  }, [animations, clip, mixer]);
+
+  useFrame((_, delta) => mixer.update(delta));
+
+  return <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />;
+}
+
+function Celebrant() {
+  // The officiant waits at the altar, facing the congregation.
+  return (
+    <group position={[0, 0, -3.55]}>
+      <AnimatedFigure clip="idle" recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_MAN} />
+    </group>
+  );
+}
+
+function MicrophoneStand() {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.52, 0]}>
+        <cylinderGeometry args={[0.012, 0.016, 1.04, 8]} />
+        <meshStandardMaterial color="#2a2a2e" metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh castShadow position={[0, 1.05, 0.02]}>
+        <sphereGeometry args={[0.042, 12, 12]} />
+        <meshStandardMaterial color="#17171a" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.01, 0]}>
+        <cylinderGeometry args={[0.11, 0.11, 0.02, 14]} />
+        <meshStandardMaterial color="#2a2a2e" metalness={0.6} roughness={0.45} />
+      </mesh>
+    </group>
+  );
+}
+
+function Singer() {
+  return (
+    <group position={[1.75, 0, -3.05]} rotation={[0, -0.55, 0]}>
+      <AnimatedFigure clip="idle" recolor={SINGER_COLORS} rotationY={0.35} url={FIGURE_WOMAN} />
+      <group position={[0.2, 0, 0.16]}>
+        <MicrophoneStand />
+      </group>
+    </group>
+  );
+}
+
+const PROCESSION_START_Z = 4.4;
+const PROCESSION_END_Z = -2.55;
+const PROCESSION_DURATION = 13;
+
+// Re-mounted (via React key) to restart, so progress + pose reset cleanly.
+function Processional({ playing }: { playing: boolean }) {
+  const progress = useRef(0);
+  const arrivedRef = useRef(false);
+  const groomRef = useRef<THREE.Group>(null);
+  const brideRef = useRef<THREE.Group>(null);
+  const [arrived, setArrived] = useState(false);
+
+  useFrame((_, delta) => {
+    if (playing && progress.current < 1) {
+      progress.current = Math.min(1, progress.current + delta / PROCESSION_DURATION);
+    }
+    if (progress.current >= 1 && !arrivedRef.current) {
+      arrivedRef.current = true;
+      setArrived(true);
+    }
+
+    const p = progress.current;
+    const eased = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+    const z = PROCESSION_START_Z + (PROCESSION_END_Z - PROCESSION_START_Z) * eased;
+    if (groomRef.current) {
+      groomRef.current.position.z = z;
+    }
+    if (brideRef.current) {
+      brideRef.current.position.z = z;
+    }
+  });
+
+  const moving = playing && !arrived;
+
+  return (
+    <>
+      <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef}>
+        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} url={FIGURE_MAN} />
+      </group>
+      <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef}>
+        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} url={FIGURE_WOMAN} />
+      </group>
+    </>
   );
 }
 

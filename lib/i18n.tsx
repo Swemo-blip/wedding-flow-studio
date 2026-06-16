@@ -355,6 +355,11 @@ const sv: Record<string, string> = {
   "Start cue": "Startsignal",
   "Backup": "Reserv",
   "Cue readiness": "Cue-status",
+  // Ceremony processional controls
+  "Play processional": "Spela upp processionen",
+  "Restart": "Börja om",
+  "Add singer": "Lägg till sångare",
+  "Remove singer": "Ta bort sångare",
   // Reception guest inspector
   "Guest Inspector": "Gästinspektör",
   "Guest Identity": "Gästidentitet",

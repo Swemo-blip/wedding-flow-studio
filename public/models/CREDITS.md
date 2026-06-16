@@ -15,6 +15,17 @@ the vertices into a static pose, merge primitives to one geometry, carry each
 material's base color as a per-vertex `COLOR_0` attribute. No textures, no rig,
 no animation — so the whole congregation renders as a few instanced draw calls.
 
+## Ceremony figures (animated)
+
+Used for the priest, the processional bride + groom, and the optional singer.
+Cloned per role (SkeletonUtils), recolored by material name (suit, white dress,
+dark vestments), and driven by their own `Walk` / `Idle` clips.
+
+| File | Source character | Author | License |
+| --- | --- | --- | --- |
+| `figure_man.glb` | "Man" (animated) | Quaternius | CC0 1.0 |
+| `figure_woman.glb` | "Woman in Dress" (animated) | Quaternius | CC0 1.0 |
+
 ## Dais props
 
 Loaded as-is and size-normalized at runtime; used at the ceremony focal point.

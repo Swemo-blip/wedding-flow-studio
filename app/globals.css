@@ -5970,6 +5970,64 @@ a {
   content: "";
 }
 
+.ceremony-processional-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: calc(100% - 24px);
+  padding: 6px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(240, 228, 196, 0.18);
+  border-radius: 999px;
+  background: rgba(16, 18, 7, 0.62);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.ceremony-processional-controls button {
+  appearance: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 253, 248, 0.86);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.ceremony-processional-controls button:hover {
+  background: rgba(255, 253, 248, 0.1);
+  color: #fffdf8;
+}
+
+.ceremony-processional-controls button:first-child {
+  background: linear-gradient(180deg, #e8cd8b, #c8a45b);
+  color: #2a2110;
+}
+
+.ceremony-processional-controls button:first-child:hover {
+  background: linear-gradient(180deg, #f0d79a, #d4ad63);
+  color: #2a2110;
+}
+
+.ceremony-processional-controls button[data-active="true"] {
+  border-color: rgba(240, 228, 196, 0.4);
+  background: rgba(240, 228, 196, 0.16);
+  color: #fffdf8;
+}
+
 .ceremony-canvas-frame canvas {
   display: block;
   width: 100% !important;
