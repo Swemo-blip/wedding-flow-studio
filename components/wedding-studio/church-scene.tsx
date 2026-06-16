@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import {
@@ -560,7 +560,11 @@ function WeddingStageInterior({
 
             {venueType === "church"
               ? activeStep !== "venue"
-                ? churchSeatedGuests.map((guest) => <SeatedGuest hair={guest.hair} key={guest.id} position={guest.position} tone={guest.tone} />)
+                ? (
+                  <Suspense fallback={null}>
+                    <ChurchCongregation seats={churchSeatedGuests} />
+                  </Suspense>
+                )
                 : null
               : showGuests
                 ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />)
@@ -902,40 +906,85 @@ function ChurchAisleMarkers({ rowZs, palette }: { rowZs: number[]; palette: Pale
   );
 }
 
-// Mostly dark formalwear with a few champagne/grey dresses, like a real
-// congregation seen from the back of the nave.
-const GUEST_TONES = ["#262a33", "#2f3540", "#3a3128", "#1f232c", "#46403a", "#cdbba2", "#94867a"];
-const GUEST_HAIR = ["#2a211a", "#3d2f22", "#1c1814", "#5a4a36", "#8a7250"];
+// Real low-poly guests (CC0, baked to a static seated pose — see
+// public/models/CREDITS.md) instanced across the pews so the whole
+// congregation is a handful of draw calls.
+const CONGREGATION_MODELS = ["/models/man_seated.glb", "/models/woman_seated.glb", "/models/woman_dress_seated.glb"];
 
-function SeatedGuest({ position, tone, hair }: { position: [number, number, number]; tone: string; hair: string }) {
+// The baked meshes stand ~4 source units tall; scale to a seated guest that
+// reads correctly at church scale.
+const CONGREGATION_SCALE = 0.205;
+
+if (typeof window !== "undefined") {
+  CONGREGATION_MODELS.forEach((url) => useGLTF.preload(url));
+}
+
+type CongregationSeat = {
+  id: string;
+  position: [number, number, number];
+  variant: number;
+  rotationY: number;
+};
+
+function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: string }) {
+  const { scene } = useGLTF(url);
+  const geometry = useMemo(() => {
+    let found: THREE.BufferGeometry | null = null;
+    scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (mesh.isMesh && !found) {
+        found = mesh.geometry;
+      }
+    });
+    return found;
+  }, [scene]);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0 }), []);
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+
+  useLayoutEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) {
+      return;
+    }
+
+    const matrix = new THREE.Matrix4();
+    const quaternion = new THREE.Quaternion();
+    const euler = new THREE.Euler();
+    const scale = new THREE.Vector3();
+    const position = new THREE.Vector3();
+
+    seats.forEach((seat, index) => {
+      euler.set(0, seat.rotationY, 0);
+      quaternion.setFromEuler(euler);
+      position.set(seat.position[0], seat.position[1], seat.position[2]);
+      scale.setScalar(CONGREGATION_SCALE);
+      matrix.compose(position, quaternion, scale);
+      mesh.setMatrixAt(index, matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  }, [seats]);
+
+  if (!geometry || seats.length === 0) {
+    return null;
+  }
+
+  return <instancedMesh args={[geometry, material, seats.length]} castShadow frustumCulled={false} ref={meshRef} />;
+}
+
+function ChurchCongregation({ seats }: { seats: CongregationSeat[] }) {
   return (
-    <group position={position}>
-      <mesh castShadow position={[0, 0.32, 0]}>
-        <capsuleGeometry args={[0.088, 0.3, 4, 8]} />
-        <meshStandardMaterial color={tone} roughness={0.74} />
-      </mesh>
-      <mesh castShadow position={[0, 0.45, 0]}>
-        <boxGeometry args={[0.28, 0.13, 0.15]} />
-        <meshStandardMaterial color={tone} roughness={0.74} />
-      </mesh>
-      <mesh castShadow position={[0, 0.57, 0]}>
-        <sphereGeometry args={[0.068, 12, 12]} />
-        <meshStandardMaterial color="#dcb892" roughness={0.6} />
-      </mesh>
-      <mesh castShadow position={[0, 0.6, -0.02]}>
-        <sphereGeometry args={[0.072, 12, 12]} />
-        <meshStandardMaterial color={hair} roughness={0.78} />
-      </mesh>
+    <group>
+      {CONGREGATION_MODELS.map((url, variant) => (
+        <CongregationVariant key={url} seats={seats.filter((seat) => seat.variant === variant)} url={url} />
+      ))}
     </group>
   );
 }
 
-function buildChurchSeatedGuests(
-  visibleRows: number,
-  maxGuests: number
-): Array<{ id: string; position: [number, number, number]; tone: string; hair: string }> {
-  const result: Array<{ id: string; position: [number, number, number]; tone: string; hair: string }> = [];
-  const seatOffsets = [-0.85, -0.28, 0.28, 0.85];
+function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): CongregationSeat[] {
+  const result: CongregationSeat[] = [];
+  const seatOffsets = [-0.86, -0.29, 0.29, 0.86];
   let count = 0;
 
   for (let row = 0; row < visibleRows; row += 1) {
@@ -947,12 +996,12 @@ function buildChurchSeatedGuests(
           return result;
         }
 
-        const variant = row * 4 + seat + (sideCenter < 0 ? 0 : 3);
+        const seed = row * 7 + seat * 3 + (sideCenter < 0 ? 0 : 11);
         result.push({
           id: `church-guest-${row}-${sideCenter}-${seat}`,
-          position: [sideCenter + seatOffsets[seat], 0, z + 0.02],
-          tone: GUEST_TONES[variant % GUEST_TONES.length],
-          hair: GUEST_HAIR[variant % GUEST_HAIR.length]
+          position: [sideCenter + seatOffsets[seat], 0, z + 0.04],
+          variant: seed % CONGREGATION_MODELS.length,
+          rotationY: Math.PI + ((seed % 5) - 2) * 0.05
         });
         count += 1;
       }
