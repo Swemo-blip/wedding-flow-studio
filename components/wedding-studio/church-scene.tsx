@@ -275,7 +275,7 @@ export function CeremonyScene({
             <Lightformer color={isDay ? "#eef1ea" : "#caa05f"} form="rect" intensity={isDay ? 1 : 0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
             <Lightformer color={isDay ? "#d6e2ee" : "#3c4258"} form="rect" intensity={isDay ? 0.8 : 0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
           </Environment>
-          <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.025, 0.25]} resolution={384} scale={13} />
+          <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.035, 0.25]} resolution={384} scale={13} />
           <EffectComposer multisampling={4}>
             <Bloom intensity={isDay ? 0.42 : 0.85} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.05 : 1} mipmapBlur />
             <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
@@ -539,9 +539,12 @@ function WeddingStageInterior({
             selectedObjectId={selectedObjectId}
             size={[1.35, 11.8]}
           >
-            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.025, 0.45]}>
+            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.018, 0.45]}>
               <planeGeometry args={[surface.aisleWidth, 11.8]} />
-              <meshStandardMaterial color={surface.path} roughness={0.82} />
+              {/* The runner is a decal on the floor: a clear gap plus a forward
+                  polygonOffset so it always wins the depth test (no flicker at
+                  grazing angles). */}
+              <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.82} />
             </mesh>
           </EditableSceneObject>
 
