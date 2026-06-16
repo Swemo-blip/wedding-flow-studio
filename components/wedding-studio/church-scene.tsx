@@ -275,9 +275,14 @@ export function CeremonyScene({
             <Lightformer color={isDay ? "#eef1ea" : "#caa05f"} form="rect" intensity={isDay ? 1 : 0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
             <Lightformer color={isDay ? "#d6e2ee" : "#3c4258"} form="rect" intensity={isDay ? 0.8 : 0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
           </Environment>
-          {/* Keep the contact-shadow plane clear of the floor and pulled in from
-              the side walls/columns so it never grazes + z-fights the floor there. */}
-          <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={8} />
+          {/* Skip the contact-shadow plane in the church: it's a second
+              floor-parallel plane whose grazing edge z-fights the flat stone
+              floor (the side strips by the pews blink). The directional key
+              light already casts real shadows from the pews, guests and columns,
+              so the church stays grounded without it. Open-air venues keep it. */}
+          {venueType === "church" ? null : (
+            <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
+          )}
           <EffectComposer multisampling={4}>
             <Bloom intensity={isDay ? 0.42 : 0.85} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.05 : 1} mipmapBlur />
             <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
