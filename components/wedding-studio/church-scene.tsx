@@ -236,13 +236,14 @@ export function CeremonyScene({
             color="#ffd9a6"
             intensity={venueType === "church" ? 2.7 : preset.keyIntensity}
             position={[4.5, 6.5, 5.5]}
-            shadow-bias={-0.0004}
+            shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
             shadow-camera-far={26}
             shadow-camera-left={-8}
             shadow-camera-right={8}
             shadow-camera-top={8}
-            shadow-mapSize={[1024, 1024]}
+            shadow-mapSize={[2048, 2048]}
+            shadow-normalBias={0.05}
           />
           <pointLight
             color="#ffca8c"
@@ -503,7 +504,9 @@ function WeddingStageInterior({
 
   useFrame(({ clock }) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(clock.elapsedTime * 0.22) * 0.018;
+      // Keep the sway very small: a larger drift rotates shadow casters under a
+      // world-fixed sun, which makes shadow edges shimmer.
+      groupRef.current.rotation.y = Math.sin(clock.elapsedTime * 0.2) * 0.008;
     }
   });
 
@@ -719,8 +722,9 @@ function StainedGlassWindow({
         <boxGeometry args={[width + 0.24, frameHeight + 0.26, 0.12]} />
         <meshStandardMaterial color="#cabfa0" roughness={0.9} />
       </mesh>
-      {/* dark lead backing — gaps between panes read as leading */}
-      <mesh position={[0, 0, -0.02]}>
+      {/* dark lead backing — gaps between panes read as leading. Sits just in
+          front of the stone reveal so the two coplanar faces never z-fight. */}
+      <mesh position={[0, 0, -0.012]}>
         <planeGeometry args={[width + 0.02, rectHeight + 0.02]} />
         <meshStandardMaterial color={LEAD_COLOR} roughness={0.82} side={THREE.DoubleSide} />
       </mesh>
@@ -1231,13 +1235,13 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
 
       {windowZs.map((z, index) => (
         <group key={z}>
-          <StainedGlassWindow position={[-4.84, 1.75, z]} rotationY={Math.PI / 2} seed={index} />
-          <StainedGlassWindow position={[4.84, 1.75, z]} rotationY={-Math.PI / 2} seed={index + 2} />
+          <StainedGlassWindow position={[-4.79, 1.75, z]} rotationY={Math.PI / 2} seed={index} />
+          <StainedGlassWindow position={[4.79, 1.75, z]} rotationY={-Math.PI / 2} seed={index + 2} />
         </group>
       ))}
 
-      <StainedGlassWindow position={[-2.5, 2, -5.73]} rectHeight={1.5} seed={4} width={0.95} />
-      <StainedGlassWindow position={[2.5, 2, -5.73]} rectHeight={1.5} seed={1} width={0.95} />
+      <StainedGlassWindow position={[-2.5, 2, -5.7]} rectHeight={1.5} seed={4} width={0.95} />
+      <StainedGlassWindow position={[2.5, 2, -5.7]} rectHeight={1.5} seed={1} width={0.95} />
       <Crucifix position={[0, 2.3, -5.6]} />
 
       <pointLight color="#ffdca0" decay={2} distance={8} intensity={1.3} position={[0, 2.9, -1]} />
