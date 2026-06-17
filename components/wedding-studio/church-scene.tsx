@@ -1146,6 +1146,17 @@ const PROCESSION_START_Z = 4.4;
 const PROCESSION_END_Z = -2.55;
 const PROCESSION_DURATION = 13;
 
+function BridalGown() {
+  // A long ivory skirt from the waist to the floor — reads as a gown and hides
+  // the walk-cycle leg movement underneath.
+  return (
+    <mesh castShadow position={[0, 0.27, 0]}>
+      <cylinderGeometry args={[0.1, 0.27, 0.56, 20]} />
+      <meshStandardMaterial color="#f6efe2" roughness={0.78} />
+    </mesh>
+  );
+}
+
 function Bouquet() {
   // A small ivory + blush posy the bride carries at her hands.
   const blooms: Array<[number, number, number, number]> = [
@@ -1216,6 +1227,7 @@ function Processional({ playing }: { playing: boolean }) {
       </group>
       <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
         <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+        <BridalGown />
         <Bouquet />
       </group>
     </>
@@ -1785,9 +1797,9 @@ function ReceptionInterior({
         selectedObjectId={selectedObjectId}
         size={[2.9, 2.55]}
       >
-        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0.9]}>
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, 0.9]}>
           <planeGeometry args={[2.45, 2.15]} />
-          <meshStandardMaterial color={surface.path} roughness={0.62} />
+          <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.62} />
         </mesh>
 
         <mesh castShadow receiveShadow position={[0, 0.04, 0.9]}>
@@ -1837,9 +1849,9 @@ function ReceptionInterior({
         <meshStandardMaterial color={palette.blush} roughness={0.66} />
       </mesh>
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.55, 0.005, 1.1]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.55, 0.012, 1.1]}>
         <planeGeometry args={[0.28, 6.9]} />
-        <meshStandardMaterial color={palette.candle} transparent opacity={0.5} roughness={0.58} />
+        <meshStandardMaterial color={palette.candle} depthWrite={false} opacity={0.5} polygonOffset polygonOffsetFactor={-3} polygonOffsetUnits={-3} roughness={0.58} transparent />
       </mesh>
 
       <LightingRibbon decorScale={0.82} palette={palette} venueType={venueType} />

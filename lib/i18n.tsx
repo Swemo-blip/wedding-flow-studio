@@ -357,6 +357,7 @@ const sv: Record<string, string> = {
   "Cue readiness": "Cue-status",
   // Ceremony processional controls
   "Garden (outdoors)": "Trädgård (utomhus)",
+  "Indoors": "Inomhus",
   "Play processional": "Spela upp processionen",
   "Restart": "Börja om",
   "Add singer": "Lägg till sångare",
