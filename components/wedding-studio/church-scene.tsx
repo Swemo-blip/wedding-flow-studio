@@ -207,7 +207,10 @@ export function CeremonyScene({
   // The processional is a hands-on ceremony rehearsal, so only offer it on the
   // interactive church view (not the auto-flown Preview walkthrough).
   const showCeremonyControls =
-    (venueType === "church" || venueType === "garden" || venueType === "beach") && !cameraOverride && activeStep !== "venue";
+    (venueType === "church" || venueType === "garden" || venueType === "beach") &&
+    !cameraOverride &&
+    activeStep !== "venue" &&
+    activeStep !== "reception";
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
@@ -1755,7 +1758,9 @@ function ReceptionInterior({
   viewMode: StudioViewMode;
 }) {
   const tableCount = Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
-  const tablePositions = buildReceptionTablePositions(tableCount);
+  const tablePositions = useMemo(() => buildReceptionTablePositions(tableCount), [tableCount]);
+  const seatsPerTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
+  const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatsPerTable), [seatsPerTable, tablePositions]);
   // The reception is held away from the ceremony venue, so a church ceremony
   // still flows into an open evening reception rather than seating dinner
   // tables inside the nave.
@@ -1801,8 +1806,11 @@ function ReceptionInterior({
         size={[7.4, 7.4]}
       >
         {tablePositions.map((position, tableIndex) => (
-          <ReceptionTable key={tableIndex} palette={palette} position={position} seats={Math.min(10, Math.max(4, capacity.seatsPerRow))} />
+          <ReceptionTable key={tableIndex} palette={palette} position={position} />
         ))}
+        <Suspense fallback={null}>
+          <ChurchCongregation seats={receptionSeats} />
+        </Suspense>
       </EditableSceneObject>
 
       <EditableSceneObject
@@ -1841,12 +1849,10 @@ function ReceptionInterior({
 
 function ReceptionTable({
   palette,
-  position,
-  seats
+  position
 }: {
   palette: Palette;
   position: [number, number, number];
-  seats: number;
 }) {
   return (
     <group position={position}>
@@ -1858,13 +1864,7 @@ function ReceptionTable({
         <cylinderGeometry args={[0.36, 0.4, 0.05, 32]} />
         <meshStandardMaterial color={palette.blush} roughness={0.68} />
       </mesh>
-      {Array.from({ length: seats }, (_, index) => {
-        const angle = (index / seats) * Math.PI * 2;
-        const x = Math.cos(angle) * 0.82;
-        const z = Math.sin(angle) * 0.82;
-
-        return <GuestDot key={index} palette={palette} position={[x, 0.26, z]} />;
-      })}
+      {/* Guests are seated around the table by ReceptionSeating (instanced). */}
     </group>
   );
 }
@@ -2048,6 +2048,29 @@ function buildReceptionTablePositions(tableCount: number): Array<[number, number
   ];
 
   return allPositions.slice(0, tableCount);
+}
+
+// Real seated guests ringed around each dinner table, facing the centre, feet
+// on the floor — reuses the instanced congregation meshes.
+function buildReceptionSeats(tablePositions: Array<[number, number, number]>, seatsPerTable: number): CongregationSeat[] {
+  const seats: CongregationSeat[] = [];
+  const radius = 0.95;
+
+  tablePositions.forEach(([tx, , tz], tableIndex) => {
+    for (let seat = 0; seat < seatsPerTable; seat += 1) {
+      const angle = (seat / seatsPerTable) * Math.PI * 2 + (tableIndex % 2) * 0.42;
+      const gx = tx + Math.cos(angle) * radius;
+      const gz = tz + Math.sin(angle) * radius;
+      seats.push({
+        id: `reception-${tableIndex}-${seat}`,
+        position: [gx, 0, gz],
+        rotationY: Math.atan2(tx - gx, tz - gz),
+        variant: (tableIndex * 3 + seat * 5) % CONGREGATION_MODELS.length
+      });
+    }
+  });
+
+  return seats;
 }
 
 function buildGuestMarkers(capacity: WeddingStudioCapacity): GuestMarker[] {
