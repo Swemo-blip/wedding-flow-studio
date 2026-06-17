@@ -253,8 +253,8 @@ export function CeremonyScene({
             intensity={
               venueType === "church"
                 ? isDay
-                  ? 2.5
-                  : 12
+                  ? 1.5
+                  : 9
                 : isDay
                   ? 7
                   : budgetLevel === "signature"
@@ -705,7 +705,7 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
 
 // ----- Church interior: a warm Catholic nave (reference look) -----
 
-const STAINED_GLASS_COLORS = ["#2f4f86", "#8c3b34", "#b1894a", "#3f6b54", "#4a4072", "#356b74"];
+const STAINED_GLASS_COLORS = ["#294367", "#79332d", "#94703a", "#345844", "#3d3459", "#2c565d"];
 
 const LEAD_COLOR = "#33301f";
 
@@ -759,7 +759,7 @@ function StainedGlassWindow({
               <meshStandardMaterial
                 color={glassColor(col + row * 2)}
                 emissive={glassColor(col + row * 2)}
-                emissiveIntensity={0.6}
+                emissiveIntensity={0.3}
                 roughness={0.45}
                 side={THREE.DoubleSide}
                 toneMapped={false}
@@ -780,11 +780,11 @@ function StainedGlassWindow({
       </mesh>
       <mesh position={[0, rectHeight / 2, 0]}>
         <circleGeometry args={[halfWidth - 0.025, 22, 0, Math.PI]} />
-        <meshStandardMaterial color={glassColor(3)} emissive={glassColor(3)} emissiveIntensity={0.64} roughness={0.45} side={THREE.DoubleSide} toneMapped={false} />
+        <meshStandardMaterial color={glassColor(3)} emissive={glassColor(3)} emissiveIntensity={0.34} roughness={0.45} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
       <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.014]}>
         <circleGeometry args={[halfWidth * 0.3, 18]} />
-        <meshStandardMaterial color={glassColor(5)} emissive={glassColor(5)} emissiveIntensity={0.85} roughness={0.4} side={THREE.DoubleSide} toneMapped={false} />
+        <meshStandardMaterial color={glassColor(5)} emissive={glassColor(5)} emissiveIntensity={0.46} roughness={0.4} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
       <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.012]}>
         <ringGeometry args={[halfWidth * 0.3, halfWidth * 0.35, 18]} />
@@ -872,7 +872,7 @@ function ChurchPendant({ candleColor, position }: { candleColor: string; positio
       </mesh>
       <mesh position={[0, -0.02, 0]}>
         <cylinderGeometry args={[0.11, 0.13, 0.3, 8]} />
-        <meshStandardMaterial color="#3a2f20" metalness={0.5} roughness={0.5} />
+        <meshStandardMaterial color="#6e5326" metalness={0.78} roughness={0.34} />
       </mesh>
       <mesh position={[0, -0.02, 0]}>
         <sphereGeometry args={[0.075, 12, 12]} />
