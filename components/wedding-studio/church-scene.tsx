@@ -1131,6 +1131,32 @@ const PROCESSION_START_Z = 4.4;
 const PROCESSION_END_Z = -2.55;
 const PROCESSION_DURATION = 13;
 
+function Bouquet() {
+  // A small ivory + blush posy the bride carries at her hands.
+  const blooms: Array<[number, number, number, number]> = [
+    [0, 0, 0, 0.058],
+    [0.05, 0.02, 0.012, 0.044],
+    [-0.05, 0.012, 0.01, 0.044],
+    [0.012, 0.05, -0.012, 0.04],
+    [-0.01, -0.012, 0.05, 0.038]
+  ];
+
+  return (
+    <group position={[0.05, 0.5, 0.17]}>
+      {blooms.map(([x, y, z, r], index) => (
+        <mesh castShadow key={index} position={[x, y, z]}>
+          <sphereGeometry args={[r, 10, 10]} />
+          <meshStandardMaterial color={index % 2 === 0 ? "#f4ece0" : "#e7cdcf"} roughness={0.82} />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.08, 0.02]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.12, 6]} />
+        <meshStandardMaterial color="#c9b489" roughness={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
 // Re-mounted (via React key) to restart, so progress + pose reset cleanly.
 function Processional({ playing }: { playing: boolean }) {
   const progress = useRef(0);
@@ -1151,11 +1177,18 @@ function Processional({ playing }: { playing: boolean }) {
     const p = progress.current;
     const eased = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
     const z = PROCESSION_START_Z + (PROCESSION_END_Z - PROCESSION_START_Z) * eased;
+    // Face down the aisle while walking; turn to face each other on arrival
+    // (groom looks right toward the bride, bride looks left toward the groom).
+    const groomTarget = arrivedRef.current ? Math.PI / 2 : Math.PI;
+    const brideTarget = arrivedRef.current ? (3 * Math.PI) / 2 : Math.PI;
+    const turn = Math.min(1, delta * 3);
     if (groomRef.current) {
       groomRef.current.position.z = z;
+      groomRef.current.rotation.y += (groomTarget - groomRef.current.rotation.y) * turn;
     }
     if (brideRef.current) {
       brideRef.current.position.z = z;
+      brideRef.current.rotation.y += (brideTarget - brideRef.current.rotation.y) * turn;
     }
   });
 
@@ -1163,11 +1196,12 @@ function Processional({ playing }: { playing: boolean }) {
 
   return (
     <>
-      <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef}>
-        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} url={FIGURE_SUIT} />
+      <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef} rotation={[0, Math.PI, 0]}>
+        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
       </group>
-      <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef}>
-        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} url={FIGURE_WOMAN} />
+      <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
+        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+        <Bouquet />
       </group>
     </>
   );
