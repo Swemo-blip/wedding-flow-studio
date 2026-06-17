@@ -365,6 +365,10 @@ const sv: Record<string, string> = {
   // Reception guest inspector
   "Guest Inspector": "Gästinspektör",
   "Guest Identity": "Gästidentitet",
+  "Seating view": "Placeringsvy",
+  "2D plan": "2D-plan",
+  "3D seating": "3D-placering",
+  "Drag to orbit · click a guest to inspect": "Dra för att rotera · klicka på en gäst för att se detaljer",
   "Accessibility": "Tillgänglighet",
   "Active guest": "Aktiv gäst",
   "Arrival": "Ankomst",

@@ -9560,6 +9560,98 @@ a {
   min-height: 760px;
 }
 
+.reception-view-toggle {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border: 1px solid rgba(146, 118, 73, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.7);
+}
+
+.reception-view-toggle button {
+  cursor: pointer;
+  padding: 7px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(33, 29, 20, 0.66);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.reception-view-toggle button[data-active="true"] {
+  background: linear-gradient(180deg, #e8cd8b, #c8a45b);
+  color: #2a2110;
+}
+
+.reception-seating-3d {
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+  height: 60vh;
+  max-height: 760px;
+  border: 1px solid rgba(146, 118, 73, 0.28);
+  border-radius: 16px;
+  background: radial-gradient(120% 90% at 50% 12%, #f7f0df, #ece2cb 80%);
+}
+
+.reception-seating-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 16px;
+  touch-action: none;
+}
+
+.seat3d-label {
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(16, 18, 7, 0.86);
+  color: #fffdf8;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.seat3d-table-label {
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid rgba(146, 118, 73, 0.3);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.seat3d-hint {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(16, 18, 7, 0.5);
+  color: rgba(255, 253, 248, 0.86);
+  font-size: 0.72rem;
+  font-weight: 500;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
 .reception-command-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.56fr);

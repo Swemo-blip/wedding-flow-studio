@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
+import { ReceptionSeating3D } from "@/components/reception/reception-seating-3d";
 import { TableCard } from "@/components/reception/table-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export function ReceptionStudio() {
   } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedGuestId, setSelectedGuestId] = useState("anna-carter");
+  const [seatingView, setSeatingView] = useState<"plan" | "3d">("plan");
   const selectedGuest = guests.find((guest) => guest.id === selectedGuestId) ?? guests[0];
   const selectedTable = dinnerTables.find((table) => table.id === selectedGuest?.tableId) ?? dinnerTables[0];
   const guestProfile = selectedGuest
@@ -334,6 +336,17 @@ export function ReceptionStudio() {
         eyebrow="Rosewood Hall Ballroom"
         title="Reception room scene"
       >
+        <div className="reception-view-toggle" role="group" aria-label={t("Seating view")}>
+          <button aria-pressed={seatingView === "plan"} data-active={seatingView === "plan"} onClick={() => setSeatingView("plan")} type="button">
+            {t("2D plan")}
+          </button>
+          <button aria-pressed={seatingView === "3d"} data-active={seatingView === "3d"} onClick={() => setSeatingView("3d")} type="button">
+            {t("3D seating")}
+          </button>
+        </div>
+        {seatingView === "3d" ? (
+          <ReceptionSeating3D guests={guests} onSelectGuest={setSelectedGuestId} selectedGuestId={selectedGuest?.id ?? ""} tables={dinnerTables} />
+        ) : (
         <div className="canvas reception-canvas" aria-label={t("Reception room scene")}>
           <div className="reception-room-header">
             <div>
@@ -389,6 +402,7 @@ export function ReceptionStudio() {
             </p>
           </div>
         </div>
+        )}
       </StudioSceneSurface>
 
       <details className="reception-detail-drawer">
