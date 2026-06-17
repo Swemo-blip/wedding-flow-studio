@@ -4,11 +4,15 @@ All models below are licensed **CC0 1.0** (public domain) via [Poly Pizza](https
 The seated congregation meshes are baked (sitting pose, merged to a single
 vertex-colored static mesh) from these source characters for instancing:
 
-| File | Source character | Author | License |
+| File(s) | Source character | Author | License |
 | --- | --- | --- | --- |
-| `man_seated.glb` | "Man" (animated) | Quaternius | CC0 1.0 |
-| `woman_seated.glb` | "Woman" (animated) | Quaternius | CC0 1.0 |
-| `woman_dress_seated.glb` | "Woman in Dress" (animated) | Quaternius | CC0 1.0 |
+| `cg_man_0..2.glb` | "Man" (animated) | Quaternius | CC0 1.0 |
+| `cg_woman_0..2.glb` | "Woman" (animated) | Quaternius | CC0 1.0 |
+| `cg_dress_0..2.glb` | "Woman in Dress" (animated) | Quaternius | CC0 1.0 |
+
+Each source is baked into 3 variants with different skin / hair / clothing colors
+(9 seated meshes total) so the congregation reads as a mixed, real crowd; each
+variant is one instanced draw call.
 
 Bake step: load the animated source, sample the `Sitting` clip, skin-transform
 the vertices into a static pose, merge primitives to one geometry, carry each

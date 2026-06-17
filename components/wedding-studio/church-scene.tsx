@@ -895,7 +895,19 @@ function ChurchPendantRow({ candleColor }: { candleColor: string }) {
 // Real low-poly guests (CC0, baked to a static seated pose — see
 // public/models/CREDITS.md) instanced across the pews so the whole
 // congregation is a handful of draw calls.
-const CONGREGATION_MODELS = ["/models/man_seated.glb", "/models/woman_seated.glb", "/models/woman_dress_seated.glb"];
+// Seated guests baked (sitting pose, see CREDITS.md) in varied skin/hair/dress
+// combinations so the congregation reads as a real, mixed crowd.
+const CONGREGATION_MODELS = [
+  "/models/cg_man_0.glb",
+  "/models/cg_man_1.glb",
+  "/models/cg_man_2.glb",
+  "/models/cg_woman_0.glb",
+  "/models/cg_woman_1.glb",
+  "/models/cg_woman_2.glb",
+  "/models/cg_dress_0.glb",
+  "/models/cg_dress_1.glb",
+  "/models/cg_dress_2.glb"
+];
 
 // The baked meshes stand ~4 source units tall; scale to a seated guest that
 // reads correctly at church scale.
@@ -1221,7 +1233,7 @@ function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): Congre
           return result;
         }
 
-        const seed = row * 7 + seat * 3 + (sideCenter < 0 ? 0 : 11);
+        const seed = row * 4 + seat * 5 + (sideCenter < 0 ? 0 : 7);
         result.push({
           id: `church-guest-${row}-${sideCenter}-${seat}`,
           position: [sideCenter + seatOffsets[seat], 0, z + 0.04],
