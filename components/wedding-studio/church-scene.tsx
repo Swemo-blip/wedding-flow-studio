@@ -1025,20 +1025,21 @@ function AltarCandle({ position, scale = 1 }: { position: [number, number, numbe
 // Animated CC0 characters (Quaternius, see CREDITS.md), cloned + recolored per
 // role and driven by their Walk/Idle clips. Only a handful, so skinned
 // animation is well within budget.
-const FIGURE_MAN = "/models/figure_man.glb";
+const FIGURE_SUIT = "/models/figure_suit.glb";
 const FIGURE_WOMAN = "/models/figure_woman.glb";
 
 if (typeof window !== "undefined") {
-  useGLTF.preload(FIGURE_MAN);
+  useGLTF.preload(FIGURE_SUIT);
   useGLTF.preload(FIGURE_WOMAN);
 }
 
 const FIGURE_SCALE = 0.235;
 
 type Recolor = Record<string, string>;
-const GROOM_COLORS: Recolor = { Pants: "#26262d", Shirt: "#2c2c33", Socks: "#26262d" };
+// figure_suit materials: Shirt (jacket), Pants, Details (dress shirt), TieTexture.
+const GROOM_COLORS: Recolor = { Details: "#efe9dd", Pants: "#1f2027", Shirt: "#1f2027", TieTexture: "#6a4a54" };
 const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Shoes: "#e9dfcf" };
-const PRIEST_COLORS: Recolor = { Pants: "#1b1b1f", Shirt: "#1d1d22", Socks: "#1b1b1f" };
+const PRIEST_COLORS: Recolor = { Details: "#16161a", Pants: "#16161a", Shirt: "#16161a", TieTexture: "#16161a" };
 const SINGER_COLORS: Recolor = { Dress: "#7d3b46" };
 
 function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; recolor?: Recolor; rotationY?: number; url: string }) {
@@ -1087,7 +1088,7 @@ function Celebrant() {
   // The officiant waits at the altar, facing the congregation.
   return (
     <group position={[0, 0, -3.55]}>
-      <AnimatedFigure clip="idle" recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_MAN} />
+      <AnimatedFigure clip="idle" recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
     </group>
   );
 }
@@ -1159,7 +1160,7 @@ function Processional({ playing }: { playing: boolean }) {
   return (
     <>
       <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef}>
-        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} url={FIGURE_MAN} />
+        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} url={FIGURE_SUIT} />
       </group>
       <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef}>
         <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} url={FIGURE_WOMAN} />
