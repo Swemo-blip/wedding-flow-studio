@@ -40,7 +40,7 @@ import {
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
-type HeroScene = "ceremony" | "reception";
+type HeroScene = "ceremony" | "ceremony-outdoor" | "reception";
 
 const styleSwatches: Record<string, string[]> = {
   classic: ["#6b7b62", "#9caf88", "#e9dcc0", "#dbb9a4", "#c9a767"],
@@ -70,6 +70,9 @@ export function OverviewDashboard() {
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
   const venueLabel = t(venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue");
+  // The outdoor option previews the same ceremony in an open-air garden venue,
+  // regardless of the wedding's own venue.
+  const sceneVenueType = heroScene === "ceremony-outdoor" ? "garden" : plan.venueType;
   const styleLabel = t(styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic");
   const themeColors = styleSwatches[plan.style] ?? styleSwatches.classic;
 
@@ -208,6 +211,7 @@ export function OverviewDashboard() {
                   value={heroScene}
                 >
                   <option value="ceremony">{t("Ceremony")} – {venueLabel}</option>
+                  <option value="ceremony-outdoor">{t("Ceremony")} – {t("Garden (outdoors)")}</option>
                   <option value="reception">{t("Reception")} – {venueLabel}</option>
                 </select>
               </div>
@@ -249,7 +253,7 @@ export function OverviewDashboard() {
               sceneEdits={sceneEdits}
               selectedObjectId={activeSelectedObjectId}
               style={plan.style}
-              venueType={plan.venueType}
+              venueType={sceneVenueType}
               viewMode={dimension === "2d" ? "top" : "3d"}
               zoom={zoom}
             />

@@ -356,6 +356,7 @@ const sv: Record<string, string> = {
   "Backup": "Reserv",
   "Cue readiness": "Cue-status",
   // Ceremony processional controls
+  "Garden (outdoors)": "Trädgård (utomhus)",
   "Play processional": "Spela upp processionen",
   "Restart": "Börja om",
   "Add singer": "Lägg till sångare",

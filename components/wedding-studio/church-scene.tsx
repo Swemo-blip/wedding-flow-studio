@@ -206,7 +206,8 @@ export function CeremonyScene({
   const [showSinger, setShowSinger] = useState(false);
   // The processional is a hands-on ceremony rehearsal, so only offer it on the
   // interactive church view (not the auto-flown Preview walkthrough).
-  const showCeremonyControls = venueType === "church" && !cameraOverride && activeStep !== "venue";
+  const showCeremonyControls =
+    (venueType === "church" || venueType === "garden" || venueType === "beach") && !cameraOverride && activeStep !== "venue";
 
   return (
     <section className="ceremony-scene-shell" aria-label="Interactive 3D ceremony visualization">
@@ -501,9 +502,12 @@ function WeddingStageInterior({
   const guestMarkers = useMemo(() => buildGuestMarkers(capacity), [capacity]);
   const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
   const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
-  const churchSeatedGuests = useMemo(
-    () => (venueType === "church" ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers) : []),
-    [capacity.visibleGuestMarkers, venueType, visibleRows]
+  // Church + open-air ceremonies (garden/beach) all seat a real congregation
+  // and run the processional; only the venue shell differs.
+  const ceremonyVenue = venueType === "church" || venueType === "garden" || venueType === "beach";
+  const seatedGuests = useMemo(
+    () => (ceremonyVenue ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers) : []),
+    [capacity.visibleGuestMarkers, ceremonyVenue, visibleRows]
   );
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
   const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
@@ -606,23 +610,23 @@ function WeddingStageInterior({
               );
             })}
 
-            {venueType === "church"
+            {ceremonyVenue
               ? activeStep !== "venue"
                 ? (
                   <Suspense fallback={null}>
-                    <ChurchCongregation seats={churchSeatedGuests} />
+                    <ChurchCongregation seats={seatedGuests} />
                   </Suspense>
                 )
                 : null
               : showGuests
                 ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />)
                 : null}
-            {showGuests && venueType !== "church" && capacity.overflowGuests > 0 ? (
+            {showGuests && !ceremonyVenue && capacity.overflowGuests > 0 ? (
               <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} />
             ) : null}
           </EditableSceneObject>
 
-          {venueType === "church" && activeStep !== "venue" ? (
+          {ceremonyVenue && activeStep !== "venue" ? (
             <Suspense fallback={null}>
               <Celebrant />
               <Processional key={processionalKey} playing={processionalPlaying} />
