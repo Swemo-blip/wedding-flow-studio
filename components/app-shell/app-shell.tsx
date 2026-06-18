@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { Navigation } from "@/components/app-shell/navigation";
-import { TabBar } from "@/components/app-shell/tab-bar";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { useTranslation } from "@/lib/i18n";
 import type { Wedding } from "@/lib/wedding-types";
@@ -32,12 +29,6 @@ export function AppShell({ children, wedding }: AppShellProps) {
           <p className="brand-kicker">{t("Wedding Flow Studio")}</p>
         </div>
         <Navigation />
-        <div className="sidebar-callout">
-          <Sparkles aria-hidden="true" size={16} strokeWidth={1.7} />
-          <strong>{t("Digital Twin Active")}</strong>
-          <span>{t("All changes update your 3D preview.")}</span>
-          <Link href="/preview">{t("View Walkthrough")}</Link>
-        </div>
         <div className="sidebar-user">
           <span aria-hidden="true" className="sidebar-avatar">{plannerInitials}</span>
           <div>
@@ -48,7 +39,6 @@ export function AppShell({ children, wedding }: AppShellProps) {
       </aside>
       <div className="workspace">
         <TopBar wedding={wedding} />
-        <TabBar />
         <main className="page-shell" id="main-content" tabIndex={-1}>
           {children}
         </main>

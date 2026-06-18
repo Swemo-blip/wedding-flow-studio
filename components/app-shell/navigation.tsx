@@ -5,15 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarClock,
   Church,
-  Clapperboard,
   FileText,
   LayoutGrid,
   Mic2,
   Music2,
   Play,
   Store,
+  Users,
   UtensilsCrossed,
-  Wand2,
   type LucideIcon
 } from "lucide-react";
 import { getNavigationItemForPath, navigationItems } from "@/lib/app-navigation";
@@ -23,21 +22,53 @@ type SideNavItem = {
   href: string;
   icon: LucideIcon;
   label: string;
+  // A "jump" link that navigates somewhere shared but does not own that route's
+  // active state (e.g. Guests currently opens the guest manager in Reception).
+  passive?: boolean;
 };
 
-const sideNavItems: SideNavItem[] = [
-  { href: "/", icon: LayoutGrid, label: "Overview" },
-  { href: "/preview", icon: Play, label: "Preview Day" },
-  { href: "/ceremony", icon: Church, label: "Ceremony" },
-  { href: "/reception", icon: UtensilsCrossed, label: "Reception" },
-  { href: "/day-flow", icon: CalendarClock, label: "Timeline" },
-  { href: "/music", icon: Music2, label: "Music" },
-  { href: "/speeches", icon: Mic2, label: "Speeches" },
-  { href: "/director", icon: Clapperboard, label: "Director" },
-  { href: "/vendors", icon: Store, label: "Vendors" },
-  { href: "/exports", icon: FileText, label: "Exports" },
-  { href: "/intake", icon: Wand2, label: "New Project" }
+type NavGroup = {
+  label: string;
+  items: SideNavItem[];
+};
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Plan",
+    items: [
+      { href: "/", icon: LayoutGrid, label: "Overview" },
+      { href: "/ceremony", icon: Church, label: "Ceremony" },
+      { href: "/reception", icon: UtensilsCrossed, label: "Reception" },
+      { href: "/day-flow", icon: CalendarClock, label: "Timeline" }
+    ]
+  },
+  {
+    label: "Details",
+    items: [
+      { href: "/reception", icon: Users, label: "Guests", passive: true },
+      { href: "/music", icon: Music2, label: "Music" },
+      { href: "/speeches", icon: Mic2, label: "Speeches" },
+      { href: "/vendors", icon: Store, label: "Vendors" }
+    ]
+  },
+  {
+    label: "Output",
+    items: [
+      { href: "/preview", icon: Play, label: "Preview Day" },
+      { href: "/exports", icon: FileText, label: "Exports" }
+    ]
+  }
 ];
+
+function isItemActive(item: SideNavItem, pathname: string) {
+  if (item.passive) {
+    return false;
+  }
+  if (item.href === "/") {
+    return pathname === "/" || pathname.startsWith("/studio");
+  }
+  return pathname.startsWith(item.href);
+}
 
 export function Navigation() {
   const pathname = usePathname();
@@ -45,17 +76,28 @@ export function Navigation() {
 
   return (
     <nav aria-label="Primary navigation" className="side-nav">
-      {sideNavItems.map((item) => {
-        const isActive = item.href === "/" ? pathname === "/" || pathname.startsWith("/studio") : pathname.startsWith(item.href);
-        const Icon = item.icon;
+      {navGroups.map((group) => (
+        <div className="side-nav-group" key={group.label}>
+          <p className="side-nav-group-label">{t(group.label)}</p>
+          {group.items.map((item) => {
+            const isActive = isItemActive(item, pathname);
+            const Icon = item.icon;
 
-        return (
-          <Link aria-current={isActive ? "page" : undefined} className="side-nav-link" data-active={isActive} href={item.href} key={item.href}>
-            <Icon aria-hidden="true" size={17} strokeWidth={1.7} />
-            <span>{t(item.label)}</span>
-          </Link>
-        );
-      })}
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className="side-nav-link"
+                data-active={isActive}
+                href={item.href}
+                key={item.label}
+              >
+                <Icon aria-hidden="true" size={17} strokeWidth={1.7} />
+                <span>{t(item.label)}</span>
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 }
