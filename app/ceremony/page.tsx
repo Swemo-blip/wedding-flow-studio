@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { CeremonyLayoutView } from "@/components/ceremony/ceremony-layout";
+import { CeremonyStudio } from "@/components/ceremony/ceremony-studio";
 
 export const metadata: Metadata = {
-  title: "Ceremony Layout",
+  title: "Ceremony Studio",
   description:
-    "Plan the ceremony layout with chapel rows, aisle flow, family seating, music cues, wedding party positions, officiant notes, and photographer locations."
+    "Design the ceremony in a live 3D studio — set the guest count and watch the pews fill, choose the venue, style, decoration and lighting, and review capacity and accessibility."
 };
 
 export default function CeremonyPage() {
-  return <CeremonyLayoutView />;
+  return <CeremonyStudio />;
 }
