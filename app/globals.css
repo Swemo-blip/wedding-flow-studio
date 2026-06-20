@@ -14089,6 +14089,18 @@ a {
   height: 100%;
 }
 
+.studio-stage-canvas .reception-seating-3d {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 14px;
+}
+
+.studio-stage-canvas .reception-canvas {
+  height: 100%;
+}
+
 .studio-stage-skeleton {
   position: absolute;
   inset: 0;
@@ -14201,6 +14213,43 @@ a {
 .studio-inspector-note[data-tone="medium"] {
   border-color: rgba(177, 134, 60, 0.32);
   background: rgba(177, 134, 60, 0.1);
+}
+
+.studio-inspector-note[data-tone="confirmed"] {
+  border-color: rgba(90, 122, 95, 0.3);
+  background: rgba(90, 122, 95, 0.08);
+}
+
+.studio-inspector-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 640;
+}
+
+.studio-inspector-note button {
+  margin-top: 10px;
+}
+
+.reception-tablemates-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.reception-controls-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.reception-controls-footer .copy-status {
+  color: var(--subtle);
+  font-size: 0.78rem;
 }
 
 @media (max-width: 1180px) {

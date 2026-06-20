@@ -26,6 +26,12 @@ SEAT_VARIANTS.forEach((url) => useGLTF.preload(url));
 const GUEST_SCALE = 0.2;
 const SEAT_RADIUS = 0.96;
 const TABLE_RADIUS = 0.62;
+const DROP_RADIUS = 1.7;
+
+// While a guest is being dragged, the seated figures must stop intercepting
+// pointer rays so the large ground plane underneath can report the cursor
+// position every frame.
+const noopRaycast = () => null;
 
 type SeatLayout = {
   guest: Guest;
@@ -33,6 +39,8 @@ type SeatLayout = {
   rotationY: number;
   variant: number;
 };
+
+type TableCenter = { table: DinnerTable; center: [number, number, number] };
 
 function hashVariant(id: string) {
   let hash = 0;
@@ -42,7 +50,7 @@ function hashVariant(id: string) {
   return hash % SEAT_VARIANTS.length;
 }
 
-function buildLayout(guests: Guest[], tables: DinnerTable[]): { seats: SeatLayout[]; tableCenters: Array<{ table: DinnerTable; center: [number, number, number] }> } {
+function buildLayout(guests: Guest[], tables: DinnerTable[]): { seats: SeatLayout[]; tableCenters: TableCenter[] } {
   const cols = Math.min(3, Math.max(1, Math.ceil(Math.sqrt(tables.length))));
   const spacing = 2.7;
   const rows = Math.ceil(tables.length / cols);
@@ -74,16 +82,33 @@ function buildLayout(guests: Guest[], tables: DinnerTable[]): { seats: SeatLayou
   return { seats, tableCenters };
 }
 
+function nearestTable(tableCenters: TableCenter[], x: number, z: number): { table: DinnerTable; distance: number } | null {
+  let best: { table: DinnerTable; distance: number } | null = null;
+  tableCenters.forEach(({ table, center }) => {
+    const distance = Math.hypot(center[0] - x, center[2] - z);
+    if (!best || distance < best.distance) {
+      best = { table, distance };
+    }
+  });
+  return best;
+}
+
 function SeatedGuest({
+  dragActive,
+  dragXZ,
   geometry,
+  isDragged,
   material,
-  onSelect,
+  onStartDrag,
   seat,
   selected
 }: {
+  dragActive: boolean;
+  dragXZ: [number, number] | null;
   geometry: THREE.BufferGeometry | null;
+  isDragged: boolean;
   material: THREE.Material;
-  onSelect: (id: string) => void;
+  onStartDrag: (seat: SeatLayout) => void;
   seat: SeatLayout;
   selected: boolean;
 }) {
@@ -93,30 +118,33 @@ function SeatedGuest({
     return null;
   }
 
+  const position: [number, number, number] = isDragged && dragXZ ? [dragXZ[0], 0.14, dragXZ[1]] : seat.position;
+
   return (
-    <group position={seat.position} rotation={[0, seat.rotationY, 0]}>
+    <group position={position} rotation={[0, seat.rotationY, 0]}>
       <mesh
         castShadow
         geometry={geometry}
         material={material}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          onStartDrag(seat);
+        }}
         onPointerOut={() => setHovered(false)}
         onPointerOver={(event) => {
           event.stopPropagation();
           setHovered(true);
         }}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect(seat.guest.id);
-        }}
+        raycast={dragActive ? noopRaycast : undefined}
         scale={selected ? GUEST_SCALE * 1.08 : GUEST_SCALE}
       />
       {selected ? (
         <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.2, 0.28, 28]} />
-          <meshBasicMaterial color="#c8a45b" transparent opacity={0.9} />
+          <meshBasicMaterial color="#c8a45b" opacity={0.9} transparent />
         </mesh>
       ) : null}
-      {hovered || selected ? (
+      {hovered || selected || isDragged ? (
         <Html center distanceFactor={9} position={[0, 1.05, 0]} zIndexRange={[20, 0]}>
           <div className="seat3d-label">{seat.guest.name}</div>
         </Html>
@@ -126,17 +154,24 @@ function SeatedGuest({
 }
 
 function SeatingScene({
+  draggedId,
   guests,
+  onReassignGuest,
   onSelectGuest,
   selectedGuestId,
+  setDraggedId,
   tables
 }: {
+  draggedId: string | null;
   guests: Guest[];
+  onReassignGuest?: (guestId: string, tableId: string) => void;
   onSelectGuest: (id: string) => void;
   selectedGuestId: string;
+  setDraggedId: (id: string | null) => void;
   tables: DinnerTable[];
 }) {
   const { seats, tableCenters } = useMemo(() => buildLayout(guests, tables), [guests, tables]);
+  const [dragXZ, setDragXZ] = useState<[number, number] | null>(null);
   const gltfs = useGLTF(SEAT_VARIANTS) as unknown as Array<{ scene: THREE.Group }>;
   const geometries = useMemo(
     () =>
@@ -154,16 +189,55 @@ function SeatingScene({
   );
   const material = useMemo(() => new THREE.MeshStandardMaterial({ metalness: 0, roughness: 0.82, vertexColors: true }), []);
 
+  const dragActive = draggedId !== null;
+  const dropTargetId = dragActive && dragXZ ? nearestTable(tableCenters, dragXZ[0], dragXZ[1])?.table.id ?? null : null;
+
+  function endDrag() {
+    if (draggedId && dragXZ && onReassignGuest) {
+      const target = nearestTable(tableCenters, dragXZ[0], dragXZ[1]);
+      const guest = guests.find((candidate) => candidate.id === draggedId);
+      if (target && target.distance < DROP_RADIUS && guest && guest.tableId !== target.table.id) {
+        onReassignGuest(draggedId, target.table.id);
+      }
+    }
+    setDraggedId(null);
+    setDragXZ(null);
+  }
+
   return (
     <group>
-      <mesh receiveShadow position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -0.02, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color="#efe7d4" roughness={0.9} />
       </mesh>
 
+      {dragActive ? (
+        <mesh
+          onPointerMove={(event) => {
+            event.stopPropagation();
+            setDragXZ([event.point.x, event.point.z]);
+          }}
+          onPointerUp={(event) => {
+            event.stopPropagation();
+            endDrag();
+          }}
+          position={[0, 0, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[80, 80]} />
+          <meshBasicMaterial depthWrite={false} opacity={0} transparent />
+        </mesh>
+      ) : null}
+
       {tableCenters.map(({ table, center }) => (
         <group key={table.id} position={center}>
-          <mesh castShadow receiveShadow position={[0, 0.36, 0]}>
+          {table.id === dropTargetId ? (
+            <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[TABLE_RADIUS + 0.16, TABLE_RADIUS + 0.3, 40]} />
+              <meshBasicMaterial color="#c8a45b" opacity={0.85} transparent />
+            </mesh>
+          ) : null}
+          <mesh castShadow position={[0, 0.36, 0]} receiveShadow>
             <cylinderGeometry args={[TABLE_RADIUS, TABLE_RADIUS, 0.06, 36]} />
             <meshStandardMaterial color="#f6eedb" roughness={0.6} />
           </mesh>
@@ -183,10 +257,17 @@ function SeatingScene({
 
       {seats.map((seat) => (
         <SeatedGuest
+          dragActive={dragActive}
+          dragXZ={dragXZ}
           geometry={geometries[seat.variant]}
+          isDragged={seat.guest.id === draggedId}
           key={seat.guest.id}
           material={material}
-          onSelect={onSelectGuest}
+          onStartDrag={(target) => {
+            onSelectGuest(target.guest.id);
+            setDraggedId(target.guest.id);
+            setDragXZ([target.position[0], target.position[2]]);
+          }}
           seat={seat}
           selected={seat.guest.id === selectedGuestId}
         />
@@ -197,28 +278,40 @@ function SeatingScene({
 
 export function ReceptionSeating3D({
   guests,
+  onReassignGuest,
   onSelectGuest,
   selectedGuestId,
   tables
 }: {
   guests: Guest[];
+  onReassignGuest?: (guestId: string, tableId: string) => void;
   onSelectGuest: (id: string) => void;
   selectedGuestId: string;
   tables: DinnerTable[];
 }) {
   const { t } = useTranslation();
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   return (
     <div className="reception-seating-3d" aria-label={t("3D seating")}>
-      <Canvas camera={{ far: 60, fov: 42, near: 0.1, position: [0, 5, 6.6] }} dpr={[1, 1.8]} shadows>
+      <Canvas camera={{ far: 60, fov: 42, near: 0.1, position: [0, 5, 6.6] }} dpr={[1, 1.8]} onPointerMissed={() => setDraggedId(null)} shadows>
         <color args={["#f4ecdb"]} attach="background" />
         <ambientLight intensity={0.85} />
         <hemisphereLight args={["#fff3d8", "#cdbf9d", 0.6]} />
         <directionalLight castShadow intensity={1.5} position={[4, 7, 4]} shadow-mapSize={[1024, 1024]} />
         <Suspense fallback={null}>
-          <SeatingScene guests={guests} onSelectGuest={onSelectGuest} selectedGuestId={selectedGuestId} tables={tables} />
+          <SeatingScene
+            draggedId={draggedId}
+            guests={guests}
+            onReassignGuest={onReassignGuest}
+            onSelectGuest={onSelectGuest}
+            selectedGuestId={selectedGuestId}
+            setDraggedId={setDraggedId}
+            tables={tables}
+          />
         </Suspense>
         <OrbitControls
+          enabled={draggedId === null}
           enablePan={false}
           maxDistance={12}
           maxPolarAngle={Math.PI / 2.25}
@@ -226,7 +319,7 @@ export function ReceptionSeating3D({
           target={[0, 0.3, 0]}
         />
       </Canvas>
-      <p className="seat3d-hint">{t("Drag to orbit · click a guest to inspect")}</p>
+      <p className="seat3d-hint">{t("Drag a guest to another table · click to inspect")}</p>
     </div>
   );
 }

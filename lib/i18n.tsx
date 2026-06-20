@@ -366,6 +366,13 @@ const sv: Record<string, string> = {
   "Next seating decision": "Nästa placeringsbeslut",
   "Seating looks ready to review.": "Placeringen ser klar ut att se över.",
   "Apply this fix": "Genomför åtgärden",
+  "Reception controls": "Receptionskontroller",
+  "Design the reception room": "Forma receptionsrummet",
+  "Seat at table": "Placera vid bord",
+  "Room overview": "Rumsöversikt",
+  "Allergy notes": "Allerginoteringar",
+  "Reception preview": "Förhandsvisning av reception",
+  "Drag a guest to another table · click to inspect": "Dra en gäst till ett annat bord · klicka för detaljer",
   // App shell nav groups
   "Plan": "Planera",
   "Details": "Detaljer",
