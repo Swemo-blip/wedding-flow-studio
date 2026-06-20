@@ -358,6 +358,14 @@ const sv: Record<string, string> = {
   // Ceremony processional controls
   "Garden (outdoors)": "Trädgård (utomhus)",
   "Indoors": "Inomhus",
+  // Reception studio copy
+  "Reception studio": "Receptionsstudio",
+  "Design the reception room.": "Forma receptionsrummet.",
+  "See your guests at their tables, then sort seating, meals and accessibility.": "Se dina gäster vid borden, ordna sedan placering, mat och tillgänglighet.",
+  "To review": "Att se över",
+  "Next seating decision": "Nästa placeringsbeslut",
+  "Seating looks ready to review.": "Placeringen ser klar ut att se över.",
+  "Apply this fix": "Genomför åtgärden",
   // App shell nav groups
   "Plan": "Planera",
   "Details": "Detaljer",

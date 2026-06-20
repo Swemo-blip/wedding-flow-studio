@@ -41,7 +41,7 @@ export function ReceptionStudio() {
   } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedGuestId, setSelectedGuestId] = useState("anna-carter");
-  const [seatingView, setSeatingView] = useState<"plan" | "3d">("plan");
+  const [seatingView, setSeatingView] = useState<"plan" | "3d">("3d");
   const selectedGuest = guests.find((guest) => guest.id === selectedGuestId) ?? guests[0];
   const selectedTable = dinnerTables.find((table) => table.id === selectedGuest?.tableId) ?? dinnerTables[0];
   const guestProfile = selectedGuest
@@ -123,25 +123,25 @@ export function ReceptionStudio() {
 
   return (
     <StudioRouteFrame
-      description="Connect seating, meal notes, accessibility, service paths, speeches, and room flow in one reception canvas."
-      eyebrow="Reception Digital Twin"
+      description="See your guests at their tables, then sort seating, meals and accessibility."
+      eyebrow="Reception studio"
       meta={[
         { label: "Tables", value: `${dinnerTables.length}` },
         { label: "Allergies", value: `${allergyGuestCount}` },
-        { label: "Signals", value: `${receptionRisks.length}` }
+        { label: "To review", value: `${receptionRisks.length}` }
       ]}
       primaryAction={{ href: "/", label: "Open 3D Studio" }}
       secondaryAction={{ href: "/exports", label: "Export Seating" }}
-      title="Design the room around the guest journey."
+      title="Design the reception room."
     >
       <div className="reception-studio page-grid">
-        <section className="module-decision-strip studio-route-decision-strip" aria-label={t("Best seating decision")}>
+        <section className="module-decision-strip studio-route-decision-strip" aria-label={t("Next seating decision")}>
           <div>
-            <span>{t("Best seating decision")}</span>
-            <strong>{bestReceptionRisk ? t(bestReceptionRisk.title) : t("Reception flow is ready for review.")}</strong>
+            <span>{t("Next seating decision")}</span>
+            <strong>{bestReceptionRisk ? t(bestReceptionRisk.title) : t("Seating looks ready to review.")}</strong>
             <p>{bestReceptionRisk ? t(bestReceptionRisk.suggestedFix) : t("Review the room once more before exporting the seating plan and venue setup brief.")}</p>
           </div>
-          {bestReceptionRisk ? <Button onClick={applyGuestJourneyFix} size="small">{t("Apply Best Fix")}</Button> : null}
+          {bestReceptionRisk ? <Button onClick={applyGuestJourneyFix} size="small">{t("Apply this fix")}</Button> : null}
         </section>
 
       <details className="studio-detail-drawer reception-context-drawer">
@@ -305,11 +305,11 @@ export function ReceptionStudio() {
               {selectedGuestRisks.length > 0 ? (
                 <div className="guest-smart-fix">
                   <div>
-                    <p className="eyebrow">{t("Smart Guest Fix")}</p>
+                    <p className="eyebrow">{t("Suggested fix")}</p>
                     <strong>{t(selectedGuestRisks[0].title)}</strong>
                     <span>{t(selectedGuestRisks[0].suggestedFix)}</span>
                   </div>
-                  <Button onClick={applyGuestJourneyFix} size="small">{t("Apply Guest Fix")}</Button>
+                  <Button onClick={applyGuestJourneyFix} size="small">{t("Apply this fix")}</Button>
                 </div>
               ) : (
                 <div className="guest-smart-fix" data-clear="true">
