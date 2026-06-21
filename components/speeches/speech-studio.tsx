@@ -2,11 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { SecretLayerBadge } from "@/components/speeches/secret-layer-badge";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { StudioCommand } from "@/components/ui/studio-command";
-import { FlowAnalysis } from "@/components/wedding/flow-analysis";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { findSpeechGuest } from "@/lib/guest-identity";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
@@ -19,7 +16,7 @@ const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "p
 
 export function SpeechStudio() {
   const { t } = useTranslation();
-  const { dinnerTables, guests, hasLocalProject, resetSpeeches, speeches, timelineItems, updateSpeech, updatedAt } = useLocalProject();
+  const { dinnerTables, guests, resetSpeeches, speeches, timelineItems, updateSpeech } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
@@ -39,7 +36,6 @@ export function SpeechStudio() {
     .filter((speech) => speech.timelineItemId !== "couple-thank-you")
     .reduce((total, speech) => total + speech.durationMinutes, 0);
   const secretCount = speeches.filter((speech) => speech.isSecret).length;
-  const saveStatus = hasLocalProject && updatedAt ? `Saved locally ${formatSavedAt(updatedAt)}` : "Autosave ready";
 
   function updateSelectedSpeech(updates: Partial<Speech>) {
     if (!selectedSpeech) {
@@ -80,229 +76,172 @@ export function SpeechStudio() {
   }
 
   return (
-    <div className="two-column speech-studio">
-      <section className="page-grid">
-        <StudioCommand
-          actions={[
-            { href: "/director", label: "Open Director Mode" },
-            { label: "Reset speeches", onClick: resetSpeeches, variant: "secondary" }
-          ]}
-          description="Edit one active speech at a time while Secret Layers, timing, technical needs, and Toastmaster handoffs stay connected to the day."
-          eyebrow="Speech Studio"
-          metrics={[
-            { label: "Active speech", value: selectedSpeech?.title ?? "No speech selected" },
-            { label: "Before cake", tone: totalSpeechMinutesBeforeCake > 25 ? "medium" : "confirmed", value: `${totalSpeechMinutesBeforeCake} minutes` },
-            { label: "Secret layers", tone: secretCount > 0 ? "secret" : "neutral", value: `${secretCount}` },
-            { label: "Warnings", tone: speechRisks.length > 0 ? "medium" : "confirmed", value: `${speechRisks.length}` }
-          ]}
-          status={{ label: saveStatus, tone: "confirmed" }}
-          title="Shape the program without exposing surprises too early."
-        >
-          <label className="field speech-select-field">
-            <span>{t("Active speech")}</span>
-            <select aria-label={t("Choose speech")} onChange={(event) => setSelectedSpeechId(event.target.value)} value={selectedSpeech?.id ?? ""}>
-              {speeches.map((speech) => (
-                <option key={speech.id} value={speech.id}>
-                  {speech.timing} - {speech.title}
-                </option>
-              ))}
-            </select>
-          </label>
-        </StudioCommand>
+    <StudioRouteFrame
+      description="Order the toasts, protect the dinner rhythm, and keep surprise moments hidden until the reveal."
+      eyebrow="Speeches"
+      meta={[
+        { label: "Speeches", value: `${speeches.length}` },
+        { label: "Before cake", value: `${totalSpeechMinutesBeforeCake} min` },
+        { label: "Secret", value: `${secretCount}` }
+      ]}
+      primaryAction={{ href: "/director", label: "Open Director Mode" }}
+      secondaryAction={{ label: "Reset speeches", onClick: resetSpeeches }}
+      title="The words of the day."
+    >
+      <div className="detail-studio">
+        <div aria-label={t("Speeches")} className="detail-studio-list" role="tablist">
+          {speeches.map((speech, index) => {
+            const isSelected = speech.id === selectedSpeech?.id;
+            const hasRisk = speechRisks.some((risk) => risk.relatedEntityId === speech.id || risk.relatedEntityId === "all-speeches");
+            const dotStatus = hasRisk ? "needs-cue" : speech.isSecret ? "secret" : "confirmed";
+
+            return (
+              <button
+                aria-selected={isSelected}
+                className="detail-studio-item"
+                data-risk={hasRisk ? "true" : undefined}
+                data-selected={isSelected}
+                key={speech.id}
+                onClick={() => setSelectedSpeechId(speech.id)}
+                role="tab"
+                type="button"
+              >
+                <span className="detail-studio-item-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="detail-studio-item-main">
+                  <strong>{speech.title}</strong>
+                  <small>
+                    {speech.timing} · {speech.durationMinutes} {t("min")} · {speech.speakerName}
+                  </small>
+                </span>
+                <span aria-hidden="true" className="detail-studio-dot" data-status={dotStatus} />
+              </button>
+            );
+          })}
+        </div>
 
         {selectedSpeech ? (
-          <>
-            <div className="speech-program-canvas" aria-label={t("Speech program canvas")}>
-              <div className="speech-program-track">
-                {speeches.map((speech, index) => {
-                  const isSelected = speech.id === selectedSpeech.id;
-                  const hasRisk = speechRisks.some((risk) => risk.relatedEntityId === speech.id || risk.relatedEntityId === "all-speeches");
-
-                  return (
-                    <button
-                      aria-pressed={isSelected}
-                      className="speech-program-node"
-                      data-risk={hasRisk}
-                      data-secret={speech.isSecret}
-                      data-selected={isSelected}
-                      key={speech.id}
-                      onClick={() => setSelectedSpeechId(speech.id)}
-                      type="button"
-                    >
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <strong>{speech.title}</strong>
-                      <small>
-                        {speech.timing} · {speech.durationMinutes} minutes
-                      </small>
-                      <em>{speech.speakerName}</em>
-                    </button>
-                  );
-                })}
+          <div className="detail-studio-detail">
+            <div className="detail-studio-detail-head">
+              <div>
+                <p className="eyebrow">{t("Selected speech")}</p>
+                <h2>{selectedSpeech.title}</h2>
+                <p className="detail-studio-sub">
+                  {selectedSpeech.speakerName} · {speakerTable ? `${selectedSpeech.relation} · ${speakerTable.name}` : selectedSpeech.relation}
+                </p>
               </div>
-
-              <Card className="speech-selected-panel">
-                <CardContent>
-                  <div className="summary-between">
-                    <div>
-                      <p className="eyebrow">{t("Selected Program Moment")}</p>
-                      <h3 className="card-title">{selectedSpeech.title}</h3>
-                    </div>
-                    <SecretLayerBadge isSecret={selectedSpeech.isSecret} />
-                  </div>
-                  <div className="speech-selected-grid">
-                    <div>
-                      <span>{t("Speaker")}</span>
-                      <strong>{selectedSpeech.speakerName}</strong>
-                      <small>{speakerTable ? `${selectedSpeech.relation} · ${speakerTable.name}` : selectedSpeech.relation}</small>
-                    </div>
-                    <div>
-                      <span>{t("Timing")}</span>
-                      <strong>{selectedSpeech.timing}</strong>
-                      <small>{selectedSpeech.durationMinutes} {t("minutes")}</small>
-                    </div>
-                    <div>
-                      <span>{t("Intro")}</span>
-                      <strong>{selectedSpeech.introPerson}</strong>
-                      <small>{t("Toastmaster handoff")}</small>
-                    </div>
-                    <div>
-                      <span>{t("Technical")}</span>
-                      <strong>{selectedSpeech.technicalNeeds.join(", ") || t("None")}</strong>
-                      <small>{selectedSpeech.visibility === "secret" ? t("Director Mode only") : t(formatOption(selectedSpeech.visibility))}</small>
-                    </div>
-                  </div>
-                  {selectedSpeechRisks.length > 0 ? (
-                    <div className="speech-smart-fix">
-                      <div>
-                        <p className="eyebrow">{t("Best Program Fix")}</p>
-                        <strong>{t(selectedSpeechRisks[0].title)}</strong>
-                        <span>{t(selectedSpeechRisks[0].suggestedFix)}</span>
-                      </div>
-                      <Button onClick={applySmartProgramFix} size="small">{t("Apply Fix")}</Button>
-                    </div>
-                  ) : (
-                    <div className="speech-smart-fix" data-clear="true">
-                      <div>
-                        <p className="eyebrow">{t("Program Readiness")}</p>
-                        <strong>{t("This speech layer is ready for Director Mode.")}</strong>
-                        <span>{t("Timing, visibility, technical needs, and notes are connected to the production map.")}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <SecretLayerBadge isSecret={selectedSpeech.isSecret} />
             </div>
 
-            <details className="studio-detail-drawer">
+            <dl className="studio-inspector-list">
+              <div className="studio-inspector-row">
+                <dt>{t("Timing")}</dt>
+                <dd>
+                  {selectedSpeech.timing} · {selectedSpeech.durationMinutes} {t("minutes")}
+                </dd>
+              </div>
+              <div className="studio-inspector-row">
+                <dt>{t("Intro")}</dt>
+                <dd>{selectedSpeech.introPerson}</dd>
+              </div>
+              <div className="studio-inspector-row">
+                <dt>{t("Technical")}</dt>
+                <dd>{selectedSpeech.technicalNeeds.join(", ") || t("None")}</dd>
+              </div>
+              <div className="studio-inspector-row">
+                <dt>{t("Visibility")}</dt>
+                <dd>{selectedSpeech.visibility === "secret" ? t("Director Mode only") : t(formatOption(selectedSpeech.visibility))}</dd>
+              </div>
+            </dl>
+
+            {selectedSpeechRisks.length > 0 ? (
+              <div className="studio-inspector-note" data-tone="medium">
+                <strong>{t(selectedSpeechRisks[0].title)}</strong>
+                <p>{t(selectedSpeechRisks[0].suggestedFix)}</p>
+                <Button onClick={applySmartProgramFix} size="small">{t("Apply this fix")}</Button>
+              </div>
+            ) : (
+              <div className="studio-inspector-note" data-tone="confirmed">
+                <strong>{t("This speech is ready.")}</strong>
+                <p>{t("Timing, visibility, technical needs, and notes are connected to the day.")}</p>
+              </div>
+            )}
+
+            <details className="reception-guest-details">
               <summary>
-                <span>{t("Edit selected speech details")}</span>
-                <strong>{selectedSpeech.title}</strong>
+                <span>{t("Edit selected speech")}</span>
+                <small>{t("Open to adjust the speaker, timing, visibility, technical needs, and notes.")}</small>
               </summary>
-              <Card className="speech-editor-card">
-                <CardContent>
-                  <div className="form-grid speech-editor-form">
-                    <label className="field">
-                      <span>{t("Title")}</span>
-                      <input onChange={(event) => updateSelectedSpeech({ title: event.target.value })} value={selectedSpeech.title} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Speaker name")}</span>
-                      <input onChange={(event) => updateSelectedSpeech({ speakerName: event.target.value })} value={selectedSpeech.speakerName} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Relation")}</span>
-                      <input onChange={(event) => updateSelectedSpeech({ relation: event.target.value })} value={selectedSpeech.relation} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Timing")}</span>
-                      <input onChange={(event) => updateSelectedSpeech({ timing: event.target.value })} value={selectedSpeech.timing} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Duration minutes")}</span>
-                      <input
-                        min={1}
-                        onChange={(event) => updateSelectedSpeech({ durationMinutes: Number(event.target.value) })}
-                        type="number"
-                        value={selectedSpeech.durationMinutes}
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{t("Visibility")}</span>
-                      <select
-                        onChange={(event) => {
-                          const visibility = event.target.value as Visibility;
-                          updateSelectedSpeech({ visibility, isSecret: visibility === "secret" });
-                        }}
-                        value={selectedSpeech.visibility}
-                      >
-                        {visibilityOptions.map((visibility) => (
-                          <option key={visibility} value={visibility}>
-                            {t(formatOption(visibility))}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="field">
-                      <span>{t("Intro person")}</span>
-                      <input onChange={(event) => updateSelectedSpeech({ introPerson: event.target.value })} value={selectedSpeech.introPerson} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Technical needs")}</span>
-                      <input
-                        onChange={(event) =>
-                          updateSelectedSpeech({
-                            technicalNeeds: event.target.value
-                              .split(",")
-                              .map((need) => need.trim())
-                              .filter(Boolean)
-                          })
-                        }
-                        value={selectedSpeech.technicalNeeds.join(", ")}
-                      />
-                    </label>
-                    <label className="field speech-wide-field">
-                      <span>{t("Program notes")}</span>
-                      <textarea onChange={(event) => updateSelectedSpeech({ notes: event.target.value })} rows={5} value={selectedSpeech.notes} />
-                    </label>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="form-grid speech-editor-form">
+                <label className="field">
+                  <span>{t("Title")}</span>
+                  <input onChange={(event) => updateSelectedSpeech({ title: event.target.value })} value={selectedSpeech.title} />
+                </label>
+                <label className="field">
+                  <span>{t("Speaker name")}</span>
+                  <input onChange={(event) => updateSelectedSpeech({ speakerName: event.target.value })} value={selectedSpeech.speakerName} />
+                </label>
+                <label className="field">
+                  <span>{t("Relation")}</span>
+                  <input onChange={(event) => updateSelectedSpeech({ relation: event.target.value })} value={selectedSpeech.relation} />
+                </label>
+                <label className="field">
+                  <span>{t("Timing")}</span>
+                  <input onChange={(event) => updateSelectedSpeech({ timing: event.target.value })} value={selectedSpeech.timing} />
+                </label>
+                <label className="field">
+                  <span>{t("Duration minutes")}</span>
+                  <input
+                    min={1}
+                    onChange={(event) => updateSelectedSpeech({ durationMinutes: Number(event.target.value) })}
+                    type="number"
+                    value={selectedSpeech.durationMinutes}
+                  />
+                </label>
+                <label className="field">
+                  <span>{t("Visibility")}</span>
+                  <select
+                    onChange={(event) => {
+                      const visibility = event.target.value as Visibility;
+                      updateSelectedSpeech({ visibility, isSecret: visibility === "secret" });
+                    }}
+                    value={selectedSpeech.visibility}
+                  >
+                    {visibilityOptions.map((visibility) => (
+                      <option key={visibility} value={visibility}>
+                        {t(formatOption(visibility))}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>{t("Intro person")}</span>
+                  <input onChange={(event) => updateSelectedSpeech({ introPerson: event.target.value })} value={selectedSpeech.introPerson} />
+                </label>
+                <label className="field">
+                  <span>{t("Technical needs")}</span>
+                  <input
+                    onChange={(event) =>
+                      updateSelectedSpeech({
+                        technicalNeeds: event.target.value
+                          .split(",")
+                          .map((need) => need.trim())
+                          .filter(Boolean)
+                      })
+                    }
+                    value={selectedSpeech.technicalNeeds.join(", ")}
+                  />
+                </label>
+                <label className="field speech-wide-field">
+                  <span>{t("Program notes")}</span>
+                  <textarea onChange={(event) => updateSelectedSpeech({ notes: event.target.value })} rows={5} value={selectedSpeech.notes} />
+                </label>
+              </div>
             </details>
-          </>
+          </div>
         ) : null}
-      </section>
-
-      <aside className="page-grid">
-        <FlowAnalysis risks={speechRisks} title="Speech Readiness" />
-        <Card>
-          <CardContent>
-            <p className="eyebrow">{t("Secret Layers")}</p>
-            <h3 className="card-title">{t("Surprises stay operational without becoming visible too early.")}</h3>
-            <p className="card-copy">
-              {t("Locked items remain visible in Director Mode and exportable briefs while preserving the emotional reveal for the couple.")}
-            </p>
-            <div className="timeline-meta">
-              <Badge tone="secret">{secretCount} {t("secret layers")}</Badge>
-              <Badge>{totalSpeechMinutesBeforeCake} {t("minutes before cake")}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </aside>
-    </div>
+      </div>
+    </StudioRouteFrame>
   );
-}
-
-function formatSavedAt(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "just now";
-  }
-
-  return date.toLocaleTimeString("en", {
-    hour: "numeric",
-    minute: "2-digit"
-  });
 }
 
 function formatOption(value: string) {

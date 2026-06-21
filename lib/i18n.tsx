@@ -477,6 +477,18 @@ const sv: Record<string, string> = {
   "This cue is ready.": "Den här cuen är redo.",
   "Edit selected cue": "Redigera vald cue",
   "Open to adjust the song, people, start cue, backup, and notes.": "Öppna för att justera låt, personer, startcue, reserv och anteckningar.",
+  "The words of the day.": "Dagens ord.",
+  "Order the toasts, protect the dinner rhythm, and keep surprise moments hidden until the reveal.":
+    "Ordna talen, skydda middagens rytm och håll överraskningar dolda till avslöjandet.",
+  "Before cake": "Före tårtan",
+  "min": "min",
+  "Selected speech": "Valt tal",
+  "This speech is ready.": "Det här talet är redo.",
+  "Timing, visibility, technical needs, and notes are connected to the day.":
+    "Tidsättning, synlighet, tekniska behov och anteckningar är kopplade till dagen.",
+  "Edit selected speech": "Redigera valt tal",
+  "Open to adjust the speaker, timing, visibility, technical needs, and notes.":
+    "Öppna för att justera talare, tidsättning, synlighet, tekniska behov och anteckningar.",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",
