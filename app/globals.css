@@ -2209,13 +2209,7 @@ a {
 .sourcing-studio {
   display: grid;
   gap: 16px;
-  border: 1px solid rgba(36, 45, 41, 0.12);
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 253, 248, 0.98), rgba(247, 243, 232, 0.94) 58%, rgba(67, 93, 109, 0.08)),
-    var(--surface);
-  box-shadow: var(--shadow-float);
-  padding: clamp(16px, 2.4vw, 24px);
+  margin-top: 20px;
 }
 
 .sourcing-hero {

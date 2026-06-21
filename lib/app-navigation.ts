@@ -115,7 +115,7 @@ export const navigationItems: AppNavigationItem[] = [
   {
     group: "Details",
     href: "/vendors",
-    label: "Sourcing",
+    label: "Vendors",
     primaryActionHref: "/director",
     primaryActionLabel: "Review Vendor Roles",
     shortDescription: "Vendor decisions",

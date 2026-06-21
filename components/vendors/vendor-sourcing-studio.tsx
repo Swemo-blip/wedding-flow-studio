@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { StudioCommand } from "@/components/ui/studio-command";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import {
   buildVendorCandidateBrief,
   buildVendorIntelligence,
@@ -64,24 +64,22 @@ export function VendorSourcingStudio() {
   }
 
   return (
-    <section className="sourcing-studio" aria-label="Production Sourcing">
-      <StudioCommand
-        actions={[{ href: "/exports", label: "Prepare Vendor Brief" }]}
-        description="Turn party needs into location-aware searches, save vendor candidates, and keep every sourcing decision connected to the wedding-day digital twin."
-        eyebrow="Production Sourcing"
-        metrics={[
-          { label: "Readiness", tone: intelligence.readinessAverage >= 70 ? "confirmed" : "medium", value: `${intelligence.readinessAverage}%` },
-          { label: "Candidates", value: `${intelligence.candidateCount}` },
-          { label: "Booked", tone: intelligence.bookedCount > 0 ? "confirmed" : "neutral", value: `${intelligence.bookedCount}` },
-          { label: "Required gaps", tone: intelligence.openRequiredCount > 0 ? "medium" : "confirmed", value: `${intelligence.openRequiredCount}` }
-        ]}
-        status={{ label: "Vendor fit live", tone: intelligence.openRequiredCount > 0 ? "medium" : "confirmed" }}
-        title="Find, shortlist, and compare the real-world services behind the wedding flow."
-      >
+    <StudioRouteFrame
+      description="Turn each party need into a local search, save the best candidates, and track quotes and bookings in one place."
+      eyebrow="Vendors"
+      meta={[
+        { label: "Candidates", value: `${intelligence.candidateCount}` },
+        { label: "Booked", value: `${intelligence.bookedCount}` },
+        { label: "Open gaps", value: `${intelligence.openRequiredCount}` }
+      ]}
+      primaryAction={{ href: "/exports", label: "Prepare vendor brief" }}
+      title="The team behind the day."
+    >
+      <div className="sourcing-studio">
         {intelligence.bestNextDecision ? (
-          <div className="module-decision-strip" aria-label={t("Best vendor decision")}>
+          <div className="module-decision-strip" aria-label={t("Next vendor to lock")}>
             <div>
-              <span>{t("Best vendor decision")}</span>
+              <span>{t("Next vendor to lock")}</span>
               <strong>{intelligence.bestNextDecision.nextAction}</strong>
               <p>
                 {intelligence.bestNextDecision.category.label} affects {intelligence.bestNextDecision.impactLabel.toLowerCase()} and is based on{" "}
@@ -96,13 +94,12 @@ export function VendorSourcingStudio() {
               }}
               type="button"
             >
-              {t("Focus Decision")}
+              {t("Focus")}
             </button>
           </div>
         ) : null}
-      </StudioCommand>
 
-      <div className="sourcing-layout">
+        <div className="sourcing-layout">
         <aside className="sourcing-queue" aria-label={t("Sourcing categories")}>
           <div>
             <span>{t("Location basis")}</span>
@@ -277,7 +274,8 @@ export function VendorSourcingStudio() {
           ))}
         </div>
       </details>
-    </section>
+      </div>
+    </StudioRouteFrame>
   );
 }
 

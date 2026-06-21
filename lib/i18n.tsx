@@ -489,6 +489,14 @@ const sv: Record<string, string> = {
   "Edit selected speech": "Redigera valt tal",
   "Open to adjust the speaker, timing, visibility, technical needs, and notes.":
     "Öppna för att justera talare, tidsättning, synlighet, tekniska behov och anteckningar.",
+  "The team behind the day.": "Teamet bakom dagen.",
+  "Turn each party need into a local search, save the best candidates, and track quotes and bookings in one place.":
+    "Gör varje behov till en lokal sökning, spara de bästa kandidaterna och följ offerter och bokningar på ett ställe.",
+  "Open gaps": "Öppna luckor",
+  "Prepare vendor brief": "Förbered leverantörsbrief",
+  "Next vendor to lock": "Nästa leverantör att låsa",
+  "Focus": "Fokusera",
+  "Candidates": "Kandidater",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",
