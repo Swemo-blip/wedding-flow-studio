@@ -3,9 +3,7 @@
 import { useMemo, useState } from "react";
 import { CueStatusBadge } from "@/components/music/cue-status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { StudioCommand } from "@/components/ui/studio-command";
-import { FlowAnalysis } from "@/components/wedding/flow-analysis";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
@@ -17,7 +15,7 @@ const musicRiskIds = ["risk-music-backup", "risk-music-start-cue", "risk-couple-
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
-  const { hasLocalProject, musicCues, resetMusicCues, timelineItems, updateMusicCue, updatedAt } = useLocalProject();
+  const { musicCues, resetMusicCues, timelineItems, updateMusicCue } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedCueId, setSelectedCueId] = useState(musicCues[0]?.id ?? "");
   const selectedCue = musicCues.find((cue) => cue.id === selectedCueId) ?? musicCues[0];
@@ -29,7 +27,6 @@ export function MusicCueStudio() {
     [musicCues, resolvedRiskIds, timelineItems]
   );
   const selectedCueRisks = selectedCue ? musicRisks.filter((risk) => risk.relatedEntityId === selectedCue.id) : [];
-  const saveStatus = hasLocalProject && updatedAt ? `Saved locally ${formatSavedAt(updatedAt)}` : "Autosave ready";
   const confirmedCueCount = musicCues.filter((cue) => cue.status === "confirmed").length;
 
   function updateSelectedCue(updates: Partial<MusicCue>) {
@@ -70,203 +67,142 @@ export function MusicCueStudio() {
   }
 
   return (
-    <div className="two-column music-cue-studio">
-      <section className="page-grid">
-        <StudioCommand
-          actions={[
-            { href: "/preview", label: "Preview Cues" },
-            { label: "Reset music cues", onClick: resetMusicCues, variant: "secondary" }
-          ]}
-          description="Work from one active cue while backup plans, start cues, responsible people, and brief outputs stay synchronized."
-          eyebrow="Music Cue Studio"
-          metrics={[
-            { label: "Active cue", value: selectedCue ? selectedCue.moment : "No cue selected" },
-            { label: "Cue status", tone: selectedCue?.status === "confirmed" ? "confirmed" : "medium", value: selectedCue ? formatStatus(selectedCue.status) : "Not selected" },
-            { label: "Confirmed", tone: confirmedCueCount === musicCues.length ? "confirmed" : "low", value: `${confirmedCueCount}/${musicCues.length}` },
-            { label: "Warnings", tone: musicRisks.length > 0 ? "medium" : "confirmed", value: `${musicRisks.length}` }
-          ]}
-          status={{ label: saveStatus, tone: "confirmed" }}
-          title="Coordinate the soundtrack as one cue sheet."
-        >
-          <label className="field music-cue-select">
-            <span>{t("Active cue")}</span>
-            <select aria-label={t("Choose music cue")} onChange={(event) => setSelectedCueId(event.target.value)} value={selectedCue?.id ?? ""}>
-              {musicCues.map((cue) => (
-                <option key={cue.id} value={cue.id}>
-                  {t(cue.moment)} - {cue.songTitle}
-                </option>
-              ))}
-            </select>
-          </label>
-        </StudioCommand>
+    <StudioRouteFrame
+      description="Keep every song, who starts it, and the backup plan in one cue sheet — so the music lands on time."
+      eyebrow="Music"
+      meta={[
+        { label: "Cues", value: `${musicCues.length}` },
+        { label: "Confirmed", value: `${confirmedCueCount}/${musicCues.length}` },
+        { label: "To review", value: `${musicRisks.length}` }
+      ]}
+      primaryAction={{ href: "/preview", label: "Preview cues" }}
+      secondaryAction={{ label: "Reset music", onClick: resetMusicCues }}
+      title="The soundtrack of the day."
+    >
+      <div className="detail-studio">
+        <div aria-label={t("Music cues")} className="detail-studio-list" role="tablist">
+          {musicCues.map((cue, index) => {
+            const isSelected = cue.id === selectedCue?.id;
+            const hasRisk = musicRisks.some((risk) => risk.relatedEntityId === cue.id);
+
+            return (
+              <button
+                aria-selected={isSelected}
+                className="detail-studio-item"
+                data-risk={hasRisk ? "true" : undefined}
+                data-selected={isSelected}
+                key={cue.id}
+                onClick={() => setSelectedCueId(cue.id)}
+                role="tab"
+                type="button"
+              >
+                <span className="detail-studio-item-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="detail-studio-item-main">
+                  <strong>{t(cue.moment)}</strong>
+                  <small>{cue.songTitle}</small>
+                </span>
+                <span aria-hidden="true" className="detail-studio-dot" data-status={cue.status} />
+              </button>
+            );
+          })}
+        </div>
 
         {selectedCue ? (
-          <>
-            <div className="music-cue-board" aria-label="Music cue production board">
-              <div className="music-cue-sequence">
-                {musicCues.map((cue, index) => {
-                  const isSelected = cue.id === selectedCue.id;
-                  const hasRisk = musicRisks.some((risk) => risk.relatedEntityId === cue.id);
-
-                  return (
-                    <button
-                      aria-pressed={isSelected}
-                      className="music-cue-node"
-                      data-risk={hasRisk}
-                      data-selected={isSelected}
-                      data-status={cue.status}
-                      key={cue.id}
-                      onClick={() => setSelectedCueId(cue.id)}
-                      type="button"
-                    >
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <strong>{t(cue.moment)}</strong>
-                      <small>{cue.songTitle}</small>
-                    </button>
-                  );
-                })}
+          <div className="detail-studio-detail">
+            <div className="detail-studio-detail-head">
+              <div>
+                <p className="eyebrow">{t("Selected cue")}</p>
+                <h2>{selectedCue.songTitle}</h2>
+                <p className="detail-studio-sub">
+                  {t(selectedCue.moment)} · {selectedCue.artist}
+                </p>
               </div>
-
-              <Card className="music-selected-panel">
-                <CardContent>
-                  <div className="summary-between">
-                    <div>
-                      <p className="eyebrow">{t("Selected cue")}</p>
-                      <h3 className="card-title">{selectedCue.songTitle}</h3>
-                    </div>
-                    <CueStatusBadge status={selectedCue.status} />
-                  </div>
-                  <div className="music-selected-grid">
-                    <div>
-                      <span>{t("Moment")}</span>
-                      <strong>{t(selectedCue.moment)}</strong>
-                      <small>{selectedCue.artist}</small>
-                    </div>
-                    <div>
-                      <span>{t("Responsible")}</span>
-                      <strong>{selectedCue.responsiblePerson}</strong>
-                      <small>{t(formatStatus(selectedCue.status))}</small>
-                    </div>
-                    <div>
-                      <span>{t("Start cue")}</span>
-                      <strong>{selectedCue.startCue}</strong>
-                      <small>{t("Production trigger")}</small>
-                    </div>
-                    <div>
-                      <span>{t("Backup")}</span>
-                      <strong>{selectedCue.backupPlan || t("Missing")}</strong>
-                      <small>{t("Offline fallback")}</small>
-                    </div>
-                  </div>
-
-                  {selectedCueRisks.length > 0 ? (
-                    <div className="music-smart-fix">
-                      <div>
-                        <p className="eyebrow">{t("Best Cue Fix")}</p>
-                        <strong>{t(selectedCueRisks[0].title)}</strong>
-                        <span>{t(selectedCueRisks[0].suggestedFix)}</span>
-                      </div>
-                      <Button onClick={applySmartCueFix} size="small">{t("Apply Fix")}</Button>
-                    </div>
-                  ) : (
-                    <div className="music-smart-fix" data-clear="true">
-                      <div>
-                        <p className="eyebrow">{t("Cue Readiness")}</p>
-                        <strong>{t("This cue is ready for the production map.")}</strong>
-                        <span>{t("Preview, Director Mode, and Exports can use this cue without an active music warning.")}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <CueStatusBadge status={selectedCue.status} />
             </div>
 
-            <details className="studio-detail-drawer">
+            <dl className="studio-inspector-list">
+              <div className="studio-inspector-row">
+                <dt>{t("Responsible")}</dt>
+                <dd>{selectedCue.responsiblePerson}</dd>
+              </div>
+              <div className="studio-inspector-row">
+                <dt>{t("Start cue")}</dt>
+                <dd>{selectedCue.startCue || t("Not set")}</dd>
+              </div>
+              <div className="studio-inspector-row" data-tone={selectedCue.backupPlan ? undefined : "alert"}>
+                <dt>{t("Backup")}</dt>
+                <dd>{selectedCue.backupPlan || t("Missing")}</dd>
+              </div>
+            </dl>
+
+            {selectedCueRisks.length > 0 ? (
+              <div className="studio-inspector-note" data-tone="medium">
+                <strong>{t(selectedCueRisks[0].title)}</strong>
+                <p>{t(selectedCueRisks[0].suggestedFix)}</p>
+                <Button onClick={applySmartCueFix} size="small">{t("Apply this fix")}</Button>
+              </div>
+            ) : (
+              <div className="studio-inspector-note" data-tone="confirmed">
+                <strong>{t("This cue is ready.")}</strong>
+                <p>{t("Preview, Director Mode, and Exports can use this cue without an active music warning.")}</p>
+              </div>
+            )}
+
+            <details className="reception-guest-details">
               <summary>
-                <span>{t("Edit selected cue details")}</span>
-                <strong>{t(selectedCue.moment)}</strong>
+                <span>{t("Edit selected cue")}</span>
+                <small>{t("Open to adjust the song, people, start cue, backup, and notes.")}</small>
               </summary>
-              <Card className="music-cue-editor-card">
-                <CardContent>
-                  <div className="form-grid music-cue-form">
-                    <label className="field">
-                      <span>{t("Moment")}</span>
-                      <input onChange={(event) => updateSelectedCue({ moment: event.target.value })} value={selectedCue.moment} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Song title")}</span>
-                      <input onChange={(event) => updateSelectedCue({ songTitle: event.target.value })} value={selectedCue.songTitle} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Artist or composer")}</span>
-                      <input onChange={(event) => updateSelectedCue({ artist: event.target.value })} value={selectedCue.artist} />
-                    </label>
-                    <label className="field">
-                      <span>{t("Responsible person")}</span>
-                      <input
-                        onChange={(event) => updateSelectedCue({ responsiblePerson: event.target.value })}
-                        value={selectedCue.responsiblePerson}
-                      />
-                    </label>
-                    <label className="field">
-                      <span>{t("Status")}</span>
-                      <select
-                        onChange={(event) => updateSelectedCue({ status: event.target.value as MusicCueStatus })}
-                        value={selectedCue.status}
-                      >
-                        {musicCueStatuses.map((status) => (
-                          <option key={status} value={status}>
-                            {t(formatStatus(status))}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="field">
-                      <span>{t("Planning link")}</span>
-                      <input onChange={(event) => updateSelectedCue({ link: event.target.value })} value={selectedCue.link} />
-                    </label>
-                    <label className="field music-cue-wide-field">
-                      <span>{t("Start cue")}</span>
-                      <textarea onChange={(event) => updateSelectedCue({ startCue: event.target.value })} rows={3} value={selectedCue.startCue} />
-                    </label>
-                    <label className="field music-cue-wide-field">
-                      <span>{t("Backup plan")}</span>
-                      <textarea
-                        onChange={(event) => updateSelectedCue({ backupPlan: event.target.value })}
-                        rows={3}
-                        value={selectedCue.backupPlan}
-                      />
-                    </label>
-                    <label className="field music-cue-wide-field">
-                      <span>{t("Production notes")}</span>
-                      <textarea onChange={(event) => updateSelectedCue({ notes: event.target.value })} rows={4} value={selectedCue.notes} />
-                    </label>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="form-grid music-cue-form">
+                <label className="field">
+                  <span>{t("Moment")}</span>
+                  <input onChange={(event) => updateSelectedCue({ moment: event.target.value })} value={selectedCue.moment} />
+                </label>
+                <label className="field">
+                  <span>{t("Song title")}</span>
+                  <input onChange={(event) => updateSelectedCue({ songTitle: event.target.value })} value={selectedCue.songTitle} />
+                </label>
+                <label className="field">
+                  <span>{t("Artist or composer")}</span>
+                  <input onChange={(event) => updateSelectedCue({ artist: event.target.value })} value={selectedCue.artist} />
+                </label>
+                <label className="field">
+                  <span>{t("Responsible person")}</span>
+                  <input onChange={(event) => updateSelectedCue({ responsiblePerson: event.target.value })} value={selectedCue.responsiblePerson} />
+                </label>
+                <label className="field">
+                  <span>{t("Status")}</span>
+                  <select onChange={(event) => updateSelectedCue({ status: event.target.value as MusicCueStatus })} value={selectedCue.status}>
+                    {musicCueStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {t(formatStatus(status))}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>{t("Planning link")}</span>
+                  <input onChange={(event) => updateSelectedCue({ link: event.target.value })} value={selectedCue.link} />
+                </label>
+                <label className="field music-cue-wide-field">
+                  <span>{t("Start cue")}</span>
+                  <textarea onChange={(event) => updateSelectedCue({ startCue: event.target.value })} rows={3} value={selectedCue.startCue} />
+                </label>
+                <label className="field music-cue-wide-field">
+                  <span>{t("Backup plan")}</span>
+                  <textarea onChange={(event) => updateSelectedCue({ backupPlan: event.target.value })} rows={3} value={selectedCue.backupPlan} />
+                </label>
+                <label className="field music-cue-wide-field">
+                  <span>{t("Production notes")}</span>
+                  <textarea onChange={(event) => updateSelectedCue({ notes: event.target.value })} rows={4} value={selectedCue.notes} />
+                </label>
+              </div>
             </details>
-          </>
+          </div>
         ) : null}
-      </section>
-
-      <aside className="page-grid">
-        <FlowAnalysis risks={musicRisks} title="Music Readiness" />
-      </aside>
-    </div>
+      </div>
+    </StudioRouteFrame>
   );
-}
-
-function formatSavedAt(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "just now";
-  }
-
-  return date.toLocaleTimeString("en", {
-    hour: "numeric",
-    minute: "2-digit"
-  });
 }
 
 function formatStatus(value: string) {
