@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { SceneEditor } from "@/components/overview/scene-editor";
 import { CeremonyScene, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
+import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
   calculateWeddingStudioCapacity,
   defaultStudioSceneEdits,
@@ -123,6 +124,21 @@ export function CeremonyStudio() {
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [viewMode, setViewMode] = useState<StudioViewMode>("3d");
 
+  // Share the plan with the home Overview studio through the persisted layout
+  // store, so the ceremony opens on the same guest count, venue and style the
+  // couple set there — and any change here flows back to the same store.
+  useEffect(() => {
+    const stored = readStoredWeddingStudioLayout();
+    if (stored) {
+      queueMicrotask(() => setPlan(stored.plan));
+    }
+  }, []);
+
+  function applyPlan(nextPlan: WeddingStudioPlan) {
+    setPlan(nextPlan);
+    writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+  }
+
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
   const inspector = buildInspector(selectedObjectId, plan, capacity, t);
 
@@ -133,7 +149,7 @@ export function CeremonyStudio() {
           <p className="eyebrow">{t("Ceremony Studio")}</p>
           <h2>{t("Design the ceremony")}</h2>
         </div>
-        <SceneEditor capacity={capacity} onChange={setPlan} plan={plan} />
+        <SceneEditor capacity={capacity} onChange={applyPlan} plan={plan} />
         <div className="studio-control-block">
           <span className="studio-control-label">{t("Lighting mood")}</span>
           <div className="studio-segment" role="group" aria-label={t("Lighting mood")}>

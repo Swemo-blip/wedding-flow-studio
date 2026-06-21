@@ -45,7 +45,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Details",
     items: [
-      { href: "/reception", icon: Users, label: "Guests", passive: true },
+      { href: "/guests", icon: Users, label: "Guests" },
       { href: "/music", icon: Music2, label: "Music" },
       { href: "/speeches", icon: Mic2, label: "Speeches" },
       { href: "/vendors", icon: Store, label: "Vendors" }

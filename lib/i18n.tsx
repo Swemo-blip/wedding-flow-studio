@@ -373,6 +373,21 @@ const sv: Record<string, string> = {
   "Allergy notes": "Allerginoteringar",
   "Reception preview": "Förhandsvisning av reception",
   "Drag a guest to another table · click to inspect": "Dra en gäst till ett annat bord · klicka för detaljer",
+  // Guests screen
+  "Guest list": "Gästlista",
+  "The people of the day.": "Dagens gäster.",
+  "Track who is coming, where they sit, and any dietary or accessibility needs — one source of truth for every guest.":
+    "Håll koll på vilka som kommer, var de sitter och eventuella kost- eller tillgänglighetsbehov — en källa för varje gäst.",
+  "Invited": "Inbjudna",
+  "Open seating": "Öppna placeringen",
+  "Filter by RSVP": "Filtrera på OSA",
+  "Search guests": "Sök gäster",
+  "Search by name or relationship": "Sök på namn eller relation",
+  "Guest": "Gäst",
+  "RSVP": "OSA",
+  "Dietary / access": "Kost / tillgänglighet",
+  "All": "Alla",
+  "No guests match this view.": "Inga gäster matchar den här vyn.",
   // App shell nav groups
   "Plan": "Planera",
   "Details": "Detaljer",

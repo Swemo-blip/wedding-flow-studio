@@ -84,6 +84,16 @@ export const navigationItems: AppNavigationItem[] = [
   },
   {
     group: "Details",
+    href: "/guests",
+    label: "Guests",
+    primaryActionHref: "/reception",
+    primaryActionLabel: "Open Seating",
+    shortDescription: "Guest list",
+    signal: "RSVP + seating",
+    summary: "Track who is coming, where they sit, and any dietary or accessibility needs."
+  },
+  {
+    group: "Details",
     href: "/speeches",
     label: "Speeches",
     primaryActionHref: "/director",
