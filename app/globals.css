@@ -10077,6 +10077,22 @@ a {
   font-weight: 600;
 }
 
+.room-table .guest-chip[draggable="true"] {
+  cursor: grab;
+}
+
+.room-table .guest-chip[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.room-table[data-drop-target="true"] {
+  border-color: var(--champagne);
+  box-shadow:
+    0 0 0 2px rgba(159, 121, 59, 0.55),
+    0 16px 44px rgba(70, 52, 33, 0.2);
+  transform: translate(-50%, -50%) scale(1.03);
+}
+
 .guest-list {
   display: grid;
   gap: 10px;

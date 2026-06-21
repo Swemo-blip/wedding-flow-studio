@@ -323,12 +323,14 @@ export function ReceptionStudio() {
                   guests={guests}
                   isSelected={table.id === selectedTable?.id}
                   key={table.id}
+                  onReassignGuest={assignGuestToTable}
                   onSelect={(tableId) => {
                     const firstGuestAtTable = guests.find((guest) => guest.tableId === tableId);
                     if (firstGuestAtTable) {
                       setSelectedGuestId(firstGuestAtTable.id);
                     }
                   }}
+                  onSelectGuest={setSelectedGuestId}
                   table={table}
                 />
               ))}
