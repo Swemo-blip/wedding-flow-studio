@@ -134,9 +134,21 @@ export function OverviewDashboard() {
     }
 
     queueMicrotask(() => {
-      const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, defaultWeddingStudioPlan);
-      setPlan(nextPlan);
-      writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+      // Prefer a saved layout when it is newer than the wedding record, so plan
+      // edits made in the Ceremony studio (or here) flow back both ways. Fall
+      // back to deriving from the wedding when the wedding itself changed last.
+      const storedLayout = readStoredWeddingStudioLayout();
+      const weddingTime = localProject.updatedAt ?? "";
+
+      if (storedLayout && storedLayout.updatedAt >= weddingTime) {
+        setPlan(storedLayout.plan);
+        setSceneEdits(storedLayout.sceneEdits);
+      } else {
+        const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, defaultWeddingStudioPlan);
+        setPlan(nextPlan);
+        writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+      }
+
       setSyncedProjectKey(projectKey);
     });
   }, [localProject.hasLocalProject, localProject.updatedAt, localProject.wedding, sceneEdits, syncedProjectKey]);

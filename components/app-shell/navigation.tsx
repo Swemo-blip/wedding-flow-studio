@@ -15,7 +15,6 @@ import {
   UtensilsCrossed,
   type LucideIcon
 } from "lucide-react";
-import { getNavigationItemForPath, navigationItems } from "@/lib/app-navigation";
 import { useTranslation } from "@/lib/i18n";
 
 type SideNavItem = {
@@ -105,22 +104,27 @@ export function Navigation() {
 export function MobileNavigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const activeItem = getNavigationItemForPath(pathname);
-  const activeValue = navigationItems.some((item) => item.href === activeItem.href) ? activeItem.href : "/";
+  const { t } = useTranslation();
+  const allItems = navGroups.flatMap((group) => group.items);
+  const activeItem = allItems.find((item) => isItemActive(item, pathname)) ?? allItems[0];
 
   return (
     <select
-      aria-label="Choose section"
+      aria-label={t("Choose section")}
       className="mobile-nav"
       onChange={(event) => {
         router.push(event.target.value);
       }}
-      value={activeValue}
+      value={activeItem.href}
     >
-      {navigationItems.map((item) => (
-        <option key={item.href} value={item.href}>
-          {item.label}
-        </option>
+      {navGroups.map((group) => (
+        <optgroup key={group.label} label={t(group.label)}>
+          {group.items.map((item) => (
+            <option key={item.label} value={item.href}>
+              {t(item.label)}
+            </option>
+          ))}
+        </optgroup>
       ))}
     </select>
   );
