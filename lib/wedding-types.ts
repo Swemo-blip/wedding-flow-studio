@@ -41,6 +41,9 @@ export type Guest = {
   language: string;
   tableId: string;
   seatIndex: number;
+  // Optional guest photo as a downscaled data URL; mapped onto the guest's 3D
+  // figure in the reception seating and shown in the guest list.
+  photoUrl?: string;
 };
 
 export type TimelineItem = {

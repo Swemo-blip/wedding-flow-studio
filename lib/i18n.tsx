@@ -505,6 +505,8 @@ const sv: Record<string, string> = {
   "more to review": "fler att se över",
   "Bride's eyes": "Brudens vy",
   "Groom's eyes": "Brudgummens vy",
+  "Add photo": "Lägg till foto",
+  "Remove photo": "Ta bort foto",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

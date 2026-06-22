@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
+import { fileToDownscaledDataUrl } from "@/lib/image-upload";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Guest } from "@/lib/wedding-types";
 
@@ -13,9 +14,18 @@ const RSVP_FILTERS: RsvpFilter[] = ["all", "attending", "pending", "declined"];
 
 export function GuestsView() {
   const { t } = useTranslation();
-  const { dinnerTables, guests, speeches } = useLocalProject();
+  const { dinnerTables, guests, speeches, updateGuest } = useLocalProject();
   const [filter, setFilter] = useState<RsvpFilter>("all");
   const [query, setQuery] = useState("");
+
+  async function handlePhoto(guestId: string, file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    const photoUrl = await fileToDownscaledDataUrl(file);
+    updateGuest(guestId, { photoUrl });
+  }
 
   const counts = useMemo(
     () => ({
@@ -93,8 +103,37 @@ export function GuestsView() {
             return (
               <div className="guests-row" key={guest.id} role="row">
                 <span className="guests-cell-name" role="cell">
-                  <strong>{guest.name}</strong>
-                  <small>{guest.relationship}</small>
+                  <span className="guests-avatar" data-has-photo={guest.photoUrl ? "true" : undefined}>
+                    {guest.photoUrl ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img alt="" src={guest.photoUrl} />
+                        <button
+                          aria-label={t("Remove photo")}
+                          className="guests-avatar-remove"
+                          onClick={() => updateGuest(guest.id, { photoUrl: undefined })}
+                          type="button"
+                        >
+                          ×
+                        </button>
+                      </>
+                    ) : (
+                      <label className="guests-avatar-add" title={t("Add photo")}>
+                        <span aria-hidden="true">{initials(guest.name)}</span>
+                        <input
+                          accept="image/*"
+                          hidden
+                          onChange={(event) => handlePhoto(guest.id, event.target.files?.[0] ?? null)}
+                          type="file"
+                        />
+                        <span className="sr-only">{t("Add photo")}</span>
+                      </label>
+                    )}
+                  </span>
+                  <span className="guests-cell-name-text">
+                    <strong>{guest.name}</strong>
+                    <small>{guest.relationship}</small>
+                  </span>
                 </span>
                 <span role="cell">
                   <span className="guests-rsvp" data-status={guest.rsvpStatus}>
@@ -138,4 +177,13 @@ function rsvpFilterLabel(filter: RsvpFilter) {
   }
 
   return rsvpLabel(filter);
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }

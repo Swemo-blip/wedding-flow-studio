@@ -1,8 +1,8 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Html, OrbitControls, useGLTF } from "@react-three/drei";
-import { Suspense, useMemo, useState } from "react";
+import { Billboard, Html, OrbitControls, useGLTF } from "@react-three/drei";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
@@ -93,6 +93,30 @@ function nearestTable(tableCenters: TableCenter[], x: number, z: number): { tabl
   return best;
 }
 
+// An uploaded guest photo, shown as a camera-facing portrait token floating just
+// above the seated figure so you recognise real people around the tables.
+function GuestFace({ photoUrl, selected }: { photoUrl: string; selected: boolean }) {
+  const texture = useMemo(() => {
+    const loaded = new THREE.TextureLoader().load(photoUrl);
+    loaded.colorSpace = THREE.SRGBColorSpace;
+    return loaded;
+  }, [photoUrl]);
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return (
+    <Billboard position={[0, 0.72, 0]}>
+      <mesh position={[0, 0, -0.002]}>
+        <circleGeometry args={[selected ? 0.172 : 0.156, 40]} />
+        <meshBasicMaterial color={selected ? "#c8a45b" : "#fffdf8"} toneMapped={false} />
+      </mesh>
+      <mesh>
+        <circleGeometry args={[selected ? 0.156 : 0.14, 40]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+    </Billboard>
+  );
+}
+
 function SeatedGuest({
   dragActive,
   dragXZ,
@@ -138,6 +162,7 @@ function SeatedGuest({
         raycast={dragActive ? noopRaycast : undefined}
         scale={selected ? GUEST_SCALE * 1.08 : GUEST_SCALE}
       />
+      {seat.guest.photoUrl ? <GuestFace photoUrl={seat.guest.photoUrl} selected={selected} /> : null}
       {selected ? (
         <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.2, 0.28, 28]} />

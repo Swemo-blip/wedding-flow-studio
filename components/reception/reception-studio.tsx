@@ -7,6 +7,7 @@ import { TableCard } from "@/components/reception/table-card";
 import { Button } from "@/components/ui/button";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
+import { fileToDownscaledDataUrl } from "@/lib/image-upload";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -67,6 +68,15 @@ export function ReceptionStudio() {
     }
 
     updateGuest(selectedGuest.id, updates);
+  }
+
+  async function handleSelectedGuestPhoto(file: File | null) {
+    if (!file || !selectedGuest) {
+      return;
+    }
+
+    const photoUrl = await fileToDownscaledDataUrl(file);
+    updateGuest(selectedGuest.id, { photoUrl });
   }
 
   function applyGuestJourneyFix() {
@@ -348,14 +358,38 @@ export function ReceptionStudio() {
       </section>
 
       <aside aria-label={t("Guest Identity")} className="studio-pane studio-pane-inspector">
-        <div className="studio-pane-head">
-          <p className="eyebrow">{t("Guest Identity")}</p>
-          <h3>{selectedGuest?.name}</h3>
-          {guestProfile ? (
-            <p className="reception-guest-relation">
-              {guestProfile.relationToCouple} · {t(rsvpLabel(guestProfile.rsvpStatus))}
-            </p>
-          ) : null}
+        <div className="studio-pane-head reception-identity-head">
+          <span className="guests-avatar reception-identity-avatar" data-has-photo={selectedGuest?.photoUrl ? "true" : undefined}>
+            {selectedGuest?.photoUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img alt="" src={selectedGuest.photoUrl} />
+                <button
+                  aria-label={t("Remove photo")}
+                  className="guests-avatar-remove"
+                  onClick={() => updateSelectedGuest({ photoUrl: undefined })}
+                  type="button"
+                >
+                  ×
+                </button>
+              </>
+            ) : (
+              <label className="guests-avatar-add" title={t("Add photo")}>
+                <span aria-hidden="true">{selectedGuest ? guestInitials(selectedGuest.name) : ""}</span>
+                <input accept="image/*" hidden onChange={(event) => handleSelectedGuestPhoto(event.target.files?.[0] ?? null)} type="file" />
+                <span className="sr-only">{t("Add photo")}</span>
+              </label>
+            )}
+          </span>
+          <div>
+            <p className="eyebrow">{t("Guest Identity")}</p>
+            <h3>{selectedGuest?.name}</h3>
+            {guestProfile ? (
+              <p className="reception-guest-relation">
+                {guestProfile.relationToCouple} · {t(rsvpLabel(guestProfile.rsvpStatus))}
+              </p>
+            ) : null}
+          </div>
         </div>
         <dl className="studio-inspector-list">
           <div className="studio-inspector-row">
@@ -399,6 +433,15 @@ function rsvpLabel(status: Guest["rsvpStatus"]) {
   }
 
   return "Pending";
+}
+
+function guestInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function formatTablemates(tablemates: Guest[]) {
