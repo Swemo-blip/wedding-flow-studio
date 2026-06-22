@@ -497,6 +497,12 @@ const sv: Record<string, string> = {
   "Next vendor to lock": "Nästa leverantör att låsa",
   "Focus": "Fokusera",
   "Candidates": "Kandidater",
+  "The shape of the day.": "Dagens form.",
+  "Walk the day moment by moment, see what each one needs, and close timing, cue, and role gaps in one place.":
+    "Gå igenom dagen moment för moment, se vad varje del behöver och täpp till luckor i tid, cue och roller på ett ställe.",
+  "Preview the day": "Förhandsvisa dagen",
+  "Next moment to review": "Nästa moment att se över",
+  "more to review": "fler att se över",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

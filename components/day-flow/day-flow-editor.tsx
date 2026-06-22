@@ -6,7 +6,7 @@ import { MomentInspector } from "@/components/moment/moment-inspector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StudioCommand } from "@/components/ui/studio-command";
+import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
 import {
@@ -308,42 +308,40 @@ export function DayFlowEditor() {
   }
 
   return (
-    <div className="two-column day-flow-editor">
-      <section>
-        <StudioCommand
-          actions={[
-            { href: "/preview", label: "Preview Wedding Day" },
-            { label: "Reset timeline", onClick: resetTimeline, variant: "secondary" }
-          ]}
-          description="Select one moment, apply the best repair, and keep the whole day synchronized from a single living timeline."
-          eyebrow="Day Flow Studio"
-          metrics={[
-            { label: "Active moment", value: selectedItem?.title ?? "No moment selected" },
-            { label: "Fix queue", tone: fixQueue.length > 0 ? "medium" : "confirmed", value: fixQueue.length > 0 ? `${fixQueue.length} to review` : "Ready" },
-            { label: "Open risks", tone: risks.length > 0 ? "medium" : "confirmed", value: `${risks.length}` },
-            { label: "Ready moments", tone: readyMomentCount === momentEntries.length ? "confirmed" : "low", value: `${readyMomentCount}/${momentEntries.length}` }
-          ]}
-          status={{ label: saveStatus, tone: "confirmed" }}
-          title="Repair the wedding day from one selected moment."
-        >
-          {fixQueue.length > 0 ? (
-            <div className="day-flow-best-repair" aria-label={t("Highest impact moment repair")}>
-              <button
-                className="studio-command-queue-item"
-                onClick={() => selectMomentFromQueue(fixQueue[0].phase)}
-                type="button"
-              >
-                <span>{String(fixQueue[0].phaseIndex + 1).padStart(2, "0")}</span>
-                <strong>{fixQueue[0].phase.title}</strong>
-                <small>{t(fixQueue[0].intelligence.primaryAction.label)}</small>
-              </button>
-              <small>{fixQueue.length - 1 > 0 ? `${fixQueue.length - 1} ${t("more moments in the repair queue")}` : t("This is the only moment that needs review.")}</small>
-            </div>
-          ) : (
-            <p className="card-copy">{t("Every preview moment is ready to rehearse from the current local plan.")}</p>
-          )}
-        </StudioCommand>
+    <StudioRouteFrame
+      description="Walk the day moment by moment, see what each one needs, and close timing, cue, and role gaps in one place."
+      eyebrow="Timeline"
+      meta={[
+        { label: "Moments", value: `${project.items.length}` },
+        { label: "To review", value: `${risks.length}` },
+        { label: "Ready", value: `${readyMomentCount}/${momentEntries.length}` }
+      ]}
+      primaryAction={{ href: "/preview", label: "Preview the day" }}
+      secondaryAction={{ label: "Reset timeline", onClick: resetTimeline }}
+      title="The shape of the day."
+    >
+      {fixQueue.length > 0 ? (
+        <div className="module-decision-strip" aria-label={t("Next moment to review")}>
+          <div>
+            <span>{t("Next moment to review")}</span>
+            <strong>{fixQueue[0].phase.title}</strong>
+            <p>
+              {t(fixQueue[0].intelligence.primaryAction.label)}
+              {fixQueue.length - 1 > 0 ? ` · ${fixQueue.length - 1} ${t("more to review")}` : ""}
+            </p>
+          </div>
+          <button className="button button-secondary" onClick={() => selectMomentFromQueue(fixQueue[0].phase)} type="button">
+            {t("Focus")}
+          </button>
+        </div>
+      ) : null}
 
+      <div className="sr-only" aria-live="polite">
+        {saveStatus}
+      </div>
+
+      <div className="two-column day-flow-editor">
+      <section>
         <div className="editable-timeline" aria-label="Editable wedding day timeline">
           {project.items.map((item) => {
             const isSelected = item.id === selectedItem?.id;
@@ -562,6 +560,7 @@ export function DayFlowEditor() {
         </details>
       </aside>
     </div>
+    </StudioRouteFrame>
   );
 }
 
