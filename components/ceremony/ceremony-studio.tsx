@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { SceneEditor } from "@/components/overview/scene-editor";
-import { CeremonyScene, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
@@ -123,6 +123,7 @@ export function CeremonyStudio() {
   const [preset, setPreset] = useState<PresetKey>("overview");
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [viewMode, setViewMode] = useState<StudioViewMode>("3d");
+  const [firstPerson, setFirstPerson] = useState<CeremonyFirstPerson>(null);
 
   // Share the plan with the home Overview studio through the persisted layout
   // store, so the ceremony opens on the same guest count, venue and style the
@@ -168,19 +169,50 @@ export function CeremonyStudio() {
           <div className="studio-preset-row" role="group" aria-label={t("Camera view")}>
             {(Object.keys(CAMERA_PRESETS) as PresetKey[]).map((key) => (
               <button
-                aria-pressed={viewMode === "3d" && preset === key}
-                data-active={viewMode === "3d" && preset === key}
+                aria-pressed={viewMode === "3d" && preset === key && !firstPerson}
+                data-active={viewMode === "3d" && preset === key && !firstPerson}
                 key={key}
                 onClick={() => {
                   setPreset(key);
                   setViewMode("3d");
+                  setFirstPerson(null);
                 }}
                 type="button"
               >
                 {t(PRESET_LABELS[key])}
               </button>
             ))}
-            <button aria-pressed={viewMode === "top"} data-active={viewMode === "top"} onClick={() => setViewMode("top")} type="button">
+            <button
+              aria-pressed={firstPerson === "bride"}
+              data-active={firstPerson === "bride"}
+              onClick={() => {
+                setFirstPerson("bride");
+                setViewMode("3d");
+              }}
+              type="button"
+            >
+              {t("Bride's eyes")}
+            </button>
+            <button
+              aria-pressed={firstPerson === "groom"}
+              data-active={firstPerson === "groom"}
+              onClick={() => {
+                setFirstPerson("groom");
+                setViewMode("3d");
+              }}
+              type="button"
+            >
+              {t("Groom's eyes")}
+            </button>
+            <button
+              aria-pressed={viewMode === "top"}
+              data-active={viewMode === "top"}
+              onClick={() => {
+                setViewMode("top");
+                setFirstPerson(null);
+              }}
+              type="button"
+            >
               {t("2D plan")}
             </button>
           </div>
@@ -191,9 +223,10 @@ export function CeremonyStudio() {
             <CeremonyScene
               activeStep="ceremony"
               budgetLevel={plan.budgetLevel}
-              cameraOverride={viewMode === "3d" ? CAMERA_PRESETS[preset] : null}
+              cameraOverride={viewMode === "3d" && !firstPerson ? CAMERA_PRESETS[preset] : null}
               capacity={capacity}
               colorDirection={plan.colorDirection}
+              firstPerson={firstPerson}
               lighting={lighting}
               onMoveObject={() => undefined}
               onSelectObject={setSelectedObjectId}

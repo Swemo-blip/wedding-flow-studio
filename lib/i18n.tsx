@@ -503,6 +503,8 @@ const sv: Record<string, string> = {
   "Preview the day": "Förhandsvisa dagen",
   "Next moment to review": "Nästa moment att se över",
   "more to review": "fler att se över",
+  "Bride's eyes": "Brudens vy",
+  "Groom's eyes": "Brudgummens vy",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

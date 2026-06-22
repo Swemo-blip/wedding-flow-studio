@@ -28,10 +28,15 @@ export type SceneCameraOverride = {
   target: [number, number, number];
 };
 
+export type CeremonyFirstPerson = "bride" | "groom" | null;
+
+type CoupleHeads = { groom: THREE.Vector3; bride: THREE.Vector3; arrived: boolean };
+
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
   cameraOverride?: SceneCameraOverride | null;
+  firstPerson?: CeremonyFirstPerson;
   capacity: WeddingStudioCapacity;
   colorDirection: StudioColorDirection;
   lighting?: SceneLighting;
@@ -194,6 +199,7 @@ export function CeremonyScene({
   venueType,
   viewMode,
   cameraOverride = null,
+  firstPerson = null,
   lighting = "dusk",
   zoom = 1
 }: CeremonySceneProps) {
@@ -204,6 +210,13 @@ export function CeremonyScene({
   const [processionalPlaying, setProcessionalPlaying] = useState(false);
   const [processionalKey, setProcessionalKey] = useState(0);
   const [showSinger, setShowSinger] = useState(false);
+  // Live head positions of the couple, written by the Processional each frame and
+  // read by CameraSetup for the first-person bride/groom view.
+  const coupleHeadsRef = useRef<CoupleHeads>({
+    groom: new THREE.Vector3(-0.34, FIRST_PERSON_EYE_Y, PROCESSION_START_Z),
+    bride: new THREE.Vector3(0.34, FIRST_PERSON_EYE_Y, PROCESSION_START_Z),
+    arrived: false
+  });
   // The processional is a hands-on ceremony rehearsal, so only offer it on the
   // interactive church view (not the auto-flown Preview walkthrough).
   const showCeremonyControls =
@@ -227,7 +240,7 @@ export function CeremonyScene({
           gl={{ toneMappingExposure: 1.16 }}
           shadows={{ type: THREE.PCFSoftShadowMap }}
         >
-          <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} venueType={venueType} viewMode={viewMode} zoom={zoom} />
+          <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={venueType} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
@@ -297,6 +310,8 @@ export function CeremonyScene({
             activeStep={activeStep}
             budgetLevel={budgetLevel}
             capacity={capacity}
+            coupleHeadsRef={coupleHeadsRef}
+            firstPerson={firstPerson}
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
             palette={palette}
@@ -476,6 +491,8 @@ function WeddingStageInterior({
   activeStep,
   budgetLevel,
   capacity,
+  coupleHeadsRef,
+  firstPerson = null,
   onMoveObject,
   onSelectObject,
   palette,
@@ -490,6 +507,8 @@ function WeddingStageInterior({
   activeStep: StudioPlanningStepId;
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
+  coupleHeadsRef?: { current: CoupleHeads };
+  firstPerson?: CeremonyFirstPerson;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
@@ -632,7 +651,7 @@ function WeddingStageInterior({
           {ceremonyVenue && activeStep !== "venue" ? (
             <Suspense fallback={null}>
               <Celebrant />
-              <Processional key={processionalKey} playing={processionalPlaying} />
+              <Processional headsRef={coupleHeadsRef} hideFigure={firstPerson} key={processionalKey} playing={processionalPlaying} />
               {showSinger ? <Singer /> : null}
             </Suspense>
           ) : null}
@@ -1145,6 +1164,7 @@ function Singer() {
 const PROCESSION_START_Z = 4.4;
 const PROCESSION_END_Z = -2.55;
 const PROCESSION_DURATION = 13;
+const FIRST_PERSON_EYE_Y = 1.5;
 
 function BridalGown() {
   // A long ivory skirt from the waist to the floor — reads as a gown and hides
@@ -1184,7 +1204,15 @@ function Bouquet() {
 }
 
 // Re-mounted (via React key) to restart, so progress + pose reset cleanly.
-function Processional({ playing }: { playing: boolean }) {
+function Processional({
+  headsRef,
+  hideFigure = null,
+  playing
+}: {
+  headsRef?: { current: CoupleHeads };
+  hideFigure?: CeremonyFirstPerson;
+  playing: boolean;
+}) {
   const progress = useRef(0);
   const arrivedRef = useRef(false);
   const groomRef = useRef<THREE.Group>(null);
@@ -1216,20 +1244,31 @@ function Processional({ playing }: { playing: boolean }) {
       brideRef.current.position.z = z;
       brideRef.current.rotation.y += (brideTarget - brideRef.current.rotation.y) * turn;
     }
+    // Publish the couple's eye positions so the first-person camera can ride along,
+    // even for a hidden figure (whose group ref is null).
+    if (headsRef) {
+      headsRef.current.groom.set(-0.34, FIRST_PERSON_EYE_Y, z);
+      headsRef.current.bride.set(0.34, FIRST_PERSON_EYE_Y, z);
+      headsRef.current.arrived = arrivedRef.current;
+    }
   });
 
   const moving = playing && !arrived;
 
   return (
     <>
-      <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef} rotation={[0, Math.PI, 0]}>
-        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
-      </group>
-      <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
-        <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
-        <BridalGown />
-        <Bouquet />
-      </group>
+      {hideFigure !== "groom" ? (
+        <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef} rotation={[0, Math.PI, 0]}>
+          <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
+        </group>
+      ) : null}
+      {hideFigure !== "bride" ? (
+        <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
+          <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+          <BridalGown />
+          <Bouquet />
+        </group>
+      ) : null}
     </>
   );
 }
@@ -1949,12 +1988,16 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
 function CameraSetup({
   activeStep,
   cameraOverride = null,
+  firstPerson = null,
+  headsRef,
   venueType,
   viewMode,
   zoom = 1
 }: {
   activeStep: StudioPlanningStepId;
   cameraOverride?: SceneCameraOverride | null;
+  firstPerson?: CeremonyFirstPerson;
+  headsRef?: { current: CoupleHeads };
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
   zoom?: number;
@@ -1964,6 +2007,22 @@ function CameraSetup({
 
   useFrame(({ clock }, delta) => {
     const time = clock.elapsedTime;
+
+    // First-person: ride at the chosen partner's eyes. Snap (no damp) so the view
+    // is locked to the head as they walk; look down the aisle, then at the partner
+    // once the couple has arrived at the altar.
+    if (firstPerson && headsRef) {
+      const self = firstPerson === "bride" ? headsRef.current.bride : headsRef.current.groom;
+      const partner = firstPerson === "bride" ? headsRef.current.groom : headsRef.current.bride;
+      camera.position.set(self.x, self.y, self.z - 0.12);
+      if (headsRef.current.arrived) {
+        lookTargetRef.current.set(partner.x, partner.y - 0.05, partner.z);
+      } else {
+        lookTargetRef.current.set(0, 1.2, -3.7);
+      }
+      camera.lookAt(lookTargetRef.current);
+      return;
+    }
     // A camera override (used by the Preview walkthrough) flies to an explicit
     // waypoint with a gentle living sway; otherwise fall back to the view-mode rig.
     const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode, venueType, activeStep);
