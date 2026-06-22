@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { ContactShadows, useGLTF } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -279,19 +280,12 @@ export function CeremonyScene({
             }
             position={[0, 3.1, -3.6]}
           />
-          <Environment frames={1} resolution={128}>
-            <Lightformer color={isDay ? "#fff6e2" : "#ffd2a0"} form="circle" intensity={isDay ? 4.2 : 3} position={[0, 2, -9]} scale={[7, 7, 1]} />
-            <Lightformer
-              color={isDay ? "#c2d8ee" : "#5a6190"}
-              form="rect"
-              intensity={isDay ? 1.7 : 1.1}
-              position={[0, 9, 0]}
-              rotation-x={Math.PI / 2}
-              scale={[16, 16, 1]}
-            />
-            <Lightformer color={isDay ? "#eef1ea" : "#caa05f"} form="rect" intensity={isDay ? 1 : 0.65} position={[7, 2.5, 3]} rotation-y={-Math.PI / 2} scale={[9, 3.5, 1]} />
-            <Lightformer color={isDay ? "#d6e2ee" : "#3c4258"} form="rect" intensity={isDay ? 0.8 : 0.4} position={[-7, 3, -2]} rotation-y={Math.PI / 2} scale={[9, 4, 1]} />
-          </Environment>
+          {/* Real CC0 interior HDRI (Poly Haven "lythwood_room") for warm image-based
+              lighting + true material reflections. Loaded imperatively via PMREM so it
+              never suspends (drei's <Environment files> suspended and crashed the
+              postprocessing EffectComposer). The directional key/rim lights below still
+              drive shadows + the day/dusk mood; HDRI intensity drops at dusk. */}
+          <HdrEnvironment intensity={isDay ? 0.72 : 0.45} url="/hdr/lythwood_room_1k.hdr" />
           {/* Skip the contact-shadow plane in the church: it's a second
               floor-parallel plane whose grazing edge z-fights the flat stone
               floor (the side strips by the pews blink). The directional key
@@ -1983,6 +1977,38 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
       ))}
     </group>
   );
+}
+
+// Image-based lighting from a real HDRI, loaded imperatively through a PMREM so it
+// never suspends (drei's <Environment files> did, which crashed the postprocessing
+// EffectComposer). The day/dusk intensity lives in its own effect so toggling the
+// mood never reloads the HDR.
+function HdrEnvironment({ intensity, url }: { intensity: number; url: string }) {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    let disposed = false;
+    const pmrem = new THREE.PMREMGenerator(gl);
+    new RGBELoader().load(url, (texture) => {
+      if (disposed) {
+        texture.dispose();
+        return;
+      }
+      const envMap = pmrem.fromEquirectangular(texture).texture;
+      scene.environment = envMap;
+      scene.environmentIntensity = intensity;
+      texture.dispose();
+      pmrem.dispose();
+    });
+    return () => {
+      disposed = true;
+      scene.environment = null;
+      scene.environmentIntensity = 1;
+      pmrem.dispose();
+    };
+  }, [gl, scene, url, intensity]);
+
+  return null;
 }
 
 function CameraSetup({
