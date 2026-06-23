@@ -554,7 +554,10 @@ function WeddingStageInterior({
         <>
           <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
             <planeGeometry args={[9.8, 12.8]} />
-            <meshStandardMaterial color={surface.floor} roughness={0.72} />
+            {/* Polished stone: low roughness + a touch of metalness so the floor
+                catches a soft warm reflection of the HDRI + candlelight, like the
+                reference's glossy nave floor. */}
+            <meshStandardMaterial color={surface.floor} envMapIntensity={1.15} metalness={0.1} roughness={0.46} />
           </mesh>
 
           <EditableSceneObject
