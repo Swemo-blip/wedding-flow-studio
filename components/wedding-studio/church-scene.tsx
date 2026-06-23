@@ -626,6 +626,24 @@ function WeddingStageInterior({
               );
             })}
 
+            {/* Candle stands lining the aisle (every other row) — the warm
+                candlelit aisle from the reference. Emissive + bloom only, no extra
+                lights, to stay mobile-safe. */}
+            {ceremonyVenue
+              ? rowIndexes
+                  .filter((rowIndex) => rowIndex % 2 === 0)
+                  .map((rowIndex) => {
+                    const z = -2.4 + rowIndex * 0.62;
+
+                    return (
+                      <group key={`aisle-candle-${rowIndex}`}>
+                        <CandleStand candleColor={palette.candle} position={[-0.82, 0, z]} scale={decorScale * 0.82} />
+                        <CandleStand candleColor={palette.candle} position={[0.82, 0, z]} scale={decorScale * 0.82} />
+                      </group>
+                    );
+                  })
+              : null}
+
             {ceremonyVenue
               ? activeStep !== "venue"
                 ? (
