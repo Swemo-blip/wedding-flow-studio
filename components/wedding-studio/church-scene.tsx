@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, useGLTF } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, SSAO, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -295,7 +295,20 @@ export function CeremonyScene({
           {venueType === "church" ? null : (
             <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
           )}
-          <EffectComposer multisampling={4}>
+          <EffectComposer enableNormalPass multisampling={4}>
+            {/* Subtle ambient occlusion to ground the people, pews and props.
+                NOTE: needs enableNormalPass. The headless preview sandbox can't
+                composite the extra pass, but it renders on real hardware. */}
+            <SSAO
+              distanceFalloff={0.02}
+              distanceThreshold={0.5}
+              intensity={12}
+              luminanceInfluence={0.7}
+              radius={0.08}
+              rangeFalloff={0.1}
+              rangeThreshold={0.5}
+              samples={16}
+            />
             <Bloom intensity={isDay ? 0.42 : 0.85} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.05 : 1} mipmapBlur />
             <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
           </EffectComposer>
