@@ -286,6 +286,7 @@ export function CeremonyScene({
               postprocessing EffectComposer). The directional key/rim lights below still
               drive shadows + the day/dusk mood; HDRI intensity drops at dusk. */}
           <HdrEnvironment intensity={isDay ? 0.72 : 0.45} url="/hdr/lythwood_room_1k.hdr" />
+          {venueType === "church" && activeStep !== "venue" ? <LightShafts isDay={isDay} /> : null}
           {/* Skip the contact-shadow plane in the church: it's a second
               floor-parallel plane whose grazing edge z-fights the flat stone
               floor (the side strips by the pews blink). The directional key
@@ -1315,6 +1316,43 @@ function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): Congre
   }
 
   return result;
+}
+
+// Soft volumetric "god-ray" beams streaming in from the side windows — additive,
+// low-opacity cones (no postprocessing pass, so it stays cheap + can't destabilize
+// the composer). Tilted down + inward across the nave, like the reference.
+function LightShaft({ isDay, position, sign }: { isDay: boolean; position: [number, number, number]; sign: number }) {
+  return (
+    <group position={position} rotation={[0.15, 0, sign * 0.6]}>
+      <mesh position={[0, -1.9, 0]}>
+        <coneGeometry args={[0.85, 4, 22, 1, true]} />
+        <meshBasicMaterial
+          blending={THREE.AdditiveBlending}
+          color={isDay ? "#fff3d6" : "#ffcf94"}
+          depthWrite={false}
+          opacity={isDay ? 0.14 : 0.07}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function LightShafts({ isDay }: { isDay: boolean }) {
+  const shaftZs = [-3.2, -0.7, 1.8];
+
+  return (
+    <group>
+      {shaftZs.map((z) => (
+        <group key={z}>
+          <LightShaft isDay={isDay} position={[-4.5, 2.5, z]} sign={1} />
+          <LightShaft isDay={isDay} position={[4.5, 2.5, z]} sign={-1} />
+        </group>
+      ))}
+    </group>
+  );
 }
 
 function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
