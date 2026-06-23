@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ReceptionSeating3D } from "@/components/reception/reception-seating-3d";
 import { TableCard } from "@/components/reception/table-card";
 import { Button } from "@/components/ui/button";
+import { Donut } from "@/components/ui/donut";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
 import { fileToDownscaledDataUrl } from "@/lib/image-upload";
@@ -61,6 +62,15 @@ export function ReceptionStudio() {
   const selectedTableGuests = selectedTable
     ? selectedTable.assignedGuestIds.map((guestId) => guests.find((guest) => guest.id === guestId)).filter((guest): guest is Guest => Boolean(guest))
     : [];
+  const totalSeats = dinnerTables.reduce((sum, table) => sum + table.capacity, 0);
+  const seatedCount = dinnerTables.reduce((sum, table) => sum + table.assignedGuestIds.length, 0);
+  const seatsRemaining = Math.max(0, totalSeats - seatedCount);
+  const capacityPercent = totalSeats > 0 ? Math.min(100, Math.round((seatedCount / totalSeats) * 100)) : 0;
+  const overCapacity = seatedCount > totalSeats;
+  const nearlyFull = !overCapacity && capacityPercent >= 85;
+  const comfortDonut = overCapacity || nearlyFull ? "gold" : "sage";
+  const comfortLabel = overCapacity ? "Over capacity" : nearlyFull ? "Nearly full" : "Comfortable";
+  const comfortSpacing = overCapacity ? "Tight — add room" : nearlyFull ? "Snug spacing" : "Good spacing";
 
   function updateSelectedGuest(updates: Partial<Guest>) {
     if (!selectedGuest) {
@@ -358,6 +368,29 @@ export function ReceptionStudio() {
       </section>
 
       <aside aria-label={t("Guest Identity")} className="studio-pane studio-pane-inspector">
+        <div className="studio-rail-block">
+          <p className="eyebrow">{t("Capacity & comfort")}</p>
+          <div className="studio-capacity">
+            <Donut percent={capacityPercent} tone={comfortDonut}>
+              <strong>{capacityPercent}%</strong>
+              <span>{t(comfortLabel)}</span>
+            </Donut>
+            <div className="studio-capacity-stats">
+              <div>
+                <strong>{seatedCount}</strong>
+                <span>{t("of {count} seats", { count: totalSeats })}</span>
+              </div>
+              <div>
+                <strong>{seatsRemaining}</strong>
+                <span>{t("seats remaining")}</span>
+              </div>
+              <span className="studio-capacity-spacing" data-tone={comfortDonut === "gold" ? "medium" : "confirmed"}>
+                {t(comfortSpacing)}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="studio-pane-head reception-identity-head">
           <span className="guests-avatar reception-identity-avatar" data-has-photo={selectedGuest?.photoUrl ? "true" : undefined}>
             {selectedGuest?.photoUrl ? (
