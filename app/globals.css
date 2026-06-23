@@ -14249,6 +14249,53 @@ a {
   text-transform: uppercase;
 }
 
+/* Visual lighting-mood picker — gradient preview cards (Ceremony controls) */
+.lighting-mood-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.lighting-mood-option {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 560;
+  text-align: center;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.lighting-mood-option[data-active="true"] {
+  border-color: rgba(159, 121, 59, 0.5);
+  color: var(--ink);
+  font-weight: 640;
+  box-shadow: inset 0 0 0 1px rgba(159, 121, 59, 0.3);
+}
+
+.lighting-mood-swatch {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(146, 118, 73, 0.2);
+}
+
+.lighting-mood-swatch[data-mood="day"] {
+  background: linear-gradient(158deg, #fdf3d8 0%, #f6e3b4 46%, #e7c98b 100%);
+}
+
+.lighting-mood-swatch[data-mood="dusk"] {
+  background: linear-gradient(158deg, #f6d9a8 0%, #d99a63 46%, #7d4a52 100%);
+}
+
 .studio-segment {
   display: inline-flex;
   gap: 4px;

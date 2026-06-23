@@ -104,12 +104,26 @@ export function CeremonyStudio() {
         <SceneEditor capacity={capacity} onChange={applyPlan} plan={plan} />
         <div className="studio-control-block">
           <span className="studio-control-label">{t("Lighting mood")}</span>
-          <div className="studio-segment" role="group" aria-label={t("Lighting mood")}>
-            <button aria-pressed={lighting === "day"} data-active={lighting === "day"} onClick={() => setLighting("day")} type="button">
-              {t("Daylight")}
+          <div className="lighting-mood-picker" role="group" aria-label={t("Lighting mood")}>
+            <button
+              aria-pressed={lighting === "day"}
+              className="lighting-mood-option"
+              data-active={lighting === "day"}
+              onClick={() => setLighting("day")}
+              type="button"
+            >
+              <span aria-hidden="true" className="lighting-mood-swatch" data-mood="day" />
+              <span>{t("Daylight")}</span>
             </button>
-            <button aria-pressed={lighting === "dusk"} data-active={lighting === "dusk"} onClick={() => setLighting("dusk")} type="button">
-              {t("Golden hour")}
+            <button
+              aria-pressed={lighting === "dusk"}
+              className="lighting-mood-option"
+              data-active={lighting === "dusk"}
+              onClick={() => setLighting("dusk")}
+              type="button"
+            >
+              <span aria-hidden="true" className="lighting-mood-swatch" data-mood="dusk" />
+              <span>{t("Golden hour")}</span>
             </button>
           </div>
         </div>
