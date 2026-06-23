@@ -11168,6 +11168,13 @@ a {
     display: block;
   }
 
+  /* The Overview hero turns compact once the sidebar collapses; hide the
+     processional rehearsal controls there (they overlapped the "Edit in 3D
+     Studio" button) — they stay available in the Ceremony studio's larger stage. */
+  .venue-hero .ceremony-processional-controls {
+    display: none;
+  }
+
   .route-ribbon {
     position: static;
     grid-template-columns: minmax(0, 1fr) auto;
