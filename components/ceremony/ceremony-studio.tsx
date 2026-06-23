@@ -2,8 +2,10 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { SceneEditor } from "@/components/overview/scene-editor";
+import { Donut } from "@/components/ui/donut";
 import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
+import { useLocalProject } from "@/lib/use-local-project";
 import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
   calculateWeddingStudioCapacity,
@@ -33,86 +35,32 @@ const PRESET_LABELS: Record<PresetKey, string> = {
   top: "Top view"
 };
 
-type InspectorRow = { label: string; value: string };
-type Inspector = {
-  eyebrow: string;
-  title: string;
-  rows: InspectorRow[];
-  recommendation: string;
-  tone: "confirmed" | "medium" | "high";
-};
+const NEXT_DECISIONS: Array<{ due: string; label: string }> = [
+  { due: "Due in 3 days", label: "Confirm ceremony music" },
+  { due: "Due in 5 days", label: "Review the final proposal" },
+  { due: "Due in 1 week", label: "Finalize the seating chart" }
+];
 
-function buildInspector(
-  objectId: StudioSceneObjectId,
-  plan: WeddingStudioPlan,
-  capacity: WeddingStudioCapacity,
-  t: (source: string, params?: Record<string, string | number>) => string
-): Inspector {
-  const accessibility =
-    plan.accessibilitySeats > 0
-      ? t("{count} accessible seats reserved near the aisle.", { count: plan.accessibilitySeats })
-      : t("No accessible seats reserved yet.");
-
-  const capacityTone = capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed";
-  const capacityRecommendation =
-    capacity.capacityStatus === "over_capacity"
-      ? t("Over comfortable capacity — consider a larger venue or fewer guests.")
-      : capacity.capacityStatus === "full"
-        ? t("Nearly full — the aisle and guest flow will feel tight at this count.")
-        : t("Fills the room comfortably with a clear aisle.");
-
-  if (objectId === "focalPoint") {
-    return {
-      eyebrow: t("Focal point"),
-      title: t("Altar & ceremony front"),
-      rows: [
-        { label: t("Style"), value: plan.style },
-        { label: t("Decoration"), value: plan.decorLevel },
-        { label: t("Color direction"), value: plan.colorDirection }
-      ],
-      recommendation: t("The altar, florals and lighting follow the chosen style and decoration level."),
-      tone: "confirmed"
-    };
+function comfortFromCapacity(status: WeddingStudioCapacity["capacityStatus"]): {
+  donut: "gold" | "sage";
+  label: string;
+  spacing: string;
+} {
+  if (status === "over_capacity") {
+    return { donut: "gold", label: "Over capacity", spacing: "Tight — add room" };
   }
-
-  if (objectId === "ceremonyPath") {
-    return {
-      eyebrow: t("Aisle"),
-      title: t("Processional aisle"),
-      rows: [
-        { label: t("Guests"), value: `${plan.guestCount}` },
-        { label: t("Rows"), value: `${capacity.recommendedRows}` }
-      ],
-      recommendation:
-        capacity.capacityStatus === "balanced"
-          ? t("The aisle stays clear for the processional.")
-          : t("The aisle may feel narrow at full capacity."),
-      tone: capacityTone
-    };
+  if (status === "full") {
+    return { donut: "gold", label: "Nearly full", spacing: "Snug spacing" };
   }
+  return { donut: "sage", label: "Comfortable", spacing: "Good spacing" };
+}
 
-  if (objectId === "lighting") {
-    return {
-      eyebrow: t("Lighting"),
-      title: t("Ceremony lighting"),
-      rows: [{ label: t("Decoration"), value: plan.decorLevel }],
-      recommendation: t("Warm lighting lifts the altar and softens the room for photos."),
-      tone: "confirmed"
-    };
+function formatWeddingDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
   }
-
-  return {
-    eyebrow: t("Guest seating"),
-    title: t("{count} guests", { count: plan.guestCount }),
-    rows: [
-      { label: t("Rows"), value: t("{count} rows", { count: capacity.recommendedRows }) },
-      { label: t("Seats per row"), value: `${capacity.seatsPerRow}` },
-      { label: t("Capacity used"), value: `${capacity.usedCapacityPercent}%` },
-      { label: t("Accessible"), value: accessibility }
-    ],
-    recommendation: capacityRecommendation,
-    tone: capacityTone
-  };
+  return date.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export function CeremonyStudio() {
@@ -140,8 +88,11 @@ export function CeremonyStudio() {
     writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
   }
 
+  const { wedding } = useLocalProject();
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
-  const inspector = buildInspector(selectedObjectId, plan, capacity, t);
+  const comfort = comfortFromCapacity(capacity.capacityStatus);
+  const seatedCount = Math.min(plan.guestCount, capacity.totalCapacity);
+  const seatsRemaining = Math.max(0, capacity.totalCapacity - plan.guestCount);
 
   return (
     <div className="studio-workspace">
@@ -240,21 +191,70 @@ export function CeremonyStudio() {
         </div>
       </section>
 
-      <aside aria-label={t("Inspector")} className="studio-pane studio-pane-inspector">
-        <div className="studio-pane-head">
-          <p className="eyebrow">{inspector.eyebrow}</p>
-          <h3>{inspector.title}</h3>
-        </div>
-        <dl className="studio-inspector-list">
-          {inspector.rows.map((row) => (
-            <div className="studio-inspector-row" key={row.label}>
-              <dt>{row.label}</dt>
-              <dd>{row.value}</dd>
+      <aside aria-label={t("Ceremony summary")} className="studio-pane studio-pane-inspector">
+        <div className="studio-rail-block">
+          <p className="eyebrow">{t("Ceremony summary")}</p>
+          <dl className="studio-inspector-list">
+            <div className="studio-inspector-row">
+              <dt>{t("Date")}</dt>
+              <dd>{formatWeddingDate(wedding.date)}</dd>
             </div>
-          ))}
-        </dl>
-        <div className="studio-inspector-note" data-tone={inspector.tone}>
-          <p>{inspector.recommendation}</p>
+            <div className="studio-inspector-row">
+              <dt>{t("Venue")}</dt>
+              <dd>{wedding.ceremonyLocation}</dd>
+            </div>
+            <div className="studio-inspector-row">
+              <dt>{t("Guests")}</dt>
+              <dd>
+                {plan.guestCount} {t("invited")} · {seatedCount} {t("seated")}
+              </dd>
+            </div>
+            <div className="studio-inspector-row">
+              <dt>{t("Style")}</dt>
+              <dd>{plan.style}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="studio-rail-block">
+          <p className="eyebrow">{t("Capacity & comfort")}</p>
+          <div className="studio-capacity">
+            <Donut percent={capacity.usedCapacityPercent} tone={comfort.donut}>
+              <strong>{capacity.usedCapacityPercent}%</strong>
+              <span>{t(comfort.label)}</span>
+            </Donut>
+            <div className="studio-capacity-stats">
+              <div>
+                <strong>{seatedCount}</strong>
+                <span>{t("of {count} seats", { count: capacity.totalCapacity })}</span>
+              </div>
+              <div>
+                <strong>{seatsRemaining}</strong>
+                <span>{t("seats remaining")}</span>
+              </div>
+              <span className="studio-capacity-spacing" data-tone={comfort.donut === "gold" ? "medium" : "confirmed"}>
+                {t(comfort.spacing)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="studio-rail-block">
+          <p className="eyebrow">{t("Next decisions")}</p>
+          <ul className="studio-decision-list">
+            {NEXT_DECISIONS.map((decision) => (
+              <li key={decision.label}>
+                <span aria-hidden="true" className="studio-decision-mark" />
+                <span className="studio-decision-label">{t(decision.label)}</span>
+                <small>{t(decision.due)}</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="studio-rail-block">
+          <p className="eyebrow">{t("Notes")}</p>
+          <p className="studio-rail-note">{t("The couple would like soft candlelight for the ceremony.")}</p>
         </div>
       </aside>
     </div>

@@ -13315,6 +13315,106 @@ a {
   text-transform: uppercase;
 }
 
+/* Studio summary rail (Ceremony / Reception): summary + capacity + decisions + notes */
+.studio-rail-block {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.studio-rail-block:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.studio-capacity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.studio-capacity-stats {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.studio-capacity-stats > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.studio-capacity-stats strong {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 640;
+}
+
+.studio-capacity-stats span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.studio-capacity-spacing {
+  width: fit-content;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 620;
+}
+
+.studio-capacity-spacing[data-tone="confirmed"] {
+  background: rgba(90, 122, 95, 0.14);
+  color: var(--success);
+}
+
+.studio-capacity-spacing[data-tone="medium"] {
+  background: rgba(177, 134, 60, 0.16);
+  color: var(--warning);
+}
+
+.studio-decision-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-decision-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.studio-decision-mark {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(146, 118, 73, 0.5);
+  border-radius: 4px;
+}
+
+.studio-decision-label {
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+
+.studio-decision-list small {
+  color: var(--subtle);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.studio-rail-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 .glance-seating {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
