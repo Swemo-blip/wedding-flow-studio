@@ -878,6 +878,30 @@ function Crucifix({ position }: { position: [number, number, number] }) {
   );
 }
 
+// A tall white + greenery floral statement on a pale urn, flanking the altar to
+// frame the cross — the lush florals from the reference church.
+function ChurchAltarFloral({ palette, position }: { palette: Palette; position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh castShadow position={[0, 0.46, 0]}>
+        <cylinderGeometry args={[0.08, 0.12, 0.92, 14]} />
+        <meshStandardMaterial color="#e6dcc6" roughness={0.55} />
+      </mesh>
+      <FlowerCluster palette={palette} position={[0, 1.08, 0]} radius={0.4} />
+      <FlowerCluster palette={palette} position={[0.2, 0.96, 0.05]} radius={0.26} />
+      <FlowerCluster palette={palette} position={[-0.2, 0.94, 0.05]} radius={0.24} />
+      <mesh castShadow position={[0.16, 0.74, 0.06]}>
+        <sphereGeometry args={[0.13, 8, 8]} />
+        <meshStandardMaterial color="#6f7f56" roughness={0.85} />
+      </mesh>
+      <mesh castShadow position={[-0.17, 0.7, 0.05]}>
+        <sphereGeometry args={[0.11, 8, 8]} />
+        <meshStandardMaterial color="#7a8a5e" roughness={0.85} />
+      </mesh>
+    </group>
+  );
+}
+
 function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Palette }) {
   return (
     <group position={[0, 0, -4.55]}>
@@ -890,6 +914,8 @@ function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Pal
         <boxGeometry args={[2.24, 0.05, 0.88]} />
         <meshStandardMaterial color={palette.accent} metalness={0.7} roughness={0.32} />
       </mesh>
+      <ChurchAltarFloral palette={palette} position={[-1.28, 0, 0.16]} />
+      <ChurchAltarFloral palette={palette} position={[1.28, 0, 0.16]} />
       <Suspense fallback={null}>
         <AltarArrangement palette={palette} position={[-0.86, 0.655, 0.24]} />
         <AltarArrangement palette={palette} position={[0.86, 0.655, 0.24]} />
