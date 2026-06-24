@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { SceneEditor } from "@/components/overview/scene-editor";
 import { Donut } from "@/components/ui/donut";
+import { StyleReferences } from "@/components/wedding/style-references";
 import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -95,6 +96,7 @@ export function CeremonyStudio() {
   const seatsRemaining = Math.max(0, capacity.totalCapacity - plan.guestCount);
 
   return (
+    <>
     <div className="studio-workspace">
       <aside aria-label={t("Ceremony controls")} className="studio-pane studio-pane-controls">
         <div className="studio-pane-head">
@@ -272,5 +274,7 @@ export function CeremonyStudio() {
         </div>
       </aside>
     </div>
+    <StyleReferences />
+    </>
   );
 }

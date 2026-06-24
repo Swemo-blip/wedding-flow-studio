@@ -13422,6 +13422,62 @@ a {
   line-height: 1.5;
 }
 
+/* Style references gallery — photoreal/AI image tiles (graceful gradient
+   placeholders until real photos are dropped into public/style-references/) */
+.style-references {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 18px 20px;
+}
+
+.style-references-head h2 {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.style-references-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.style-reference-tile {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.style-reference-tile img,
+.style-reference-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  border: 1px solid rgba(146, 118, 73, 0.2);
+  object-fit: cover;
+  background-size: cover;
+  background-position: center;
+}
+
+.style-reference-tile figcaption {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 560;
+}
+
+@media (max-width: 860px) {
+  .style-references-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .glance-seating {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
