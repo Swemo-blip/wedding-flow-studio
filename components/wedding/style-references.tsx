@@ -21,7 +21,7 @@ export type StyleReference = {
   image?: string;
 };
 
-const CEREMONY_REFERENCES: StyleReference[] = [
+export const CEREMONY_REFERENCES: StyleReference[] = [
   { id: "arch", label: "Floral arch", mood: "linear-gradient(140deg, #f4ece0, #dfe8d2 55%, #b9c79f)", image: "/style-references/ceremony-floral-arch.jpg" },
   { id: "aisle", label: "Candlelit aisle", mood: "linear-gradient(140deg, #fbe6c9, #e7c98b 60%, #caa05f)", image: "/style-references/ceremony-candlelit-aisle.jpg" },
   { id: "glass", label: "Stained glass", mood: "linear-gradient(140deg, #cdd8ea, #b48fae 52%, #8a6a52)", image: "/style-references/ceremony-stained-glass.jpg" },
@@ -80,6 +80,34 @@ function StyleReferenceTile({ reference }: { reference: StyleReference }) {
       ) : null}
       <figcaption>{t(reference.label)}</figcaption>
     </figure>
+  );
+}
+
+// A read-only thumbnail (no upload controls) for the Style References summary
+// card — resolves uploaded image › committed /public file › gradient placeholder.
+export function StyleReferenceThumb({ reference }: { reference: StyleReference }) {
+  const { t } = useTranslation();
+  const [uploaded] = useState<string | null>(() => readStoredImage(`wedding-flow-studio.style-ref.${reference.id}`));
+  const [staticFailed, setStaticFailed] = useState(!reference.image);
+  const src = uploaded ?? (staticFailed ? null : reference.image);
+
+  return src ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt={t(reference.label)}
+      className="style-ref-thumb"
+      loading="lazy"
+      onError={() => setStaticFailed(true)}
+      src={src}
+      suppressHydrationWarning
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="style-ref-thumb style-reference-placeholder"
+      style={{ backgroundImage: reference.mood }}
+      title={t(reference.label)}
+    />
   );
 }
 

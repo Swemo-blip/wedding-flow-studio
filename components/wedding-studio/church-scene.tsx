@@ -40,6 +40,7 @@ type CeremonySceneProps = {
   firstPerson?: CeremonyFirstPerson;
   capacity: WeddingStudioCapacity;
   colorDirection: StudioColorDirection;
+  highQuality?: boolean;
   lighting?: SceneLighting;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
@@ -201,6 +202,7 @@ export function CeremonyScene({
   viewMode,
   cameraOverride = null,
   firstPerson = null,
+  highQuality = true,
   lighting = "dusk",
   zoom = 1
 }: CeremonySceneProps) {
@@ -237,8 +239,8 @@ export function CeremonyScene({
       >
         <Canvas
           camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, venueType, activeStep) }}
-          dpr={[1, 1.8]}
-          gl={{ toneMappingExposure: 1.02 }}
+          dpr={highQuality ? [1, 2] : [1, 1.3]}
+          gl={{ preserveDrawingBuffer: true, toneMappingExposure: 1.02 }}
           shadows={{ type: THREE.PCFSoftShadowMap }}
         >
           <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={venueType} viewMode={viewMode} zoom={zoom} />
