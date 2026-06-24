@@ -13449,9 +13449,55 @@ a {
 }
 
 .style-reference-tile {
+  position: relative;
   display: grid;
   gap: 7px;
   margin: 0;
+}
+
+.style-reference-upload {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
+.style-reference-upload span {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 246, 236, 0.18);
+  background: rgba(33, 29, 20, 0.62);
+  color: #fbf6ec;
+  font-size: 0.7rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.style-reference-upload:hover span {
+  background: rgba(33, 29, 20, 0.82);
+}
+
+.style-reference-remove {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 246, 236, 0.18);
+  background: rgba(33, 29, 20, 0.62);
+  color: #fbf6ec;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.style-reference-remove:hover {
+  background: rgba(33, 29, 20, 0.82);
 }
 
 .style-reference-tile img,

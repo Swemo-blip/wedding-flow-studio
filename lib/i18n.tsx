@@ -532,6 +532,8 @@ const sv: Record<string, string> = {
   "Candlelit aisle": "Ljussatt mittgång",
   "Stained glass": "Glasmålning",
   "Palette & details": "Palett & detaljer",
+  "Upload": "Ladda upp",
+  "Replace": "Byt bild",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

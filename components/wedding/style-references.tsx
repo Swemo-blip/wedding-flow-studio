@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { fileToDownscaledDataUrl } from "@/lib/image-upload";
+
+function readStoredImage(storageKey: string): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(storageKey);
+}
 
 export type StyleReference = {
   id: string;
@@ -24,16 +30,54 @@ const CEREMONY_REFERENCES: StyleReference[] = [
 
 function StyleReferenceTile({ reference }: { reference: StyleReference }) {
   const { t } = useTranslation();
-  const [failed, setFailed] = useState(!reference.image);
+  const storageKey = `wedding-flow-studio.style-ref.${reference.id}`;
+  // Uploaded images live in localStorage (browser-only, no backend) — the same
+  // approach as the per-guest photos. Read in a lazy initializer (not an effect)
+  // so it's hydration-safe: server + client both render an <img>, only src differs.
+  const [uploaded, setUploaded] = useState<string | null>(() => readStoredImage(storageKey));
+  const [staticFailed, setStaticFailed] = useState(!reference.image);
+
+  async function handleUpload(file: File | null) {
+    if (!file) return;
+    const dataUrl = await fileToDownscaledDataUrl(file, 640);
+    try {
+      window.localStorage.setItem(storageKey, dataUrl);
+    } catch {
+      // localStorage full — keep it in memory for this session at least.
+    }
+    setUploaded(dataUrl);
+  }
+
+  function clearUpload() {
+    window.localStorage.removeItem(storageKey);
+    setUploaded(null);
+  }
+
+  // Priority: your uploaded image › a committed /public file › gradient placeholder.
+  const src = uploaded ?? (staticFailed ? null : reference.image);
 
   return (
     <figure className="style-reference-tile">
-      {failed ? (
-        <span aria-hidden="true" className="style-reference-placeholder" style={{ backgroundImage: reference.mood }} />
-      ) : (
+      {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img alt={t(reference.label)} loading="lazy" onError={() => setFailed(true)} src={reference.image} />
+        <img alt={t(reference.label)} loading="lazy" onError={() => setStaticFailed(true)} src={src} suppressHydrationWarning />
+      ) : (
+        <span aria-hidden="true" className="style-reference-placeholder" style={{ backgroundImage: reference.mood }} />
       )}
+      <label className="style-reference-upload">
+        <input
+          accept="image/*"
+          hidden
+          onChange={(event) => handleUpload(event.target.files?.[0] ?? null)}
+          type="file"
+        />
+        <span>{uploaded ? t("Replace") : t("Upload")}</span>
+      </label>
+      {uploaded ? (
+        <button aria-label={t("Remove photo")} className="style-reference-remove" onClick={clearUpload} type="button">
+          ×
+        </button>
+      ) : null}
       <figcaption>{t(reference.label)}</figcaption>
     </figure>
   );
