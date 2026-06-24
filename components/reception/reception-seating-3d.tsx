@@ -2,10 +2,20 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Billboard, Html, OrbitControls, useGLTF } from "@react-three/drei";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { type ComponentRef, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
+
+export type ReceptionCameraMode = "walk" | "orbit" | "fly";
+
+// Camera framings for the Walk / Orbit / Fly controls. Applied to the live
+// OrbitControls so the guest can still orbit freely afterwards.
+const CAMERA_MODES: Record<ReceptionCameraMode, { position: [number, number, number]; target: [number, number, number] }> = {
+  orbit: { position: [0, 5, 6.6], target: [0, 0.3, 0] },
+  walk: { position: [0, 1.7, 5.6], target: [0, 1, 0] },
+  fly: { position: [0, 9.2, 7], target: [0, 0, 0] }
+};
 
 // Reuse the baked, vertex-colored seated congregation variants as clickable
 // dinner guests so the seating editor shows the real, varied crowd.
@@ -302,13 +312,17 @@ function SeatingScene({
 }
 
 export function ReceptionSeating3D({
+  cameraMode = "orbit",
   guests,
+  highQuality = true,
   onReassignGuest,
   onSelectGuest,
   selectedGuestId,
   tables
 }: {
+  cameraMode?: ReceptionCameraMode;
   guests: Guest[];
+  highQuality?: boolean;
   onReassignGuest?: (guestId: string, tableId: string) => void;
   onSelectGuest: (id: string) => void;
   selectedGuestId: string;
@@ -316,10 +330,28 @@ export function ReceptionSeating3D({
 }) {
   const { t } = useTranslation();
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+
+  // Re-frame the camera when the Walk / Orbit / Fly mode changes, then hand
+  // control back to OrbitControls so the guest can keep orbiting.
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    const framing = CAMERA_MODES[cameraMode];
+    controls.object.position.set(...framing.position);
+    controls.target.set(...framing.target);
+    controls.update();
+  }, [cameraMode]);
 
   return (
     <div className="reception-seating-3d" aria-label={t("3D seating")}>
-      <Canvas camera={{ far: 60, fov: 42, near: 0.1, position: [0, 5, 6.6] }} dpr={[1, 1.8]} onPointerMissed={() => setDraggedId(null)} shadows>
+      <Canvas
+        camera={{ far: 60, fov: 42, near: 0.1, position: [0, 5, 6.6] }}
+        dpr={highQuality ? [1, 2] : [1, 1.3]}
+        gl={{ preserveDrawingBuffer: true }}
+        onPointerMissed={() => setDraggedId(null)}
+        shadows
+      >
         <color args={["#f4ecdb"]} attach="background" />
         <ambientLight intensity={0.85} />
         <hemisphereLight args={["#fff3d8", "#cdbf9d", 0.6]} />
@@ -341,6 +373,7 @@ export function ReceptionSeating3D({
           maxDistance={12}
           maxPolarAngle={Math.PI / 2.25}
           minDistance={3}
+          ref={controlsRef}
           target={[0, 0.3, 0]}
         />
       </Canvas>
