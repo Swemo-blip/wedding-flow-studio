@@ -14925,6 +14925,26 @@ a {
   .studio-stage-canvas {
     min-height: 380px;
   }
+  /* Keep the canvas tabs on one line on phones; scroll the pill if it can't
+     fit rather than wrapping each label across two rows. */
+  .stage-tabbar {
+    justify-content: flex-start;
+  }
+  .stage-tabs {
+    gap: 1px;
+    margin: 0;
+    padding: 3px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stage-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .stage-tabs button {
+    padding: 6px 10px;
+    font-size: 0.73rem;
+  }
 }
 
 /* ============================================================
@@ -15133,6 +15153,7 @@ a {
   font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 580;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background 150ms ease,
