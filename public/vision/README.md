@@ -20,3 +20,13 @@ Generate these from your style references (e.g. Midjourney / DALL·E / Sora-imag
 using the prompts in `public/style-references/README.md`. Landscape ~3:2, ≥1400px
 wide, exported under ~1 MB. Until a file or upload exists, the tab shows an
 elegant placeholder prompting you to add one.
+
+## Current images are swappable placeholders
+`ceremony.jpg` and `reception.jpg` are license-free stock photos from Pexels
+(Pexels License — free for commercial use, no attribution required), chosen to
+match the warm-church / draped-ballroom look:
+- ceremony.jpg — Pexels photo 3212018 (church ceremony, floral arch + cross)
+- reception.jpg — Pexels photo 32593148 (draped-ceiling ballroom, round tables)
+
+Swap them with the couple's own renders anytime — overwrite these files, or use
+"Upload vision" / "Paste link" in the app.
