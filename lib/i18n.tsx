@@ -616,6 +616,7 @@ const sv: Record<string, string> = {
   "Add a photoreal render of your day — generate one from your style references, then upload it here.": "Lägg till en fotorealistisk bild av er dag — skapa en från dina stilreferenser och ladda upp den här.",
   "Replace vision": "Byt vision",
   "Upload vision": "Ladda upp vision",
+  "Drop a photoreal render here, or click to upload — generate one from your style references.": "Släpp en fotorealistisk bild här, eller klicka för att ladda upp — skapa en från dina stilreferenser.",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

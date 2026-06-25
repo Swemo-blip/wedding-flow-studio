@@ -15677,23 +15677,25 @@ a {
   place-content: center;
   gap: 8px;
   padding: 40px;
+  border: 0;
   text-align: center;
   background: linear-gradient(150deg, #f4ece0, #e7d9bf 55%, #cdb88f);
+  cursor: pointer;
+  font: inherit;
 }
 
 .vision-empty .eyebrow {
   margin: 0;
 }
 
-.vision-empty h3 {
-  margin: 0;
+.vision-empty-title {
   color: var(--ink);
   font-family: var(--font-serif);
   font-size: 1.7rem;
   font-weight: 600;
 }
 
-.vision-empty p {
+.vision-empty-text {
   max-width: 44ch;
   margin: 0 auto;
   color: var(--muted);
@@ -15701,11 +15703,25 @@ a {
   line-height: 1.5;
 }
 
+.vision-view[data-dragover="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: 7;
+  border: 2px dashed #c19a52;
+  border-radius: 12px;
+  background: rgba(193, 154, 82, 0.08);
+  pointer-events: none;
+}
+
 .vision-upload {
   position: absolute;
   bottom: 14px;
   left: 14px;
   z-index: 9;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
 }
 
