@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, ChevronRight, Maximize2, Music, Play, Settings, Sun, Users } from "lucide-react";
 import { Donut } from "@/components/ui/donut";
 import { CEREMONY_REFERENCES, StyleReferenceThumb, StyleReferences } from "@/components/wedding/style-references";
+import { VisionView } from "@/components/wedding/vision-view";
 import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -23,7 +24,7 @@ import {
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
-type CanvasTab = "studio" | "plan" | "camera";
+type CanvasTab = "vision" | "studio" | "plan" | "camera";
 type CameraMotion = "walk" | "orbit" | "fly";
 type PresetKey = "overview" | "entrance" | "couple" | "side";
 
@@ -113,8 +114,9 @@ export function CeremonyStudio() {
   const [sceneEdits] = useState(defaultStudioSceneEdits);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("guestSeating");
 
-  // Canvas view state.
-  const [canvasTab, setCanvasTab] = useState<CanvasTab>("studio");
+  // Canvas view state. Default to the photoreal Vision so the first thing the
+  // couple sees is the realistic render, not the stylised plan.
+  const [canvasTab, setCanvasTab] = useState<CanvasTab>("vision");
   const [cameraMotion, setCameraMotion] = useState<CameraMotion>("orbit");
   const [preset, setPreset] = useState<PresetKey>("overview");
   const [firstPerson, setFirstPerson] = useState<CeremonyFirstPerson>(null);
@@ -362,6 +364,14 @@ export function CeremonyStudio() {
           <div className="stage-tabbar">
             <div aria-label={t("Canvas view")} className="stage-tabs" role="group">
               <button
+                aria-pressed={canvasTab === "vision"}
+                data-active={canvasTab === "vision"}
+                onClick={() => setCanvasTab("vision")}
+                type="button"
+              >
+                {t("Vision")}
+              </button>
+              <button
                 aria-pressed={canvasTab === "studio"}
                 data-active={canvasTab === "studio"}
                 onClick={() => setCanvasTab("studio")}
@@ -386,37 +396,39 @@ export function CeremonyStudio() {
                 {t("Camera Views")}
               </button>
             </div>
-            <div className="stage-icons">
-              <button
-                aria-label={t("Toggle lighting")}
-                aria-pressed={lighting === "dusk"}
-                className="stage-icon"
-                data-active={lighting === "dusk"}
-                onClick={() => setLighting((previous) => (previous === "day" ? "dusk" : "day"))}
-                title={t("Toggle lighting")}
-                type="button"
-              >
-                <Sun aria-hidden="true" size={16} />
-              </button>
-              <button
-                aria-label={t("Reset view")}
-                className="stage-icon"
-                onClick={resetView}
-                title={t("Reset view")}
-                type="button"
-              >
-                <Settings aria-hidden="true" size={16} />
-              </button>
-              <button
-                aria-label={t("Save a still")}
-                className="stage-icon"
-                onClick={captureView}
-                title={t("Save a still")}
-                type="button"
-              >
-                <Camera aria-hidden="true" size={16} />
-              </button>
-            </div>
+            {canvasTab !== "vision" ? (
+              <div className="stage-icons">
+                <button
+                  aria-label={t("Toggle lighting")}
+                  aria-pressed={lighting === "dusk"}
+                  className="stage-icon"
+                  data-active={lighting === "dusk"}
+                  onClick={() => setLighting((previous) => (previous === "day" ? "dusk" : "day"))}
+                  title={t("Toggle lighting")}
+                  type="button"
+                >
+                  <Sun aria-hidden="true" size={16} />
+                </button>
+                <button
+                  aria-label={t("Reset view")}
+                  className="stage-icon"
+                  onClick={resetView}
+                  title={t("Reset view")}
+                  type="button"
+                >
+                  <Settings aria-hidden="true" size={16} />
+                </button>
+                <button
+                  aria-label={t("Save a still")}
+                  className="stage-icon"
+                  onClick={captureView}
+                  title={t("Save a still")}
+                  type="button"
+                >
+                  <Camera aria-hidden="true" size={16} />
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="studio-stage-canvas" ref={stageRef}>
@@ -439,6 +451,8 @@ export function CeremonyStudio() {
                 viewMode={viewMode}
               />
             </Suspense>
+
+            {canvasTab === "vision" ? <VisionView heading="Your ceremony, realised" room="ceremony" /> : null}
 
             {canvasTab === "camera" ? (
               <div aria-label={t("Camera Views")} className="stage-overlay stage-overlay-center" role="group">
@@ -505,15 +519,17 @@ export function CeremonyStudio() {
             ) : null}
 
             <div className="stage-overlay stage-overlay-right">
-              <button
-                aria-pressed={highQuality}
-                className="stage-hd"
-                data-active={highQuality}
-                onClick={() => setHighQuality((previous) => !previous)}
-                type="button"
-              >
-                {t("HD")}
-              </button>
+              {canvasTab === "studio" || canvasTab === "camera" ? (
+                <button
+                  aria-pressed={highQuality}
+                  className="stage-hd"
+                  data-active={highQuality}
+                  onClick={() => setHighQuality((previous) => !previous)}
+                  type="button"
+                >
+                  {t("HD")}
+                </button>
+              ) : null}
               <button aria-label={t("Fullscreen")} className="stage-icon" onClick={toggleFullscreen} title={t("Fullscreen")} type="button">
                 <Maximize2 aria-hidden="true" size={15} />
               </button>

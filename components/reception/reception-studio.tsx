@@ -7,12 +7,13 @@ import { ReceptionSeating3D, type ReceptionCameraMode } from "@/components/recep
 import { TableCard } from "@/components/reception/table-card";
 import { Donut } from "@/components/ui/donut";
 import { CEREMONY_REFERENCES, StyleReferenceThumb, StyleReferences } from "@/components/wedding/style-references";
+import { VisionView } from "@/components/wedding/vision-view";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { venueLayout } from "@/lib/wedding-data";
 import { colorDirectionOptions, type StudioColorDirection } from "@/lib/wedding-studio-plan";
 
-type CanvasTab = "studio" | "plan" | "camera";
+type CanvasTab = "vision" | "studio" | "plan" | "camera";
 
 const TABLE_STYLES = ["Round", "Long", "Mixed"];
 const DANCE_FLOOR_SIZES = ["Small (12' x 12')", "Medium (16' x 16')", "Large (20' x 20')"];
@@ -53,7 +54,7 @@ export function ReceptionStudio() {
   const [selectedGuestId, setSelectedGuestId] = useState("anna-carter");
 
   // Canvas view state.
-  const [canvasTab, setCanvasTab] = useState<CanvasTab>("studio");
+  const [canvasTab, setCanvasTab] = useState<CanvasTab>("vision");
   const [cameraMode, setCameraMode] = useState<ReceptionCameraMode>("orbit");
   const [highQuality, setHighQuality] = useState(true);
 
@@ -124,7 +125,7 @@ export function ReceptionStudio() {
     }
   }
 
-  const showThreeD = canvasTab !== "plan";
+  const showThreeD = canvasTab === "studio" || canvasTab === "camera";
 
   return (
     <>
@@ -360,6 +361,9 @@ export function ReceptionStudio() {
         <section aria-label={t("Reception preview")} className="studio-pane studio-pane-stage">
           <div className="stage-tabbar">
             <div aria-label={t("Canvas view")} className="stage-tabs" role="group">
+              <button aria-pressed={canvasTab === "vision"} data-active={canvasTab === "vision"} onClick={() => setCanvasTab("vision")} type="button">
+                {t("Vision")}
+              </button>
               <button aria-pressed={canvasTab === "studio"} data-active={canvasTab === "studio"} onClick={() => setCanvasTab("studio")} type="button">
                 {t("3D Studio")}
               </button>
@@ -370,17 +374,20 @@ export function ReceptionStudio() {
                 {t("Camera Views")}
               </button>
             </div>
-            <div className="stage-icons">
-              <button aria-label={t("Reset view")} className="stage-icon" onClick={resetView} title={t("Reset view")} type="button">
-                <Settings aria-hidden="true" size={16} />
-              </button>
-              <button aria-label={t("Save a still")} className="stage-icon" onClick={captureView} title={t("Save a still")} type="button">
-                <Camera aria-hidden="true" size={16} />
-              </button>
-            </div>
+            {canvasTab !== "vision" ? (
+              <div className="stage-icons">
+                <button aria-label={t("Reset view")} className="stage-icon" onClick={resetView} title={t("Reset view")} type="button">
+                  <Settings aria-hidden="true" size={16} />
+                </button>
+                <button aria-label={t("Save a still")} className="stage-icon" onClick={captureView} title={t("Save a still")} type="button">
+                  <Camera aria-hidden="true" size={16} />
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="studio-stage-canvas" ref={stageRef}>
+            {canvasTab === "vision" ? <VisionView heading="Your reception, realised" room="reception" /> : null}
             {showThreeD ? (
               <ReceptionSeating3D
                 cameraMode={cameraMode}
@@ -441,9 +448,11 @@ export function ReceptionStudio() {
             ) : null}
 
             <div className="stage-overlay stage-overlay-right">
-              <button aria-pressed={highQuality} className="stage-hd" data-active={highQuality} onClick={() => setHighQuality((value) => !value)} type="button">
-                {t("HD")}
-              </button>
+              {showThreeD ? (
+                <button aria-pressed={highQuality} className="stage-hd" data-active={highQuality} onClick={() => setHighQuality((value) => !value)} type="button">
+                  {t("HD")}
+                </button>
+              ) : null}
               <button aria-label={t("Fullscreen")} className="stage-icon" onClick={toggleFullscreen} title={t("Fullscreen")} type="button">
                 <Maximize2 aria-hidden="true" size={15} />
               </button>

@@ -15102,7 +15102,7 @@ a {
 .stage-tabbar {
   position: absolute;
   inset: 14px 14px auto 14px;
-  z-index: 5;
+  z-index: 8;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -15187,7 +15187,7 @@ a {
 .stage-overlay {
   position: absolute;
   bottom: 14px;
-  z-index: 5;
+  z-index: 8;
   display: inline-flex;
   gap: 3px;
   padding: 4px;
@@ -15631,4 +15631,97 @@ a {
   .studio-pane-inspector {
     min-height: 0;
   }
+}
+
+/* Vision view — the photoreal hero image filling the studio canvas. Sits above
+   the WebGL canvas (z 1) and the scene's own controls (z 4), below the floating
+   chrome (z 8+). */
+.vision-view {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+
+.vision-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vision-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 40px;
+  text-align: center;
+  background: linear-gradient(150deg, #f4ece0, #e7d9bf 55%, #cdb88f);
+}
+
+.vision-empty .eyebrow {
+  margin: 0;
+}
+
+.vision-empty h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.vision-empty p {
+  max-width: 44ch;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.vision-upload {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 9;
+  cursor: pointer;
+}
+
+.vision-upload span {
+  display: inline-block;
+  padding: 6px 13px;
+  border: 1px solid rgba(251, 246, 236, 0.2);
+  border-radius: 999px;
+  background: rgba(33, 29, 20, 0.62);
+  color: #fbf6ec;
+  font-size: 0.76rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+.vision-upload:hover span {
+  background: rgba(33, 29, 20, 0.82);
+}
+
+.vision-remove {
+  position: absolute;
+  bottom: 14px;
+  left: 104px;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(251, 246, 236, 0.2);
+  border-radius: 999px;
+  background: rgba(33, 29, 20, 0.62);
+  color: #fbf6ec;
+  font-size: 1rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.vision-remove:hover {
+  background: rgba(33, 29, 20, 0.82);
 }
