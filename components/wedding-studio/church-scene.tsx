@@ -68,14 +68,14 @@ const lightingPresets: Record<
   }
 > = {
   day: {
-    ambientColor: "#dfe6ef",
+    ambientColor: "#f4ebd8",
     ambientIntensity: 0.85,
-    fogColor: "#e7eef3",
+    fogColor: "#f1e9da",
     fogFar: 44,
     fogNear: 20,
-    hemisphereGround: "#9a9277",
+    hemisphereGround: "#a89570",
     hemisphereIntensity: 1.15,
-    hemisphereSky: "#cfe0f0",
+    hemisphereSky: "#f6e9cd",
     keyIntensity: 2.2,
     rimIntensity: 0.5
   },
@@ -250,11 +250,11 @@ export function CeremonyScene({
           {venueType === "garden" || venueType === "beach" ? <HillSilhouettes /> : null}
           <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, venueType === "church" ? 0.72 : preset.hemisphereIntensity]} />
           <ambientLight color={preset.ambientColor} intensity={venueType === "church" ? 0.5 : preset.ambientIntensity} />
-          <directionalLight color="#aebdd6" intensity={preset.rimIntensity} position={[-6, 8, -7]} />
+          <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 8, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={venueType === "church" ? 2.7 : preset.keyIntensity}
+            intensity={venueType === "church" ? 2.45 : preset.keyIntensity}
             position={[4.5, 6.5, 5.5]}
             shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
@@ -851,16 +851,12 @@ function ChurchCeiling({ wallTopY, color }: { wallTopY: number; color: string })
         <boxGeometry args={[slopeLength, 0.08, depth]} />
         <meshStandardMaterial color={color} roughness={0.95} side={THREE.DoubleSide} />
       </mesh>
+      {/* A slim ridge in the ceiling tone — the dark cross-beams are gone so the
+          vault reads as a smooth, pale plaster ceiling like the reference. */}
       <mesh position={[0, ridgeY, 0]}>
-        <boxGeometry args={[0.16, 0.16, depth]} />
-        <meshStandardMaterial color="#5a4a33" roughness={0.7} />
+        <boxGeometry args={[0.1, 0.1, depth]} />
+        <meshStandardMaterial color={color} roughness={0.95} />
       </mesh>
-      {[-4, -1.4, 1.2, 3.6].map((z) => (
-        <mesh key={z} position={[0, wallTopY - 0.12, z]}>
-          <boxGeometry args={[halfW * 2 - 0.1, 0.1, 0.14]} />
-          <meshStandardMaterial color="#5a4a33" roughness={0.7} />
-        </mesh>
-      ))}
     </group>
   );
 }
