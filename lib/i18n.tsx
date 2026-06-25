@@ -617,6 +617,8 @@ const sv: Record<string, string> = {
   "Replace vision": "Byt vision",
   "Upload vision": "Ladda upp vision",
   "Drop a photoreal render here, or click to upload — generate one from your style references.": "Släpp en fotorealistisk bild här, eller klicka för att ladda upp — skapa en från dina stilreferenser.",
+  "Paste link": "Klistra in länk",
+  "Paste an image link (URL)": "Klistra in en bildlänk (URL)",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

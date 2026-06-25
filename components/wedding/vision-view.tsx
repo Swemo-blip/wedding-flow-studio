@@ -44,15 +44,26 @@ export function VisionView({ heading, room }: { heading: string; room: "ceremony
 
   const src = uploaded ?? (publicOk ? publicSrc : null);
 
+  function applyImageSrc(value: string) {
+    try {
+      window.localStorage.setItem(storageKey, value);
+    } catch {
+      // localStorage full (a remote URL is tiny; a data URL may not fit) — keep
+      // it for this session at least.
+    }
+    setUploaded(value);
+  }
+
   async function handleUpload(file: File | null | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
-    const dataUrl = await fileToDownscaledDataUrl(file, 1280);
-    try {
-      window.localStorage.setItem(storageKey, dataUrl);
-    } catch {
-      // localStorage full — keep it for this session at least.
+    applyImageSrc(await fileToDownscaledDataUrl(file, 1280));
+  }
+
+  function handlePasteLink() {
+    const url = window.prompt(t("Paste an image link (URL)"));
+    if (url && /^https?:\/\//i.test(url.trim())) {
+      applyImageSrc(url.trim());
     }
-    setUploaded(dataUrl);
   }
 
   function clearUpload() {
@@ -98,14 +109,20 @@ export function VisionView({ heading, room }: { heading: string; room: "ceremony
           </span>
         </button>
       )}
-      <button className="vision-upload" onClick={openPicker} type="button">
-        <span>{uploaded ? t("Replace vision") : t("Upload vision")}</span>
-      </button>
-      {uploaded ? (
-        <button aria-label={t("Remove photo")} className="vision-remove" onClick={clearUpload} type="button">
-          ×
+      <div className="vision-actions">
+        <button className="vision-pill" onClick={openPicker} type="button">
+          {uploaded ? t("Replace vision") : t("Upload vision")}
         </button>
-      ) : null}
+        {uploaded ? (
+          <button aria-label={t("Remove photo")} className="vision-pill vision-pill-icon" onClick={clearUpload} type="button">
+            ×
+          </button>
+        ) : (
+          <button className="vision-pill" onClick={handlePasteLink} type="button">
+            {t("Paste link")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

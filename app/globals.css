@@ -15714,19 +15714,16 @@ a {
   pointer-events: none;
 }
 
-.vision-upload {
+.vision-actions {
   position: absolute;
   bottom: 14px;
   left: 14px;
   z-index: 9;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+  display: flex;
+  gap: 8px;
 }
 
-.vision-upload span {
-  display: inline-block;
+.vision-pill {
   padding: 6px 13px;
   border: 1px solid rgba(251, 246, 236, 0.2);
   border-radius: 999px;
@@ -15734,31 +15731,19 @@ a {
   color: #fbf6ec;
   font-size: 0.76rem;
   font-weight: 600;
-  backdrop-filter: blur(8px);
-}
-
-.vision-upload:hover span {
-  background: rgba(33, 29, 20, 0.82);
-}
-
-.vision-remove {
-  position: absolute;
-  bottom: 14px;
-  left: 104px;
-  z-index: 9;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(251, 246, 236, 0.2);
-  border-radius: 999px;
-  background: rgba(33, 29, 20, 0.62);
-  color: #fbf6ec;
-  font-size: 1rem;
   cursor: pointer;
   backdrop-filter: blur(8px);
 }
 
-.vision-remove:hover {
+.vision-pill:hover {
   background: rgba(33, 29, 20, 0.82);
+}
+
+.vision-pill-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
 }
