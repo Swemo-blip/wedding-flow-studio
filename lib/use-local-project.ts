@@ -171,6 +171,57 @@ export function useLocalProject() {
     });
   }
 
+  function addGuest(partial: Partial<Guest> = {}) {
+    setState((currentState) => {
+      const newGuest: Guest = {
+        id: `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: "New guest",
+        household: "",
+        rsvpStatus: "pending",
+        mealChoice: "",
+        allergies: [],
+        tags: [],
+        relationship: "",
+        accessibilityNotes: "",
+        conflictGuestIds: [],
+        preferredGuestIds: [],
+        language: "",
+        tableId: "",
+        seatIndex: 0,
+        ...partial
+      };
+      const nextGuests = [newGuest, ...currentState.guests];
+      const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
+
+      return {
+        ...currentState,
+        hasLocalProject: true,
+        guests: storedProject?.guests ?? nextGuests,
+        dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
+        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      };
+    });
+  }
+
+  function removeGuest(guestId: string) {
+    setState((currentState) => {
+      const nextGuests = currentState.guests.filter((guest) => guest.id !== guestId);
+      const nextTables = currentState.dinnerTables.map((table) => ({
+        ...table,
+        assignedGuestIds: table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId)
+      }));
+      const storedProject = writeStoredReception(nextGuests, nextTables);
+
+      return {
+        ...currentState,
+        hasLocalProject: true,
+        guests: storedProject?.guests ?? nextGuests,
+        dinnerTables: storedProject?.dinnerTables ?? nextTables,
+        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      };
+    });
+  }
+
   function updateDinnerTable(tableId: string, updates: Partial<DinnerTable>) {
     setState((currentState) => {
       const nextTables = currentState.dinnerTables.map((table) => (table.id === tableId ? { ...table, ...updates } : table));
@@ -301,6 +352,8 @@ export function useLocalProject() {
     updateSpeech,
     resetSpeeches,
     updateGuest,
+    addGuest,
+    removeGuest,
     updateDinnerTable,
     assignGuestToTable,
     resetReception,

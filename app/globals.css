@@ -14706,10 +14706,10 @@ a {
 
 .guests-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr) auto;
   gap: 16px;
   align-items: center;
-  padding: 13px 18px;
+  padding: 11px 18px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -14873,6 +14873,128 @@ a {
   color: var(--danger);
 }
 
+.guests-rsvp-button {
+  border: 0;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: filter 150ms ease;
+}
+
+.guests-rsvp-button:hover {
+  filter: brightness(0.97);
+}
+
+.guests-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #c19a52;
+  border-radius: 999px;
+  background: #c19a52;
+  color: #2a2113;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 640;
+  cursor: pointer;
+}
+
+.guests-add:hover {
+  filter: brightness(1.05);
+}
+
+.guests-tally {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.guests-tally-label {
+  color: var(--subtle);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.guests-tally-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.guests-tally-chip strong {
+  margin-left: 3px;
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.guests-cell-input {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.guests-cell-input:hover {
+  border-color: var(--line);
+}
+
+.guests-cell-input:focus {
+  outline: none;
+  border-color: #c19a52;
+  background: var(--surface-warm);
+}
+
+.guests-cell-input::placeholder {
+  color: var(--subtle);
+}
+
+.guests-cell-input-name {
+  font-size: 0.94rem;
+  font-weight: 620;
+}
+
+.guests-cell-input-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.guests-cell-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.guests-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.guests-remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .guests-empty {
   margin: 0;
   padding: 28px 18px;
@@ -14887,22 +15009,19 @@ a {
   }
   .guests-row {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "name rsvp"
-      "seat seat"
-      "meal meal"
-      "diet diet";
-    gap: 4px 12px;
+    gap: 6px 12px;
+    align-items: center;
   }
-  .guests-cell-name {
-    grid-area: name;
-  }
+  /* Name keeps column 1; the RSVP button pins top-right; seat, meal, dietary
+     and actions each stack full-width below. */
   .guests-row > span:nth-child(2) {
-    grid-area: rsvp;
     justify-self: end;
   }
-  .guests-cell-muted:nth-of-type(1) {
-    grid-area: seat;
+  .guests-row > span:nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+  .guests-cell-actions {
+    justify-self: start;
   }
 }
 

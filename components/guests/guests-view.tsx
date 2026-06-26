@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
@@ -11,10 +12,11 @@ import type { Guest } from "@/lib/wedding-types";
 type RsvpFilter = "all" | "attending" | "pending" | "declined";
 
 const RSVP_FILTERS: RsvpFilter[] = ["all", "attending", "pending", "declined"];
+const RSVP_CYCLE: Guest["rsvpStatus"][] = ["attending", "pending", "declined"];
 
 export function GuestsView() {
   const { t } = useTranslation();
-  const { dinnerTables, guests, speeches, updateGuest } = useLocalProject();
+  const { addGuest, dinnerTables, guests, removeGuest, speeches, updateGuest } = useLocalProject();
   const [filter, setFilter] = useState<RsvpFilter>("all");
   const [query, setQuery] = useState("");
 
@@ -27,6 +29,11 @@ export function GuestsView() {
     updateGuest(guestId, { photoUrl });
   }
 
+  function cycleRsvp(guest: Guest) {
+    const next = RSVP_CYCLE[(RSVP_CYCLE.indexOf(guest.rsvpStatus) + 1) % RSVP_CYCLE.length];
+    updateGuest(guest.id, { rsvpStatus: next });
+  }
+
   const counts = useMemo(
     () => ({
       total: guests.length,
@@ -36,6 +43,17 @@ export function GuestsView() {
     }),
     [guests]
   );
+
+  // Catering counts: meals among the guests who are actually coming.
+  const mealTally = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const guest of guests) {
+      if (guest.rsvpStatus !== "attending") continue;
+      const meal = guest.mealChoice.trim() || t("Not chosen");
+      map.set(meal, (map.get(meal) ?? 0) + 1);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [guests, t]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = guests.filter((guest) => {
@@ -52,9 +70,9 @@ export function GuestsView() {
       description="Track who is coming, where they sit, and any dietary or accessibility needs — one source of truth for every guest."
       eyebrow="Guest list"
       meta={[
-        { label: "Invited", value: `${counts.total}` },
         { label: "Attending", value: `${counts.attending}` },
-        { label: "Pending", value: `${counts.pending}` }
+        { label: "Pending", value: `${counts.pending}` },
+        { label: "Declined", value: `${counts.declined}` }
       ]}
       primaryAction={{ href: "/reception", label: "Open seating" }}
       title="The people of the day."
@@ -82,7 +100,22 @@ export function GuestsView() {
             type="search"
             value={query}
           />
+          <button className="guests-add" onClick={() => addGuest()} type="button">
+            <Plus aria-hidden="true" size={15} />
+            {t("Add guest")}
+          </button>
         </div>
+
+        {mealTally.length > 0 ? (
+          <div className="guests-tally" aria-label={t("Meal tally")}>
+            <span className="guests-tally-label">{t("Meal tally")}</span>
+            {mealTally.map(([meal, count]) => (
+              <span className="guests-tally-chip" key={meal}>
+                {meal} <strong>{count}</strong>
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <div className="guests-list" role="table" aria-label={t("Guest list")}>
           <div className="guests-row guests-row-head" role="row">
@@ -91,6 +124,7 @@ export function GuestsView() {
             <span role="columnheader">{t("Seat")}</span>
             <span role="columnheader">{t("Meal")}</span>
             <span role="columnheader">{t("Dietary / access")}</span>
+            <span className="sr-only" role="columnheader">{t("Actions")}</span>
           </div>
           {filtered.map((guest) => {
             const profile = buildGuestProfile(guest, { guests, tables: dinnerTables, speeches });
@@ -131,23 +165,58 @@ export function GuestsView() {
                     )}
                   </span>
                   <span className="guests-cell-name-text">
-                    <strong>{guest.name}</strong>
-                    <small>{guest.relationship}</small>
+                    <input
+                      aria-label={t("Guest name")}
+                      className="guests-cell-input guests-cell-input-name"
+                      onChange={(event) => updateGuest(guest.id, { name: event.target.value })}
+                      placeholder={t("Guest name")}
+                      value={guest.name}
+                    />
+                    <input
+                      aria-label={t("Relationship to couple")}
+                      className="guests-cell-input guests-cell-input-sub"
+                      onChange={(event) => updateGuest(guest.id, { relationship: event.target.value })}
+                      placeholder={t("Relationship")}
+                      value={guest.relationship}
+                    />
                   </span>
                 </span>
                 <span role="cell">
-                  <span className="guests-rsvp" data-status={guest.rsvpStatus}>
+                  <button
+                    className="guests-rsvp guests-rsvp-button"
+                    data-status={guest.rsvpStatus}
+                    onClick={() => cycleRsvp(guest)}
+                    title={t("Click to change RSVP")}
+                    type="button"
+                  >
                     {t(rsvpLabel(guest.rsvpStatus))}
-                  </span>
+                  </button>
                 </span>
                 <span className="guests-cell-muted" role="cell">
                   {profile.table ? profile.seatLabel : t("Unassigned")}
                 </span>
-                <span className="guests-cell-muted" role="cell">
-                  {guest.mealChoice}
+                <span role="cell">
+                  <input
+                    aria-label={t("Meal")}
+                    className="guests-cell-input"
+                    onChange={(event) => updateGuest(guest.id, { mealChoice: event.target.value })}
+                    placeholder={t("Not chosen")}
+                    value={guest.mealChoice}
+                  />
                 </span>
                 <span className="guests-cell-diet" data-alert={guest.allergies.length > 0 ? "true" : undefined} role="cell">
                   {dietary}
+                </span>
+                <span className="guests-cell-actions" role="cell">
+                  <button
+                    aria-label={t("Remove {name}", { name: guest.name })}
+                    className="guests-remove"
+                    onClick={() => removeGuest(guest.id)}
+                    title={t("Remove guest")}
+                    type="button"
+                  >
+                    <X aria-hidden="true" size={14} />
+                  </button>
                 </span>
               </div>
             );
