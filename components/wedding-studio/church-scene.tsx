@@ -645,6 +645,10 @@ function WeddingStageInterior({
                       <group key={`aisle-candle-${rowIndex}`}>
                         <CandleStand candleColor={palette.candle} position={[-0.82, 0, z]} scale={decorScale * 0.82} />
                         <CandleStand candleColor={palette.candle} position={[0.82, 0, z]} scale={decorScale * 0.82} />
+                        {/* White floral posies nestled beside each candle so the
+                            aisle reads as a continuous candlelit-floral border. */}
+                        <FlowerCluster palette={palette} position={[-0.92, 0.12, z]} radius={0.16} />
+                        <FlowerCluster palette={palette} position={[0.92, 0.12, z]} radius={0.16} />
                       </group>
                     );
                   })
