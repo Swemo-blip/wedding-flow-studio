@@ -13,6 +13,7 @@ import {
   Store,
   Users,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
@@ -45,6 +46,7 @@ const navGroups: NavGroup[] = [
     label: "Details",
     items: [
       { href: "/guests", icon: Users, label: "Guests" },
+      { href: "/budget", icon: Wallet, label: "Budget" },
       { href: "/music", icon: Music2, label: "Music" },
       { href: "/speeches", icon: Mic2, label: "Speeches" },
       { href: "/vendors", icon: Store, label: "Vendors" }
