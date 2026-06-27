@@ -40,7 +40,7 @@ Then read:
 
 - The product is bilingual: English is the default and Swedish is available via the header EN/SV toggle. Write all source strings, docs, comments, and mock data in English; add Swedish only as translations in `lib/i18n.tsx` (`useTranslation`/`t()`), where missing keys fall back to English.
 - Keep the app a premium visual wedding-day production studio, not a checklist app, marketplace, registry, or generic dashboard.
-- Do not add backend, authentication, payments, paid APIs, real music streaming, or database work unless explicitly requested.
+- A **free, no-card backend is now allowed** (decided 2026-06-27): Supabase (auth + Postgres + realtime + storage) powers accounts, cloud sync, and sharing. It must stay on the free tier — **no payments, no paid APIs, no card-on-file** (the original "no paid services" rule still holds). localStorage stays as the offline cache + the fallback when Supabase isn't configured, so the app always runs with zero setup. Still no real music streaming.
 - Do not scatter mock data across components.
 - Do not add more cards, badges, buttons, or explanatory text when the page already feels busy.
 - Prefer one clear focal surface, one primary action, and secondary details in drawers.

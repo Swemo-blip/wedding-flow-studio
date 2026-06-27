@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarClock,
   Church,
+  CircleUser,
   FileText,
   LayoutGrid,
   ListChecks,
@@ -58,7 +59,8 @@ const navGroups: NavGroup[] = [
     label: "Output",
     items: [
       { href: "/preview", icon: Play, label: "Preview Day" },
-      { href: "/exports", icon: FileText, label: "Exports" }
+      { href: "/exports", icon: FileText, label: "Exports" },
+      { href: "/account", icon: CircleUser, label: "Account" }
     ]
   }
 ];

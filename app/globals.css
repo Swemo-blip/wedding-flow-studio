@@ -16075,3 +16075,140 @@ a {
   color: var(--ink);
 }
 
+/* ============================================================
+   Account / cloud sync
+   ============================================================ */
+.account-screen {
+  max-width: 460px;
+}
+
+.account-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.account-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.account-status svg {
+  margin-top: 2px;
+}
+
+.account-status[data-tone="on"] svg {
+  color: var(--success);
+}
+
+.account-status[data-tone="off"] svg {
+  color: var(--muted);
+}
+
+.account-status h2 {
+  margin: 0 0 2px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.account-status p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.account-hint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.8rem;
+}
+
+.account-mode {
+  align-self: start;
+}
+
+.account-form {
+  display: grid;
+  gap: 12px;
+}
+
+.account-field {
+  display: grid;
+  gap: 5px;
+}
+
+.account-field span {
+  color: var(--subtle);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.account-field input {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+
+.account-field input:focus {
+  outline: none;
+  border-color: #c19a52;
+}
+
+.account-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.84rem;
+}
+
+.account-notice {
+  margin: 0;
+  color: var(--success);
+  font-size: 0.84rem;
+}
+
+.account-button {
+  padding: 10px 16px;
+  border: 1px solid #c19a52;
+  border-radius: 999px;
+  background: #c19a52;
+  color: #2a2113;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 640;
+  cursor: pointer;
+}
+
+.account-button:hover {
+  filter: brightness(1.05);
+}
+
+.account-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.account-button-secondary {
+  justify-self: start;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.account-button-secondary:hover {
+  filter: none;
+  border-color: var(--line-strong);
+}
+
