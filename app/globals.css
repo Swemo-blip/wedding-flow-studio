@@ -15951,3 +15951,127 @@ a {
   }
 }
 
+/* ============================================================
+   Checklist — progress summary + phase-grouped tasks
+   ============================================================ */
+.checklist-screen {
+  display: grid;
+  gap: 16px;
+}
+
+.checklist-hide {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 540;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.checklist-hide input {
+  width: 15px;
+  height: 15px;
+  accent-color: #5f7355;
+  cursor: pointer;
+}
+
+.checklist-phases {
+  display: grid;
+  gap: 14px;
+}
+
+.checklist-phase {
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.checklist-phase-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.checklist-phase-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.checklist-phase-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+}
+
+.checklist-tasks {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.checklist-check {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checklist-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #5f7355;
+  cursor: pointer;
+}
+
+.checklist-check-box {
+  display: none;
+}
+
+.checklist-task-input {
+  flex: 1;
+}
+
+.checklist-task[data-done="true"] .checklist-task-input {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.checklist-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 11px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 580;
+  cursor: pointer;
+}
+
+.checklist-add:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+

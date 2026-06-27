@@ -7,6 +7,7 @@ import {
   Church,
   FileText,
   LayoutGrid,
+  ListChecks,
   Mic2,
   Music2,
   Play,
@@ -47,6 +48,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/guests", icon: Users, label: "Guests" },
       { href: "/budget", icon: Wallet, label: "Budget" },
+      { href: "/checklist", icon: ListChecks, label: "Checklist" },
       { href: "/music", icon: Music2, label: "Music" },
       { href: "/speeches", icon: Mic2, label: "Speeches" },
       { href: "/vendors", icon: Store, label: "Vendors" }
