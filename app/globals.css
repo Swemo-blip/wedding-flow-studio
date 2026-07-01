@@ -16212,3 +16212,14 @@ a {
   border-color: var(--line-strong);
 }
 
+/* Countdown line under the wedding date on the Overview rail */
+.rail-countdown {
+  display: block;
+  margin-top: 1px;
+  color: #9c7a36;
+  font-size: 0.74rem;
+  font-weight: 640;
+  font-style: normal;
+  letter-spacing: 0.02em;
+}
+

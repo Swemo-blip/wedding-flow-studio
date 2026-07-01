@@ -22,8 +22,10 @@ import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/c
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { useBudget } from "@/lib/use-budget";
+import { useChecklist } from "@/lib/use-checklist";
 import { useLocalProject } from "@/lib/use-local-project";
-import { calculateBudgetSummary, formatCurrency } from "@/lib/wedding-budget";
+import { formatCurrency } from "@/lib/wedding-budget";
 import { sampleWedding } from "@/lib/wedding-data";
 import { clearStoredWeddingStudioLayout, readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
@@ -64,6 +66,8 @@ export function OverviewDashboard() {
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
   const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  // Computed after mount (avoids a server/client hydration mismatch on the date).
+  const [daysToGo, setDaysToGo] = useState<number | null>(null);
 
   const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
@@ -101,7 +105,24 @@ export function OverviewDashboard() {
   const attentionRisks = risks.filter((risk) => risk.severity === "high").length;
   const reviewRisks = risks.length - attentionRisks;
 
-  const budget = useMemo(() => calculateBudgetSummary(), []);
+  // Live snapshots pulled from the real pillar stores so the home reflects the
+  // actual plan (not stale mock numbers).
+  const { items: budgetItems } = useBudget();
+  const { tasks: checklistTasks } = useChecklist();
+  const budgetTotals = useMemo(() => {
+    const estimate = budgetItems.reduce((sum, item) => sum + (Number(item.estimate) || 0), 0);
+    const paid = budgetItems.reduce((sum, item) => sum + (Number(item.paid) || 0), 0);
+    return {
+      estimate,
+      paid,
+      remaining: Math.max(0, estimate - paid),
+      percent: estimate > 0 ? Math.min(100, Math.round((paid / estimate) * 100)) : 0
+    };
+  }, [budgetItems]);
+  const checklistDone = checklistTasks.filter((task) => task.done).length;
+  const checklistPercent = checklistTasks.length > 0 ? Math.round((checklistDone / checklistTasks.length) * 100) : 0;
+  const invitedGuests = localProject.guests.length;
+  const attendingGuests = localProject.guests.filter((guest) => guest.rsvpStatus === "attending").length;
 
   const glanceTimeline = localProject.timelineItems.slice(0, 4);
   const seatedGuests = localProject.dinnerTables.reduce((sum, table) => sum + table.assignedGuestIds.length, 0);
@@ -123,6 +144,14 @@ export function OverviewDashboard() {
     window.localStorage.setItem("wfs-welcome-dismissed", "1");
     setShowWelcome(false);
   }
+
+  useEffect(() => {
+    const weddingDate = new Date(activeWedding.date);
+    if (Number.isNaN(weddingDate.getTime())) {
+      return;
+    }
+    queueMicrotask(() => setDaysToGo(Math.max(0, Math.ceil((weddingDate.getTime() - Date.now()) / 86400000))));
+  }, [activeWedding.date]);
 
   useEffect(() => {
     if (!localProject.hasLocalProject) {
@@ -324,12 +353,14 @@ export function OverviewDashboard() {
             <section aria-label={t("Guest Count")} className="glance-card">
               <h3>{t("Guest Count")}</h3>
               <div className="glance-donut-wrap">
-                <Donut percent={Math.min(100, Math.round((plan.guestCount / Math.max(1, capacity.totalCapacity)) * 100))} tone="sage">
-                  <strong>{plan.guestCount}</strong>
-                  <span>{t("Expected")}</span>
+                <Donut percent={invitedGuests > 0 ? Math.round((attendingGuests / invitedGuests) * 100) : 0} tone="sage">
+                  <strong>{attendingGuests}</strong>
+                  <span>
+                    {t("of {count} invited", { count: invitedGuests })}
+                  </span>
                 </Donut>
               </div>
-              <Button className="glance-action" href="/reception" size="small" variant="secondary">
+              <Button className="glance-action" href="/guests" size="small" variant="secondary">
                 {t("Manage Guests")}
               </Button>
             </section>
@@ -376,7 +407,10 @@ export function OverviewDashboard() {
               <li>
                 <CalendarDays aria-hidden="true" size={16} strokeWidth={1.7} />
                 <span>{t("Date")}</span>
-                <strong>{activeWedding.date}</strong>
+                <strong>
+                  {activeWedding.date}
+                  {daysToGo !== null ? <em className="rail-countdown">{daysToGo} {t("days to go")}</em> : null}
+                </strong>
               </li>
               <li>
                 <MapPin aria-hidden="true" size={16} strokeWidth={1.7} />
@@ -448,25 +482,50 @@ export function OverviewDashboard() {
             </div>
             <div className="rail-budget">
               <div className="rail-budget-topline">
-                <span>{t("Total Budget")}</span>
-                <strong>{formatCurrency(budget.total)}</strong>
+                <span>{t("Estimated total")}</span>
+                <strong>{formatCurrency(budgetTotals.estimate)}</strong>
               </div>
               <div aria-hidden="true" className="rail-meter">
-                <span style={{ width: `${budget.spentPercent}%` }} />
+                <span style={{ width: `${budgetTotals.percent}%` }} />
               </div>
               <ul className="rail-progress-rows">
                 <li>
-                  <span>{t("Spent")}</span>
-                  <strong>{formatCurrency(budget.spent)}</strong>
+                  <span>{t("Paid")}</span>
+                  <strong>{formatCurrency(budgetTotals.paid)}</strong>
                 </li>
                 <li>
-                  <span>{t("Remaining")}</span>
-                  <strong>{formatCurrency(budget.remaining)}</strong>
+                  <span>{t("Left to pay")}</span>
+                  <strong>{formatCurrency(budgetTotals.remaining)}</strong>
                 </li>
               </ul>
             </div>
-            <Button className="glance-action" href="/exports" size="small" variant="secondary">
+            <Button className="glance-action" href="/budget" size="small" variant="secondary">
               {t("View Budget")}
+            </Button>
+          </section>
+
+          <section className="rail-card">
+            <div className="rail-card-head">
+              <h3>{t("Checklist")}</h3>
+            </div>
+            <div className="rail-progress">
+              <Donut percent={checklistPercent} tone={checklistPercent >= 70 ? "sage" : "gold"}>
+                <strong>{checklistPercent}%</strong>
+                <span>{t("done")}</span>
+              </Donut>
+              <ul className="rail-progress-rows">
+                <li>
+                  <span>{t("Done")}</span>
+                  <strong>{checklistDone}</strong>
+                </li>
+                <li>
+                  <span>{t("Still to do")}</span>
+                  <strong>{checklistTasks.length - checklistDone}</strong>
+                </li>
+              </ul>
+            </div>
+            <Button className="glance-action" href="/checklist" size="small" variant="secondary">
+              {t("Open checklist")}
             </Button>
           </section>
         </aside>
