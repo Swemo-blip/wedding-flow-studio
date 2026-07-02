@@ -14,6 +14,7 @@ const tabItems = [
   { href: "/vendors", label: "Vendors" },
   { href: "/budget", label: "Budget" },
   { href: "/checklist", label: "Checklist" },
+  { href: "/summary", label: "Summary" },
   { href: "/exports", label: "Exports" }
 ];
 

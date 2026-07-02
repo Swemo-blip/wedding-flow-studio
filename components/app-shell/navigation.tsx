@@ -6,6 +6,7 @@ import {
   CalendarClock,
   Church,
   CircleUser,
+  FileCheck,
   FileText,
   LayoutGrid,
   ListChecks,
@@ -59,6 +60,7 @@ const navGroups: NavGroup[] = [
     label: "Output",
     items: [
       { href: "/preview", icon: Play, label: "Preview Day" },
+      { href: "/summary", icon: FileCheck, label: "Summary" },
       { href: "/exports", icon: FileText, label: "Exports" },
       { href: "/account", icon: CircleUser, label: "Account" }
     ]

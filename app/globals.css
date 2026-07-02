@@ -12625,10 +12625,18 @@ a {
 @media print {
   .sidebar,
   .topbar,
+  .studio-header,
+  .studio-tab-bar,
   .route-ribbon,
   .button-row,
   .no-print {
     display: none !important;
+  }
+
+  .summary-sheet {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
   }
 
   .app-frame,
@@ -16042,6 +16050,161 @@ a {
 .checklist-phase-date[data-status="done"] {
   background: rgba(90, 122, 95, 0.12);
   color: var(--success);
+}
+
+/* ============================================================
+   Shareable planning summary — one-page, print-friendly sheet
+   ============================================================ */
+.summary-screen {
+  display: grid;
+  gap: 16px;
+  max-width: 900px;
+}
+
+.summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-actions-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.summary-actions .account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.summary-sheet {
+  padding: 32px 34px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.summary-head {
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-couple {
+  margin: 4px 0 6px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.summary-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 28px;
+}
+
+.summary-block-wide {
+  grid-column: 1 / -1;
+}
+
+.summary-block h2 {
+  margin: 0 0 10px;
+  color: var(--subtle);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-stats li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px dotted var(--line);
+}
+
+.summary-stats span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.summary-stats strong {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.summary-note[data-tone="alert"] {
+  color: var(--danger);
+  font-weight: 560;
+}
+
+.summary-note[data-tone="good"] {
+  color: var(--success);
+  font-weight: 560;
+}
+
+.summary-timeline {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-timeline li {
+  display: flex;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.summary-timeline-time {
+  flex: 0 0 64px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .checklist-tasks {
