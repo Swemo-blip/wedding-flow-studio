@@ -421,7 +421,7 @@ export function OverviewDashboard() {
                 <Users aria-hidden="true" size={16} strokeWidth={1.7} />
                 <span>{t("Guests")}</span>
                 <strong>
-                  {plan.guestCount} {t("invited")} · {capacity.totalCapacity} {t("seats")}
+                  {invitedGuests} {t("invited")} · {attendingGuests} {t("attending")}
                 </strong>
               </li>
               <li>
