@@ -683,6 +683,7 @@ const sv: Record<string, string> = {
   "Working…": "Arbetar…",
   "Account created — you can sign in now.": "Konto skapat — du kan logga in nu.",
   "Your total budget": "Er totala budget",
+  "Where it goes": "Vart det går",
   "{amount} over budget": "{amount} över budget",
   "{amount} under budget": "{amount} under budget",
   "days to go": "dagar kvar",

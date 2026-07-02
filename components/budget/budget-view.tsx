@@ -22,6 +22,23 @@ export function BudgetView() {
   const paidPercent = totals.estimate > 0 ? Math.min(100, Math.round((totals.paid / totals.estimate) * 100)) : 0;
   const overBudget = totals.estimate > target;
 
+  // Spend by category (share of the estimated total) — shows where the money goes.
+  const byCategory = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of items) {
+      const amount = Number(item.estimate) || 0;
+      if (amount <= 0) continue;
+      map.set(item.category, (map.get(item.category) ?? 0) + amount);
+    }
+    return Array.from(map.entries())
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        pct: totals.estimate > 0 ? Math.round((amount / totals.estimate) * 100) : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [items, totals.estimate]);
+
   return (
     <StudioRouteFrame
       description="Track every cost in one place — estimate each line, log what's paid, and always see what's left."
@@ -79,6 +96,25 @@ export function BudgetView() {
             </span>
           </div>
         </section>
+
+        {byCategory.length > 0 ? (
+          <section aria-label={t("Where it goes")} className="budget-breakdown">
+            <h3>{t("Where it goes")}</h3>
+            <div className="budget-breakdown-list">
+              {byCategory.map((row) => (
+                <div className="budget-breakdown-row" key={row.category}>
+                  <span className="budget-breakdown-label">{t(row.category)}</span>
+                  <span aria-hidden="true" className="budget-breakdown-bar">
+                    <span style={{ width: `${row.pct}%` }} />
+                  </span>
+                  <span className="budget-breakdown-amount">
+                    {money.format(row.amount)} · {row.pct}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="budget-toolbar">
           <span className="budget-count">{t("{count} line items", { count: items.length })}</span>
