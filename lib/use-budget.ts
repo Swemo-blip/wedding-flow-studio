@@ -61,18 +61,48 @@ function writeStoredBudget(items: BudgetItem[]) {
   }
 }
 
+const TARGET_KEY = "wedding-flow-studio.budget-target.v1";
+const DEFAULT_TARGET = 50000;
+
+function readStoredTarget(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(TARGET_KEY);
+  if (raw === null) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+function writeStoredTarget(target: number) {
+  try {
+    window.localStorage.setItem(TARGET_KEY, String(target));
+  } catch {
+    // ignore
+  }
+}
+
 export function useBudget() {
   // Render the seed on the server and first client paint (hydration-safe), then
   // swap in any stored budget after mount via a microtask (matches the studio
   // layout-store pattern).
   const [items, setItems] = useState<BudgetItem[]>(DEFAULT_BUDGET);
+  const [target, setTargetState] = useState<number>(DEFAULT_TARGET);
 
   useEffect(() => {
     const stored = readStoredBudget();
+    const storedTarget = readStoredTarget();
     if (stored) {
       queueMicrotask(() => setItems(stored));
     }
+    if (storedTarget !== null) {
+      queueMicrotask(() => setTargetState(storedTarget));
+    }
   }, []);
+
+  function setTarget(next: number) {
+    const value = Math.max(0, Math.round(Number(next) || 0));
+    setTargetState(value);
+    writeStoredTarget(value);
+  }
 
   function persist(next: BudgetItem[]) {
     setItems(next);
@@ -104,5 +134,5 @@ export function useBudget() {
     persist(DEFAULT_BUDGET);
   }
 
-  return { items, addItem, updateItem, removeItem, resetBudget };
+  return { items, target, setTarget, addItem, updateItem, removeItem, resetBudget };
 }

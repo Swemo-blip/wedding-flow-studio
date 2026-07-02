@@ -11,7 +11,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 
 export function BudgetView() {
   const { t } = useTranslation();
-  const { addItem, items, removeItem, updateItem } = useBudget();
+  const { addItem, items, removeItem, setTarget, target, updateItem } = useBudget();
 
   const totals = useMemo(() => {
     const estimate = items.reduce((sum, item) => sum + (Number(item.estimate) || 0), 0);
@@ -20,6 +20,7 @@ export function BudgetView() {
   }, [items]);
 
   const paidPercent = totals.estimate > 0 ? Math.min(100, Math.round((totals.paid / totals.estimate) * 100)) : 0;
+  const overBudget = totals.estimate > target;
 
   return (
     <StudioRouteFrame
@@ -54,6 +55,28 @@ export function BudgetView() {
               <span>{t("Left to pay")}</span>
               <strong>{money.format(totals.remaining)}</strong>
             </div>
+          </div>
+          <div className="budget-target">
+            <label className="budget-target-field">
+              <span>{t("Your total budget")}</span>
+              <span className="budget-target-input">
+                <span aria-hidden="true" className="budget-money-prefix">$</span>
+                <input
+                  aria-label={t("Your total budget")}
+                  className="guests-cell-input"
+                  inputMode="numeric"
+                  min={0}
+                  onChange={(event) => setTarget(Number(event.target.value))}
+                  type="number"
+                  value={target}
+                />
+              </span>
+            </label>
+            <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
+              {overBudget
+                ? t("{amount} over budget", { amount: money.format(totals.estimate - target) })
+                : t("{amount} under budget", { amount: money.format(target - totals.estimate) })}
+            </span>
           </div>
         </section>
 

@@ -16212,6 +16212,63 @@ a {
   border-color: var(--line-strong);
 }
 
+/* Budget target row (couple's total budget + over/under badge) */
+.budget-target {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.budget-target-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.budget-target-field > span:first-child {
+  color: var(--subtle);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.budget-target-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.budget-target-input input {
+  width: 92px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-target-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(90, 122, 95, 0.14);
+  color: var(--success);
+  font-size: 0.82rem;
+  font-weight: 640;
+}
+
+.budget-target-badge[data-over="true"] {
+  background: rgba(176, 106, 79, 0.14);
+  color: var(--danger);
+}
+
 /* Countdown line under the wedding date on the Overview rail */
 .rail-countdown {
   display: block;
