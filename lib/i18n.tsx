@@ -689,6 +689,8 @@ const sv: Record<string, string> = {
   "days to go": "dagar kvar",
   "of {count} invited": "av {count} inbjudna",
   "Open checklist": "Öppna checklista",
+  "Overdue": "Försenat",
+  "Soon": "Snart",
   "Song title": "Låttitel",
   "Artist or composer": "Artist eller kompositör",
   "Responsible person": "Ansvarig person",

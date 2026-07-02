@@ -1,16 +1,44 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { Donut } from "@/components/ui/donut";
 import { useTranslation } from "@/lib/i18n";
+import { useLocalProject } from "@/lib/use-local-project";
 import { CHECKLIST_PHASES, useChecklist } from "@/lib/use-checklist";
+
+// Roughly how far before the wedding each phase should be wrapped up.
+const PHASE_OFFSET_DAYS: Record<string, number> = {
+  "12+ months": 365,
+  "9 months": 274,
+  "6 months": 183,
+  "3 months": 91,
+  "1 month": 30,
+  "Final week": 7,
+  "Day of": 0
+};
 
 export function ChecklistView() {
   const { t } = useTranslation();
   const { addTask, removeTask, tasks, toggleTask, updateTask } = useChecklist();
+  const { wedding } = useLocalProject();
   const [hideDone, setHideDone] = useState(false);
+  // "Today" is read after mount so the overdue/soon flags don't cause a
+  // server/client hydration mismatch.
+  const [todayMs, setTodayMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => setTodayMs(Date.now()));
+  }, []);
+
+  function phaseTarget(phase: string): Date | null {
+    const weddingDate = new Date(wedding.date);
+    if (Number.isNaN(weddingDate.getTime())) {
+      return null;
+    }
+    return new Date(weddingDate.getTime() - (PHASE_OFFSET_DAYS[phase] ?? 0) * 86400000);
+  }
 
   const counts = useMemo(() => {
     const done = tasks.filter((task) => task.done).length;
@@ -81,13 +109,36 @@ export function ChecklistView() {
             if (hideDone && visible.length === 0) {
               return null;
             }
+            const allDone = phaseDone === phaseTasks.length;
+            const target = phaseTarget(phase);
+            let dateStatus: "overdue" | "soon" | "upcoming" | "done" = allDone ? "done" : "upcoming";
+            if (!allDone && target && todayMs !== null) {
+              const diff = target.getTime() - todayMs;
+              if (diff < 0) {
+                dateStatus = "overdue";
+              } else if (diff < 30 * 86400000) {
+                dateStatus = "soon";
+              }
+            }
+            const dateLabel = target ? target.toLocaleDateString("en", { month: "short", year: "numeric" }) : null;
             return (
               <section className="checklist-phase" key={phase}>
                 <div className="checklist-phase-head">
                   <h2>{t(phase)}</h2>
-                  <span className="checklist-phase-count">
-                    {phaseDone}/{phaseTasks.length}
-                  </span>
+                  <div className="checklist-phase-meta">
+                    {dateLabel ? (
+                      <span className="checklist-phase-date" data-status={dateStatus}>
+                        {dateStatus === "overdue"
+                          ? `${t("Overdue")} · ${dateLabel}`
+                          : dateStatus === "soon"
+                            ? `${t("Soon")} · ${dateLabel}`
+                            : dateLabel}
+                      </span>
+                    ) : null}
+                    <span className="checklist-phase-count">
+                      {phaseDone}/{phaseTasks.length}
+                    </span>
+                  </div>
                 </div>
                 <ul className="checklist-tasks">
                   {visible.map((task) => (

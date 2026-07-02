@@ -16013,6 +16013,37 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+.checklist-phase-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checklist-phase-date {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(33, 29, 20, 0.06);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.checklist-phase-date[data-status="overdue"] {
+  background: rgba(176, 106, 79, 0.14);
+  color: var(--danger);
+}
+
+.checklist-phase-date[data-status="soon"] {
+  background: rgba(177, 134, 60, 0.16);
+  color: var(--warning);
+}
+
+.checklist-phase-date[data-status="done"] {
+  background: rgba(90, 122, 95, 0.12);
+  color: var(--success);
+}
+
 .checklist-tasks {
   display: grid;
   margin: 0;
