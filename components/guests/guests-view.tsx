@@ -106,6 +106,15 @@ export function GuestsView() {
           </button>
         </div>
 
+        {counts.pending > 0 ? (
+          <div className="guests-nudge">
+            <span>{t("{count} guests haven't responded yet.", { count: counts.pending })}</span>
+            <button className="guests-nudge-action" onClick={() => setFilter("pending")} type="button">
+              {t("Show pending")}
+            </button>
+          </div>
+        ) : null}
+
         {mealTally.length > 0 ? (
           <div className="guests-tally" aria-label={t("Meal tally")}>
             <span className="guests-tally-label">{t("Meal tally")}</span>
@@ -172,13 +181,22 @@ export function GuestsView() {
                       placeholder={t("Guest name")}
                       value={guest.name}
                     />
-                    <input
-                      aria-label={t("Relationship to couple")}
-                      className="guests-cell-input guests-cell-input-sub"
-                      onChange={(event) => updateGuest(guest.id, { relationship: event.target.value })}
-                      placeholder={t("Relationship")}
-                      value={guest.relationship}
-                    />
+                    <span className="guests-cell-subrow">
+                      <input
+                        aria-label={t("Relationship to couple")}
+                        className="guests-cell-input guests-cell-input-sub"
+                        onChange={(event) => updateGuest(guest.id, { relationship: event.target.value })}
+                        placeholder={t("Relationship")}
+                        value={guest.relationship}
+                      />
+                      <input
+                        aria-label={t("Household")}
+                        className="guests-cell-input guests-cell-input-sub"
+                        onChange={(event) => updateGuest(guest.id, { household: event.target.value })}
+                        placeholder={t("Household / +1 group")}
+                        value={guest.household}
+                      />
+                    </span>
                   </span>
                 </span>
                 <span role="cell">

@@ -15003,6 +15003,47 @@ a {
   color: var(--danger);
 }
 
+.guests-cell-subrow {
+  display: flex;
+  gap: 6px;
+}
+
+.guests-cell-subrow .guests-cell-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.guests-nudge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(177, 134, 60, 0.3);
+  border-radius: 12px;
+  background: rgba(177, 134, 60, 0.1);
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 540;
+}
+
+.guests-nudge-action {
+  padding: 5px 12px;
+  border: 1px solid var(--warning);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--warning);
+  font-size: 0.8rem;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.guests-nudge-action:hover {
+  background: rgba(177, 134, 60, 0.16);
+}
+
 .guests-empty {
   margin: 0;
   padding: 28px 18px;
