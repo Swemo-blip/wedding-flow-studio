@@ -284,6 +284,7 @@ export type VendorCandidate = {
   webUrl: string;
   status: VendorCandidateStatus;
   priceTier: VendorPriceTier;
+  quote: number;
   fitScore: number;
   contactPerson: string;
   contactUrl: string;

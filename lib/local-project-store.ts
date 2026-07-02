@@ -63,6 +63,7 @@ export function createDinnerTableDraft(items: DinnerTable[]) {
 export function createVendorCandidateDraft(items: VendorCandidate[]) {
   return items.map((item) => ({
     ...item,
+    quote: typeof item.quote === "number" ? item.quote : 0,
     connectedTimelineItemIds: [...item.connectedTimelineItemIds]
   }));
 }

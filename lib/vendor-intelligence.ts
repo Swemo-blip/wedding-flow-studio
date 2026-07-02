@@ -52,6 +52,7 @@ export function createVendorCandidateFromSuggestion(
     name: `${suggestion.label} candidate ${candidateNumber} near ${suggestion.locationLabel}`,
     notes: "Saved from the location-aware sourcing workflow. Replace this placeholder with the real vendor name after reviewing external results.",
     priceTier: "unknown",
+    quote: 0,
     sourceQuery: suggestion.query,
     status: "shortlisted",
     updatedAt: now,

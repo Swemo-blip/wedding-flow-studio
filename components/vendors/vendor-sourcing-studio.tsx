@@ -18,6 +18,7 @@ import type { SourcingPriority, VendorCandidate, VendorCandidateStatus, VendorPr
 
 const vendorStatusOptions: VendorCandidateStatus[] = ["shortlisted", "contacted", "quote-requested", "booked", "rejected"];
 const priceTierOptions: VendorPriceTier[] = ["unknown", "budget", "standard", "premium", "luxury"];
+const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export function VendorSourcingStudio() {
   const { t } = useTranslation();
@@ -27,6 +28,10 @@ export function VendorSourcingStudio() {
   const intelligence = useMemo(
     () => buildVendorIntelligence(vendorSourcingCategories, suggestions, vendorCandidates),
     [suggestions, vendorCandidates]
+  );
+  const bookedTotal = useMemo(
+    () => vendorCandidates.filter((candidate) => candidate.status === "booked").reduce((sum, candidate) => sum + (Number(candidate.quote) || 0), 0),
+    [vendorCandidates]
   );
   const [selectedId, setSelectedId] = useState(suggestions[0]?.id ?? "");
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
@@ -68,8 +73,8 @@ export function VendorSourcingStudio() {
       description="Turn each party need into a local search, save the best candidates, and track quotes and bookings in one place."
       eyebrow="Vendors"
       meta={[
-        { label: "Candidates", value: `${intelligence.candidateCount}` },
         { label: "Booked", value: `${intelligence.bookedCount}` },
+        { label: "Booked cost", value: money.format(bookedTotal) },
         { label: "Open gaps", value: `${intelligence.openRequiredCount}` }
       ]}
       primaryAction={{ href: "/exports", label: "Prepare vendor brief" }}
@@ -168,6 +173,11 @@ export function VendorSourcingStudio() {
               <div>
                 <span>{t("Candidate intelligence")}</span>
                 <strong>{selectedDecision.nextAction}</strong>
+                {bookedTotal > 0 ? (
+                  <small className="vendor-panel-money">
+                    <strong>{money.format(bookedTotal)}</strong> {t("committed to booked vendors")}
+                  </small>
+                ) : null}
               </div>
               <button className="button button-ghost" onClick={() => copySourcingBrief(selectedSuggestion)} type="button">
                 {t("Copy Brief")}
@@ -184,9 +194,17 @@ export function VendorSourcingStudio() {
                         <strong>{candidate.name}</strong>
                         <p>{candidate.notes}</p>
                       </div>
-                      <div className="vendor-fit-score">
-                        <span>{t("Fit")}</span>
-                        <strong>{candidate.fitScore}%</strong>
+                      <div className="vendor-candidate-stats">
+                        <div className="vendor-fit-score">
+                          <span>{t("Fit")}</span>
+                          <strong>{candidate.fitScore}%</strong>
+                        </div>
+                        {candidate.quote > 0 ? (
+                          <div className="vendor-fit-score vendor-quote-figure">
+                            <span>{t("Quote")}</span>
+                            <strong>{money.format(candidate.quote)}</strong>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -220,6 +238,17 @@ export function VendorSourcingStudio() {
                             </option>
                           ))}
                         </select>
+                      </label>
+                      <label>
+                        {t("Quote")}
+                        <input
+                          aria-label={`${t("Quote")} – ${candidate.name}`}
+                          inputMode="numeric"
+                          min={0}
+                          onChange={(event) => updateVendorCandidate(candidate.id, { quote: Math.max(0, Number(event.target.value) || 0) })}
+                          type="number"
+                          value={candidate.quote ?? 0}
+                        />
                       </label>
                       <button className="button button-ghost" onClick={() => copyCandidateBrief(candidate, selectedDecision)} type="button">
                         {t("Copy Candidate")}

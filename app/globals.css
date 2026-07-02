@@ -2495,6 +2495,17 @@ a {
   gap: 5px;
 }
 
+.vendor-panel-money {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.vendor-panel-money strong {
+  color: var(--ink);
+  font-weight: 750;
+}
+
 .vendor-candidate-list {
   display: grid;
   gap: 10px;
@@ -2511,7 +2522,7 @@ a {
 
 .vendor-candidate-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 84px;
+  grid-template-columns: minmax(0, 1fr) 108px;
   gap: 12px;
   align-items: start;
 }
@@ -2519,6 +2530,17 @@ a {
 .vendor-candidate-main > div:first-child {
   display: grid;
   gap: 6px;
+}
+
+.vendor-candidate-stats {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.vendor-quote-figure strong {
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
 }
 
 .vendor-candidate-card strong {
@@ -2551,7 +2573,7 @@ a {
 
 .vendor-candidate-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 8px;
   align-items: end;
 }
@@ -2566,7 +2588,8 @@ a {
   text-transform: uppercase;
 }
 
-.vendor-candidate-controls select {
+.vendor-candidate-controls select,
+.vendor-candidate-controls input {
   width: 100%;
   border: 1px solid rgba(36, 45, 41, 0.14);
   border-radius: 10px;
