@@ -691,6 +691,8 @@ const sv: Record<string, string> = {
   "Quote": "Offert",
   "Booked cost": "Bokad kostnad",
   "committed to booked vendors": "avtalat med bokade leverantörer",
+  "booked with vendors": "bokat med leverantörer",
+  "Not budgeted yet": "Ingen budgetpost än",
   "Wedding summary": "Bröllopssammanfattning",
   "A one-page overview to print or share with your partner and vendors.": "En ensides översikt att skriva ut eller dela med din partner och leverantörer.",
   "Print / Save as PDF": "Skriv ut / Spara som PDF",

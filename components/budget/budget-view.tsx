@@ -6,11 +6,15 @@ import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { Donut } from "@/components/ui/donut";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/wedding-budget";
-import { BUDGET_CATEGORIES, useBudget } from "@/lib/use-budget";
+import { BUDGET_CATEGORIES, VENDOR_TO_BUDGET_CATEGORY, useBudget } from "@/lib/use-budget";
+import { useLocalProject } from "@/lib/use-local-project";
+
+type BookedVendor = { id: string; name: string; quote: number };
 
 export function BudgetView() {
   const { t } = useTranslation();
   const { addItem, items, removeItem, setTarget, target, updateItem } = useBudget();
+  const { vendorCandidates } = useLocalProject();
 
   const totals = useMemo(() => {
     const estimate = items.reduce((sum, item) => sum + (Number(item.estimate) || 0), 0);
@@ -37,6 +41,48 @@ export function BudgetView() {
       }))
       .sort((a, b) => b.amount - a.amount);
   }, [items, totals.estimate]);
+
+  // Booked vendors (with their quote) grouped under the budget category they map
+  // to — this is what ties the Vendors studio to the budget. Only booked ones.
+  const bookedByCategory = useMemo(() => {
+    const map = new Map<string, BookedVendor[]>();
+    for (const candidate of vendorCandidates) {
+      if (candidate.status !== "booked") continue;
+      const category = VENDOR_TO_BUDGET_CATEGORY[candidate.categoryId] ?? "Other";
+      const list = map.get(category) ?? [];
+      list.push({ id: candidate.id, name: candidate.name, quote: Number(candidate.quote) || 0 });
+      map.set(category, list);
+    }
+    return map;
+  }, [vendorCandidates]);
+
+  const bookedTotal = useMemo(
+    () =>
+      vendorCandidates
+        .filter((candidate) => candidate.status === "booked")
+        .reduce((sum, candidate) => sum + (Number(candidate.quote) || 0), 0),
+    [vendorCandidates]
+  );
+
+  // Categories that have a booked vendor but no budget line yet — surfaced so a
+  // booking never hides just because you haven't budgeted for it.
+  const bookedOnlyCategories = useMemo(
+    () => Array.from(bookedByCategory.keys()).filter((category) => !byCategory.some((row) => row.category === category)),
+    [bookedByCategory, byCategory]
+  );
+
+  function renderBookedVendors(booked: BookedVendor[]) {
+    return (
+      <ul className="budget-breakdown-vendors">
+        {booked.map((vendor) => (
+          <li key={vendor.id}>
+            <span className="budget-vendor-name">{vendor.name}</span>
+            <span className="budget-vendor-quote">{vendor.quote > 0 ? formatCurrency(vendor.quote) : t("Booked")}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <StudioRouteFrame
@@ -96,19 +142,42 @@ export function BudgetView() {
           </div>
         </section>
 
-        {byCategory.length > 0 ? (
+        {byCategory.length > 0 || bookedByCategory.size > 0 ? (
           <section aria-label={t("Where it goes")} className="budget-breakdown">
-            <h3>{t("Where it goes")}</h3>
+            <div className="budget-breakdown-head">
+              <h3>{t("Where it goes")}</h3>
+              {bookedTotal > 0 ? (
+                <span className="budget-breakdown-booked">
+                  <strong>{formatCurrency(bookedTotal)}</strong> {t("booked with vendors")}
+                </span>
+              ) : null}
+            </div>
             <div className="budget-breakdown-list">
-              {byCategory.map((row) => (
-                <div className="budget-breakdown-row" key={row.category}>
-                  <span className="budget-breakdown-label">{t(row.category)}</span>
-                  <span aria-hidden="true" className="budget-breakdown-bar">
-                    <span style={{ width: `${row.pct}%` }} />
-                  </span>
-                  <span className="budget-breakdown-amount">
-                    {formatCurrency(row.amount)} · {row.pct}%
-                  </span>
+              {byCategory.map((row) => {
+                const booked = bookedByCategory.get(row.category) ?? [];
+                return (
+                  <div className="budget-breakdown-group" key={row.category}>
+                    <div className="budget-breakdown-row">
+                      <span className="budget-breakdown-label">{t(row.category)}</span>
+                      <span aria-hidden="true" className="budget-breakdown-bar">
+                        <span style={{ width: `${row.pct}%` }} />
+                      </span>
+                      <span className="budget-breakdown-amount">
+                        {formatCurrency(row.amount)} · {row.pct}%
+                      </span>
+                    </div>
+                    {booked.length > 0 ? renderBookedVendors(booked) : null}
+                  </div>
+                );
+              })}
+              {bookedOnlyCategories.map((category) => (
+                <div className="budget-breakdown-group" key={category}>
+                  <div className="budget-breakdown-row">
+                    <span className="budget-breakdown-label">{t(category)}</span>
+                    <span aria-hidden="true" className="budget-breakdown-bar" />
+                    <span className="budget-breakdown-amount budget-breakdown-note">{t("Not budgeted yet")}</span>
+                  </div>
+                  {renderBookedVendors(bookedByCategory.get(category) ?? [])}
                 </div>
               ))}
             </div>

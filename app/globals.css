@@ -16583,6 +16583,80 @@ a {
   white-space: nowrap;
 }
 
+.budget-breakdown-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.budget-breakdown-head h3 {
+  margin: 0;
+}
+
+.budget-breakdown-booked {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.budget-breakdown-booked strong {
+  color: var(--ink);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-breakdown-group {
+  display: grid;
+  gap: 6px;
+}
+
+.budget-breakdown-note {
+  color: var(--subtle);
+  font-style: italic;
+}
+
+.budget-breakdown-vendors {
+  list-style: none;
+  margin: 0 0 2px;
+  padding: 0 0 0 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.budget-breakdown-vendors li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.budget-vendor-name {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-vendor-name::before {
+  content: "\21b3";
+  margin-right: 6px;
+  color: var(--subtle);
+}
+
+.budget-vendor-quote {
+  flex-shrink: 0;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 @media (max-width: 620px) {
   .budget-breakdown-row {
     grid-template-columns: 1fr auto;

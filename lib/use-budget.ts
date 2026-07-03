@@ -28,6 +28,24 @@ export const BUDGET_CATEGORIES = [
   "Other"
 ];
 
+// Maps a vendor sourcing category id (see lib/vendor-sourcing) to the budget
+// category a booked vendor's cost belongs under, so bookings surface on the
+// budget breakdown. Unmapped ids fall back to "Other".
+export const VENDOR_TO_BUDGET_CATEGORY: Record<string, string> = {
+  catering: "Catering",
+  "bar-service": "Catering",
+  cake: "Cake",
+  dj: "Music",
+  "live-singer": "Music",
+  "music-equipment": "Music",
+  "photo-booth": "Photography",
+  "hair-makeup": "Attire",
+  transport: "Transport",
+  lighting: "Other",
+  "furniture-rental": "Other",
+  childcare: "Other"
+};
+
 const DEFAULT_BUDGET: BudgetItem[] = [
   { id: "b-venue", category: "Venue", label: "Rosewood Hall — venue hire", estimate: 12000, paid: 6000 },
   { id: "b-catering", category: "Catering", label: "Dinner & drinks", estimate: 16800, paid: 4000 },
