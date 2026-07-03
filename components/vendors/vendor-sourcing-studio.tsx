@@ -12,13 +12,13 @@ import {
   type VendorDecisionEntry
 } from "@/lib/vendor-intelligence";
 import { useTranslation } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/wedding-budget";
 import { buildVendorSearchSuggestions, getVendorSourcingSummary, vendorSourcingCategories } from "@/lib/vendor-sourcing";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { SourcingPriority, VendorCandidate, VendorCandidateStatus, VendorPriceTier, VendorSearchSuggestion } from "@/lib/wedding-types";
 
 const vendorStatusOptions: VendorCandidateStatus[] = ["shortlisted", "contacted", "quote-requested", "booked", "rejected"];
 const priceTierOptions: VendorPriceTier[] = ["unknown", "budget", "standard", "premium", "luxury"];
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export function VendorSourcingStudio() {
   const { t } = useTranslation();
@@ -74,7 +74,7 @@ export function VendorSourcingStudio() {
       eyebrow="Vendors"
       meta={[
         { label: "Booked", value: `${intelligence.bookedCount}` },
-        { label: "Booked cost", value: money.format(bookedTotal) },
+        { label: "Booked cost", value: formatCurrency(bookedTotal) },
         { label: "Open gaps", value: `${intelligence.openRequiredCount}` }
       ]}
       primaryAction={{ href: "/exports", label: "Prepare vendor brief" }}
@@ -175,7 +175,7 @@ export function VendorSourcingStudio() {
                 <strong>{selectedDecision.nextAction}</strong>
                 {bookedTotal > 0 ? (
                   <small className="vendor-panel-money">
-                    <strong>{money.format(bookedTotal)}</strong> {t("committed to booked vendors")}
+                    <strong>{formatCurrency(bookedTotal)}</strong> {t("committed to booked vendors")}
                   </small>
                 ) : null}
               </div>
@@ -202,7 +202,7 @@ export function VendorSourcingStudio() {
                         {candidate.quote > 0 ? (
                           <div className="vendor-fit-score vendor-quote-figure">
                             <span>{t("Quote")}</span>
-                            <strong>{money.format(candidate.quote)}</strong>
+                            <strong>{formatCurrency(candidate.quote)}</strong>
                           </div>
                         ) : null}
                       </div>

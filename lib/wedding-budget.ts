@@ -37,6 +37,14 @@ export function calculateBudgetSummary(categories: BudgetCategory[] = budgetCate
   return { total, spent, remaining, spentPercent, categories };
 }
 
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0
+});
+
 export function formatCurrency(amount: number): string {
-  return `$${Math.round(amount).toLocaleString("en-US")}`;
+  const rounded = Math.round(amount) || 0;
+
+  return currencyFormatter.format(rounded);
 }

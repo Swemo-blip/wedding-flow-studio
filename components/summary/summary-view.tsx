@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Printer } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
+import { formatCurrency } from "@/lib/wedding-budget";
 import { useBudget } from "@/lib/use-budget";
 import { useChecklist } from "@/lib/use-checklist";
-
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export function SummaryView() {
   const { t } = useTranslation();
@@ -86,15 +85,15 @@ export function SummaryView() {
           <section className="summary-block">
             <h2>{t("Budget")}</h2>
             <ul className="summary-stats">
-              <li><span>{t("Total budget")}</span><strong>{money.format(budgetStats.target)}</strong></li>
-              <li><span>{t("Estimated")}</span><strong>{money.format(budgetStats.estimate)}</strong></li>
-              <li><span>{t("Paid")}</span><strong>{money.format(budgetStats.paid)}</strong></li>
-              <li><span>{t("Left to pay")}</span><strong>{money.format(budgetStats.remaining)}</strong></li>
+              <li><span>{t("Total budget")}</span><strong>{formatCurrency(budgetStats.target)}</strong></li>
+              <li><span>{t("Estimated")}</span><strong>{formatCurrency(budgetStats.estimate)}</strong></li>
+              <li><span>{t("Paid")}</span><strong>{formatCurrency(budgetStats.paid)}</strong></li>
+              <li><span>{t("Left to pay")}</span><strong>{formatCurrency(budgetStats.remaining)}</strong></li>
             </ul>
             <p className="summary-note" data-tone={budgetStats.overBudget ? "alert" : "good"}>
               {budgetStats.overBudget
-                ? t("{amount} over budget", { amount: money.format(budgetStats.estimate - budgetStats.target) })
-                : t("{amount} under budget", { amount: money.format(budgetStats.target - budgetStats.estimate) })}
+                ? t("{amount} over budget", { amount: formatCurrency(budgetStats.estimate - budgetStats.target) })
+                : t("{amount} under budget", { amount: formatCurrency(budgetStats.target - budgetStats.estimate) })}
             </p>
           </section>
 

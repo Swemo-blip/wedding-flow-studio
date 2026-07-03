@@ -5,9 +5,8 @@ import { Plus, X } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { Donut } from "@/components/ui/donut";
 import { useTranslation } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/wedding-budget";
 import { BUDGET_CATEGORIES, useBudget } from "@/lib/use-budget";
-
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export function BudgetView() {
   const { t } = useTranslation();
@@ -44,9 +43,9 @@ export function BudgetView() {
       description="Track every cost in one place — estimate each line, log what's paid, and always see what's left."
       eyebrow="Budget"
       meta={[
-        { label: "Estimated", value: money.format(totals.estimate) },
-        { label: "Paid", value: money.format(totals.paid) },
-        { label: "Left to pay", value: money.format(totals.remaining) }
+        { label: "Estimated", value: formatCurrency(totals.estimate) },
+        { label: "Paid", value: formatCurrency(totals.paid) },
+        { label: "Left to pay", value: formatCurrency(totals.remaining) }
       ]}
       primaryAction={{ href: "/exports", label: "Export summary" }}
       title="Where the money goes."
@@ -62,15 +61,15 @@ export function BudgetView() {
           <div className="budget-summary-stats">
             <div>
               <span>{t("Estimated total")}</span>
-              <strong>{money.format(totals.estimate)}</strong>
+              <strong>{formatCurrency(totals.estimate)}</strong>
             </div>
             <div>
               <span>{t("Paid so far")}</span>
-              <strong>{money.format(totals.paid)}</strong>
+              <strong>{formatCurrency(totals.paid)}</strong>
             </div>
             <div data-tone={totals.remaining > 0 ? "due" : "clear"}>
               <span>{t("Left to pay")}</span>
-              <strong>{money.format(totals.remaining)}</strong>
+              <strong>{formatCurrency(totals.remaining)}</strong>
             </div>
           </div>
           <div className="budget-target">
@@ -91,8 +90,8 @@ export function BudgetView() {
             </label>
             <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
               {overBudget
-                ? t("{amount} over budget", { amount: money.format(totals.estimate - target) })
-                : t("{amount} under budget", { amount: money.format(target - totals.estimate) })}
+                ? t("{amount} over budget", { amount: formatCurrency(totals.estimate - target) })
+                : t("{amount} under budget", { amount: formatCurrency(target - totals.estimate) })}
             </span>
           </div>
         </section>
@@ -108,7 +107,7 @@ export function BudgetView() {
                     <span style={{ width: `${row.pct}%` }} />
                   </span>
                   <span className="budget-breakdown-amount">
-                    {money.format(row.amount)} · {row.pct}%
+                    {formatCurrency(row.amount)} · {row.pct}%
                   </span>
                 </div>
               ))}
@@ -185,7 +184,7 @@ export function BudgetView() {
                   />
                 </span>
                 <span className="budget-num budget-left" data-due={left > 0 ? "true" : undefined} role="cell">
-                  {money.format(left)}
+                  {formatCurrency(left)}
                 </span>
                 <span className="guests-cell-actions" role="cell">
                   <button
