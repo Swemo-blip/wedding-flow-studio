@@ -13,6 +13,7 @@ import {
 } from "@/lib/vendor-intelligence";
 import { useTranslation } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/wedding-budget";
+import { VENDOR_CATEGORY_TO_CHECKLIST_TASK, useChecklist } from "@/lib/use-checklist";
 import { buildVendorSearchSuggestions, getVendorSourcingSummary, vendorSourcingCategories } from "@/lib/vendor-sourcing";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { SourcingPriority, VendorCandidate, VendorCandidateStatus, VendorPriceTier, VendorSearchSuggestion } from "@/lib/wedding-types";
@@ -23,6 +24,7 @@ const priceTierOptions: VendorPriceTier[] = ["unknown", "budget", "standard", "p
 export function VendorSourcingStudio() {
   const { t } = useTranslation();
   const { addVendorCandidate, updateVendorCandidate, vendorCandidates, wedding } = useLocalProject();
+  const { markTaskDone } = useChecklist();
   const suggestions = useMemo(() => buildVendorSearchSuggestions(wedding), [wedding]);
   const summary = getVendorSourcingSummary(suggestions);
   const intelligence = useMemo(
@@ -48,6 +50,15 @@ export function VendorSourcingStudio() {
 
     addVendorCandidate(candidate);
     setCopyStatus(`${candidate.name} saved to the sourcing shortlist.`);
+  }
+
+  function setCandidateStatus(candidate: VendorCandidate, status: VendorCandidateStatus) {
+    updateVendorCandidate(candidate.id, { status });
+
+    if (status === "booked" && VENDOR_CATEGORY_TO_CHECKLIST_TASK[candidate.categoryId]) {
+      markTaskDone(VENDOR_CATEGORY_TO_CHECKLIST_TASK[candidate.categoryId]);
+      setCopyStatus(t("{name} booked — checked off on your checklist.", { name: candidate.name }));
+    }
   }
 
   async function copySourcingBrief(suggestion: VendorSearchSuggestion) {
@@ -213,9 +224,7 @@ export function VendorSourcingStudio() {
                         {t("Status")}
                         <select
                           aria-label={`${t("Status")} – ${candidate.name}`}
-                          onChange={(event) =>
-                            updateVendorCandidate(candidate.id, { status: event.target.value as VendorCandidateStatus })
-                          }
+                          onChange={(event) => setCandidateStatus(candidate, event.target.value as VendorCandidateStatus)}
                           value={candidate.status}
                         >
                           {vendorStatusOptions.map((status) => (

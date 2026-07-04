@@ -15,6 +15,18 @@ const STORAGE_KEY = "wedding-flow-studio.checklist.v1";
 // and are translated for display via t().
 export const CHECKLIST_PHASES = ["12+ months", "9 months", "6 months", "3 months", "1 month", "Final week", "Day of"];
 
+// Maps a vendor sourcing category id (see lib/vendor-sourcing) to the seeded
+// checklist task that booking such a vendor completes. Forward-only: booking
+// marks the task done, un-booking never un-checks it. Categories without a
+// matching seeded task are intentionally absent.
+export const VENDOR_CATEGORY_TO_CHECKLIST_TASK: Record<string, string> = {
+  catering: "c-cater",
+  dj: "c-music",
+  "live-singer": "c-music",
+  "music-equipment": "c-music",
+  cake: "c-cake"
+};
+
 const DEFAULT_CHECKLIST: ChecklistTask[] = [
   { id: "c-date", title: "Set the date", phase: "12+ months", done: true },
   { id: "c-budget", title: "Agree a budget", phase: "12+ months", done: true },
@@ -78,6 +90,12 @@ export function useChecklist() {
     persist(tasks.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
   }
 
+  // Idempotent set-done, used by cross-module links (e.g. booking a vendor
+  // completes its checklist task) where a toggle would be unsafe.
+  function markTaskDone(id: string) {
+    persist(tasks.map((task) => (task.id === id ? { ...task, done: true } : task)));
+  }
+
   function updateTask(id: string, title: string) {
     persist(tasks.map((task) => (task.id === id ? { ...task, title } : task)));
   }
@@ -90,5 +108,5 @@ export function useChecklist() {
     persist(tasks.filter((task) => task.id !== id));
   }
 
-  return { tasks, toggleTask, updateTask, addTask, removeTask };
+  return { tasks, toggleTask, markTaskDone, updateTask, addTask, removeTask };
 }
