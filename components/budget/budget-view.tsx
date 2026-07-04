@@ -155,6 +155,8 @@ export function BudgetView() {
             <div className="budget-breakdown-list">
               {byCategory.map((row) => {
                 const booked = bookedByCategory.get(row.category) ?? [];
+                const bookedSum = booked.reduce((sum, vendor) => sum + vendor.quote, 0);
+                const overBooked = bookedSum > row.amount;
                 return (
                   <div className="budget-breakdown-group" key={row.category}>
                     <div className="budget-breakdown-row">
@@ -167,6 +169,11 @@ export function BudgetView() {
                       </span>
                     </div>
                     {booked.length > 0 ? renderBookedVendors(booked) : null}
+                    {overBooked ? (
+                      <span className="budget-breakdown-over">
+                        {t("Booked {amount} over this estimate", { amount: formatCurrency(bookedSum - row.amount) })}
+                      </span>
+                    ) : null}
                   </div>
                 );
               })}

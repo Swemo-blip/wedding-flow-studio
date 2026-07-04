@@ -16657,6 +16657,17 @@ a {
   white-space: nowrap;
 }
 
+.budget-breakdown-over {
+  justify-self: end;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(176, 106, 79, 0.14);
+  color: var(--danger);
+  font-size: 0.76rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 620px) {
   .budget-breakdown-row {
     grid-template-columns: 1fr auto;
