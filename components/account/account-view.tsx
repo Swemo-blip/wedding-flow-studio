@@ -1,9 +1,10 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
-import { CloudCheck, CloudOff } from "lucide-react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
+import { CloudCheck, CloudOff, Download, HardDrive, Upload } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
+import { downloadBackup, restoreBackup } from "@/lib/project-backup";
 import { useAuth } from "@/lib/use-auth";
 
 export function AccountView() {
@@ -15,6 +16,34 @@ export function AccountView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [dataNotice, setDataNotice] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  function handleDownloadBackup() {
+    setDataError(null);
+    downloadBackup();
+    setDataNotice(t("Backup downloaded — keep it somewhere safe."));
+  }
+
+  async function handleRestoreBackup(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    setDataError(null);
+    setDataNotice(null);
+    const result = await restoreBackup(file);
+
+    if (!result.ok) {
+      setDataError(result.error === "not-json" ? t("Couldn't read that file.") : t("That file isn't a Wedding Flow Studio backup."));
+      return;
+    }
+
+    setDataNotice(t("Backup restored — reloading your plan…"));
+    window.setTimeout(() => window.location.reload(), 900);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -99,6 +128,29 @@ export function AccountView() {
             </form>
           </section>
         )}
+
+        <section className="account-card">
+          <div className="account-status" data-tone="off">
+            <HardDrive aria-hidden="true" size={20} />
+            <div>
+              <h2>{t("Back up your plan")}</h2>
+              <p>{t("Everything you enter is saved in this browser. Download a backup file to keep it safe, or move your plan to another device.")}</p>
+            </div>
+          </div>
+          <div className="account-actions">
+            <button className="account-button account-file-button" onClick={handleDownloadBackup} type="button">
+              <Download aria-hidden="true" size={16} />
+              {t("Download backup")}
+            </button>
+            <label className="account-button account-button-secondary account-file-button">
+              <Upload aria-hidden="true" size={16} />
+              {t("Restore from backup")}
+              <input accept="application/json,.json" hidden onChange={handleRestoreBackup} type="file" />
+            </label>
+          </div>
+          {dataNotice ? <p className="account-notice">{dataNotice}</p> : null}
+          {dataError ? <p className="account-error">{dataError}</p> : null}
+        </section>
       </div>
     </StudioRouteFrame>
   );

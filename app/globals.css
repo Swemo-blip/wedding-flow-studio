@@ -16483,6 +16483,19 @@ a {
   border-color: var(--line-strong);
 }
 
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.account-file-button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+
 /* Budget target row (couple's total budget + over/under badge) */
 .budget-target {
   display: flex;
