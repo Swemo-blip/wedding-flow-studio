@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeSetItem } from "@/lib/persistence-status";
 
 export type BudgetItem = {
   id: string;
@@ -72,11 +73,7 @@ function readStoredBudget(): BudgetItem[] | null {
 }
 
 function writeStoredBudget(items: BudgetItem[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  } catch {
-    // localStorage unavailable/full — keep it in memory for this session.
-  }
+  safeSetItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 const TARGET_KEY = "wedding-flow-studio.budget-target.v1";
@@ -91,11 +88,7 @@ function readStoredTarget(): number | null {
 }
 
 function writeStoredTarget(target: number) {
-  try {
-    window.localStorage.setItem(TARGET_KEY, String(target));
-  } catch {
-    // ignore
-  }
+  safeSetItem(TARGET_KEY, String(target));
 }
 
 export function useBudget() {

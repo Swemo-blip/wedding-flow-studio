@@ -12909,6 +12909,19 @@ a {
   color: var(--sage);
 }
 
+.studio-saved-chip[data-state="sample"] svg {
+  color: var(--gold, #b48a4a);
+}
+
+.studio-saved-chip[data-state="error"] {
+  color: var(--danger);
+  font-weight: 640;
+}
+
+.studio-saved-chip[data-state="error"] svg {
+  color: var(--danger);
+}
+
 .studio-share-button,
 .studio-preview-button {
   display: inline-flex;

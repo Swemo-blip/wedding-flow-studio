@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CloudCheck, Eye, Share2 } from "lucide-react";
+import { Eye, HardDrive, Share2, Sparkles, TriangleAlert } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { useTranslation } from "@/lib/i18n";
+import { getPersistenceState, subscribePersistence } from "@/lib/persistence-status";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
 
@@ -15,6 +16,7 @@ type TopBarProps = {
 export function TopBar({ wedding }: TopBarProps) {
   const { language, setLanguage, t } = useTranslation();
   const { hasLocalProject, wedding: localWedding } = useLocalProject();
+  const persistence = useSyncExternalStore(subscribePersistence, getPersistenceState, () => ({ ok: true, reason: null }));
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const activeWedding = hasLocalProject ? localWedding : wedding;
 
@@ -49,13 +51,29 @@ export function TopBar({ wedding }: TopBarProps) {
               SV
             </button>
           </div>
-          <span className="studio-saved-chip">
-            <CloudCheck aria-hidden="true" size={16} strokeWidth={1.7} />
-            {hasLocalProject ? t("All changes saved") : t("Sample wedding")}
-          </span>
+          {!hasLocalProject ? (
+            <span className="studio-saved-chip" data-state="sample">
+              <Sparkles aria-hidden="true" size={16} strokeWidth={1.7} />
+              {t("Sample wedding")}
+            </span>
+          ) : persistence.ok ? (
+            <span
+              className="studio-saved-chip"
+              data-state="saved"
+              title={t("Saved in this browser. Sign in to back up to the cloud.")}
+            >
+              <HardDrive aria-hidden="true" size={16} strokeWidth={1.7} />
+              {t("Saved in this browser")}
+            </span>
+          ) : (
+            <span className="studio-saved-chip" data-state="error" role="status">
+              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.9} />
+              {persistence.reason === "quota" ? t("Couldn't save — storage full") : t("Couldn't save changes")}
+            </span>
+          )}
           <button className="button button-secondary button-small studio-share-button" onClick={copyStudioLink} type="button">
             <Share2 aria-hidden="true" size={15} strokeWidth={1.8} />
-            {shareStatus ?? t("Share Studio")}
+            {shareStatus ?? t("Copy link")}
           </button>
           <Link className="button button-primary button-small studio-preview-button" href="/preview">
             <Eye aria-hidden="true" size={15} strokeWidth={1.8} />

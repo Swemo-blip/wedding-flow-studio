@@ -14,6 +14,7 @@ import {
   type StudioSceneObjectId,
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
+import { safeSetItem } from "@/lib/persistence-status";
 
 export const weddingStudioLayoutStorageKey = "wedding-flow-studio.layout.v1";
 
@@ -55,7 +56,9 @@ export function writeStoredWeddingStudioLayout(plan: WeddingStudioPlan, sceneEdi
     updatedAt: new Date().toISOString()
   });
 
-  window.localStorage.setItem(weddingStudioLayoutStorageKey, JSON.stringify(nextLayout));
+  if (!safeSetItem(weddingStudioLayoutStorageKey, JSON.stringify(nextLayout))) {
+    return null;
+  }
 
   return nextLayout;
 }

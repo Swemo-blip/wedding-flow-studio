@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { fileToDownscaledDataUrl } from "@/lib/image-upload";
+import { safeSetItem } from "@/lib/persistence-status";
 
 function readStoredImage(storageKey: string): string | null {
   if (typeof window === "undefined") return null;
@@ -40,11 +41,7 @@ function StyleReferenceTile({ reference }: { reference: StyleReference }) {
   async function handleUpload(file: File | null) {
     if (!file) return;
     const dataUrl = await fileToDownscaledDataUrl(file, 640);
-    try {
-      window.localStorage.setItem(storageKey, dataUrl);
-    } catch {
-      // localStorage full — keep it in memory for this session at least.
-    }
+    safeSetItem(storageKey, dataUrl);
     setUploaded(dataUrl);
   }
 

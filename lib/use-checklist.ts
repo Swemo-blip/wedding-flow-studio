@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeSetItem } from "@/lib/persistence-status";
 
 export type ChecklistTask = {
   id: string;
@@ -64,11 +65,7 @@ function readStoredChecklist(): ChecklistTask[] | null {
 }
 
 function writeStoredChecklist(tasks: ChecklistTask[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  } catch {
-    // localStorage unavailable/full — keep it in memory for this session.
-  }
+  safeSetItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
 export function useChecklist() {

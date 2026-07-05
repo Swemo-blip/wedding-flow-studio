@@ -37,7 +37,11 @@ export function writeRecoveryDecisionLog(entries: RecoveryDecisionLogEntry[]) {
     return entries;
   }
 
-  window.localStorage.setItem(recoveryLogStorageKey, JSON.stringify(entries.slice(0, 20)));
+  try {
+    window.localStorage.setItem(recoveryLogStorageKey, JSON.stringify(entries.slice(0, 20)));
+  } catch {
+    // Recovery log is non-critical history; ignore storage failures.
+  }
 
   return entries;
 }

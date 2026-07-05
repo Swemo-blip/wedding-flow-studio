@@ -141,7 +141,11 @@ export function OverviewDashboard() {
   }, []);
 
   function dismissWelcome() {
-    window.localStorage.setItem("wfs-welcome-dismissed", "1");
+    try {
+      window.localStorage.setItem("wfs-welcome-dismissed", "1");
+    } catch {
+      // Non-critical UI preference; ignore storage failures.
+    }
     setShowWelcome(false);
   }
 

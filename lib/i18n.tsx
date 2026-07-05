@@ -695,6 +695,13 @@ const sv: Record<string, string> = {
   "Not budgeted yet": "Ingen budgetpost än",
   "Booked {amount} over this estimate": "Bokat {amount} över uppskattningen",
   "{name} booked — checked off on your checklist.": "{name} bokad — avbockad i din checklista.",
+  "Saved in this browser": "Sparat i webbläsaren",
+  "Saved in this browser. Sign in to back up to the cloud.": "Sparat i den här webbläsaren. Logga in för att säkerhetskopiera till molnet.",
+  "Couldn't save — storage full": "Kunde inte spara — lagringen är full",
+  "Couldn't save changes": "Kunde inte spara ändringar",
+  "Copy link": "Kopiera länk",
+  "Account created. Check your email to confirm, then sign in.": "Kontot skapat. Kolla din e-post för att bekräfta, logga sedan in.",
+  "Signed in. Your plan is still saved on this device — cloud backup is coming soon.": "Inloggad. Din plan sparas fortfarande på den här enheten — molnbackup kommer snart.",
   "Wedding summary": "Bröllopssammanfattning",
   "A one-page overview to print or share with your partner and vendors.": "En ensides översikt att skriva ut eller dela med din partner och leverantörer.",
   "Print / Save as PDF": "Skriv ut / Spara som PDF",
@@ -1127,7 +1134,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = useCallback((next: Language) => {
     setLanguageState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Language preference is non-critical; keep it for the session if storage is full.
+    }
     document.documentElement.lang = next;
   }, []);
 

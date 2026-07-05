@@ -26,7 +26,7 @@ export function AccountView() {
     if (actionError) {
       setError(actionError);
     } else if (mode === "signup") {
-      setNotice(t("Account created — you can sign in now."));
+      setNotice(t("Account created. Check your email to confirm, then sign in."));
       setMode("signin");
     }
     setBusy(false);
@@ -34,7 +34,7 @@ export function AccountView() {
 
   return (
     <StudioRouteFrame
-      description="Sign in to sync your plan to the cloud, reach it from any device, and share it with your partner and vendors."
+      description="Create an account now. Your plan is saved on this device today — cloud backup and sharing are coming soon."
       eyebrow="Account"
       meta={[{ label: "Cloud", value: configured ? (user ? "Signed in" : "Ready") : "Local only" }]}
       title="Your wedding, everywhere."
@@ -60,7 +60,7 @@ export function AccountView() {
                 <p>{user.email}</p>
               </div>
             </div>
-            <p className="account-hint">{t("Your plan syncs to the cloud and follows you across devices.")}</p>
+            <p className="account-hint">{t("Signed in. Your plan is still saved on this device — cloud backup is coming soon.")}</p>
             <button className="account-button account-button-secondary" onClick={() => void signOut()} type="button">
               {t("Sign out")}
             </button>

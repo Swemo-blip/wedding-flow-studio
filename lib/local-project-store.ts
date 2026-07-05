@@ -1,4 +1,5 @@
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
+import { safeSetItem } from "@/lib/persistence-status";
 import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 export const projectStorageKey = "wedding-flow-studio.project.v1";
@@ -132,7 +133,11 @@ export function writeStoredProject(project: StoredWeddingProject) {
     updatedAt: new Date().toISOString()
   });
 
-  window.localStorage.setItem(projectStorageKey, JSON.stringify(nextProject));
+  // Returns null when the write did not land (quota/unavailable) so callers keep
+  // their in-memory state and the header can flag "not saved" — never throws.
+  if (!safeSetItem(projectStorageKey, JSON.stringify(nextProject))) {
+    return null;
+  }
 
   return nextProject;
 }
@@ -174,14 +179,17 @@ export function writeStoredTimeline(items: TimelineItem[]) {
     timelineItems: createTimelineDraft(items)
   });
 
-  const legacyProject: StoredTimelineProject = {
-    updatedAt: project?.updatedAt ?? new Date().toISOString(),
-    timelineItems: createTimelineDraft(items)
-  };
+  if (!project) {
+    return null;
+  }
 
-  window.localStorage.setItem(timelineStorageKey, JSON.stringify(legacyProject));
-
-  return legacyProject;
+  // The project blob is the single source of truth for the timeline; the legacy
+  // per-timeline key is read-only fallback for pre-project installs, so we no
+  // longer dual-write it (that doubled storage on every timeline edit).
+  return {
+    updatedAt: project.updatedAt,
+    timelineItems: project.timelineItems
+  } satisfies StoredTimelineProject;
 }
 
 export function readStoredMusicCues() {
@@ -300,7 +308,7 @@ export function writeStoredRiskResolutions(resolutions: StoredRiskResolution[]) 
     riskResolutions: resolutions
   });
 
-  window.localStorage.setItem(riskResolutionStorageKey, JSON.stringify(resolutions));
+  safeSetItem(riskResolutionStorageKey, JSON.stringify(resolutions));
 }
 
 export function resolveStoredRisk(riskId: string) {
