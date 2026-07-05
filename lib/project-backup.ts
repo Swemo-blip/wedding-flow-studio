@@ -55,6 +55,27 @@ export function downloadBackup(): BackupFile {
   return backup;
 }
 
+// Guard for destructive resets: confirm with the couple, and — if they agree —
+// download a backup file BEFORE anything is cleared, so the wipe is always
+// recoverable. Returns false (caller should abort) unless the user confirms.
+export function confirmAndBackupBeforeReset(message: string): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (!window.confirm(message)) {
+    return false;
+  }
+
+  try {
+    downloadBackup();
+  } catch {
+    // Best-effort safety copy — never block the reset the user explicitly asked for.
+  }
+
+  return true;
+}
+
 export async function restoreBackup(file: File): Promise<RestoreResult> {
   let parsed: unknown;
 

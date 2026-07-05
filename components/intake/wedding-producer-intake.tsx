@@ -18,7 +18,8 @@ import {
   type WeddingStylePreset
 } from "@/lib/project-composer";
 import { useTranslation } from "@/lib/i18n";
-import { createStoredProjectDraft, writeStoredProject } from "@/lib/local-project-store";
+import { createStoredProjectDraft, readStoredProject, writeStoredProject } from "@/lib/local-project-store";
+import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 
 const styleOptions = Object.entries(stylePresetLabels) as Array<[WeddingStylePreset, string]>;
 const ceremonyOptions = Object.entries(ceremonyFormatLabels) as Array<[CeremonyFormat, string]>;
@@ -124,6 +125,17 @@ export function WeddingProducerIntake() {
   }
 
   function createDigitalTwin(redirectTo?: string) {
+    if (
+      readStoredProject() &&
+      !confirmAndBackupBeforeReset(
+        t(
+          "You already have a wedding plan. Creating a new one replaces your current guests, seating, timeline and speeches. A backup file downloads first so you can restore it."
+        )
+      )
+    ) {
+      return;
+    }
+
     const storedProject = writeStoredProject(
       createStoredProjectDraft({
         dinnerTables: plan.dinnerTables,

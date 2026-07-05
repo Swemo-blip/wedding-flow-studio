@@ -5,6 +5,7 @@ import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidat
 export const projectStorageKey = "wedding-flow-studio.project.v1";
 export const timelineStorageKey = "wedding-flow-studio.timeline.v1";
 export const riskResolutionStorageKey = "wedding-flow-studio.risk-resolutions.v1";
+export const corruptProjectStorageKey = "wedding-flow-studio.project.corrupt.v1";
 
 export type StoredTimelineProject = {
   updatedAt: string;
@@ -106,6 +107,14 @@ export function readStoredProject() {
         });
       }
     } catch {
+      // Don't silently fall back to sample data (which the next edit would then
+      // persist over the real blob) — stash the unreadable value under a
+      // recovery key so it isn't lost, then give up on this read.
+      try {
+        window.localStorage.setItem(corruptProjectStorageKey, rawValue);
+      } catch {
+        // best effort — nothing more we can do if storage is also full
+      }
       return null;
     }
   }

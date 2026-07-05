@@ -21,6 +21,7 @@ import { Donut } from "@/components/ui/donut";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
+import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useBudget } from "@/lib/use-budget";
 import { useChecklist } from "@/lib/use-checklist";
@@ -210,6 +211,16 @@ export function OverviewDashboard() {
   }
 
   function startOver() {
+    if (
+      !confirmAndBackupBeforeReset(
+        t(
+          "Start over? This permanently deletes your current wedding plan — guests, seating, timeline, speeches and vendors. A backup file downloads first so you can restore it."
+        )
+      )
+    ) {
+      return;
+    }
+
     clearStoredProject();
     clearStoredWeddingStudioLayout();
     localProject.resetLocalProject();

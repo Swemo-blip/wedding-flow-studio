@@ -8,6 +8,7 @@ import { StudioQuickStrip } from "@/components/wedding-studio/studio-quick-strip
 import { StudioSummary } from "@/components/wedding-studio/studio-summary";
 import { StudioToolkit } from "@/components/wedding-studio/studio-toolkit";
 import { clearStoredProject } from "@/lib/local-project-store";
+import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { useLocalProject } from "@/lib/use-local-project";
 import { sampleWedding } from "@/lib/wedding-data";
 import { clearStoredWeddingStudioLayout, readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
@@ -116,6 +117,14 @@ export function WeddingStudio() {
   }
 
   function resetGeneratedProject() {
+    if (
+      !confirmAndBackupBeforeReset(
+        "Start over? This permanently deletes your current wedding plan — guests, seating, timeline, speeches and vendors. A backup file downloads first so you can restore it."
+      )
+    ) {
+      return;
+    }
+
     clearStoredProject();
     clearStoredWeddingStudioLayout();
     localProject.resetLocalProject();
