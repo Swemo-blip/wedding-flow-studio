@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, useGLTF } from "@react-three/drei";
-import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -322,15 +322,22 @@ export function CeremonyScene({
             <EffectComposer multisampling={4}>
               <N8AO aoRadius={0.8} distanceFalloff={0.75} halfRes intensity={3} quality="medium" />
               <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
-              <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
+              <Vignette darkness={isDay ? 0.28 : 0.55} eskil={false} offset={0.3} />
               <Noise opacity={0.05} premultiply />
               <ToneMapping mode={ToneMappingMode.AGX} />
+              {/* AgX rolls off highlights beautifully but desaturates — this pass
+                  brings the warm ivory/candle tones back and adds a little depth
+                  so the scene reads rich, not pastel-flat. */}
+              <BrightnessContrast brightness={-0.015} contrast={0.09} />
+              <HueSaturation saturation={0.18} />
             </EffectComposer>
           ) : (
             <EffectComposer multisampling={4}>
               <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
-              <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
+              <Vignette darkness={isDay ? 0.28 : 0.55} eskil={false} offset={0.3} />
               <ToneMapping mode={ToneMappingMode.AGX} />
+              <BrightnessContrast brightness={-0.015} contrast={0.09} />
+              <HueSaturation saturation={0.18} />
             </EffectComposer>
           )}
           {isDay ? null : <GlowHalo />}
@@ -1711,26 +1718,35 @@ function Dais({ palette }: { palette: Palette }) {
 }
 
 function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
-  // A fuller arrangement: many small ivory/blush blooms over a couple of green
-  // foliage spheres, rather than a few flat puffs.
+  // Many small individual blooms on a loose, asymmetric silhouette with greenery
+  // breaking the edges — reads as a florist's arrangement rather than one solid
+  // white ball. Sizes stay small (<=0.26 r) so no single sphere dominates.
   const blossoms: Array<[number, number, number, number, string]> = [
-    [radius * 0.05, -radius * 0.32, -0.03, radius * 0.34, "#6f7f56"],
-    [-radius * 0.4, -radius * 0.3, -0.03, radius * 0.28, "#7a8a5e"],
-    [0, 0.04, 0.02, radius * 0.46, "#f3ece0"],
-    [radius * 0.44, radius * 0.1, 0.02, radius * 0.38, palette.blush],
-    [-radius * 0.44, radius * 0.08, 0.02, radius * 0.36, "#efe6d6"],
-    [radius * 0.18, radius * 0.4, 0, radius * 0.34, palette.blush],
-    [-radius * 0.22, radius * 0.36, 0.02, radius * 0.32, "#f3ece0"],
-    [0, radius * 0.56, -0.01, radius * 0.28, palette.carpet],
-    [radius * 0.34, -radius * 0.18, 0.05, radius * 0.3, "#e7d8cf"],
-    [-radius * 0.32, -radius * 0.16, 0.05, radius * 0.28, palette.blush]
+    // greenery base + a few sprigs poking past the blooms
+    [radius * 0.02, -radius * 0.34, -0.04, radius * 0.24, "#6f7f56"],
+    [-radius * 0.46, -radius * 0.28, -0.05, radius * 0.2, "#7a8a5e"],
+    [radius * 0.5, -radius * 0.22, -0.05, radius * 0.18, "#6f7f56"],
+    [-radius * 0.34, radius * 0.5, -0.02, radius * 0.13, "#7a8a5e"],
+    [radius * 0.4, radius * 0.46, -0.02, radius * 0.12, "#6f7f56"],
+    // ivory / blush blooms, varied size + depth for a broken silhouette
+    [0, radius * 0.02, radius * 0.12, radius * 0.24, "#f5efe4"],
+    [radius * 0.34, radius * 0.06, radius * 0.08, radius * 0.2, palette.blush],
+    [-radius * 0.36, radius * 0.04, radius * 0.08, radius * 0.19, "#efe6d6"],
+    [radius * 0.16, radius * 0.34, radius * 0.06, radius * 0.18, palette.blush],
+    [-radius * 0.2, radius * 0.32, radius * 0.06, radius * 0.17, "#f3ece0"],
+    [0, radius * 0.54, radius * 0.02, radius * 0.15, "#f5efe4"],
+    [radius * 0.42, radius * 0.26, 0.02, radius * 0.15, "#e7d8cf"],
+    [-radius * 0.42, radius * 0.24, 0.02, radius * 0.14, palette.blush],
+    [radius * 0.26, -radius * 0.16, radius * 0.1, radius * 0.17, "#efe6d6"],
+    [-radius * 0.28, -radius * 0.14, radius * 0.1, radius * 0.16, "#f3ece0"],
+    [0, -radius * 0.02, radius * 0.22, radius * 0.14, palette.blush]
   ];
 
   return (
     <group position={position}>
       {blossoms.map(([x, y, z, size, color], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
-          <sphereGeometry args={[size, 10, 10]} />
+          <sphereGeometry args={[size, 8, 8]} />
           <meshStandardMaterial color={color} roughness={0.82} />
         </mesh>
       ))}
