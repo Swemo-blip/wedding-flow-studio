@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { Billboard, Html, OrbitControls, useGLTF } from "@react-three/drei";
 import { type ComponentRef, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { SceneBootGate } from "@/components/wedding-studio/scene-boot";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
 
@@ -345,6 +346,7 @@ export function ReceptionSeating3D({
 
   return (
     <div className="reception-seating-3d" aria-label={t("3D seating")}>
+      <SceneBootGate>
       <Canvas
         camera={{ far: 60, fov: 42, near: 0.1, position: [0, 5, 6.6] }}
         dpr={highQuality ? [1, 2] : [1, 1.3]}
@@ -377,6 +379,7 @@ export function ReceptionSeating3D({
           target={[0, 0.3, 0]}
         />
       </Canvas>
+      </SceneBootGate>
       <p className="seat3d-hint">{t("Drag a guest to another table · click to inspect")}</p>
     </div>
   );

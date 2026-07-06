@@ -4,10 +4,11 @@ import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, useGLTF } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { useTranslation } from "@/lib/i18n";
 import {
   venueOptions,
@@ -23,6 +24,11 @@ import {
 } from "@/lib/wedding-studio-plan";
 
 export type SceneLighting = "day" | "dusk";
+
+// Poly Haven CC0 HDRIs (see public/hdr/CREDITS.md): a real sunlit church
+// interior lights the church venue; the warm lounge lights the open venues.
+const CHURCH_HDR_URL = "/hdr/church_museum_2k.hdr";
+const INTERIOR_HDR_URL = "/hdr/lythwood_room_1k.hdr";
 
 export type SceneCameraOverride = {
   position: [number, number, number];
@@ -237,10 +243,11 @@ export function CeremonyScene({
         // never a loading flash.
         style={{ background: `linear-gradient(180deg, ${preset.hemisphereSky}, ${preset.fogColor} 60%)` }}
       >
+        <SceneBootGate>
         <Canvas
           camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, venueType, activeStep) }}
           dpr={highQuality ? [1, 2] : [1, 1.3]}
-          gl={{ preserveDrawingBuffer: true, toneMappingExposure: 1.02 }}
+          gl={{ preserveDrawingBuffer: true }}
           // three 0.184 removed PCFSoftShadowMap (it silently downgraded and
           // logged a deprecation warning every frame) — PCF is what actually ran.
           shadows={{ type: THREE.PCFShadowMap }}
@@ -250,20 +257,23 @@ export function CeremonyScene({
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
           {venueType === "garden" || venueType === "beach" ? <HillSilhouettes /> : null}
-          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, venueType === "church" ? 0.72 : preset.hemisphereIntensity]} />
-          <ambientLight color={preset.ambientColor} intensity={venueType === "church" ? 0.5 : preset.ambientIntensity} />
-          <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 8, -7]} />
+          {/* Directional-over-fill: the church runs on a low ambient base so
+              corners darken and the candle pools read — the chiaroscuro of the
+              reference. Open venues keep their brighter presets. */}
+          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, venueType === "church" ? 0.38 : preset.hemisphereIntensity]} />
+          <ambientLight color={preset.ambientColor} intensity={venueType === "church" ? 0.2 : preset.ambientIntensity} />
+          <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 10, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={venueType === "church" ? 2.45 : preset.keyIntensity}
-            position={[4.5, 6.5, 5.5]}
+            intensity={venueType === "church" ? 2.9 : preset.keyIntensity}
+            position={[4.5, 9, 5.5]}
             shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
-            shadow-camera-far={26}
+            shadow-camera-far={32}
             shadow-camera-left={-8}
             shadow-camera-right={8}
-            shadow-camera-top={8}
+            shadow-camera-top={10}
             shadow-mapSize={[2048, 2048]}
             shadow-normalBias={0.05}
           />
@@ -284,12 +294,16 @@ export function CeremonyScene({
             }
             position={[0, 3.1, -3.6]}
           />
-          {/* Real CC0 interior HDRI (Poly Haven "lythwood_room") for warm image-based
-              lighting + true material reflections. Loaded imperatively via PMREM so it
-              never suspends (drei's <Environment files> suspended and crashed the
-              postprocessing EffectComposer). The directional key/rim lights below still
-              drive shadows + the day/dusk mood; HDRI intensity drops at dusk. */}
-          <HdrEnvironment intensity={isDay ? 0.72 : 0.45} url="/hdr/lythwood_room_1k.hdr" />
+          {/* Real CC0 interior HDRIs for warm image-based lighting + true material
+              reflections, loaded imperatively via PMREM so nothing suspends (drei's
+              <Environment files> suspended and crashed the postprocessing
+              EffectComposer). The church is lit by an actual sunlit church interior
+              (Poly Haven "church_museum") so reflections match the room the viewer
+              is standing in; open venues keep the warm lounge probe. */}
+          <HdrEnvironment
+            intensity={venueType === "church" ? (isDay ? 0.62 : 0.34) : isDay ? 0.72 : 0.45}
+            url={venueType === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
+          />
           {venueType === "church" && activeStep !== "venue" ? <LightShafts isDay={isDay} /> : null}
           {/* Skip the contact-shadow plane in the church: it's a second
               floor-parallel plane whose grazing edge z-fights the flat stone
@@ -299,10 +313,25 @@ export function CeremonyScene({
           {venueType === "church" ? null : (
             <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
           )}
-          <EffectComposer multisampling={4}>
-            <Bloom intensity={isDay ? 0.42 : 0.85} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.05 : 1} mipmapBlur />
-            <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
-          </EffectComposer>
+          {/* The film look lives here: contact occlusion (N8AO), restrained bloom
+              on flames only, a whisper of grain, and AgX tone mapping LAST — the
+              composer disables the renderer's own tone curve, so without the
+              ToneMapping pass the scene ships ungraded. */}
+          {highQuality ? (
+            <EffectComposer multisampling={4}>
+              <N8AO aoRadius={0.8} distanceFalloff={0.75} halfRes intensity={3} quality="medium" />
+              <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
+              <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
+              <Noise opacity={0.05} premultiply />
+              <ToneMapping mode={ToneMappingMode.AGX} />
+            </EffectComposer>
+          ) : (
+            <EffectComposer multisampling={4}>
+              <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
+              <Vignette darkness={isDay ? 0.26 : 0.55} eskil={false} offset={0.3} />
+              <ToneMapping mode={ToneMappingMode.AGX} />
+            </EffectComposer>
+          )}
           {isDay ? null : <GlowHalo />}
           <DustMotes intensity={isDay ? 0.18 : 0.42} />
           <WeddingStageInterior
@@ -323,6 +352,7 @@ export function CeremonyScene({
             viewMode={viewMode}
           />
         </Canvas>
+        </SceneBootGate>
 
         {showCeremonyControls ? (
           <div className="ceremony-processional-controls">
@@ -519,7 +549,6 @@ function WeddingStageInterior({
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
   const guestMarkers = useMemo(() => buildGuestMarkers(capacity), [capacity]);
   const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
   const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
@@ -534,16 +563,11 @@ function WeddingStageInterior({
   const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
   const surface = getVenueSurface(venueType, palette);
 
-  useFrame(({ clock }) => {
-    if (groupRef.current) {
-      // Keep the sway very small: a larger drift rotates shadow casters under a
-      // world-fixed sun, which makes shadow edges shimmer.
-      groupRef.current.rotation.y = Math.sin(clock.elapsedTime * 0.2) * 0.008;
-    }
-  });
-
+  // Buildings do not move: the old whole-scene sway rotated the architecture
+  // itself, a subconscious "floating game level" tell. Camera motion (a slow
+  // dolly in CameraSetup) now carries all the life instead.
   return (
-    <group ref={groupRef} position={[0, 0, 0.25]}>
+    <group position={[0, 0, 0.25]}>
       {activeStep === "reception" ? (
         <ReceptionInterior
           capacity={capacity}
@@ -647,6 +671,10 @@ function WeddingStageInterior({
                       <group key={`aisle-candle-${rowIndex}`}>
                         <CandleStand candleColor={palette.candle} position={[-0.82, 0, z]} scale={decorScale * 0.82} />
                         <CandleStand candleColor={palette.candle} position={[0.82, 0, z]} scale={decorScale * 0.82} />
+                        {/* Each lantern pools warm light on the stone beneath it —
+                            the pooled-candlelight gradient of the reference aisle. */}
+                        <CandleFloorPool position={[-0.82, 0.004, z]} />
+                        <CandleFloorPool position={[0.82, 0.004, z]} />
                         {/* White floral posies nestled beside each candle so the
                             aisle reads as a continuous candlelit-floral border. */}
                         <FlowerCluster palette={palette} position={[-0.92, 0.12, z]} radius={0.16} />
@@ -842,7 +870,7 @@ function StainedGlassWindow({
 
 function ChurchCeiling({ wallTopY, color }: { wallTopY: number; color: string }) {
   const halfW = 4.95;
-  const ridgeY = wallTopY + 1.1;
+  const ridgeY = wallTopY + 1.9;
   const slopeLength = Math.hypot(halfW, ridgeY - wallTopY);
   const angle = Math.atan2(ridgeY - wallTopY, halfW);
   const depth = 12.4;
@@ -934,18 +962,15 @@ function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Pal
 function ChurchPendant({ candleColor, position }: { candleColor: string; position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh position={[0, 0.5, 0]}>
-        <cylinderGeometry args={[0.006, 0.006, 1, 6]} />
+      <mesh position={[0, 1.3, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 2.6, 6]} />
         <meshStandardMaterial color="#2c2519" roughness={0.8} />
       </mesh>
       <mesh position={[0, -0.02, 0]}>
         <cylinderGeometry args={[0.11, 0.13, 0.3, 8]} />
         <meshStandardMaterial color="#6e5326" metalness={0.78} roughness={0.34} />
       </mesh>
-      <mesh position={[0, -0.02, 0]}>
-        <sphereGeometry args={[0.075, 12, 12]} />
-        <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={2.6} toneMapped={false} />
-      </mesh>
+      <FlickerFlame base={2} color={candleColor} position={[0, -0.02, 0]} radius={0.075} seed={position[0] * 2.9 + position[2] * 1.7} />
     </group>
   );
 }
@@ -954,7 +979,7 @@ function ChurchPendantRow({ candleColor }: { candleColor: string }) {
   return (
     <group>
       {[-3.2, -1, 1.2, 3.2].map((z) =>
-        [-3.4, 3.4].map((x) => <ChurchPendant candleColor={candleColor} key={`${x}-${z}`} position={[x, 2.75, z]} />)
+        [-3.4, 3.4].map((x) => <ChurchPendant candleColor={candleColor} key={`${x}-${z}`} position={[x, 3.55, z]} />)
       )}
     </group>
   );
@@ -983,6 +1008,9 @@ const CONGREGATION_SCALE = 0.205;
 
 if (typeof window !== "undefined") {
   CONGREGATION_MODELS.forEach((url) => useGLTF.preload(url));
+  // The HDR environment is part of the boot too — preloading it here means the
+  // boot gate holds the Canvas until the scene can light itself correctly.
+  preloadHdr(CHURCH_HDR_URL);
 }
 
 type CongregationSeat = {
@@ -1354,8 +1382,8 @@ function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): Congre
 function LightShaft({ isDay, position, sign }: { isDay: boolean; position: [number, number, number]; sign: number }) {
   return (
     <group position={position} rotation={[0.15, 0, sign * 0.6]}>
-      <mesh position={[0, -1.9, 0]}>
-        <coneGeometry args={[0.85, 4, 22, 1, true]} />
+      <mesh position={[0, -2.85, 0]}>
+        <coneGeometry args={[1, 6, 22, 1, true]} />
         <meshBasicMaterial
           blending={THREE.AdditiveBlending}
           color={isDay ? "#fff3d6" : "#ffcf94"}
@@ -1377,8 +1405,8 @@ function LightShafts({ isDay }: { isDay: boolean }) {
     <group>
       {shaftZs.map((z) => (
         <group key={z}>
-          <LightShaft isDay={isDay} position={[-4.5, 2.5, z]} sign={1} />
-          <LightShaft isDay={isDay} position={[4.5, 2.5, z]} sign={-1} />
+          <LightShaft isDay={isDay} position={[-4.5, 3.3, z]} sign={1} />
+          <LightShaft isDay={isDay} position={[4.5, 3.3, z]} sign={-1} />
         </group>
       ))}
     </group>
@@ -1386,7 +1414,11 @@ function LightShafts({ isDay }: { isDay: boolean }) {
 }
 
 function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
-  const wallHeight = 3.4;
+  // Real naves tower over the congregation — at eye height the ceiling ratio is
+  // what separates "church" from "scale model". Everything below derives from
+  // this so the room stays coherent.
+  const wallHeight = 5.6;
+  const windowY = wallHeight * 0.46;
   const windowZs = [-3.2, -0.7, 1.8];
   const columnZs = [-4.5, -1.95, 0.55, 3.1];
   // The 2D plan view looks straight down, so the vaulted ceiling would hide
@@ -1404,19 +1436,19 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
         </mesh>
       ))}
 
-      <mesh receiveShadow position={[0, 2.4, -5.85]}>
-        <boxGeometry args={[10.1, 4.8, 0.22]} />
+      <mesh receiveShadow position={[0, (wallHeight + 1.9) / 2, -5.85]}>
+        <boxGeometry args={[10.1, wallHeight + 1.9, 0.22]} />
         <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
       </mesh>
 
       {/* Reredos: a framed backdrop behind the altar so the crucifix reads
           against depth instead of a blown-out wall. */}
-      <mesh position={[0, 1.95, -5.72]}>
-        <boxGeometry args={[2.95, 3.7, 0.08]} />
+      <mesh position={[0, 2.2, -5.72]}>
+        <boxGeometry args={[2.95, 4.4, 0.08]} />
         <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.5} />
       </mesh>
-      <mesh receiveShadow position={[0, 1.95, -5.69]}>
-        <boxGeometry args={[2.6, 3.34, 0.1]} />
+      <mesh receiveShadow position={[0, 2.2, -5.69]}>
+        <boxGeometry args={[2.6, 4, 0.1]} />
         <meshStandardMaterial color="#d3bf97" roughness={0.82} />
       </mesh>
 
@@ -1433,18 +1465,18 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
 
       {windowZs.map((z, index) => (
         <group key={z}>
-          <StainedGlassWindow position={[-4.79, 1.75, z]} rotationY={Math.PI / 2} seed={index} />
-          <StainedGlassWindow position={[4.79, 1.75, z]} rotationY={-Math.PI / 2} seed={index + 2} />
+          <StainedGlassWindow position={[-4.79, windowY, z]} rectHeight={2.4} rotationY={Math.PI / 2} seed={index} />
+          <StainedGlassWindow position={[4.79, windowY, z]} rectHeight={2.4} rotationY={-Math.PI / 2} seed={index + 2} />
         </group>
       ))}
 
-      <StainedGlassWindow position={[-2.5, 2, -5.7]} rectHeight={1.5} seed={4} width={0.95} />
-      <StainedGlassWindow position={[2.5, 2, -5.7]} rectHeight={1.5} seed={1} width={0.95} />
-      <Crucifix position={[0, 2.3, -5.6]} />
+      <StainedGlassWindow position={[-2.5, 3.4, -5.7]} rectHeight={2.1} seed={4} width={0.95} />
+      <StainedGlassWindow position={[2.5, 3.4, -5.7]} rectHeight={2.1} seed={1} width={0.95} />
+      <Crucifix position={[0, 2.95, -5.6]} />
 
-      <pointLight color="#ffdca0" decay={2} distance={8} intensity={1.3} position={[0, 2.9, -1]} />
-      <pointLight color="#ffe7bc" decay={2} distance={8} intensity={1.2} position={[0, 2.7, 3]} />
-      <hemisphereLight args={["#fff1d2", "#cdb792", 0.6]} />
+      <pointLight color="#ffdca0" decay={2} distance={9} intensity={1.5} position={[0, 3.6, -1]} />
+      <pointLight color="#ffe7bc" decay={2} distance={9} intensity={1.4} position={[0, 3.4, 3]} />
+      <hemisphereLight args={["#fff1d2", "#cdb792", 0.34]} />
     </group>
   );
 }
@@ -1517,6 +1549,63 @@ function Altar({ decorScale, palette }: { decorScale: number; palette: Palette }
   );
 }
 
+// A living candle flame: per-flame phase + layered sine "noise" around 5-13Hz so
+// no two candles pulse together — static identical emitters are the signature of
+// procedural duplication, real flames never hold still.
+function FlickerFlame({
+  base,
+  color,
+  position,
+  radius,
+  seed
+}: {
+  base: number;
+  color: string;
+  position: [number, number, number];
+  radius: number;
+  seed: number;
+}) {
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  useFrame(({ clock }) => {
+    const time = clock.elapsedTime;
+    const flicker =
+      Math.sin(time * 9.4 + seed * 7.13) * 0.5 + Math.sin(time * 12.9 + seed * 3.71) * 0.32 + Math.sin(time * 5.2 + seed * 11.3) * 0.18;
+
+    if (materialRef.current) {
+      materialRef.current.emissiveIntensity = base * (1 + flicker * 0.15);
+    }
+  });
+
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[radius, 8, 8]} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={base} ref={materialRef} toneMapped={false} />
+    </mesh>
+  );
+}
+
+// The warm pool a lantern throws on the floor beneath it — an additive disc that
+// grounds the candle in the room instead of leaving it floating as a bright dot.
+function CandleFloorPool({ position, strength = 1 }: { position: [number, number, number]; strength?: number }) {
+  return (
+    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
+      <circleGeometry args={[0.52, 22]} />
+      <meshBasicMaterial
+        blending={THREE.AdditiveBlending}
+        color="#ffbe78"
+        depthWrite={false}
+        opacity={0.085 * strength}
+        polygonOffset
+        polygonOffsetFactor={-3}
+        polygonOffsetUnits={-3}
+        toneMapped={false}
+        transparent
+      />
+    </mesh>
+  );
+}
+
 function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string; position: [number, number, number]; scale?: number }) {
   return (
     <group position={position} scale={scale}>
@@ -1528,10 +1617,7 @@ function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string
         <cylinderGeometry args={[0.035, 0.035, 0.13, 8]} />
         <meshStandardMaterial color="#efe3c4" roughness={0.6} />
       </mesh>
-      <mesh position={[0, 0.75, 0]}>
-        <sphereGeometry args={[0.024, 8, 8]} />
-        <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={3} toneMapped={false} />
-      </mesh>
+      <FlickerFlame base={2.2} color={candleColor} position={[0, 0.75, 0]} radius={0.024} seed={position[0] * 3.7 + position[2] * 1.31} />
     </group>
   );
 }
@@ -1593,10 +1679,14 @@ function ArchChandelier({ candleColor }: { candleColor: string }) {
         const angle = (index / 6) * Math.PI * 2;
 
         return (
-          <mesh key={index} position={[Math.cos(angle) * 0.17, -0.17, Math.sin(angle) * 0.17]}>
-            <sphereGeometry args={[0.023, 8, 8]} />
-            <meshStandardMaterial color={candleColor} emissive={candleColor} emissiveIntensity={2.8} toneMapped={false} />
-          </mesh>
+          <FlickerFlame
+            base={2.2}
+            color={candleColor}
+            key={index}
+            position={[Math.cos(angle) * 0.17, -0.17, Math.sin(angle) * 0.17]}
+            radius={0.023}
+            seed={index * 4.3}
+          />
         );
       })}
       <pointLight color={candleColor} decay={2} distance={3.2} intensity={1.6} position={[0, -0.18, 0]} />
@@ -2077,20 +2167,23 @@ function HdrEnvironment({ intensity, url }: { intensity: number; url: string }) 
 
   useEffect(() => {
     let disposed = false;
+    let envMap: THREE.Texture | null = null;
     const pmrem = new THREE.PMREMGenerator(gl);
-    new RGBELoader().load(url, (texture) => {
+    // The equirect HDR comes from the module-level cache (scene-boot), so a
+    // remount or venue switch never re-downloads it. The shared source texture
+    // is never disposed — only this mount's PMREM output is.
+    void preloadHdr(url).then((texture) => {
       if (disposed) {
-        texture.dispose();
         return;
       }
-      const envMap = pmrem.fromEquirectangular(texture).texture;
+      envMap = pmrem.fromEquirectangular(texture).texture;
       scene.environment = envMap;
-      texture.dispose();
       pmrem.dispose();
     });
     return () => {
       disposed = true;
       scene.environment = null;
+      envMap?.dispose();
       pmrem.dispose();
     };
   }, [gl, scene, url]);
@@ -2126,6 +2219,26 @@ function CameraSetup({
   const { camera } = useThree();
   const lookTargetRef = useRef(new THREE.Vector3(...getCameraTarget(viewMode, venueType, activeStep)));
 
+  // Photographic lens per view: the hero church shot gets a "50mm" compressed
+  // one-point aisle framing, while portrait canvases widen so the same shot
+  // still fits (three.js FOV is vertical). Preview waypoints were composed at
+  // the classic 40 and keep it.
+  useFrame((state, delta) => {
+    const perspective = state.camera as THREE.PerspectiveCamera;
+
+    if (!perspective.isPerspectiveCamera) {
+      return;
+    }
+
+    const desiredFov = cameraOverride ? 40 : firstPerson ? 46 : getViewFov(viewMode, venueType, perspective.aspect);
+    const nextFov = THREE.MathUtils.damp(perspective.fov, desiredFov, 2.4, delta);
+
+    if (Math.abs(nextFov - perspective.fov) > 0.01) {
+      perspective.fov = nextFov;
+      perspective.updateProjectionMatrix();
+    }
+  });
+
   useFrame(({ clock }, delta) => {
     const time = clock.elapsedTime;
 
@@ -2145,19 +2258,19 @@ function CameraSetup({
       return;
     }
     // A camera override (used by the Preview walkthrough) flies to an explicit
-    // waypoint with a gentle living sway; otherwise fall back to the view-mode rig.
+    // waypoint; otherwise fall back to the view-mode rig. Idle life is a slow
+    // locked-axis dolly (wedding-videography grammar), not the old sin/cos
+    // hover that read as a drone.
     const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode, venueType, activeStep);
     const distanceScale = cameraOverride ? 1 : 1 / zoom;
     const baseX = rawX * distanceScale;
     const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawY * distanceScale);
     const baseZ = rawZ * distanceScale;
     const drifting = cameraOverride ? true : viewMode === "3d";
-    const swayX = cameraOverride ? 0.18 : 0.6;
-    const swayY = cameraOverride ? 0.06 : 0.14;
-    const swayZ = cameraOverride ? 0.08 : 0.25;
-    const desiredX = baseX + (drifting ? Math.sin(time * 0.07) * swayX : 0);
-    const desiredY = baseY + (drifting ? Math.sin(time * 0.05) * swayY : 0);
-    const desiredZ = baseZ + (drifting ? Math.cos(time * 0.06) * swayZ : 0);
+    const dollyDepth = cameraOverride ? 0.1 : 0.24;
+    const desiredX = baseX;
+    const desiredY = baseY;
+    const desiredZ = baseZ + (drifting ? Math.sin(time * 0.045) * dollyDepth : 0);
     const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode, venueType, activeStep);
     // Slower lambda on override so the fly-between-moments reads as a cinematic glide.
     const lambda = cameraOverride ? 1.5 : 2.4;
@@ -2178,13 +2291,35 @@ function CameraSetup({
   return null;
 }
 
+// Vertical FOV per view mode: the hero shot is a compressed "50mm" one-point
+// aisle frame; portrait canvases get a wider angle so the shot still fits.
+function getViewFov(viewMode: StudioViewMode, venueType: StudioVenueType, aspect: number): number {
+  const portraitBoost = aspect < 1 ? 12 : aspect < 1.3 ? 6 : 0;
+
+  if (viewMode === "top") {
+    return 44 + portraitBoost;
+  }
+
+  if (viewMode === "guest") {
+    return 38 + portraitBoost;
+  }
+
+  if (viewMode === "walkthrough") {
+    return 42 + portraitBoost;
+  }
+
+  return (venueType === "church" ? 32 : 36) + portraitBoost;
+}
+
 function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
   // The church is an enclosed nave, so the eye sits inside it looking down the
   // aisle toward the altar (matching the reference one-point perspective). The
-  // reception flows to an open venue, so it keeps the standard wide rig.
+  // hero "3d" view shoots from standing eye height at the back of the nave —
+  // wedding-photography grammar, not the old drone altitude. The reception
+  // flows to an open venue, so it keeps the standard wide rig.
   if (venueType === "church" && activeStep !== "reception") {
     const churchPositions: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 3.6, 8.8],
+      "3d": [0, 1.7, 8.7],
       guest: [0, 1.45, 4.2],
       top: [0, 11, 0.4],
       walkthrough: [0, 1.85, 4.8]
@@ -2206,7 +2341,7 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
 function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
   if (venueType === "church" && activeStep !== "reception") {
     const churchTargets: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 0.55, -2.4],
+      "3d": [0, 1.2, -3.8],
       guest: [0, 1, -4.4],
       top: [0, 0, -1.4],
       walkthrough: [0, 1, -4.4]

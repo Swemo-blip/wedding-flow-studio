@@ -12922,6 +12922,53 @@ a {
   color: var(--danger);
 }
 
+/* Branded 3D boot state: shown inside the canvas frame while models + HDR
+   load, so the stage never sits as an unexplained blank rectangle. */
+.scene-boot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(244, 200, 140, 0.14), transparent 55%),
+    linear-gradient(180deg, #17241d, #0e1712 70%);
+}
+
+.scene-boot-monogram {
+  color: #d8b877;
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.scene-boot-label {
+  color: rgba(244, 236, 219, 0.72);
+  font-size: 0.82rem;
+  font-weight: 560;
+  letter-spacing: 0.04em;
+}
+
+.scene-boot-track {
+  overflow: hidden;
+  width: min(220px, 56%);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(244, 236, 219, 0.16);
+}
+
+.scene-boot-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b48a4a, #e6c47f);
+  transition: width 260ms ease;
+}
+
 .studio-share-button,
 .studio-preview-button {
   display: inline-flex;
