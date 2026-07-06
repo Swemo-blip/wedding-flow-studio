@@ -241,7 +241,9 @@ export function CeremonyScene({
           camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, venueType, activeStep) }}
           dpr={highQuality ? [1, 2] : [1, 1.3]}
           gl={{ preserveDrawingBuffer: true, toneMappingExposure: 1.02 }}
-          shadows={{ type: THREE.PCFSoftShadowMap }}
+          // three 0.184 removed PCFSoftShadowMap (it silently downgraded and
+          // logged a deprecation warning every frame) — PCF is what actually ran.
+          shadows={{ type: THREE.PCFShadowMap }}
         >
           <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={venueType} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
@@ -2083,17 +2085,23 @@ function HdrEnvironment({ intensity, url }: { intensity: number; url: string }) 
       }
       const envMap = pmrem.fromEquirectangular(texture).texture;
       scene.environment = envMap;
-      scene.environmentIntensity = intensity;
       texture.dispose();
       pmrem.dispose();
     });
     return () => {
       disposed = true;
       scene.environment = null;
-      scene.environmentIntensity = 1;
       pmrem.dispose();
     };
-  }, [gl, scene, url, intensity]);
+  }, [gl, scene, url]);
+
+  // Applied per-frame (not in the load effect) so day/dusk changes never
+  // re-download or re-PMREM the HDR — only the scalar changes.
+  useFrame((state) => {
+    if (state.scene.environmentIntensity !== intensity) {
+      state.scene.environmentIntensity = intensity;
+    }
+  });
 
   return null;
 }

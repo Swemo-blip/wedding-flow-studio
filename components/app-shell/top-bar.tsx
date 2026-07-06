@@ -13,10 +13,16 @@ type TopBarProps = {
   wedding: Wedding;
 };
 
+// Server snapshot must be a stable reference — returning a fresh object every
+// call makes React re-render in a loop ("getServerSnapshot should be cached"),
+// which remounted the 3D canvas ~8x per route and blanked it for 20s+.
+const SERVER_PERSISTENCE_STATE = { ok: true, reason: null } as const;
+const getServerPersistenceState = () => SERVER_PERSISTENCE_STATE;
+
 export function TopBar({ wedding }: TopBarProps) {
   const { language, setLanguage, t } = useTranslation();
   const { hasLocalProject, wedding: localWedding } = useLocalProject();
-  const persistence = useSyncExternalStore(subscribePersistence, getPersistenceState, () => ({ ok: true, reason: null }));
+  const persistence = useSyncExternalStore(subscribePersistence, getPersistenceState, getServerPersistenceState);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const activeWedding = hasLocalProject ? localWedding : wedding;
 
