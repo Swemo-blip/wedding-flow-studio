@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, useGLTF } from "@react-three/drei";
+import { ContactShadows, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
@@ -30,6 +30,85 @@ export type SceneLighting = "day" | "dusk";
 // interior lights the church venue; the warm lounge lights the open venues.
 const CHURCH_HDR_URL = assetPath("/hdr/church_museum_2k.hdr");
 const INTERIOR_HDR_URL = assetPath("/hdr/lythwood_room_1k.hdr");
+
+// Real CC0 scanned PBR sets (Poly Haven, see public/textures/CREDITS.md) that
+// replace the flat single-colour church surfaces — the #1 "gamey" tell. Each
+// set is diffuse + normal + roughness at 1k.
+type SurfaceTextureSet = { map: string; normalMap: string; roughnessMap: string };
+const CHURCH_TEXTURES: Record<"wall" | "floor" | "pew", SurfaceTextureSet> = {
+  wall: {
+    map: assetPath("/textures/wall_diff.jpg"),
+    normalMap: assetPath("/textures/wall_nor_gl.jpg"),
+    roughnessMap: assetPath("/textures/wall_rough.jpg")
+  },
+  floor: {
+    map: assetPath("/textures/floor_diff.jpg"),
+    normalMap: assetPath("/textures/floor_nor_gl.jpg"),
+    roughnessMap: assetPath("/textures/floor_rough.jpg")
+  },
+  pew: {
+    map: assetPath("/textures/pew_diff.jpg"),
+    normalMap: assetPath("/textures/pew_nor_gl.jpg"),
+    roughnessMap: assetPath("/textures/pew_rough.jpg")
+  }
+};
+
+if (typeof window !== "undefined") {
+  Object.values(CHURCH_TEXTURES).forEach((set) => useTexture.preload(Object.values(set)));
+}
+
+// Loads a PBR set and returns per-use CLONES with independent tiling — cloning
+// shares the GPU image (one upload) but lets each surface set its own repeat
+// without fighting over the shared drei cache.
+function useSurfaceMaps(set: SurfaceTextureSet, repeatX: number, repeatY: number) {
+  const maps = useTexture(set) as { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture };
+
+  return useMemo(() => {
+    const tile = (texture: THREE.Texture, srgb: boolean) => {
+      const clone = texture.clone();
+      clone.wrapS = THREE.RepeatWrapping;
+      clone.wrapT = THREE.RepeatWrapping;
+      clone.repeat.set(repeatX, repeatY);
+      clone.anisotropy = 4;
+      clone.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+      clone.needsUpdate = true;
+      return clone;
+    };
+
+    return {
+      map: tile(maps.map, true),
+      normalMap: tile(maps.normalMap, false),
+      roughnessMap: tile(maps.roughnessMap, false)
+    };
+  }, [maps, repeatX, repeatY]);
+}
+
+// Polished stone nave floor (marble PBR). color keeps the palette tint so the
+// floor still responds to the couple's style, multiplied over the scan.
+function TexturedGround({ color, position, size }: { color: string; position: [number, number, number]; size: [number, number] }) {
+  const maps = useSurfaceMaps(CHURCH_TEXTURES.floor, size[0] / 1.4, size[1] / 1.4);
+
+  return (
+    <mesh position={position} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={size} />
+      <meshStandardMaterial {...maps} color={color} envMapIntensity={1.2} metalness={0.05} normalScale={new THREE.Vector2(0.5, 0.5)} roughness={0.9} />
+    </mesh>
+  );
+}
+
+// Plastered-stone church wall. One shared repeat across all wall segments so
+// the tiling stays consistent; polygonOffset preserved so flush-mounted
+// windows/reredos don't z-fight.
+function StoneWall({ args, color, position }: { args: [number, number, number]; color: string; position: [number, number, number] }) {
+  const maps = useSurfaceMaps(CHURCH_TEXTURES.wall, 5, 2.6);
+
+  return (
+    <mesh position={position} receiveShadow>
+      <boxGeometry args={args} />
+      <meshStandardMaterial {...maps} color={color} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={1} />
+    </mesh>
+  );
+}
 
 export type SceneCameraOverride = {
   position: [number, number, number];
@@ -589,13 +668,26 @@ function WeddingStageInterior({
         />
       ) : (
         <>
-          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
-            <planeGeometry args={[9.8, 12.8]} />
-            {/* Polished stone: low roughness + a touch of metalness so the floor
-                catches a soft warm reflection of the HDRI + candlelight, like the
-                reference's glossy nave floor. */}
-            <meshStandardMaterial color={surface.floor} envMapIntensity={1.15} metalness={0.1} roughness={0.46} />
-          </mesh>
+          {venueType === "church" ? (
+            <Suspense
+              fallback={
+                <mesh position={[0, -0.04, 0.25]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+                  <planeGeometry args={[9.8, 12.8]} />
+                  <meshStandardMaterial color={surface.floor} envMapIntensity={1.15} metalness={0.1} roughness={0.46} />
+                </mesh>
+              }
+            >
+              <TexturedGround color={surface.floor} position={[0, -0.04, 0.25]} size={[9.8, 12.8]} />
+            </Suspense>
+          ) : (
+            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
+              <planeGeometry args={[9.8, 12.8]} />
+              {/* Polished stone: low roughness + a touch of metalness so the floor
+                  catches a soft warm reflection of the HDRI + candlelight, like the
+                  reference's glossy nave floor. */}
+              <meshStandardMaterial color={surface.floor} envMapIntensity={1.15} metalness={0.1} roughness={0.46} />
+            </mesh>
+          )}
 
           <EditableSceneObject
             objectId="ceremonyPath"
@@ -655,16 +747,18 @@ function WeddingStageInterior({
             selectedObjectId={selectedObjectId}
             size={[6.4, Math.max(2.4, visibleRows * 0.7)]}
           >
-            {rowIndexes.map((rowIndex) => {
-              const z = -2.4 + rowIndex * 0.62;
+            <Suspense fallback={null}>
+              {rowIndexes.map((rowIndex) => {
+                const z = -2.4 + rowIndex * 0.62;
 
-              return (
-                <group key={rowIndex}>
-                  <CeremonySeatBlock palette={palette} position={[-1.82, 0.18, z]} venueType={venueType} />
-                  <CeremonySeatBlock palette={palette} position={[1.82, 0.18, z]} venueType={venueType} />
-                </group>
-              );
-            })}
+                return (
+                  <group key={rowIndex}>
+                    <CeremonySeatBlock palette={palette} position={[-1.82, 0.18, z]} venueType={venueType} />
+                    <CeremonySeatBlock palette={palette} position={[1.82, 0.18, z]} venueType={venueType} />
+                  </group>
+                );
+              })}
+            </Suspense>
 
             {/* Candle stands lining the aisle (every other row) — the warm
                 candlelit aisle from the reference. Emissive + bloom only, no extra
@@ -1435,19 +1529,30 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
 
   return (
     <group>
-      {/* polygonOffset biases the walls back in the depth buffer so the windows
-          and reredos mounted flush against them never z-fight (flicker). */}
-      {[-4.95, 4.95].map((x) => (
-        <mesh key={x} receiveShadow position={[x, wallHeight / 2, 0.1]}>
-          <boxGeometry args={[0.2, wallHeight, 12.4]} />
-          <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
-        </mesh>
-      ))}
-
-      <mesh receiveShadow position={[0, (wallHeight + 1.9) / 2, -5.85]}>
-        <boxGeometry args={[10.1, wallHeight + 1.9, 0.22]} />
-        <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
-      </mesh>
+      {/* Scanned plaster-stone walls (fall back to the flat colour while the
+          texture set streams in). polygonOffset biases the walls back in the
+          depth buffer so flush windows/reredos never z-fight. */}
+      <Suspense
+        fallback={
+          <group>
+            {[-4.95, 4.95].map((x) => (
+              <mesh key={x} position={[x, wallHeight / 2, 0.1]} receiveShadow>
+                <boxGeometry args={[0.2, wallHeight, 12.4]} />
+                <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
+              </mesh>
+            ))}
+            <mesh position={[0, (wallHeight + 1.9) / 2, -5.85]} receiveShadow>
+              <boxGeometry args={[10.1, wallHeight + 1.9, 0.22]} />
+              <meshStandardMaterial color={palette.wall} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={0.92} />
+            </mesh>
+          </group>
+        }
+      >
+        {[-4.95, 4.95].map((x) => (
+          <StoneWall args={[0.2, wallHeight, 12.4]} color={palette.wall} key={x} position={[x, wallHeight / 2, 0.1]} />
+        ))}
+        <StoneWall args={[10.1, wallHeight + 1.9, 0.22]} color={palette.wall} position={[0, (wallHeight + 1.9) / 2, -5.85]} />
+      </Suspense>
 
       {/* Reredos: a framed backdrop behind the altar so the crucifix reads
           against depth instead of a blown-out wall. */}
@@ -1867,20 +1972,24 @@ function StringLights({ candleColor, poleHeight, scale }: { candleColor: string;
 }
 
 function Pew({ palette, position }: { palette: Palette; position: [number, number, number] }) {
+  // Real oak-veneer wood grain (palette.pew multiplied over it keeps the style
+  // tint). One cloned set shared across the pew's wood parts.
+  const wood = useSurfaceMaps(CHURCH_TEXTURES.pew, 2, 0.5);
+
   return (
     <group position={position}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[2.55, 0.16, 0.34]} />
-        <meshStandardMaterial color={palette.pew} roughness={0.42} />
+        <meshStandardMaterial {...wood} color={palette.pew} roughness={0.72} />
       </mesh>
       <mesh castShadow receiveShadow position={[0, 0.2, -0.14]}>
         <boxGeometry args={[2.55, 0.3, 0.07]} />
-        <meshStandardMaterial color={palette.pew} roughness={0.44} />
+        <meshStandardMaterial {...wood} color={palette.pew} roughness={0.74} />
       </mesh>
       {[-1.26, 1.26].map((xPosition) => (
         <mesh castShadow key={xPosition} position={[xPosition, 0.1, 0]}>
           <boxGeometry args={[0.05, 0.38, 0.36]} />
-          <meshStandardMaterial color={palette.pew} roughness={0.4} />
+          <meshStandardMaterial {...wood} color={palette.pew} roughness={0.7} />
         </mesh>
       ))}
       <mesh position={[0, 0.085, 0.02]}>
