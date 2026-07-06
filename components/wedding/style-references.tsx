@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import { fileToDownscaledDataUrl } from "@/lib/image-upload";
 import { safeSetItem } from "@/lib/persistence-status";
@@ -23,10 +24,10 @@ export type StyleReference = {
 };
 
 export const CEREMONY_REFERENCES: StyleReference[] = [
-  { id: "arch", label: "Floral arch", mood: "linear-gradient(140deg, #f4ece0, #dfe8d2 55%, #b9c79f)", image: "/style-references/ceremony-floral-arch.jpg" },
-  { id: "aisle", label: "Candlelit aisle", mood: "linear-gradient(140deg, #fbe6c9, #e7c98b 60%, #caa05f)", image: "/style-references/ceremony-candlelit-aisle.jpg" },
-  { id: "glass", label: "Stained glass", mood: "linear-gradient(140deg, #cdd8ea, #b48fae 52%, #8a6a52)", image: "/style-references/ceremony-stained-glass.jpg" },
-  { id: "palette", label: "Palette & details", mood: "linear-gradient(140deg, #efe6d6, #d8c7a4 55%, #9f793b)", image: "/style-references/ceremony-palette.jpg" }
+  { id: "arch", label: "Floral arch", mood: "linear-gradient(140deg, #f4ece0, #dfe8d2 55%, #b9c79f)", image: assetPath("/style-references/ceremony-floral-arch.jpg") },
+  { id: "aisle", label: "Candlelit aisle", mood: "linear-gradient(140deg, #fbe6c9, #e7c98b 60%, #caa05f)", image: assetPath("/style-references/ceremony-candlelit-aisle.jpg") },
+  { id: "glass", label: "Stained glass", mood: "linear-gradient(140deg, #cdd8ea, #b48fae 52%, #8a6a52)", image: assetPath("/style-references/ceremony-stained-glass.jpg") },
+  { id: "palette", label: "Palette & details", mood: "linear-gradient(140deg, #efe6d6, #d8c7a4 55%, #9f793b)", image: assetPath("/style-references/ceremony-palette.jpg") }
 ];
 
 function StyleReferenceTile({ reference }: { reference: StyleReference }) {

@@ -5,6 +5,7 @@ import { Billboard, Html, OrbitControls, useGLTF } from "@react-three/drei";
 import { type ComponentRef, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { SceneBootGate } from "@/components/wedding-studio/scene-boot";
+import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
 
@@ -30,7 +31,7 @@ const SEAT_VARIANTS = [
   "/models/cg_man_2.glb",
   "/models/cg_woman_2.glb",
   "/models/cg_dress_2.glb"
-];
+].map(assetPath);
 
 SEAT_VARIANTS.forEach((url) => useGLTF.preload(url));
 

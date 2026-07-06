@@ -9,6 +9,7 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
+import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import {
   venueOptions,
@@ -27,8 +28,8 @@ export type SceneLighting = "day" | "dusk";
 
 // Poly Haven CC0 HDRIs (see public/hdr/CREDITS.md): a real sunlit church
 // interior lights the church venue; the warm lounge lights the open venues.
-const CHURCH_HDR_URL = "/hdr/church_museum_2k.hdr";
-const INTERIOR_HDR_URL = "/hdr/lythwood_room_1k.hdr";
+const CHURCH_HDR_URL = assetPath("/hdr/church_museum_2k.hdr");
+const INTERIOR_HDR_URL = assetPath("/hdr/lythwood_room_1k.hdr");
 
 export type SceneCameraOverride = {
   position: [number, number, number];
@@ -1000,7 +1001,7 @@ const CONGREGATION_MODELS = [
   "/models/cg_dress_0.glb",
   "/models/cg_dress_1.glb",
   "/models/cg_dress_2.glb"
-];
+].map(assetPath);
 
 // The baked meshes stand ~4 source units tall; scale to a seated guest that
 // reads correctly at church scale.
@@ -1078,7 +1079,7 @@ function ChurchCongregation({ seats }: { seats: CongregationSeat[] }) {
 
 // Real CC0 dais props (Poly Pizza, see CREDITS.md). Loaded as-is and
 // size-normalized at runtime so we never depend on the model's authored scale.
-const DAIS_PROP_MODELS = ["/models/altar_vase.glb", "/models/altar_candlestick.glb"];
+const DAIS_PROP_MODELS = ["/models/altar_vase.glb", "/models/altar_candlestick.glb"].map(assetPath);
 
 if (typeof window !== "undefined") {
   DAIS_PROP_MODELS.forEach((url) => useGLTF.preload(url));
@@ -1110,7 +1111,7 @@ function useNormalizedModel(url: string, targetHeight: number) {
 // A real gold vase (CC0) holding the soft ivory blooms — reads as a wedding
 // arrangement, where the bare CC0 flower meshes looked like loose stems.
 function AltarArrangement({ palette, position }: { palette: Palette; position: [number, number, number] }) {
-  const vase = useNormalizedModel("/models/altar_vase.glb", 0.22);
+  const vase = useNormalizedModel(assetPath("/models/altar_vase.glb"), 0.22);
   return (
     <group position={position}>
       <primitive object={vase} />
@@ -1120,7 +1121,7 @@ function AltarArrangement({ palette, position }: { palette: Palette; position: [
 }
 
 function AltarCandle({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
-  const model = useNormalizedModel("/models/altar_candlestick.glb", 0.56);
+  const model = useNormalizedModel(assetPath("/models/altar_candlestick.glb"), 0.56);
   return (
     <group position={position} scale={scale}>
       <primitive object={model} />
@@ -1137,8 +1138,8 @@ function AltarCandle({ position, scale = 1 }: { position: [number, number, numbe
 // Animated CC0 characters (Quaternius, see CREDITS.md), cloned + recolored per
 // role and driven by their Walk/Idle clips. Only a handful, so skinned
 // animation is well within budget.
-const FIGURE_SUIT = "/models/figure_suit.glb";
-const FIGURE_WOMAN = "/models/figure_woman.glb";
+const FIGURE_SUIT = assetPath("/models/figure_suit.glb");
+const FIGURE_WOMAN = assetPath("/models/figure_woman.glb");
 
 if (typeof window !== "undefined") {
   useGLTF.preload(FIGURE_SUIT);
