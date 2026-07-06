@@ -713,6 +713,8 @@ const sv: Record<string, string> = {
   "Start over? This permanently deletes your current wedding plan — guests, seating, timeline, speeches and vendors. A backup file downloads first so you can restore it.": "Börja om? Detta raderar din nuvarande bröllopsplan permanent — gäster, placering, tidslinje, tal och leverantörer. En säkerhetskopia laddas ner först så att du kan återställa den.",
   "You already have a wedding plan. Creating a new one replaces your current guests, seating, timeline and speeches. A backup file downloads first so you can restore it.": "Du har redan en bröllopsplan. Att skapa en ny ersätter dina nuvarande gäster, placering, tidslinje och tal. En säkerhetskopia laddas ner först så att du kan återställa den.",
   "Setting the scene…": "Scenen görs i ordning…",
+  "Mute music": "Stäng av musik",
+  "Unmute music": "Sätt på musik",
   "Wedding summary": "Bröllopssammanfattning",
   "A one-page overview to print or share with your partner and vendors.": "En ensides översikt att skriva ut eller dela med din partner och leverantörer.",
   "Print / Save as PDF": "Skriv ut / Spara som PDF",

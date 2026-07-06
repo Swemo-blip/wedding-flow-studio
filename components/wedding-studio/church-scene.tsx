@@ -7,6 +7,7 @@ import { ContactShadows, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
+import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { assetPath } from "@/lib/asset-path";
@@ -302,6 +303,26 @@ export function CeremonyScene({
   // The singer is off in the clean preview; its toggle no longer clutters the
   // 3D canvas overlay (kept in the model for the full studio editor).
   const [showSinger] = useState(false);
+  // Classic wedding processional music (public-domain Pachelbel Canon in D),
+  // started by the couple's own gesture of pressing Play — never autoplayed.
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.volume = 0.55;
+    if (processionalPlaying) {
+      audio.currentTime = 0;
+      void audio.play().catch(() => {
+        // Autoplay can still be blocked in edge cases; the scene just plays silently.
+      });
+    } else {
+      audio.pause();
+    }
+  }, [processionalPlaying, processionalKey]);
   // Live head positions of the couple, written by the Processional each frame and
   // read by CameraSetup for the first-person bride/groom view.
   const coupleHeadsRef = useRef<CoupleHeads>({
@@ -458,8 +479,27 @@ export function CeremonyScene({
             >
               {t("Restart")}
             </button>
+            <button
+              aria-label={muted ? t("Unmute music") : t("Mute music")}
+              className="ceremony-mute-button"
+              data-active={!muted}
+              onClick={() => {
+                const audio = audioRef.current;
+                if (audio) {
+                  audio.muted = !audio.muted;
+                  setMuted(audio.muted);
+                }
+              }}
+              type="button"
+            >
+              {muted ? <VolumeX aria-hidden="true" size={16} /> : <Volume2 aria-hidden="true" size={16} />}
+            </button>
           </div>
         ) : null}
+
+        {/* Processional music lives outside the WebGL canvas; it only plays on
+            an explicit Play press (a user gesture), so autoplay is never an issue. */}
+        <audio loop preload="auto" ref={audioRef} src={assetPath("/audio/processional.mp3")} />
       </div>
 
       <div className="ceremony-scene-caption" aria-live="polite">

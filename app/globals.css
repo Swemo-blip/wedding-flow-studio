@@ -6045,6 +6045,15 @@ a {
   color: #fffdf8;
 }
 
+/* Music mute toggle: snug icon button, not the full-width text style, and it
+   must never take the gold primary-CTA treatment of the first child. */
+.ceremony-processional-controls button.ceremony-mute-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
 .ceremony-canvas-frame canvas {
   display: block;
   width: 100% !important;
