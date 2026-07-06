@@ -35,6 +35,7 @@ const INTERIOR_HDR_URL = assetPath("/hdr/lythwood_room_1k.hdr");
 // replace the flat single-colour church surfaces — the #1 "gamey" tell. Each
 // set is diffuse + normal + roughness at 1k.
 type SurfaceTextureSet = { map: string; normalMap: string; roughnessMap: string };
+type SurfaceMaps = { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture };
 const CHURCH_TEXTURES: Record<"wall" | "floor" | "pew", SurfaceTextureSet> = {
   wall: {
     map: assetPath("/textures/wall_diff.jpg"),
@@ -60,8 +61,8 @@ if (typeof window !== "undefined") {
 // Loads a PBR set and returns per-use CLONES with independent tiling — cloning
 // shares the GPU image (one upload) but lets each surface set its own repeat
 // without fighting over the shared drei cache.
-function useSurfaceMaps(set: SurfaceTextureSet, repeatX: number, repeatY: number) {
-  const maps = useTexture(set) as { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture };
+function useSurfaceMaps(set: SurfaceTextureSet, repeatX: number, repeatY: number): SurfaceMaps {
+  const maps = useTexture(set) as SurfaceMaps;
 
   return useMemo(() => {
     const tile = (texture: THREE.Texture, srgb: boolean) => {
@@ -298,7 +299,9 @@ export function CeremonyScene({
   const { t } = useTranslation();
   const [processionalPlaying, setProcessionalPlaying] = useState(false);
   const [processionalKey, setProcessionalKey] = useState(0);
-  const [showSinger, setShowSinger] = useState(false);
+  // The singer is off in the clean preview; its toggle no longer clutters the
+  // 3D canvas overlay (kept in the model for the full studio editor).
+  const [showSinger] = useState(false);
   // Live head positions of the couple, written by the Processional each frame and
   // read by CameraSetup for the first-person bride/groom view.
   const coupleHeadsRef = useRef<CoupleHeads>({
@@ -454,9 +457,6 @@ export function CeremonyScene({
               type="button"
             >
               {t("Restart")}
-            </button>
-            <button data-active={showSinger} onClick={() => setShowSinger((value) => !value)} type="button">
-              {showSinger ? t("Remove singer") : t("Add singer")}
             </button>
           </div>
         ) : null}
@@ -1569,10 +1569,21 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
 
       {[-4.6, 4.6].map((x) =>
         columnZs.map((z) => (
-          <mesh castShadow key={`${x}-${z}`} position={[x, wallHeight / 2, z]}>
-            <boxGeometry args={[0.34, wallHeight, 0.34]} />
-            <meshStandardMaterial color="#ddd1b6" roughness={0.85} />
-          </mesh>
+          <group key={`${x}-${z}`} position={[x, 0, z]}>
+            {/* Round, slightly tapered stone columns instead of square posts —
+                a rounded shaft with a simple base + capital reads far less
+                "blocky" at eye level. */}
+            <mesh castShadow position={[0, wallHeight / 2, 0]}>
+              <cylinderGeometry args={[0.19, 0.22, wallHeight, 20]} />
+              <meshStandardMaterial color="#ddd1b6" roughness={0.85} />
+            </mesh>
+            {[0.06, wallHeight - 0.06].map((cy) => (
+              <mesh castShadow key={cy} position={[0, cy, 0]}>
+                <cylinderGeometry args={[0.28, 0.28, 0.12, 20]} />
+                <meshStandardMaterial color="#d7cbaf" roughness={0.86} />
+              </mesh>
+            ))}
+          </group>
         ))
       )}
 
@@ -1851,7 +1862,7 @@ function FlowerCluster({ palette, position, radius }: { palette: Palette; positi
     <group position={position}>
       {blossoms.map(([x, y, z, size, color], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
-          <sphereGeometry args={[size, 8, 8]} />
+          <sphereGeometry args={[size, 16, 16]} />
           <meshStandardMaterial color={color} roughness={0.82} />
         </mesh>
       ))}
@@ -1971,11 +1982,9 @@ function StringLights({ candleColor, poleHeight, scale }: { candleColor: string;
   );
 }
 
-function Pew({ palette, position }: { palette: Palette; position: [number, number, number] }) {
-  // Real oak-veneer wood grain (palette.pew multiplied over it keeps the style
-  // tint). One cloned set shared across the pew's wood parts.
-  const wood = useSurfaceMaps(CHURCH_TEXTURES.pew, 2, 0.5);
-
+// Flat pew — the never-suspends fallback, so the pews are ALWAYS visible even
+// while the wood texture streams in or when the guest count changes the rows.
+function PewBody({ palette, position, wood }: { palette: Palette; position: [number, number, number]; wood?: SurfaceMaps }) {
   return (
     <group position={position}>
       <mesh castShadow receiveShadow>
@@ -1997,6 +2006,22 @@ function Pew({ palette, position }: { palette: Palette; position: [number, numbe
         <meshStandardMaterial color={palette.carpet} roughness={0.78} />
       </mesh>
     </group>
+  );
+}
+
+function TexturedPew({ palette, position }: { palette: Palette; position: [number, number, number] }) {
+  const wood = useSurfaceMaps(CHURCH_TEXTURES.pew, 2, 0.5);
+  return <PewBody palette={palette} position={position} wood={wood} />;
+}
+
+function Pew({ palette, position }: { palette: Palette; position: [number, number, number] }) {
+  // Each pew owns its Suspense boundary and falls back to a flat pew, so a
+  // texture that isn't ready (or a re-render from changing the guest count)
+  // shows a plain pew for a frame instead of the whole row vanishing.
+  return (
+    <Suspense fallback={<PewBody palette={palette} position={position} />}>
+      <TexturedPew palette={palette} position={position} />
+    </Suspense>
   );
 }
 
