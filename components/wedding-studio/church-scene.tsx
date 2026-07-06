@@ -1172,9 +1172,20 @@ function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: s
         found = mesh.geometry;
       }
     });
-    return found;
+    if (!found) {
+      return null;
+    }
+    // Smooth (averaged) vertex normals turn the baked figures from a hard,
+    // faceted "crystalline" read into the soft rounded low-poly look — the
+    // single cheapest fix for the "everything is angular" feedback. Clone so we
+    // never mutate the shared GLTF cache.
+    const smoothed = (found as THREE.BufferGeometry).clone();
+    smoothed.computeVertexNormals();
+    return smoothed;
   }, [scene]);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0 }), []);
+  // Matte, non-metallic skin/cloth so figures read as soft sculpture, not
+  // plastic game props.
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.94, metalness: 0 }), []);
   const meshRef = useRef<THREE.InstancedMesh>(null);
 
   useLayoutEffect(() => {
@@ -1306,6 +1317,13 @@ function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "wa
         return;
       }
       mesh.castShadow = true;
+      // Smooth the couple/officiant the same way as the congregation so the
+      // close-up hero figures aren't faceted. Clone the geometry first (skinned
+      // clones share it) so we never touch the shared GLTF cache.
+      if (mesh.geometry) {
+        mesh.geometry = mesh.geometry.clone();
+        mesh.geometry.computeVertexNormals();
+      }
       const recolorOne = (material: THREE.Material) => {
         const cloned = (material as THREE.MeshStandardMaterial).clone();
         const next = recolor?.[cloned.name];
