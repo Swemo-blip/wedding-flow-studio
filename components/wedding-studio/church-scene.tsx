@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, useGLTF, useTexture } from "@react-three/drei";
+import { Billboard, ContactShadows, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
@@ -11,6 +11,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { assetPath } from "@/lib/asset-path";
+import { useCouplePhotos } from "@/lib/use-couple-photos";
 import { useTranslation } from "@/lib/i18n";
 import {
   venueOptions,
@@ -309,6 +310,9 @@ export function CeremonyScene({
   // started by the couple's own gesture of pressing Play — never autoplayed.
   const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted] = useState(false);
+  // Uploaded face cameos for the couple (browser-only). Shown on the bride/groom
+  // figures so a couple recognises themselves walking in.
+  const { bride: bridePhoto, groom: groomPhoto } = useCouplePhotos();
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -449,10 +453,12 @@ export function CeremonyScene({
           <DustMotes intensity={isDay ? 0.18 : 0.42} />
           <WeddingStageInterior
             activeStep={activeStep}
+            bridePhoto={bridePhoto}
             budgetLevel={budgetLevel}
             capacity={capacity}
             coupleHeadsRef={coupleHeadsRef}
             firstPerson={firstPerson}
+            groomPhoto={groomPhoto}
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
             palette={palette}
@@ -647,10 +653,12 @@ function DustMotes({ intensity = 0.42 }: { intensity?: number }) {
 
 function WeddingStageInterior({
   activeStep,
+  bridePhoto,
   budgetLevel,
   capacity,
   coupleHeadsRef,
   firstPerson = null,
+  groomPhoto,
   onMoveObject,
   onSelectObject,
   palette,
@@ -663,10 +671,12 @@ function WeddingStageInterior({
   viewMode
 }: {
   activeStep: StudioPlanningStepId;
+  bridePhoto?: string | null;
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
   coupleHeadsRef?: { current: CoupleHeads };
   firstPerson?: CeremonyFirstPerson;
+  groomPhoto?: string | null;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
@@ -849,6 +859,13 @@ function WeddingStageInterior({
               <Celebrant />
               <Processional headsRef={coupleHeadsRef} hideFigure={firstPerson} key={processionalKey} playing={processionalPlaying} />
               {showSinger ? <Singer /> : null}
+              {/* Uploaded face cameos, tracking the couple's live head positions
+                  (hidden for the partner you're seeing through in first person). */}
+              <CoupleFaces
+                bridePhoto={firstPerson === "bride" ? null : bridePhoto}
+                groomPhoto={firstPerson === "groom" ? null : groomPhoto}
+                headsRef={coupleHeadsRef}
+              />
             </Suspense>
           ) : null}
 
@@ -1475,6 +1492,71 @@ function Bouquet() {
         <meshStandardMaterial color="#c9b489" roughness={0.7} />
       </mesh>
     </group>
+  );
+}
+
+function CoupleFacePortrait({ photoUrl }: { photoUrl: string }) {
+  const texture = useMemo(() => {
+    const loaded = new THREE.TextureLoader().load(photoUrl);
+    loaded.colorSpace = THREE.SRGBColorSpace;
+    return loaded;
+  }, [photoUrl]);
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return (
+    <>
+      <mesh position={[0, 0, -0.003]}>
+        <circleGeometry args={[0.2, 40]} />
+        <meshBasicMaterial color="#fffdf8" toneMapped={false} />
+      </mesh>
+      <mesh>
+        <circleGeometry args={[0.182, 40]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+    </>
+  );
+}
+
+// Camera-facing portrait cameos that follow the couple's live head positions
+// (written each frame by the Processional), so an uploaded face reads as
+// "that's us" as they walk in.
+function CoupleFaces({
+  bridePhoto,
+  groomPhoto,
+  headsRef
+}: {
+  bridePhoto?: string | null;
+  groomPhoto?: string | null;
+  headsRef?: { current: CoupleHeads };
+}) {
+  const groomRef = useRef<THREE.Group>(null);
+  const brideRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!headsRef) {
+      return;
+    }
+    if (groomRef.current) {
+      groomRef.current.position.copy(headsRef.current.groom);
+    }
+    if (brideRef.current) {
+      brideRef.current.position.copy(headsRef.current.bride);
+    }
+  });
+
+  return (
+    <>
+      {groomPhoto ? (
+        <Billboard ref={groomRef}>
+          <CoupleFacePortrait photoUrl={groomPhoto} />
+        </Billboard>
+      ) : null}
+      {bridePhoto ? (
+        <Billboard ref={brideRef}>
+          <CoupleFacePortrait photoUrl={bridePhoto} />
+        </Billboard>
+      ) : null}
+    </>
   );
 }
 

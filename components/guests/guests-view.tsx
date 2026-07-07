@@ -6,6 +6,7 @@ import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
 import { fileToDownscaledDataUrl } from "@/lib/image-upload";
+import { type CoupleRole, useCouplePhotos } from "@/lib/use-couple-photos";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Guest } from "@/lib/wedding-types";
 
@@ -19,6 +20,7 @@ export function GuestsView() {
   const { addGuest, dinnerTables, guests, removeGuest, speeches, updateGuest } = useLocalProject();
   const [filter, setFilter] = useState<RsvpFilter>("all");
   const [query, setQuery] = useState("");
+  const { bride, groom, setPhoto } = useCouplePhotos();
 
   async function handlePhoto(guestId: string, file: File | null) {
     if (!file) {
@@ -28,6 +30,20 @@ export function GuestsView() {
     const photoUrl = await fileToDownscaledDataUrl(file);
     updateGuest(guestId, { photoUrl });
   }
+
+  async function handleCouplePhoto(role: CoupleRole, file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    const dataUrl = await fileToDownscaledDataUrl(file);
+    setPhoto(role, dataUrl);
+  }
+
+  const couplePhotos: Array<{ label: string; photo: string | null; role: CoupleRole }> = [
+    { label: t("Partner one"), photo: groom, role: "groom" },
+    { label: t("Partner two"), photo: bride, role: "bride" }
+  ];
 
   function cycleRsvp(guest: Guest) {
     const next = RSVP_CYCLE[(RSVP_CYCLE.indexOf(guest.rsvpStatus) + 1) % RSVP_CYCLE.length];
@@ -78,6 +94,47 @@ export function GuestsView() {
       title="The people of the day."
     >
       <div className="guests-screen">
+        <section aria-label={t("Your faces in the 3D preview")} className="couple-faces-card">
+          <div className="couple-faces-copy">
+            <span className="eyebrow">{t("Your faces in 3D")}</span>
+            <p>{t("Upload a photo of each of you — it appears on the couple walking down the aisle in the 3D ceremony.")}</p>
+          </div>
+          <div className="couple-faces-slots">
+            {couplePhotos.map(({ label, photo, role }) => (
+              <div className="couple-face-slot" key={role}>
+                <span className="guests-avatar couple-face-avatar" data-has-photo={photo ? "true" : undefined}>
+                  {photo ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img alt="" src={photo} />
+                      <button
+                        aria-label={t("Remove photo")}
+                        className="guests-avatar-remove"
+                        onClick={() => setPhoto(role, null)}
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </>
+                  ) : (
+                    <label className="guests-avatar-add" title={t("Add photo")}>
+                      <span aria-hidden="true">+</span>
+                      <input
+                        accept="image/*"
+                        hidden
+                        onChange={(event) => handleCouplePhoto(role, event.target.files?.[0] ?? null)}
+                        type="file"
+                      />
+                      <span className="sr-only">{t("Add photo")}</span>
+                    </label>
+                  )}
+                </span>
+                <small>{label}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <div className="guests-toolbar">
           <div aria-label={t("Filter by RSVP")} className="reception-view-toggle guests-filter" role="group">
             {RSVP_FILTERS.map((value) => (
