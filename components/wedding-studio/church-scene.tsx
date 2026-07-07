@@ -1503,17 +1503,14 @@ function CoupleFacePortrait({ photoUrl }: { photoUrl: string }) {
   }, [photoUrl]);
   useEffect(() => () => texture.dispose(), [texture]);
 
+  // The photo IS the head now — a head-sized oval sitting on the figure's head
+  // (no portrait frame), so it reads as the person's face rather than a
+  // floating token. Kept camera-facing so it's visible from any angle.
   return (
-    <>
-      <mesh position={[0, 0, -0.003]}>
-        <circleGeometry args={[0.2, 40]} />
-        <meshBasicMaterial color="#fffdf8" toneMapped={false} />
-      </mesh>
-      <mesh>
-        <circleGeometry args={[0.182, 40]} />
-        <meshBasicMaterial map={texture} toneMapped={false} />
-      </mesh>
-    </>
+    <mesh scale={[0.9, 1.12, 1]}>
+      <circleGeometry args={[0.17, 44]} />
+      <meshBasicMaterial map={texture} toneMapped={false} transparent />
+    </mesh>
   );
 }
 
