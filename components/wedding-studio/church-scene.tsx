@@ -9,6 +9,7 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { assetPath } from "@/lib/asset-path";
 import { useCouplePhotos } from "@/lib/use-couple-photos";
@@ -459,6 +460,7 @@ export function CeremonyScene({
             coupleHeadsRef={coupleHeadsRef}
             firstPerson={firstPerson}
             groomPhoto={groomPhoto}
+            highQuality={highQuality}
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
             palette={palette}
@@ -659,6 +661,7 @@ function WeddingStageInterior({
   coupleHeadsRef,
   firstPerson = null,
   groomPhoto,
+  highQuality = true,
   onMoveObject,
   onSelectObject,
   palette,
@@ -677,6 +680,7 @@ function WeddingStageInterior({
   coupleHeadsRef?: { current: CoupleHeads };
   firstPerson?: CeremonyFirstPerson;
   groomPhoto?: string | null;
+  highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
@@ -842,7 +846,7 @@ function WeddingStageInterior({
               ? activeStep !== "venue"
                 ? (
                   <Suspense fallback={null}>
-                    <ChurchCongregation seats={seatedGuests} />
+                    <ChurchCongregation highQuality={highQuality} seats={seatedGuests} />
                   </Suspense>
                 )
                 : null
@@ -1205,7 +1209,7 @@ type CongregationSeat = {
   rotationY: number;
 };
 
-function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: string }) {
+function CongregationVariant({ highQuality = true, seats, url }: { highQuality?: boolean; seats: CongregationSeat[]; url: string }) {
   const { scene } = useGLTF(url);
   const geometry = useMemo(() => {
     let found: THREE.BufferGeometry | null = null;
@@ -1218,12 +1222,19 @@ function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: s
     if (!found) {
       return null;
     }
-    // Smooth (averaged) vertex normals turn the baked figures from a hard,
-    // faceted "crystalline" read into the soft rounded low-poly look — the
-    // single cheapest fix for the "everything is angular" feedback. Clone so we
-    // never mutate the shared GLTF cache.
-    const smoothed = (found as THREE.BufferGeometry).clone();
-    smoothed.computeVertexNormals();
+    // Round the blocky low-poly silhouette with one Loop subdivision pass. These
+    // baked meshes are NON-INDEXED, so computeVertexNormals alone was a no-op
+    // (per-triangle only) — LoopSubdivision finds neighbours by hashing vertex
+    // position, so it genuinely adds curvature to limbs/torso/head. It clones
+    // internally (never mutating the GLTF cache), keeps the COLOR_0 palette, and
+    // the crowd is a single instanced draw per variant regardless of tri count.
+    // Skipped on the low-quality (mobile) path to keep the vertex load down.
+    const smoothed = highQuality
+      ? LoopSubdivision.modify(found as THREE.BufferGeometry, 1, { maxTriangles: 28000 })
+      : (found as THREE.BufferGeometry).clone();
+    if (!highQuality) {
+      smoothed.computeVertexNormals();
+    }
     // Mute the baked skin/hair/clothing colours toward a cohesive, softly warm
     // palette so the crowd reads editorial and designed instead of a saturated
     // game crowd — individual variation stays, just calmer.
@@ -1240,7 +1251,7 @@ function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: s
       colorAttr.needsUpdate = true;
     }
     return smoothed;
-  }, [scene]);
+  }, [scene, highQuality]);
   // Matte, non-metallic skin/cloth so figures read as soft sculpture, not
   // plastic game props.
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.94, metalness: 0 }), []);
@@ -1277,11 +1288,11 @@ function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: s
   return <instancedMesh args={[geometry, material, seats.length]} castShadow frustumCulled={false} ref={meshRef} />;
 }
 
-function ChurchCongregation({ seats }: { seats: CongregationSeat[] }) {
+function ChurchCongregation({ highQuality = true, seats }: { highQuality?: boolean; seats: CongregationSeat[] }) {
   return (
     <group>
       {CONGREGATION_MODELS.map((url, variant) => (
-        <CongregationVariant key={url} seats={seats.filter((seat) => seat.variant === variant)} url={url} />
+        <CongregationVariant highQuality={highQuality} key={url} seats={seats.filter((seat) => seat.variant === variant)} url={url} />
       ))}
     </group>
   );

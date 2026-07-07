@@ -18,7 +18,8 @@
     "next": "16.2.7",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "three-subdivide": "^1.1.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
