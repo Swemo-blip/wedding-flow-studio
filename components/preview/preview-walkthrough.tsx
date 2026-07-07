@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CeremonyScene, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useLocalProject } from "@/lib/use-local-project";
+import { readStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import { sampleWedding } from "@/lib/wedding-data";
 import {
   calculateWeddingStudioCapacity,
   createWeddingStudioPlanFromWedding,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
+  type StudioSceneEdits,
   type StudioPlanningStepId
 } from "@/lib/wedding-studio-plan";
 
@@ -48,11 +50,30 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
   const plan = useMemo(() => createWeddingStudioPlanFromWedding(activeWedding, defaultWeddingStudioPlan), [activeWedding]);
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
 
+  // Reflect the couple's actual scene edits (object nudges) instead of the
+  // defaults — the preview used to ignore them, so it disagreed with the home
+  // hero for anyone who moved anything. Read post-mount to stay hydration-safe.
+  const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
+  useEffect(() => {
+    queueMicrotask(() => {
+      const stored = readStoredWeddingStudioLayout();
+      if (stored) {
+        setSceneEdits(stored.sceneEdits);
+      }
+    });
+  }, []);
+
   const waypoint = walkthrough[Math.min(phaseIndex, walkthrough.length - 1)] ?? walkthrough[0];
+
+  // The couple actually walks in during the processional (phase 2) and stays at
+  // the altar through the ceremony — previously they stood frozen at the back
+  // of the aisle the whole time, absent from their own vows.
+  const autoProcessional = waypoint.step !== "reception" && phaseIndex >= 2;
 
   return (
     <CeremonyScene
       activeStep={waypoint.step}
+      autoProcessional={autoProcessional}
       budgetLevel={plan.budgetLevel}
       cameraOverride={waypoint.camera}
       capacity={capacity}
@@ -60,7 +81,7 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
       lighting={waypoint.lighting}
       onMoveObject={() => {}}
       onSelectObject={() => {}}
-      sceneEdits={defaultStudioSceneEdits}
+      sceneEdits={sceneEdits}
       selectedObjectId="focalPoint"
       style={plan.style}
       venueType={plan.venueType}

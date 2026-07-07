@@ -123,6 +123,7 @@ type CoupleHeads = { groom: THREE.Vector3; bride: THREE.Vector3; arrived: boolea
 
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
+  autoProcessional?: boolean;
   budgetLevel: StudioBudgetLevel;
   cameraOverride?: SceneCameraOverride | null;
   firstPerson?: CeremonyFirstPerson;
@@ -288,6 +289,7 @@ export function CeremonyScene({
   style,
   venueType,
   viewMode,
+  autoProcessional,
   cameraOverride = null,
   firstPerson = null,
   highQuality = true,
@@ -455,7 +457,7 @@ export function CeremonyScene({
             onSelectObject={onSelectObject}
             palette={palette}
             processionalKey={processionalKey}
-            processionalPlaying={processionalPlaying}
+            processionalPlaying={autoProcessional ?? processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             showSinger={showSinger}

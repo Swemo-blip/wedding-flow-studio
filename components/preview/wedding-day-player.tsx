@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import { MomentInspector } from "@/components/moment/moment-inspector";
 import { PreviewWalkthrough } from "@/components/preview/preview-walkthrough";
 import { Button } from "@/components/ui/button";
+import { assetPath } from "@/lib/asset-path";
 import { buildMomentIntelligence } from "@/lib/moment-intelligence";
 import { buildPreviewCockpitContext } from "@/lib/preview-cockpit";
 import { useTranslation } from "@/lib/i18n";
@@ -25,7 +27,24 @@ const scenePositions = [
 export function WeddingDayPlayer() {
   const [index, setIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const { t } = useTranslation();
+
+  // The processional music plays through the whole day walkthrough while it's
+  // playing (started by the explicit Play press — a user gesture).
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.volume = 0.5;
+    if (isPlaying) {
+      void audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying]);
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const risks = useMemo(
@@ -129,7 +148,23 @@ export function WeddingDayPlayer() {
           <button aria-label="Next moment" disabled={!canGoNext} onClick={goToNextMoment} type="button">
             ›
           </button>
+          <button
+            aria-label={muted ? t("Unmute music") : t("Mute music")}
+            className="preview-walkthrough-mute"
+            data-active={!muted}
+            onClick={() => {
+              const audio = audioRef.current;
+              if (audio) {
+                audio.muted = !audio.muted;
+                setMuted(audio.muted);
+              }
+            }}
+            type="button"
+          >
+            {muted ? <VolumeX aria-hidden="true" size={15} /> : <Volume2 aria-hidden="true" size={15} />}
+          </button>
         </div>
+        <audio loop preload="auto" ref={audioRef} src={assetPath("/audio/processional.mp3")} />
       </div>
 
       <div className="preview-day-caption">
