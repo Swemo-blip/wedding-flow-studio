@@ -927,6 +927,61 @@ const STAINED_GLASS_COLORS = ["#294367", "#79332d", "#94703a", "#345844", "#3d34
 
 const LEAD_COLOR = "#33301f";
 
+// Draws a leaded stained-glass panel to a canvas: a diamond "quarry" lattice of
+// backlit jewel cells separated by dark lead cames, plus a soft light bloom.
+// Seeded so each window differs. Used as both map and emissiveMap so the glass
+// glows like real backlit glass.
+function createStainedGlassTexture(seed: number): THREE.CanvasTexture {
+  const w = 128;
+  const h = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  const jewels = ["#7db0d6", "#c8536a", "#e0b64e", "#5aa06e", "#9a6bb0", "#d98a45", "#3f7fa8", "#b8455a"];
+  const pick = (n: number) => jewels[((seed + n) % jewels.length + jewels.length) % jewels.length];
+
+  if (ctx) {
+    ctx.fillStyle = "#15120c";
+    ctx.fillRect(0, 0, w, h);
+
+    const cell = 26;
+    let n = 0;
+    for (let row = -1; row * (cell / 2) < h + cell; row += 1) {
+      const y = row * (cell / 2);
+      const offset = row % 2 === 0 ? 0 : cell / 2;
+      for (let x = -cell; x < w + cell; x += cell) {
+        const cx = x + offset;
+        ctx.beginPath();
+        ctx.moveTo(cx, y - cell / 2);
+        ctx.lineTo(cx + cell / 2, y);
+        ctx.lineTo(cx, y + cell / 2);
+        ctx.lineTo(cx - cell / 2, y);
+        ctx.closePath();
+        ctx.fillStyle = pick(n + row * 3);
+        ctx.globalAlpha = 0.72 + ((n * 7) % 10) / 34;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#0e0b07";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        n += 1;
+      }
+    }
+
+    // soft backlight bloom through the glass
+    const glow = ctx.createRadialGradient(w / 2, h * 0.42, 8, w / 2, h * 0.42, h * 0.58);
+    glow.addColorStop(0, "rgba(255,246,220,0.34)");
+    glow.addColorStop(1, "rgba(255,246,220,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 function StainedGlassWindow({
   position,
   rotationY = 0,
@@ -941,11 +996,12 @@ function StainedGlassWindow({
   seed?: number;
 }) {
   const halfWidth = width / 2;
-  const panes = 4;
-  const paneStep = width / panes;
   const frameHeight = rectHeight + halfWidth;
-  const transomY = rectHeight * 0.08;
   const glassColor = (offset: number) => STAINED_GLASS_COLORS[((seed + offset) % STAINED_GLASS_COLORS.length + STAINED_GLASS_COLORS.length) % STAINED_GLASS_COLORS.length];
+  // Real leaded-glass look: a jewel-toned quarry lattice with dark lead lines
+  // and a soft backlight, drawn to a canvas — far richer than a few flat panes.
+  const texture = useMemo(() => createStainedGlassTexture(seed), [seed]);
+  useEffect(() => () => texture.dispose(), [texture]);
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -954,42 +1010,10 @@ function StainedGlassWindow({
         <boxGeometry args={[width + 0.24, frameHeight + 0.26, 0.12]} />
         <meshStandardMaterial color="#cabfa0" roughness={0.9} />
       </mesh>
-      {/* dark lead backing — gaps between panes read as leading. Sits just in
-          front of the stone reveal so the two coplanar faces never z-fight. */}
-      <mesh position={[0, 0, -0.012]}>
-        <planeGeometry args={[width + 0.02, rectHeight + 0.02]} />
-        <meshStandardMaterial color={LEAD_COLOR} roughness={0.82} side={THREE.DoubleSide} />
-      </mesh>
-      {/* leaded jewel panes: 4 columns × 2 rows split by a transom */}
-      {Array.from({ length: panes }).map((_, col) =>
-        [0, 1].map((row) => {
-          const x = -halfWidth + paneStep / 2 + col * paneStep;
-          const lowerTop = transomY - 0.02;
-          const lowerH = lowerTop - -rectHeight / 2;
-          const upperBottom = transomY + 0.02;
-          const upperH = rectHeight / 2 - upperBottom;
-          const h = row === 0 ? lowerH : upperH;
-          const y = row === 0 ? (-rectHeight / 2 + lowerTop) / 2 : (upperBottom + rectHeight / 2) / 2;
-
-          return (
-            <mesh key={`${col}-${row}`} position={[x, y, 0]}>
-              <planeGeometry args={[paneStep - 0.05, h]} />
-              <meshStandardMaterial
-                color={glassColor(col + row * 2)}
-                emissive={glassColor(col + row * 2)}
-                emissiveIntensity={0.3}
-                roughness={0.45}
-                side={THREE.DoubleSide}
-                toneMapped={false}
-              />
-            </mesh>
-          );
-        })
-      )}
-      {/* transom lead bar */}
-      <mesh position={[0, transomY, 0.012]}>
-        <boxGeometry args={[width, 0.03, 0.05]} />
-        <meshStandardMaterial color={LEAD_COLOR} roughness={0.7} />
+      {/* leaded jewel glass — one textured, gently backlit plane */}
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[width, rectHeight]} />
+        <meshStandardMaterial emissive="#ffffff" emissiveIntensity={0.9} emissiveMap={texture} map={texture} roughness={0.4} side={THREE.DoubleSide} />
       </mesh>
       {/* arched top: lead backing + jewel + rose medallion */}
       <mesh position={[0, rectHeight / 2, -0.01]}>
@@ -1183,6 +1207,21 @@ function CongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: s
     // never mutate the shared GLTF cache.
     const smoothed = (found as THREE.BufferGeometry).clone();
     smoothed.computeVertexNormals();
+    // Mute the baked skin/hair/clothing colours toward a cohesive, softly warm
+    // palette so the crowd reads editorial and designed instead of a saturated
+    // game crowd — individual variation stays, just calmer.
+    const colorAttr = smoothed.getAttribute("color") as THREE.BufferAttribute | undefined;
+    if (colorAttr) {
+      const color = new THREE.Color();
+      const hsl = { h: 0, s: 0, l: 0 };
+      for (let i = 0; i < colorAttr.count; i += 1) {
+        color.fromBufferAttribute(colorAttr, i);
+        color.getHSL(hsl);
+        color.setHSL(hsl.h, hsl.s * 0.62, Math.min(0.82, hsl.l * 0.98 + 0.03));
+        colorAttr.setXYZ(i, color.r, color.g, color.b);
+      }
+      colorAttr.needsUpdate = true;
+    }
     return smoothed;
   }, [scene]);
   // Matte, non-metallic skin/cloth so figures read as soft sculpture, not
