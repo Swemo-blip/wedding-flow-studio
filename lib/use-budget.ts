@@ -91,6 +91,17 @@ function writeStoredTarget(target: number) {
   safeSetItem(TARGET_KEY, String(target));
 }
 
+// Budget items + target live outside the project blob, so a full "Start over"
+// must clear them too or the new couple inherits the old budget.
+export function clearStoredBudget() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(TARGET_KEY);
+}
+
 export function useBudget() {
   // Render the seed on the server and first client paint (hydration-safe), then
   // swap in any stored budget after mount via a microtask (matches the studio

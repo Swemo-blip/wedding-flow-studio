@@ -68,6 +68,16 @@ function writeStoredChecklist(tasks: ChecklistTask[]) {
   safeSetItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
+// Checklist progress lives outside the project blob, so a full "Start over"
+// must clear it too or the new couple inherits the old checked-off tasks.
+export function clearStoredChecklist() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(STORAGE_KEY);
+}
+
 export function useChecklist() {
   const [tasks, setTasks] = useState<ChecklistTask[]>(DEFAULT_CHECKLIST);
 

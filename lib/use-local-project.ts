@@ -20,6 +20,8 @@ import {
   writeStoredTimeline,
   writeStoredVendorCandidates
 } from "@/lib/local-project-store";
+import { clearStoredBudget } from "@/lib/use-budget";
+import { clearStoredChecklist } from "@/lib/use-checklist";
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
 import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
@@ -410,6 +412,8 @@ function updateVendorCandidate(candidateId: string, updates: Partial<VendorCandi
 
 function resetLocalProject() {
   clearStoredProject();
+  clearStoredBudget();
+  clearStoredChecklist();
   setStoreState(() => createInitialState());
 }
 
