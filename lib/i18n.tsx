@@ -96,6 +96,7 @@ const sv: Record<string, string> = {
   "Edit": "Redigera",
   "Date": "Datum",
   "invited": "inbjudna",
+  "attending": "kommer",
   "seats": "platser",
   "Theme Colors": "Temafärger",
   "Start over with a new project": "Börja om med ett nytt projekt",
@@ -1017,7 +1018,7 @@ const sv: Record<string, string> = {
   // Intake — questions
   "Start with 5 questions": "Börja med 5 frågor",
   "Get a first visual wedding plan before you start editing.": "Få en första visuell bröllopsplan innan du börjar redigera.",
-  "Answer five calm questions. Wedding Flow Studio generates a first ceremony, reception, guest flow, cue sheet, and shareable planning summary.": "Svara på fem lugna frågor. Wedding Flow Studio genererar en första vigsel, mottagning, gästflöde, cue-lista och delbar planeringssammanfattning.",
+  "Answer a few calm questions and watch your day take shape.": "Svara på några lugna frågor och se din dag ta form.",
   "Question 1": "Fråga 1",
   "Question 2": "Fråga 2",
   "Question 3": "Fråga 3",

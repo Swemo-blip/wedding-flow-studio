@@ -167,7 +167,7 @@ export function WeddingProducerIntake() {
           <p className="eyebrow">{t("Start with 5 questions")}</p>
           <h1 id="intake-title">{t("Get a first visual wedding plan before you start editing.")}</h1>
           <p>
-            {t("Answer five calm questions. Wedding Flow Studio generates a first ceremony, reception, guest flow, cue sheet, and shareable planning summary.")}
+            {t("Answer a few calm questions and watch your day take shape.")}
           </p>
         </div>
         <div className="intake-hero-card" aria-label={t("Generated readiness")}>

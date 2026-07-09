@@ -10,7 +10,6 @@ import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resoluti
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
-import { sampleWedding } from "@/lib/wedding-data";
 import type { ExportType } from "@/lib/wedding-types";
 
 type ExportPreviewProps = {
@@ -31,7 +30,7 @@ type GuestBriefRow = {
 export function ExportPreview({ exportType }: ExportPreviewProps) {
   const { t } = useTranslation();
   const [copyStatus, setCopyStatus] = useState(t("Ready to copy"));
-  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
+  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const items = useMemo(
     () => getTimelineItemsByIds(timelineItems, exportType.timelineItemIds),
@@ -81,8 +80,8 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
     [dinnerTables, guestNotes, guests, shouldShowGuestNotes, speeches]
   );
   const briefText = useMemo(
-    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows),
-    [exportType, guestBriefRows, items, relatedCues, relatedSpeeches, risks]
+    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows, wedding),
+    [exportType, guestBriefRows, items, relatedCues, relatedSpeeches, risks, wedding]
   );
 
   async function copyBrief() {
@@ -103,7 +102,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
               <p className="eyebrow">{t("Export Preview")}</p>
               <h3 className="card-title">{exportType.title}</h3>
               <p className="card-copy">
-                {sampleWedding.coupleNames} - {sampleWedding.date}
+                {wedding.coupleNames} - {wedding.date}
               </p>
             </div>
             <div className="export-contact">
@@ -204,7 +203,8 @@ function buildExportBriefText(
   risks: Array<{ title: string; description: string; suggestedFix: string }>,
   relatedSpeeches: Array<{ title: string; speakerName: string; durationMinutes: number; technicalNeeds: string[] }>,
   relatedCues: Array<{ moment: string; songTitle: string; artist: string; startCue: string; backupPlan: string }>,
-  guestRows: GuestBriefRow[]
+  guestRows: GuestBriefRow[],
+  wedding: { coupleNames: string; date: string }
 ) {
   const timelineText = items
     .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.responsiblePerson}\n  Notes: ${item.notes}`)
@@ -229,7 +229,7 @@ function buildExportBriefText(
 
   return [
     exportType.title,
-    `${sampleWedding.coupleNames} - ${sampleWedding.date}`,
+    `${wedding.coupleNames} - ${wedding.date}`,
     `Contact: ${exportType.contactPerson}`,
     "",
     exportType.description,
