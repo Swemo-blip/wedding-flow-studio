@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   createMusicCueDraft,
   createSpeechDraft,
@@ -10,7 +10,9 @@ import {
   clearStoredProject,
   createStoredProjectDraft,
   createTimelineDraft,
+  projectStorageKey,
   readStoredProject,
+  subscribeStoredProjectChange,
   writeStoredMusicCues,
   writeStoredProject,
   writeStoredReception,
@@ -33,8 +35,8 @@ type LocalProjectState = {
   updatedAt?: string;
 };
 
-export function useLocalProject() {
-  const [state, setState] = useState<LocalProjectState>(() => ({
+function createInitialState(): LocalProjectState {
+  return {
     hasLocalProject: false,
     wedding: sampleWedding,
     timelineItems: createTimelineDraft(timelineItems),
@@ -44,308 +46,395 @@ export function useLocalProject() {
     dinnerTables: createDinnerTableDraft(dinnerTables),
     vendorCandidates: [],
     updatedAt: undefined
-  }));
+  };
+}
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      const storedProject = readStoredProject();
+// A single shared source of truth for the project. Previously every
+// useLocalProject() call kept its own useState copy, so the always-mounted
+// header (root layout) never learned about a plan created on another route —
+// it kept showing the sample wedding while the page showed the real couple.
+// One module-level store + a listener set fixes that: all consumers render the
+// same state and react to create/reset/edit live.
+let state: LocalProjectState = createInitialState();
+// Stable reference for SSR / first client paint (never recreate — a fresh
+// object each call would loop useSyncExternalStore).
+const SERVER_SNAPSHOT: LocalProjectState = state;
+const listeners = new Set<() => void>();
 
-      if (storedProject) {
-        setState({
-          hasLocalProject: true,
-          wedding: storedProject.wedding,
-          timelineItems: storedProject.timelineItems,
-          musicCues: storedProject.musicCues,
-          speeches: storedProject.speeches,
-          guests: storedProject.guests,
-          dinnerTables: storedProject.dinnerTables,
-          vendorCandidates: storedProject.vendorCandidates,
-          updatedAt: storedProject.updatedAt
-        });
-      }
-    });
-  }, []);
+function emit() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
 
-  function updateTimelineItems(updater: TimelineItem[] | ((items: TimelineItem[]) => TimelineItem[])) {
-    setState((currentState) => {
-      const nextTimelineItems = typeof updater === "function" ? updater(currentState.timelineItems) : updater;
-      const storedProject = writeStoredTimeline(nextTimelineItems);
+function setStoreState(updater: (current: LocalProjectState) => LocalProjectState) {
+  state = updater(state);
+  emit();
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        timelineItems: storedProject?.timelineItems ?? createTimelineDraft(nextTimelineItems),
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
+function getSnapshot() {
+  return state;
+}
+
+function getServerSnapshot() {
+  return SERVER_SNAPSHOT;
+}
+
+// Pull the latest blob into the store. Skips its own writes (updatedAt already
+// matches) so per-keystroke edits don't re-parse the whole project; only
+// external writers (intake, a reset elsewhere, another tab) trigger a refresh.
+function hydrateFromStorage() {
+  const stored = readStoredProject();
+
+  if (stored) {
+    if (state.hasLocalProject && stored.updatedAt === state.updatedAt) {
+      return;
+    }
+
+    setStoreState(() => ({
+      hasLocalProject: true,
+      wedding: stored.wedding,
+      timelineItems: stored.timelineItems,
+      musicCues: stored.musicCues,
+      speeches: stored.speeches,
+      guests: stored.guests,
+      dinnerTables: stored.dinnerTables,
+      vendorCandidates: stored.vendorCandidates,
+      updatedAt: stored.updatedAt
+    }));
+
+    return;
   }
 
-  function updateMusicCue(cueId: string, updates: Partial<MusicCue>) {
-    setState((currentState) => {
-      const nextMusicCues = currentState.musicCues.map((cue) => (cue.id === cueId ? { ...cue, ...updates } : cue));
-      const storedProject = writeStoredMusicCues(nextMusicCues);
-
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        musicCues: storedProject?.musicCues ?? nextMusicCues,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
+  // No stored project (e.g. cleared elsewhere) — fall back to the sample.
+  if (!state.hasLocalProject) {
+    return;
   }
 
-  function resetMusicCues() {
-    setState((currentState) => {
-      const nextProject = writeStoredProject(
-        createStoredProjectDraft({
-          timelineItems: currentState.timelineItems,
-          wedding: currentState.wedding,
-          musicCues,
-          speeches: currentState.speeches,
-          guests: currentState.guests,
-          dinnerTables: currentState.dinnerTables,
-          vendorCandidates: currentState.vendorCandidates,
-          riskResolutions: readStoredProject()?.riskResolutions ?? []
-        })
-      );
+  setStoreState(() => createInitialState());
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: Boolean(nextProject),
-        musicCues: nextProject?.musicCues ?? createMusicCueDraft(musicCues),
-        updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
+let storeWired = false;
+function ensureStoreWiring() {
+  if (storeWired || typeof window === "undefined") {
+    return;
   }
 
-  function updateSpeech(speechId: string, updates: Partial<Speech>) {
-    setState((currentState) => {
-      const nextSpeeches = currentState.speeches.map((speech) => (speech.id === speechId ? { ...speech, ...updates } : speech));
-      const storedProject = writeStoredSpeeches(nextSpeeches);
+  storeWired = true;
+  subscribeStoredProjectChange(hydrateFromStorage);
+  window.addEventListener("storage", (event) => {
+    if (event.key === projectStorageKey || event.key === null) {
+      hydrateFromStorage();
+    }
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        speeches: storedProject?.speeches ?? nextSpeeches,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
+let hydratedOnce = false;
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  ensureStoreWiring();
+
+  if (!hydratedOnce) {
+    hydratedOnce = true;
+    // After commit, so the first client paint matches the server snapshot.
+    queueMicrotask(hydrateFromStorage);
   }
 
-  function resetSpeeches() {
-    setState((currentState) => {
-      const nextProject = writeStoredProject(
-        createStoredProjectDraft({
-          timelineItems: currentState.timelineItems,
-          wedding: currentState.wedding,
-          musicCues: currentState.musicCues,
-          speeches,
-          guests: currentState.guests,
-          dinnerTables: currentState.dinnerTables,
-          vendorCandidates: currentState.vendorCandidates,
-          riskResolutions: readStoredProject()?.riskResolutions ?? []
-        })
-      );
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: Boolean(nextProject),
-        speeches: nextProject?.speeches ?? createSpeechDraft(speeches),
-        updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
+function updateTimelineItems(updater: TimelineItem[] | ((items: TimelineItem[]) => TimelineItem[])) {
+  setStoreState((currentState) => {
+    const nextTimelineItems = typeof updater === "function" ? updater(currentState.timelineItems) : updater;
+    const storedProject = writeStoredTimeline(nextTimelineItems);
 
-  function updateGuest(guestId: string, updates: Partial<Guest>) {
-    setState((currentState) => {
-      const nextGuests = currentState.guests.map((guest) => (guest.id === guestId ? { ...guest, ...updates } : guest));
-      const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      timelineItems: storedProject?.timelineItems ?? createTimelineDraft(nextTimelineItems),
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        guests: storedProject?.guests ?? nextGuests,
-        dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
+function updateMusicCue(cueId: string, updates: Partial<MusicCue>) {
+  setStoreState((currentState) => {
+    const nextMusicCues = currentState.musicCues.map((cue) => (cue.id === cueId ? { ...cue, ...updates } : cue));
+    const storedProject = writeStoredMusicCues(nextMusicCues);
 
-  function addGuest(partial: Partial<Guest> = {}) {
-    setState((currentState) => {
-      const newGuest: Guest = {
-        id: `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        name: "New guest",
-        household: "",
-        rsvpStatus: "pending",
-        mealChoice: "",
-        allergies: [],
-        tags: [],
-        relationship: "",
-        accessibilityNotes: "",
-        conflictGuestIds: [],
-        preferredGuestIds: [],
-        language: "",
-        tableId: "",
-        seatIndex: 0,
-        ...partial
-      };
-      const nextGuests = [newGuest, ...currentState.guests];
-      const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      musicCues: storedProject?.musicCues ?? nextMusicCues,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        guests: storedProject?.guests ?? nextGuests,
-        dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
+function resetMusicCues() {
+  setStoreState((currentState) => {
+    const nextProject = writeStoredProject(
+      createStoredProjectDraft({
+        timelineItems: currentState.timelineItems,
+        wedding: currentState.wedding,
+        musicCues,
+        speeches: currentState.speeches,
+        guests: currentState.guests,
+        dinnerTables: currentState.dinnerTables,
+        vendorCandidates: currentState.vendorCandidates,
+        riskResolutions: readStoredProject()?.riskResolutions ?? []
+      })
+    );
 
-  function removeGuest(guestId: string) {
-    setState((currentState) => {
-      const nextGuests = currentState.guests.filter((guest) => guest.id !== guestId);
-      const nextTables = currentState.dinnerTables.map((table) => ({
-        ...table,
-        assignedGuestIds: table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId)
-      }));
-      const storedProject = writeStoredReception(nextGuests, nextTables);
+    return {
+      ...currentState,
+      hasLocalProject: Boolean(nextProject),
+      musicCues: nextProject?.musicCues ?? createMusicCueDraft(musicCues),
+      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        guests: storedProject?.guests ?? nextGuests,
-        dinnerTables: storedProject?.dinnerTables ?? nextTables,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
+function updateSpeech(speechId: string, updates: Partial<Speech>) {
+  setStoreState((currentState) => {
+    const nextSpeeches = currentState.speeches.map((speech) => (speech.id === speechId ? { ...speech, ...updates } : speech));
+    const storedProject = writeStoredSpeeches(nextSpeeches);
 
-  function updateDinnerTable(tableId: string, updates: Partial<DinnerTable>) {
-    setState((currentState) => {
-      const nextTables = currentState.dinnerTables.map((table) => (table.id === tableId ? { ...table, ...updates } : table));
-      const storedProject = writeStoredReception(currentState.guests, nextTables);
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      speeches: storedProject?.speeches ?? nextSpeeches,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        guests: storedProject?.guests ?? currentState.guests,
-        dinnerTables: storedProject?.dinnerTables ?? nextTables,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
+function resetSpeeches() {
+  setStoreState((currentState) => {
+    const nextProject = writeStoredProject(
+      createStoredProjectDraft({
+        timelineItems: currentState.timelineItems,
+        wedding: currentState.wedding,
+        musicCues: currentState.musicCues,
+        speeches,
+        guests: currentState.guests,
+        dinnerTables: currentState.dinnerTables,
+        vendorCandidates: currentState.vendorCandidates,
+        riskResolutions: readStoredProject()?.riskResolutions ?? []
+      })
+    );
 
-  function assignGuestToTable(guestId: string, tableId: string) {
-    setState((currentState) => {
-      const targetTable = currentState.dinnerTables.find((table) => table.id === tableId);
-      const nextSeatIndex = targetTable?.assignedGuestIds.length ?? 0;
-      const nextGuests = currentState.guests.map((guest) =>
-        guest.id === guestId ? { ...guest, tableId, seatIndex: nextSeatIndex } : guest
-      );
-      const nextTables = currentState.dinnerTables.map((table) => {
-        const withoutGuest = table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId);
+    return {
+      ...currentState,
+      hasLocalProject: Boolean(nextProject),
+      speeches: nextProject?.speeches ?? createSpeechDraft(speeches),
+      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-        if (table.id === tableId) {
-          return {
-            ...table,
-            assignedGuestIds: [...withoutGuest, guestId]
-          };
-        }
+function updateGuest(guestId: string, updates: Partial<Guest>) {
+  setStoreState((currentState) => {
+    const nextGuests = currentState.guests.map((guest) => (guest.id === guestId ? { ...guest, ...updates } : guest));
+    const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
 
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? nextGuests,
+      dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function addGuest(partial: Partial<Guest> = {}) {
+  setStoreState((currentState) => {
+    const newGuest: Guest = {
+      id: `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: "New guest",
+      household: "",
+      rsvpStatus: "pending",
+      mealChoice: "",
+      allergies: [],
+      tags: [],
+      relationship: "",
+      accessibilityNotes: "",
+      conflictGuestIds: [],
+      preferredGuestIds: [],
+      language: "",
+      tableId: "",
+      seatIndex: 0,
+      ...partial
+    };
+    const nextGuests = [newGuest, ...currentState.guests];
+    const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? nextGuests,
+      dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function removeGuest(guestId: string) {
+  setStoreState((currentState) => {
+    const remainingGuests = currentState.guests.filter((guest) => guest.id !== guestId);
+    const nextTables = currentState.dinnerTables.map((table) => ({
+      ...table,
+      assignedGuestIds: table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId)
+    }));
+    const nextGuests = applySeatIndices(remainingGuests, nextTables);
+    const storedProject = writeStoredReception(nextGuests, nextTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? nextGuests,
+      dinnerTables: storedProject?.dinnerTables ?? nextTables,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function updateDinnerTable(tableId: string, updates: Partial<DinnerTable>) {
+  setStoreState((currentState) => {
+    const nextTables = currentState.dinnerTables.map((table) => (table.id === tableId ? { ...table, ...updates } : table));
+    const storedProject = writeStoredReception(currentState.guests, nextTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? currentState.guests,
+      dinnerTables: storedProject?.dinnerTables ?? nextTables,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function assignGuestToTable(guestId: string, tableId: string) {
+  setStoreState((currentState) => {
+    const nextTables = currentState.dinnerTables.map((table) => {
+      const withoutGuest = table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId);
+
+      if (table.id === tableId) {
         return {
           ...table,
-          assignedGuestIds: withoutGuest
+          assignedGuestIds: [...withoutGuest, guestId]
         };
-      });
-      const storedProject = writeStoredReception(nextGuests, nextTables);
+      }
 
       return {
-        ...currentState,
-        hasLocalProject: true,
-        guests: storedProject?.guests ?? nextGuests,
-        dinnerTables: storedProject?.dinnerTables ?? nextTables,
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+        ...table,
+        assignedGuestIds: withoutGuest
       };
     });
-  }
+    const nextGuests = applySeatIndices(
+      currentState.guests.map((guest) => (guest.id === guestId ? { ...guest, tableId } : guest)),
+      nextTables
+    );
+    const storedProject = writeStoredReception(nextGuests, nextTables);
 
-  function resetReception() {
-    setState((currentState) => {
-      const nextProject = writeStoredProject(
-        createStoredProjectDraft({
-          timelineItems: currentState.timelineItems,
-          wedding: currentState.wedding,
-          musicCues: currentState.musicCues,
-          speeches: currentState.speeches,
-          guests,
-          dinnerTables,
-          vendorCandidates: currentState.vendorCandidates,
-          riskResolutions: readStoredProject()?.riskResolutions ?? []
-        })
-      );
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? nextGuests,
+      dinnerTables: storedProject?.dinnerTables ?? nextTables,
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: Boolean(nextProject),
-        guests: nextProject?.guests ?? createGuestDraft(guests),
-        dinnerTables: nextProject?.dinnerTables ?? createDinnerTableDraft(dinnerTables),
-        updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
-      };
+function resetReception() {
+  setStoreState((currentState) => {
+    const nextProject = writeStoredProject(
+      createStoredProjectDraft({
+        timelineItems: currentState.timelineItems,
+        wedding: currentState.wedding,
+        musicCues: currentState.musicCues,
+        speeches: currentState.speeches,
+        guests,
+        dinnerTables,
+        vendorCandidates: currentState.vendorCandidates,
+        riskResolutions: readStoredProject()?.riskResolutions ?? []
+      })
+    );
+
+    return {
+      ...currentState,
+      hasLocalProject: Boolean(nextProject),
+      guests: nextProject?.guests ?? createGuestDraft(guests),
+      dinnerTables: nextProject?.dinnerTables ?? createDinnerTableDraft(dinnerTables),
+      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function addVendorCandidate(candidate: VendorCandidate) {
+  setStoreState((currentState) => {
+    const existingCandidate = currentState.vendorCandidates.find((item) => item.id === candidate.id);
+    const nextCandidates = existingCandidate
+      ? currentState.vendorCandidates.map((item) => (item.id === candidate.id ? candidate : item))
+      : [candidate, ...currentState.vendorCandidates];
+    const storedProject = writeStoredVendorCandidates(nextCandidates);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function updateVendorCandidate(candidateId: string, updates: Partial<VendorCandidate>) {
+  setStoreState((currentState) => {
+    const nextCandidates = currentState.vendorCandidates.map((candidate) =>
+      candidate.id === candidateId ? { ...candidate, ...updates, updatedAt: new Date().toISOString() } : candidate
+    );
+    const storedProject = writeStoredVendorCandidates(nextCandidates);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
+      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+    };
+  });
+}
+
+function resetLocalProject() {
+  clearStoredProject();
+  setStoreState(() => createInitialState());
+}
+
+// Recompute each seated guest's seatIndex from its position in the table's
+// assignedGuestIds so labels ("Table · 3") never show stale/duplicate numbers
+// after a move or removal.
+function applySeatIndices(guestList: Guest[], tables: DinnerTable[]): Guest[] {
+  const seatByGuest = new Map<string, number>();
+  for (const table of tables) {
+    table.assignedGuestIds.forEach((assignedGuestId, index) => {
+      seatByGuest.set(assignedGuestId, index);
     });
   }
 
-  function addVendorCandidate(candidate: VendorCandidate) {
-    setState((currentState) => {
-      const existingCandidate = currentState.vendorCandidates.find((item) => item.id === candidate.id);
-      const nextCandidates = existingCandidate
-        ? currentState.vendorCandidates.map((item) => (item.id === candidate.id ? candidate : item))
-        : [candidate, ...currentState.vendorCandidates];
-      const storedProject = writeStoredVendorCandidates(nextCandidates);
+  return guestList.map((guest) => {
+    const seatIndex = seatByGuest.get(guest.id);
+    return seatIndex === undefined || guest.seatIndex === seatIndex ? guest : { ...guest, seatIndex };
+  });
+}
 
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
-
-  function updateVendorCandidate(candidateId: string, updates: Partial<VendorCandidate>) {
-    setState((currentState) => {
-      const nextCandidates = currentState.vendorCandidates.map((candidate) =>
-        candidate.id === candidateId ? { ...candidate, ...updates, updatedAt: new Date().toISOString() } : candidate
-      );
-      const storedProject = writeStoredVendorCandidates(nextCandidates);
-
-      return {
-        ...currentState,
-        hasLocalProject: true,
-        vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
-        updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
-      };
-    });
-  }
-
-  function resetLocalProject() {
-    clearStoredProject();
-    setState({
-      hasLocalProject: false,
-      wedding: sampleWedding,
-      timelineItems: createTimelineDraft(timelineItems),
-      musicCues: createMusicCueDraft(musicCues),
-      speeches: createSpeechDraft(speeches),
-      guests: createGuestDraft(guests),
-      dinnerTables: createDinnerTableDraft(dinnerTables),
-      vendorCandidates: [],
-      updatedAt: undefined
-    });
-  }
+export function useLocalProject() {
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   return {
-    ...state,
+    ...snapshot,
     updateTimelineItems,
     updateMusicCue,
     resetMusicCues,

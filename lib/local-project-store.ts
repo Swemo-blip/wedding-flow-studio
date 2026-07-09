@@ -7,6 +7,37 @@ export const timelineStorageKey = "wedding-flow-studio.timeline.v1";
 export const riskResolutionStorageKey = "wedding-flow-studio.risk-resolutions.v1";
 export const corruptProjectStorageKey = "wedding-flow-studio.project.corrupt.v1";
 
+// The stored project is the single source of truth on disk, but it is written
+// from many places (the useLocalProject mutators, the intake flow's direct
+// writeStoredProject, resets). This pub/sub lets the shared in-memory store
+// refresh whenever the blob changes — so, e.g., creating a plan in the intake
+// and navigating home updates the header, not just the page that wrote it.
+type StoredProjectChangeListener = () => void;
+const storedProjectChangeListeners = new Set<StoredProjectChangeListener>();
+
+export function subscribeStoredProjectChange(listener: StoredProjectChangeListener) {
+  storedProjectChangeListeners.add(listener);
+
+  return () => {
+    storedProjectChangeListeners.delete(listener);
+  };
+}
+
+function notifyStoredProjectChange() {
+  if (typeof window === "undefined" || storedProjectChangeListeners.size === 0) {
+    return;
+  }
+
+  // Defer so a caller that also updates the shared in-memory store settles
+  // first; the store then skips re-reading its own write (updatedAt matches)
+  // and only external writers trigger a refresh.
+  queueMicrotask(() => {
+    for (const listener of storedProjectChangeListeners) {
+      listener();
+    }
+  });
+}
+
 export type StoredTimelineProject = {
   updatedAt: string;
   timelineItems: TimelineItem[];
@@ -148,6 +179,8 @@ export function writeStoredProject(project: StoredWeddingProject) {
     return null;
   }
 
+  notifyStoredProjectChange();
+
   return nextProject;
 }
 
@@ -159,6 +192,7 @@ export function clearStoredProject() {
   window.localStorage.removeItem(projectStorageKey);
   window.localStorage.removeItem(timelineStorageKey);
   window.localStorage.removeItem(riskResolutionStorageKey);
+  notifyStoredProjectChange();
 }
 
 export function readStoredTimeline() {
@@ -387,6 +421,8 @@ function readStoredRiskResolutionsFromLegacyKey() {
 function isTimelineArray(value: unknown): value is TimelineItem[] {
   return Array.isArray(value) && value.every(
     (item) =>
+      Boolean(item) &&
+      typeof item === "object" &&
       typeof item.id === "string" &&
       typeof item.time === "string" &&
       typeof item.title === "string" &&
@@ -424,6 +460,8 @@ function isWedding(value: unknown): value is Wedding {
 function isMusicCueArray(value: unknown): value is MusicCue[] {
   return Array.isArray(value) && value.every(
     (item) =>
+      Boolean(item) &&
+      typeof item === "object" &&
       typeof item.id === "string" &&
       typeof item.moment === "string" &&
       typeof item.songTitle === "string" &&
@@ -441,6 +479,8 @@ function isMusicCueArray(value: unknown): value is MusicCue[] {
 function isSpeechArray(value: unknown): value is Speech[] {
   return Array.isArray(value) && value.every(
     (item) =>
+      Boolean(item) &&
+      typeof item === "object" &&
       typeof item.id === "string" &&
       typeof item.title === "string" &&
       typeof item.speakerName === "string" &&
@@ -460,6 +500,8 @@ function isSpeechArray(value: unknown): value is Speech[] {
 function isGuestArray(value: unknown): value is Guest[] {
   return Array.isArray(value) && value.every(
     (item) =>
+      Boolean(item) &&
+      typeof item === "object" &&
       typeof item.id === "string" &&
       typeof item.name === "string" &&
       typeof item.household === "string" &&
@@ -484,6 +526,8 @@ function isGuestArray(value: unknown): value is Guest[] {
 function isDinnerTableArray(value: unknown): value is DinnerTable[] {
   return Array.isArray(value) && value.every(
     (item) =>
+      Boolean(item) &&
+      typeof item === "object" &&
       typeof item.id === "string" &&
       typeof item.name === "string" &&
       typeof item.type === "string" &&
