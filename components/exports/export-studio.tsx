@@ -4,15 +4,19 @@ import { useState } from "react";
 import { BudgetSheet } from "@/components/exports/budget-sheet";
 import { ExportPreview } from "@/components/exports/export-preview";
 import { RunOfShow } from "@/components/exports/run-of-show";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioSceneSurface } from "@/components/ui/studio-scene-surface";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
 import { useTranslation } from "@/lib/i18n";
+import { downloadTimelineIcs } from "@/lib/timeline-ics";
+import { useLocalProject } from "@/lib/use-local-project";
 import { exportTypes } from "@/lib/wedding-data";
 
 export function ExportStudio() {
   const { t } = useTranslation();
+  const { timelineItems, wedding } = useLocalProject();
   const [selectedExportId, setSelectedExportId] = useState(exportTypes[0].id);
   const selectedExport = exportTypes.find((exportType) => exportType.id === selectedExportId) ?? exportTypes[0];
 
@@ -79,6 +83,11 @@ export function ExportStudio() {
                 <p className="eyebrow">{t("Reference")}</p>
                 <h3 className="card-title">{t("Full Run of Show")}</h3>
                 <p className="card-copy">{t("A compact source view for the selected brief.")}</p>
+                <div className="button-row no-print">
+                  <Button onClick={() => downloadTimelineIcs(wedding, timelineItems)} size="small" variant="secondary">
+                    {t("Add to calendar (.ics)")}
+                  </Button>
+                </div>
                 <RunOfShow />
               </CardContent>
             </Card>

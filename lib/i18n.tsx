@@ -945,6 +945,7 @@ const sv: Record<string, string> = {
   "Reference": "Referens",
   "Full Run of Show": "Fullständigt körschema",
   "A compact source view for the selected brief.": "En kompakt källvy för den valda briefen.",
+  "Add to calendar (.ics)": "Lägg till i kalender (.ics)",
   "Export Preview": "Exportförhandsvisning",
   "Contact person": "Kontaktperson",
   "Using local project edits": "Använder lokala projektändringar",
