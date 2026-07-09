@@ -36,6 +36,15 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
     () => getTimelineItemsByIds(timelineItems, exportType.timelineItemIds),
     [exportType.timelineItemIds, timelineItems]
   );
+  // The linked timeline item owns each speech's time, so the brief matches the
+  // Speeches studio and Day Flow rather than a speech's stale `timing` string.
+  const timelineTimeById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of timelineItems) {
+      map.set(item.id, item.time);
+    }
+    return map;
+  }, [timelineItems]);
   const risks = useMemo(
     () =>
       getRisksByIds(
@@ -65,6 +74,8 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
       shouldShowGuestNotes
         ? guestNotes.map((guest) => {
             const profile = buildGuestProfile(guest, { guests, speeches, tables: dinnerTables });
+            const linkedSpeech = profile.speech;
+            const speechTiming = linkedSpeech ? timelineTimeById.get(linkedSpeech.timelineItemId) ?? linkedSpeech.timing : "";
             return {
               accessibility: guest.accessibilityNotes,
               allergies: guest.allergies,
@@ -73,11 +84,11 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
               name: guest.name,
               relation: profile.relationToCouple,
               seat: profile.table ? profile.seatLabel : "Unassigned",
-              speech: profile.speech ? `${profile.speech.title} (${profile.speech.timing})` : ""
+              speech: linkedSpeech ? `${linkedSpeech.title} (${speechTiming})` : ""
             };
           })
         : [],
-    [dinnerTables, guestNotes, guests, shouldShowGuestNotes, speeches]
+    [dinnerTables, guestNotes, guests, shouldShowGuestNotes, speeches, timelineTimeById]
   );
   const briefText = useMemo(
     () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows, wedding),

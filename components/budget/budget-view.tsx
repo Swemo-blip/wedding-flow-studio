@@ -19,11 +19,10 @@ export function BudgetView() {
   const totals = useMemo(() => {
     const estimate = items.reduce((sum, item) => sum + (Number(item.estimate) || 0), 0);
     const paid = items.reduce((sum, item) => sum + (Number(item.paid) || 0), 0);
-    return { estimate, paid, remaining: Math.max(0, estimate - paid) };
+    return { estimate, paid };
   }, [items]);
 
   const paidPercent = totals.estimate > 0 ? Math.min(100, Math.round((totals.paid / totals.estimate) * 100)) : 0;
-  const overBudget = totals.estimate > target;
 
   // Spend by category (share of the estimated total) — shows where the money goes.
   const byCategory = useMemo(() => {
@@ -64,6 +63,28 @@ export function BudgetView() {
     [vendorCandidates]
   );
 
+  // What the couple has actually committed: the budgeted estimate plus any
+  // booked vendor spend the estimate lines don't already cover. Reconciled per
+  // category so a caterer you both estimated AND booked isn't counted twice —
+  // only the amount a booking runs *beyond* its category's estimate is added.
+  const committed = useMemo(() => {
+    const estimateByCategory = new Map<string, number>();
+    for (const item of items) {
+      estimateByCategory.set(item.category, (estimateByCategory.get(item.category) ?? 0) + (Number(item.estimate) || 0));
+    }
+
+    let uncoveredBooked = 0;
+    for (const [category, vendors] of bookedByCategory) {
+      const bookedSum = vendors.reduce((sum, vendor) => sum + vendor.quote, 0);
+      uncoveredBooked += Math.max(0, bookedSum - (estimateByCategory.get(category) ?? 0));
+    }
+
+    return totals.estimate + uncoveredBooked;
+  }, [bookedByCategory, items, totals.estimate]);
+
+  const remaining = Math.max(0, committed - totals.paid);
+  const overBudget = committed > target;
+
   // Categories that have a booked vendor but no budget line yet — surfaced so a
   // booking never hides just because you haven't budgeted for it.
   const bookedOnlyCategories = useMemo(
@@ -91,7 +112,7 @@ export function BudgetView() {
       meta={[
         { label: "Estimated", value: formatCurrency(totals.estimate) },
         { label: "Paid", value: formatCurrency(totals.paid) },
-        { label: "Left to pay", value: formatCurrency(totals.remaining) }
+        { label: "Left to pay", value: formatCurrency(remaining) }
       ]}
       primaryAction={{ href: "/exports", label: "Export summary" }}
       title="Where the money goes."
@@ -113,9 +134,9 @@ export function BudgetView() {
               <span>{t("Paid so far")}</span>
               <strong>{formatCurrency(totals.paid)}</strong>
             </div>
-            <div data-tone={totals.remaining > 0 ? "due" : "clear"}>
+            <div data-tone={remaining > 0 ? "due" : "clear"}>
               <span>{t("Left to pay")}</span>
-              <strong>{formatCurrency(totals.remaining)}</strong>
+              <strong>{formatCurrency(remaining)}</strong>
             </div>
           </div>
           <div className="budget-target">
@@ -136,8 +157,8 @@ export function BudgetView() {
             </label>
             <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
               {overBudget
-                ? t("{amount} over budget", { amount: formatCurrency(totals.estimate - target) })
-                : t("{amount} under budget", { amount: formatCurrency(target - totals.estimate) })}
+                ? t("{amount} over budget", { amount: formatCurrency(committed - target) })
+                : t("{amount} under budget", { amount: formatCurrency(target - committed) })}
             </span>
           </div>
         </section>

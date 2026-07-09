@@ -20,6 +20,17 @@ export function SpeechStudio() {
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
+  // The linked timeline item owns the clock time; the speech's own `timing`
+  // string is only a fallback for speeches not tied to a timeline moment, so
+  // the Speeches screen can never contradict the Day Flow timeline.
+  const timelineTimeById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of timelineItems) {
+      map.set(item.id, item.time);
+    }
+    return map;
+  }, [timelineItems]);
+  const speechTiming = (speech: Speech) => timelineTimeById.get(speech.timelineItemId) ?? speech.timing;
   const speakerGuest = selectedSpeech ? findSpeechGuest(selectedSpeech, guests) : null;
   const speakerTable = speakerGuest ? dinnerTables.find((table) => table.id === speakerGuest.tableId) ?? null : null;
   const speechRisks = useMemo(
@@ -110,7 +121,7 @@ export function SpeechStudio() {
                 <span className="detail-studio-item-main">
                   <strong>{speech.title}</strong>
                   <small>
-                    {speech.timing} · {speech.durationMinutes} {t("min")} · {speech.speakerName}
+                    {speechTiming(speech)} · {speech.durationMinutes} {t("min")} · {speech.speakerName}
                   </small>
                 </span>
                 <span aria-hidden="true" className="detail-studio-dot" data-status={dotStatus} />
@@ -136,7 +147,7 @@ export function SpeechStudio() {
               <div className="studio-inspector-row">
                 <dt>{t("Timing")}</dt>
                 <dd>
-                  {selectedSpeech.timing} · {selectedSpeech.durationMinutes} {t("minutes")}
+                  {speechTiming(selectedSpeech)} · {selectedSpeech.durationMinutes} {t("minutes")}
                 </dd>
               </div>
               <div className="studio-inspector-row">
@@ -169,7 +180,7 @@ export function SpeechStudio() {
             <details className="reception-guest-details">
               <summary>
                 <span>{t("Edit selected speech")}</span>
-                <small>{t("Open to adjust the speaker, timing, visibility, technical needs, and notes.")}</small>
+                <small>{t("Open to adjust the speaker, visibility, technical needs, and notes.")}</small>
               </summary>
               <div className="form-grid speech-editor-form">
                 <label className="field">
@@ -186,7 +197,8 @@ export function SpeechStudio() {
                 </label>
                 <label className="field">
                   <span>{t("Timing")}</span>
-                  <input onChange={(event) => updateSelectedSpeech({ timing: event.target.value })} value={selectedSpeech.timing} />
+                  <input readOnly value={speechTiming(selectedSpeech)} />
+                  <small className="field-hint">{t("Set in the Day Flow timeline")}</small>
                 </label>
                 <label className="field">
                   <span>{t("Duration minutes")}</span>

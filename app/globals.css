@@ -10587,6 +10587,12 @@ a {
   margin-top: 18px;
 }
 
+.field-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted-ink, rgba(33, 29, 20, 0.55));
+}
+
 .speech-wide-field {
   grid-column: 1 / -1;
 }

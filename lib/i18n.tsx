@@ -488,8 +488,9 @@ const sv: Record<string, string> = {
   "Timing, visibility, technical needs, and notes are connected to the day.":
     "Tidsättning, synlighet, tekniska behov och anteckningar är kopplade till dagen.",
   "Edit selected speech": "Redigera valt tal",
-  "Open to adjust the speaker, timing, visibility, technical needs, and notes.":
-    "Öppna för att justera talare, tidsättning, synlighet, tekniska behov och anteckningar.",
+  "Open to adjust the speaker, visibility, technical needs, and notes.":
+    "Öppna för att justera talare, synlighet, tekniska behov och anteckningar.",
+  "Set in the Day Flow timeline": "Ställs in i dagsschemat",
   "The team behind the day.": "Teamet bakom dagen.",
   "Turn each party need into a local search, save the best candidates, and track quotes and bookings in one place.":
     "Gör varje behov till en lokal sökning, spara de bästa kandidaterna och följ offerter och bokningar på ett ställe.",
