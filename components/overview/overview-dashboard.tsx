@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { SceneEditor } from "@/components/overview/scene-editor";
 import { Donut } from "@/components/ui/donut";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
@@ -44,6 +45,16 @@ import {
 } from "@/lib/wedding-studio-plan";
 
 type HeroScene = "ceremony" | "ceremony-outdoor" | "reception-indoor" | "reception-outdoor";
+
+// Photoreal hero stills per scene — these are the premium "preview" (the live
+// real-time 3D can't reach photoreal, so the home leads with a rendered image
+// and the interactive twin sits behind "Edit in 3D Studio"). A scene with no
+// image here falls back to the live 3D, so dropping a new file in + adding a
+// key is all it takes to make that scene photoreal too.
+const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {
+  "reception-indoor": "/images/reception-atmosphere.png",
+  "reception-outdoor": "/images/reception-atmosphere.png"
+};
 
 const styleSwatches: Record<string, string[]> = {
   classic: ["#6b7b62", "#9caf88", "#e9dcc0", "#dbb9a4", "#c9a767"],
@@ -89,6 +100,8 @@ export function OverviewDashboard() {
         : plan.venueType;
   const styleLabel = t(styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic");
   const themeColors = styleSwatches[plan.style] ?? styleSwatches.classic;
+  // Photoreal still for this scene, if we have one; else fall back to the live 3D.
+  const heroImage = SCENE_HERO_IMAGES[heroScene];
 
   const risks = useMemo(
     () =>
@@ -256,57 +269,70 @@ export function OverviewDashboard() {
                 </select>
               </div>
               <div className="venue-hero-tools">
-                <div className="venue-dimension-toggle" role="group" aria-label={t("Choose 2D or 3D view")}>
-                  <button aria-pressed={dimension === "2d"} data-active={dimension === "2d"} onClick={() => setDimension("2d")} type="button">
-                    2D
-                  </button>
-                  <button aria-pressed={dimension === "3d"} data-active={dimension === "3d"} onClick={() => setDimension("3d")} type="button">
-                    3D
-                  </button>
-                </div>
-                <button
-                  aria-label={lighting === "day" ? t("Switch to golden-hour lighting") : t("Switch to daylight")}
-                  className="venue-tool-button"
-                  onClick={() => setLighting((value) => (value === "day" ? "dusk" : "day"))}
-                  type="button"
-                >
-                  {lighting === "day" ? (
-                    <Sunrise aria-hidden="true" size={15} strokeWidth={1.8} />
-                  ) : (
-                    <SunMedium aria-hidden="true" size={15} strokeWidth={1.8} />
-                  )}
-                </button>
+                {heroImage ? null : (
+                  <>
+                    <div className="venue-dimension-toggle" role="group" aria-label={t("Choose 2D or 3D view")}>
+                      <button aria-pressed={dimension === "2d"} data-active={dimension === "2d"} onClick={() => setDimension("2d")} type="button">
+                        2D
+                      </button>
+                      <button aria-pressed={dimension === "3d"} data-active={dimension === "3d"} onClick={() => setDimension("3d")} type="button">
+                        3D
+                      </button>
+                    </div>
+                    <button
+                      aria-label={lighting === "day" ? t("Switch to golden-hour lighting") : t("Switch to daylight")}
+                      className="venue-tool-button"
+                      onClick={() => setLighting((value) => (value === "day" ? "dusk" : "day"))}
+                      type="button"
+                    >
+                      {lighting === "day" ? (
+                        <Sunrise aria-hidden="true" size={15} strokeWidth={1.8} />
+                      ) : (
+                        <SunMedium aria-hidden="true" size={15} strokeWidth={1.8} />
+                      )}
+                    </button>
+                  </>
+                )}
                 <button aria-label={t("Toggle fullscreen preview")} className="venue-tool-button" onClick={toggleFullscreen} type="button">
                   <Expand aria-hidden="true" size={15} strokeWidth={1.8} />
                 </button>
               </div>
             </div>
 
-            <CeremonyScene
-              activeStep={sceneStep}
-              budgetLevel={plan.budgetLevel}
-              capacity={capacity}
-              colorDirection={plan.colorDirection}
-              lighting={lighting}
-              onMoveObject={moveSceneObject}
-              onSelectObject={setSelectedObjectId}
-              sceneEdits={sceneEdits}
-              selectedObjectId={activeSelectedObjectId}
-              style={plan.style}
-              venueType={sceneVenueType}
-              viewMode={dimension === "2d" ? "top" : "3d"}
-              zoom={zoom}
-            />
+            {heroImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img alt={t("Photoreal preview of your wedding day")} className="venue-hero-photo" src={assetPath(heroImage)} />
+            ) : (
+              <CeremonyScene
+                activeStep={sceneStep}
+                budgetLevel={plan.budgetLevel}
+                capacity={capacity}
+                colorDirection={plan.colorDirection}
+                lighting={lighting}
+                onMoveObject={moveSceneObject}
+                onSelectObject={setSelectedObjectId}
+                sceneEdits={sceneEdits}
+                selectedObjectId={activeSelectedObjectId}
+                style={plan.style}
+                venueType={sceneVenueType}
+                viewMode={dimension === "2d" ? "top" : "3d"}
+                zoom={zoom}
+              />
+            )}
 
             <div className="venue-hero-bottomline">
-              <div className="venue-zoom-tools" role="group" aria-label={t("Zoom controls")}>
-                <button aria-label={t("Zoom out")} onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.15).toFixed(2))))} type="button">
-                  <Minus aria-hidden="true" size={15} strokeWidth={2} />
-                </button>
-                <button aria-label={t("Zoom in")} onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.15).toFixed(2))))} type="button">
-                  <Plus aria-hidden="true" size={15} strokeWidth={2} />
-                </button>
-              </div>
+              {heroImage ? (
+                <span className="venue-hero-caption">{t("Photoreal preview")}</span>
+              ) : (
+                <div className="venue-zoom-tools" role="group" aria-label={t("Zoom controls")}>
+                  <button aria-label={t("Zoom out")} onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.15).toFixed(2))))} type="button">
+                    <Minus aria-hidden="true" size={15} strokeWidth={2} />
+                  </button>
+                  <button aria-label={t("Zoom in")} onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.15).toFixed(2))))} type="button">
+                    <Plus aria-hidden="true" size={15} strokeWidth={2} />
+                  </button>
+                </div>
+              )}
               <button className="venue-edit-button" onClick={() => setIsEditing((value) => !value)} type="button">
                 <PencilRuler aria-hidden="true" size={15} strokeWidth={1.8} />
                 {isEditing ? t("Close 3D Studio") : t("Edit in 3D Studio")}

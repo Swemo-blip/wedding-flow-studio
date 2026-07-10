@@ -13238,6 +13238,21 @@ a {
   box-shadow: var(--shadow-float);
 }
 
+.venue-hero-photo {
+  display: block;
+  width: 100%;
+  height: 540px;
+  object-fit: cover;
+}
+
+.venue-hero-caption {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .venue-hero .ceremony-scene-shell {
   min-height: 540px;
 }
