@@ -12796,15 +12796,40 @@ a {
   }
 }
 
+@page {
+  size: A4;
+  margin: 18mm;
+}
+
 @media print {
   .sidebar,
   .topbar,
   .studio-header,
   .studio-tab-bar,
   .route-ribbon,
+  .studio-route-ribbon,
+  .studio-route-actions,
+  .studio-scene-heading,
+  .studio-scene-aside,
+  .export-brief-library,
+  .export-context-drawer,
+  .export-budget-card,
   .button-row,
   .no-print {
     display: none !important;
+  }
+
+  /* On /exports the print must emit only the selected brief sheet, not the
+     whole studio layout — flatten the scene-surface grid so the remaining
+     brief fills the page. */
+  .studio-scene-surface,
+  .studio-scene-main,
+  .studio-scene-visual {
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .summary-sheet {
