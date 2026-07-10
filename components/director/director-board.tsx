@@ -6,9 +6,11 @@ import { RoleSelector } from "@/components/director/role-selector";
 import { StudioCommand } from "@/components/ui/studio-command";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
+import { useTranslation } from "@/lib/i18n";
 import { buildRoleBriefs } from "@/lib/role-briefs";
 
 export function DirectorBoard() {
+  const { t } = useTranslation();
   const briefs = useMemo(() => buildRoleBriefs(), []);
   const [activeRole, setActiveRole] = useState(briefs[0].role);
   const activeBrief = briefs.find((brief) => brief.role === activeRole) ?? briefs[0];
@@ -46,8 +48,8 @@ export function DirectorBoard() {
 
       <details className="director-detail-drawer">
         <summary>
-          <span>Studio Context</span>
-          <small>Open the broader workflow and module metrics when you need orientation beyond the active role.</small>
+          <span>{t("Studio Context")}</span>
+          <small>{t("Workflow and module metrics beyond the active role.")}</small>
         </summary>
         <div className="director-detail-drawer-content">
           <StudioCommand
