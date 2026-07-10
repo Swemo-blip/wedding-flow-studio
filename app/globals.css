@@ -5996,18 +5996,18 @@ a {
 }
 
 .ceremony-processional-controls button:first-child {
-  background: linear-gradient(180deg, #e8cd8b, #c8a45b);
-  color: #2a2110;
+  background: var(--accent);
+  color: #f4efe3;
 }
 
 .ceremony-processional-controls button:first-child:hover {
-  background: linear-gradient(180deg, #f0d79a, #d4ad63);
-  color: #2a2110;
+  background: #556141;
+  color: #f4efe3;
 }
 
 .ceremony-processional-controls button[data-active="true"] {
-  border-color: rgba(240, 228, 196, 0.4);
-  background: rgba(240, 228, 196, 0.16);
+  border-color: rgba(196, 208, 184, 0.4);
+  background: rgba(65, 76, 55, 0.5);
   color: #ffffff;
 }
 
@@ -13040,6 +13040,24 @@ a {
   font-size: 0.78rem;
   font-weight: 540;
   padding-right: 3px;
+}
+
+.studio-saved-chip-link {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.studio-saved-chip-link:hover,
+.studio-saved-chip-link:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .studio-saved-chip svg {

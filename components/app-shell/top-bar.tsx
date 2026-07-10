@@ -68,10 +68,10 @@ export function TopBar({ wedding }: TopBarProps) {
             </button>
           </div>
           {!hasLocalProject ? (
-            <span className="studio-saved-chip" data-state="sample">
+            <Link className="studio-saved-chip studio-saved-chip-link" data-state="sample" href="/intake">
               <Sparkles aria-hidden="true" size={16} strokeWidth={1.7} />
-              {t("Sample wedding")}
-            </span>
+              {t("Create your wedding")}
+            </Link>
           ) : persistence.ok ? (
             <span
               className="studio-saved-chip"

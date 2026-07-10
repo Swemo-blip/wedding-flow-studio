@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   CalendarDays,
   Expand,
@@ -66,7 +65,6 @@ export function OverviewDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
   const [syncedProjectKey, setSyncedProjectKey] = useState<string | null>(null);
-  const [showWelcome, setShowWelcome] = useState(false);
   // Computed after mount (avoids a server/client hydration mismatch on the date).
   const [daysToGo, setDaysToGo] = useState<number | null>(null);
 
@@ -141,19 +139,8 @@ export function OverviewDashboard() {
         setPlan(storedLayout.plan);
         setSceneEdits(storedLayout.sceneEdits);
       }
-
-      setShowWelcome(window.localStorage.getItem("wfs-welcome-dismissed") !== "1");
     });
   }, []);
-
-  function dismissWelcome() {
-    try {
-      window.localStorage.setItem("wfs-welcome-dismissed", "1");
-    } catch {
-      // Non-critical UI preference; ignore storage failures.
-    }
-    setShowWelcome(false);
-  }
 
   useEffect(() => {
     const weddingDate = new Date(activeWedding.date);
@@ -251,21 +238,6 @@ export function OverviewDashboard() {
 
   return (
     <div className="overview-page">
-      {!localProject.hasLocalProject && showWelcome ? (
-        <div className="overview-welcome" role="status">
-          <p>
-            <strong>{t("You are viewing a sample wedding.")}</strong> {t("Explore freely — then create your own in about two minutes.")}
-          </p>
-          <div className="overview-welcome-actions">
-            <Link className="button button-primary button-small" href="/intake">
-              {t("Create your wedding")}
-            </Link>
-            <button aria-label={t("Dismiss welcome message")} onClick={dismissWelcome} type="button">
-              <X aria-hidden="true" size={15} strokeWidth={1.8} />
-            </button>
-          </div>
-        </div>
-      ) : null}
       <div className="overview-grid">
         <div className="overview-main">
           <section aria-label="3D venue preview" className="venue-hero" ref={heroRef}>
