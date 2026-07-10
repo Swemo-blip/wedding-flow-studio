@@ -25,6 +25,7 @@ import {
 import { getRehearsalScenarios, simulateWeddingRehearsal, type RehearsalScenarioId, type RehearsalSimulation } from "@/lib/rehearsal-simulator";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { buildStudioGuide, type StudioGuide } from "@/lib/studio-guide";
+import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
 import { buildVendorIntelligence } from "@/lib/vendor-intelligence";
@@ -39,6 +40,7 @@ type AppliedActionStatus = {
 };
 
 export function StudioWorkspace() {
+  const { t } = useTranslation();
   const [hasRunSimulation, setHasRunSimulation] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [selectedScenarioId, setSelectedScenarioId] = useState<RehearsalScenarioId | null>(null);
@@ -237,7 +239,7 @@ export function StudioWorkspace() {
 
     setActionStatus({
       actionId: action.id,
-      label: didApply ? action.successLabel : "Open the connected studio to finish this action."
+      label: didApply ? action.successLabel : t("Open the connected studio to finish this action.")
     });
     setRecoveryStatus(null);
     setHasRunSimulation(false);
@@ -279,7 +281,7 @@ export function StudioWorkspace() {
     }
 
     setActionStatus(null);
-    setRecoveryStatus("Recovery plan applied to the local wedding digital twin.");
+    setRecoveryStatus(t("Recovery plan applied to the local wedding digital twin."));
     setHasRunSimulation(true);
   }
 
@@ -292,7 +294,7 @@ export function StudioWorkspace() {
   }
 
   return (
-    <section className="studio-workspace" aria-label="Unified Studio Workspace">
+    <section className="studio-workspace" aria-label={t("Unified Studio Workspace")}>
       <div className="studio-workspace-grid">
         <div className="studio-workspace-canvas studio-focus-canvas" data-scene={selectedEntry.cockpit.sceneKind}>
           <div className="studio-focus-hero">
@@ -304,19 +306,19 @@ export function StudioWorkspace() {
               <p>{selectedEntry.cockpit.feelingLine}</p>
             </div>
 
-            <div className="studio-focus-status" aria-label="Selected moment status">
+            <div className="studio-focus-status" aria-label={t("Selected moment status")}>
               <Badge tone={selectedEntry.intelligence.readinessTone}>{selectedEntry.intelligence.readinessLabel}</Badge>
               <Badge tone={selectedEntry.cockpit.healthTone}>{selectedEntry.cockpit.healthLabel}</Badge>
             </div>
           </div>
 
-          <div className="studio-focus-stage" aria-label="Focused wedding day scene">
+          <div className="studio-focus-stage" aria-label={t("Focused wedding day scene")}>
             <div className="studio-focus-visual" aria-hidden="true">
               <div className="studio-focus-atmosphere" />
               <span className="studio-focus-line" />
               <span className="studio-focus-zone studio-focus-zone-primary">{selectedEntry.cockpit.sceneLabel}</span>
-              <span className="studio-focus-zone studio-focus-zone-guests">Guests</span>
-              <span className="studio-focus-zone studio-focus-zone-team">Team</span>
+              <span className="studio-focus-zone studio-focus-zone-guests">{t("Guests")}</span>
+              <span className="studio-focus-zone studio-focus-zone-team">{t("Team")}</span>
               {selectedPhase.involvedPeople.slice(0, 5).map((person, index) => (
                 <span className="studio-focus-person" data-index={index} key={person}>
                   {getInitials(person)}
@@ -324,29 +326,29 @@ export function StudioWorkspace() {
               ))}
             </div>
 
-            <div className="studio-focus-brief" aria-label="Moment brief">
+            <div className="studio-focus-brief" aria-label={t("Moment brief")}>
               <div>
-                <span>Owner</span>
+                <span>{t("Owner")}</span>
                 <strong>{selectedPhase.responsiblePerson}</strong>
                 <small>{selectedPhase.responsibleRole}</small>
               </div>
               <div>
-                <span>Next handoff</span>
+                <span>{t("Next handoff")}</span>
                 <strong>{selectedEntry.cockpit.directorTitle}</strong>
                 <small>{selectedEntry.cockpit.watchLine}</small>
               </div>
               <div>
-                <span>Music</span>
+                <span>{t("Music")}</span>
                 <strong>{selectedEntry.cockpit.musicLabel}</strong>
                 <small>{selectedEntry.cockpit.handoffLine}</small>
               </div>
             </div>
           </div>
 
-          <nav className="studio-moment-strip studio-focus-filmstrip" aria-label="Wedding day moments">
+          <nav className="studio-moment-strip studio-focus-filmstrip" aria-label={t("Wedding day moments")}>
             {momentEntries.map((entry) => (
               <button
-                aria-label={`Work on ${entry.phase.title}`}
+                aria-label={t("Work on {title}", { title: entry.phase.title })}
                 aria-pressed={entry.phaseIndex === selectedEntry.phaseIndex}
                 data-active={entry.phaseIndex === selectedEntry.phaseIndex}
                 data-readiness={entry.intelligence.readiness}
@@ -374,25 +376,28 @@ export function StudioWorkspace() {
 
           <details className="studio-guide-drawer">
             <summary>
-              <span>Studio details</span>
-              <small>Vendor gaps, saved candidates, and local updates.</small>
+              <span>{t("Studio details")}</span>
+              <small>{t("Vendor gaps, saved candidates, and local updates.")}</small>
             </summary>
             <div className="studio-guide-drawer-content">
               <Link className="cockpit-vendor-card" href="/vendors">
                 <div>
-                  <span>Vendor Intelligence</span>
-                  <strong>{vendorIntelligence.bestNextDecision?.nextAction ?? "All required vendor decisions are moving."}</strong>
+                  <span>{t("Vendor Intelligence")}</span>
+                  <strong>{vendorIntelligence.bestNextDecision?.nextAction ?? t("All required vendor decisions are moving.")}</strong>
                   <p>
-                    {vendorIntelligence.candidateCount} saved candidates · {vendorIntelligence.bookedCount} booked ·{" "}
-                    {vendorIntelligence.openRequiredCount} required gaps
+                    {t("{candidates} saved candidates · {booked} booked · {gaps} required gaps", {
+                      booked: vendorIntelligence.bookedCount,
+                      candidates: vendorIntelligence.candidateCount,
+                      gaps: vendorIntelligence.openRequiredCount
+                    })}
                   </p>
                 </div>
-                <small>Open Production Sourcing</small>
+                <small>{t("Open Production Sourcing")}</small>
               </Link>
 
               {(actionStatus || recoveryStatus) && (
                 <div className="studio-workspace-status" role="status">
-                  <span>Studio update</span>
+                  <span>{t("Studio update")}</span>
                   <strong>{recoveryStatus ?? actionStatus?.label}</strong>
                 </div>
               )}
@@ -403,29 +408,29 @@ export function StudioWorkspace() {
 
       <details className="studio-impact-details">
         <summary>
-          <span>Impact layers</span>
-          <small>Open role, brief, guest, cue, and graph context for the selected moment.</small>
+          <span>{t("Impact layers")}</span>
+          <small>{t("Role, brief, guest, cue, and graph context for this moment.")}</small>
         </summary>
 
         <div className="studio-impact-grid">
-          <ImpactColumn title="Affected roles" items={selectedEntry.intelligence.affectedRoles.map((item) => item.label)} />
-          <ImpactColumn title="Affected briefs" items={selectedEntry.intelligence.affectedExports.map((item) => item.label)} />
-          <ImpactColumn title="Missing signals" items={selectedEntry.intelligence.missingSignals} />
+          <ImpactColumn title={t("Affected roles")} items={selectedEntry.intelligence.affectedRoles.map((item) => item.label)} />
+          <ImpactColumn title={t("Affected briefs")} items={selectedEntry.intelligence.affectedExports.map((item) => item.label)} />
+          <ImpactColumn title={t("Missing signals")} items={selectedEntry.intelligence.missingSignals} />
           <ImpactColumn
-            title="Current health"
+            title={t("Current health")}
             items={[
-              `${reviewCount} moments need review`,
-              `${blockedCount} moments are blocked`,
-              `${risks.length} open production risks`
+              t("{count} moments need review", { count: reviewCount }),
+              t("{count} moments are blocked", { count: blockedCount }),
+              t("{count} open production risks", { count: risks.length })
             ]}
           />
-          <ImpactColumn title="Guest journey" items={[selectedEntry.intelligence.guestImpact.label, ...selectedEntry.intelligence.guestImpact.details]} />
+          <ImpactColumn title={t("Guest journey")} items={[selectedEntry.intelligence.guestImpact.label, ...selectedEntry.intelligence.guestImpact.details]} />
           <ImpactColumn
-            title="Production graph"
+            title={t("Production graph")}
             items={[
               productionBrain.graphSummary,
-              `${momentGraphContext.graphNodeCount} connected nodes`,
-              `${momentGraphContext.graphEdgeCount} connected edges`
+              t("{count} connected nodes", { count: momentGraphContext.graphNodeCount }),
+              t("{count} connected edges", { count: momentGraphContext.graphEdgeCount })
             ]}
           />
         </div>
@@ -449,11 +454,13 @@ function OneDecisionPanel({
   productionBrain: ProductionBrainInsight;
   rehearsalSimulation: RehearsalSimulation;
 }) {
+  const { t } = useTranslation();
+
   return (
-    <section className="one-decision-panel" aria-label="One Decision Panel">
+    <section className="one-decision-panel" aria-label={t("One Decision Panel")}>
       <div className="one-decision-header">
         <div>
-          <p className="eyebrow">Next Best Move</p>
+          <p className="eyebrow">{t("Next Best Move")}</p>
           <h2>{guide.title}</h2>
           <p>{guide.plainEnglish}</p>
         </div>
@@ -461,7 +468,7 @@ function OneDecisionPanel({
       </div>
 
       <div className="one-decision-action one-decision-primary">
-        <span>Recommended action</span>
+        <span>{t("Recommended action")}</span>
         <strong>{guide.primaryAction.label}</strong>
         <p>{guide.primaryAction.detail}</p>
         {renderDecisionAction(guide, onApplyAction, onApplyRecovery, onRunSimulation)}
@@ -469,22 +476,22 @@ function OneDecisionPanel({
 
       <details className="one-decision-details">
         <summary>
-          <span>Decision reasoning</span>
-          <small>Confidence, impact, and rehearsal context.</small>
+          <span>{t("Decision reasoning")}</span>
+          <small>{t("Confidence, impact, and rehearsal context.")}</small>
         </summary>
 
         <div className="one-decision-detail-grid">
           <div className="one-decision-confidence">
             <div>
-              <span>Confidence</span>
+              <span>{t("Confidence")}</span>
               <strong>{guide.confidenceScore}%</strong>
               <small>{guide.confidenceLabel}</small>
             </div>
-            <Progress label="Decision confidence" value={guide.confidenceScore} />
+            <Progress label={t("Decision confidence")} value={guide.confidenceScore} />
           </div>
 
           <div>
-            <span>What matters now</span>
+            <span>{t("What matters now")}</span>
             <ul>
               {guide.focusItems.map((item) => (
                 <li key={item}>{item}</li>
@@ -493,7 +500,7 @@ function OneDecisionPanel({
           </div>
 
           <div>
-            <span>What will change</span>
+            <span>{t("What will change")}</span>
             <ul>
               {productionBrain.impactPreview.slice(0, 3).map((impact) => (
                 <li key={impact.label}>
@@ -504,9 +511,12 @@ function OneDecisionPanel({
           </div>
 
           <div>
-            <span>Rehearsal signal</span>
+            <span>{t("Rehearsal signal")}</span>
             <p>
-              {rehearsalSimulation.scenario.title}: {rehearsalSimulation.dayFeelScore}% day-feel score.
+              {t("{title}: {score}% day-feel score.", {
+                score: rehearsalSimulation.dayFeelScore,
+                title: rehearsalSimulation.scenario.title
+              })}
             </p>
           </div>
         </div>
@@ -537,6 +547,7 @@ function renderDecisionAction(
 }
 
 function ImpactColumn({ items, title }: { items: string[]; title: string }) {
+  const { t } = useTranslation();
   const visibleItems = items.filter(Boolean).slice(0, 4);
 
   return (
@@ -549,7 +560,7 @@ function ImpactColumn({ items, title }: { items: string[]; title: string }) {
           ))}
         </ul>
       ) : (
-        <p>No connected items for this moment.</p>
+        <p>{t("No connected items for this moment.")}</p>
       )}
     </div>
   );
