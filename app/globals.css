@@ -12931,19 +12931,18 @@ a {
 
 .side-nav-link:hover,
 .side-nav-link:focus-visible {
-  background: rgba(120, 106, 74, 0.08);
+  background: rgba(65, 76, 55, 0.07);
   color: var(--ink);
 }
 
 .side-nav-link[data-active="true"] {
-  background: var(--surface-warm);
-  color: var(--ink);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
   font-weight: 600;
-  box-shadow: inset 2px 0 0 var(--champagne);
 }
 
 .side-nav-link[data-active="true"] svg {
-  color: var(--champagne-dark);
+  color: var(--accent);
 }
 
 .sidebar-callout {
