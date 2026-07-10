@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Navigation } from "@/components/app-shell/navigation";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { useTranslation } from "@/lib/i18n";
@@ -12,6 +13,14 @@ type AppShellProps = {
 
 export function AppShell({ children, wedding }: AppShellProps) {
   const { t } = useTranslation();
+  const pathname = usePathname();
+
+  // The shared read-only preview is opened by a guest, not the couple — it must
+  // stand alone with no editing chrome (sidebar nav, Copy link, Preview Day).
+  if (pathname?.startsWith("/shared")) {
+    return <>{children}</>;
+  }
+
   const plannerInitials = wedding.plannerName
     .split(" ")
     .map((part) => part[0])

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Eye, HardDrive, Share2, Sparkles, TriangleAlert } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { useTranslation } from "@/lib/i18n";
 import { getPersistenceState, subscribePersistence } from "@/lib/persistence-status";
+import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
 
@@ -21,14 +22,23 @@ const getServerPersistenceState = () => SERVER_PERSISTENCE_STATE;
 
 export function TopBar({ wedding }: TopBarProps) {
   const { language, setLanguage, t } = useTranslation();
-  const { hasLocalProject, wedding: localWedding } = useLocalProject();
+  const { guests, hasLocalProject, timelineItems, updatedAt, wedding: localWedding } = useLocalProject();
   const persistence = useSyncExternalStore(subscribePersistence, getPersistenceState, getServerPersistenceState);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const activeWedding = hasLocalProject ? localWedding : wedding;
 
+  // A shareable read-only link carrying the plan in its hash, so a recipient
+  // sees this couple's plan, not their own localStorage. Rebuilt when the plan
+  // changes; `updatedAt` in the deps keeps it fresh after edits.
+  const shareUrl = useMemo(
+    () => buildShareUrl(encodeSnapshot(buildShareSnapshot({ guests, timelineItems, wedding: activeWedding }))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeWedding, guests, timelineItems, updatedAt]
+  );
+
   async function copyStudioLink() {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareUrl);
       setShareStatus(t("Link copied"));
     } catch {
       setShareStatus(t("Copy the address bar link"));
