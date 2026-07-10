@@ -3,46 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --studio-ink: #1d1a12;
-  --studio-charcoal: #23271e;
-  --studio-paper: #f8f4ea;
-  --studio-porcelain: #fffdf8;
-  --studio-mist: #f3eddf;
-  --studio-linen: #e7dfcc;
-  --studio-champagne: #a8854d;
-  --studio-champagne-deep: #7c6132;
-  --studio-sage: #6b7b62;
-  --studio-clay: #8f6536;
-  --studio-rosewood: #82584f;
-  --studio-plum: #5d5360;
-  --background: #f6f1e6;
-  --surface: var(--studio-porcelain);
-  --surface-soft: #faf6ec;
-  --surface-warm: #efe7d6;
-  --surface-glass: rgba(255, 253, 248, 0.9);
-  --canvas: #fcf9f1;
-  --ink: #211d14;
-  --muted: #716a5a;
-  --subtle: #a39378;
-  --line: rgba(96, 78, 50, 0.13);
-  --line-strong: rgba(96, 78, 50, 0.24);
-  --champagne: var(--studio-champagne);
-  --champagne-dark: var(--studio-champagne-deep);
-  --sage: var(--studio-sage);
+  /* Premium soft-gradient palette — lavender → peach over near-white, deep
+     plum ink, periwinkle accent. Reference: the portfolio hero background.
+     Variable NAMES are kept so the whole app inherits the new look at once. */
+  --studio-ink: #241f2e;
+  --studio-charcoal: #201b2a;
+  --studio-paper: #f7f5fc;
+  --studio-porcelain: #ffffff;
+  --studio-mist: #f2eefb;
+  --studio-linen: #ebe6f6;
+  --accent: #6c5ce6;
+  --accent-deep: #5646c4;
+  --peach: #e6a382;
+  --peach-soft: #fbe7d8;
+  --lav-soft: #ece8fb;
+  --background: #fbfaff;
+  --surface: #ffffff;
+  --surface-soft: #faf9ff;
+  --surface-warm: #f4f1fc;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --canvas: #fbfaff;
+  --ink: #241f2e;
+  --muted: #6a6478;
+  --subtle: #948da6;
+  --line: rgba(96, 84, 140, 0.14);
+  --line-strong: rgba(96, 84, 140, 0.24);
+  --champagne: var(--accent);
+  --champagne-dark: var(--accent-deep);
+  --sage: #6f8f7c;
   --fig: var(--studio-charcoal);
-  --rose: #9b7473;
-  --blue: #5d7077;
-  --success: #5a7a5f;
-  --warning: #b1863c;
-  --danger: #b06a4f;
-  --focus-ring: rgba(168, 133, 77, 0.45);
-  --shadow-soft: 0 18px 44px rgba(97, 76, 41, 0.08);
-  --shadow-card: 0 10px 24px rgba(97, 76, 41, 0.07);
-  --shadow-float: 0 28px 68px rgba(97, 76, 41, 0.13);
-  --shadow-button: 0 12px 26px rgba(35, 39, 30, 0.24);
-  --radius: 6px;
-  --radius-control: 6px;
-  --radius-panel: 12px;
+  --rose: var(--peach);
+  --blue: #5f6bd0;
+  --success: #4e9a6a;
+  --warning: #c98a3f;
+  --danger: #d0685a;
+  --focus-ring: rgba(108, 92, 230, 0.42);
+  --shadow-soft: 0 20px 50px -26px rgba(60, 50, 110, 0.26);
+  --shadow-card: 0 16px 40px -28px rgba(60, 50, 110, 0.26);
+  --shadow-float: 0 30px 72px -32px rgba(60, 50, 110, 0.4);
+  --shadow-button: 0 14px 30px -14px rgba(36, 31, 46, 0.42);
+  --radius: 14px;
+  --radius-control: 11px;
+  --radius-panel: 20px;
   --font-serif:
     var(--font-display),
     "Iowan Old Style",
@@ -72,10 +74,15 @@ body {
   min-height: 100%;
   margin: 0;
   color: var(--ink);
+  /* Soft lavender (top-left) → warm peach (top-right) → lilac (bottom) wash
+     over near-white — the premium reference background. Fixed so it stays a
+     calm, steady field as the app scrolls. */
   background:
-    radial-gradient(120% 90% at 82% -12%, rgba(168, 133, 77, 0.07), transparent 50%),
-    linear-gradient(180deg, #fcf9f1 0%, #f7f2e6 50%, #f2ebdb 100%),
-    var(--background);
+    radial-gradient(760px 520px at 3% -6%, #e7e3f8 0%, rgba(231, 227, 248, 0) 56%),
+    radial-gradient(720px 560px at 105% 3%, #fce6d6 0%, rgba(252, 230, 214, 0) 52%),
+    radial-gradient(680px 560px at 60% 120%, #efe9fb 0%, rgba(239, 233, 251, 0) 55%),
+    linear-gradient(180deg, #fcfbfe 0%, #fefdfc 62%);
+  background-attachment: fixed;
   font-family: var(--font-sans);
   letter-spacing: 0;
 }
@@ -6824,17 +6831,18 @@ a {
 
 .button {
   position: relative;
-  min-height: 40px;
+  min-height: 42px;
   display: inline-flex;
   overflow: hidden;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid rgba(146, 118, 73, 0.12);
-  border-radius: var(--radius-control);
-  padding: 9px 14px;
-  font-weight: 640;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-weight: 520;
   font-size: 0.9rem;
+  letter-spacing: 0.005em;
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -6868,45 +6876,42 @@ a {
 }
 
 .button-primary {
-  color: #33270f;
-  border-color: rgba(146, 112, 58, 0.5);
-  background: linear-gradient(172deg, #e7c98c, #cfa861 56%, #bd9551);
-  box-shadow:
-    0 10px 22px rgba(160, 124, 62, 0.3),
-    inset 0 1px 0 rgba(255, 245, 218, 0.75);
+  color: #fbfaff;
+  border-color: transparent;
+  background: #241f2e;
+  box-shadow: var(--shadow-button);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
-  background: linear-gradient(172deg, #eed29a, #d6b06a 56%, #c39b56);
-  box-shadow:
-    0 12px 26px rgba(160, 124, 62, 0.38),
-    inset 0 1px 0 rgba(255, 245, 218, 0.8);
+  background: #322b40;
+  box-shadow: 0 16px 34px -14px rgba(36, 31, 46, 0.5);
 }
 
 .button-secondary {
   color: var(--ink);
-  border-color: rgba(82, 65, 39, 0.26);
-  background: rgba(255, 253, 248, 0.94);
-  box-shadow: 0 8px 18px rgba(74, 56, 28, 0.05);
+  border-color: rgba(96, 84, 140, 0.24);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 20px -14px rgba(60, 50, 110, 0.25);
 }
 
 .button-secondary:hover,
 .button-secondary:focus-visible {
-  border-color: rgba(171, 136, 81, 0.55);
+  border-color: rgba(108, 92, 230, 0.5);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .button-ghost {
   color: var(--ink);
-  border-color: rgba(82, 65, 39, 0.12);
+  border-color: transparent;
   background: transparent;
   box-shadow: none;
 }
 
 .button-small {
-  min-height: 34px;
-  border-radius: var(--radius-control);
-  padding: 7px 10px;
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 8px 15px;
   font-size: 0.82rem;
 }
 
@@ -12841,7 +12846,8 @@ a {
 .sidebar {
   gap: 12px;
   border-right: 1px solid var(--line);
-  background: linear-gradient(180deg, #fffdf8, #faf5ea 58%, #f5eee0);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
   color: var(--ink);
   padding: 18px 14px 14px;
 }
@@ -12987,8 +12993,8 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  border-bottom: 1px solid rgba(146, 118, 73, 0.16);
-  background: rgba(252, 249, 241, 0.92);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(18px);
   padding: 14px 26px 12px;
 }
@@ -14046,17 +14052,19 @@ a {
 }
 
 .card {
-  border: 1px solid rgba(146, 118, 73, 0.16);
-  border-radius: 14px;
-  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
   box-shadow: var(--shadow-card);
 }
 
 .studio-route-ribbon,
 .module-decision-strip {
-  border: 1px solid rgba(146, 118, 73, 0.16);
-  border-radius: 14px;
-  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
   box-shadow: var(--shadow-card);
 }
 
@@ -14260,9 +14268,9 @@ a {
 .studio-lang-toggle {
   display: inline-flex;
   overflow: hidden;
-  border: 1px solid rgba(146, 118, 73, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 253, 248, 0.7);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .studio-lang-toggle button {
@@ -14279,8 +14287,8 @@ a {
 }
 
 .studio-lang-toggle button[data-active="true"] {
-  background: linear-gradient(172deg, #e7c98c, #cfa861);
-  color: #33270f;
+  background: #241f2e;
+  color: #fbfaff;
 }
 
 @media (max-width: 680px) {

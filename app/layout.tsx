@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { LanguageProvider } from "@/lib/i18n";
 import { sampleWedding } from "@/lib/wedding-data";
 import "./globals.css";
 
-const displaySerif = Cormorant_Garamond({
+const displaySerif = Fraunces({
   display: "swap",
   style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["400", "500", "600", "700"]
+  weight: ["400", "500", "600"]
 });
 
 const bodySans = Inter({
