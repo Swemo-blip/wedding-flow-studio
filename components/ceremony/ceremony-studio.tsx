@@ -10,7 +10,6 @@ import { useLocalProject } from "@/lib/use-local-project";
 import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
   calculateWeddingStudioCapacity,
-  clampGuestCount,
   colorDirectionOptions,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
@@ -147,12 +146,20 @@ export function CeremonyStudio() {
     writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
   }
 
-  const { wedding } = useLocalProject();
-  const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
+  const { guests, wedding } = useLocalProject();
+  // The live guest list is the single source of truth for headcount. The plan's
+  // stored guestCount is overridden with the real invited count, so the
+  // ceremony numbers, capacity, and the 3D pew-fill always match the Guests
+  // page instead of a separate slider value.
+  const invitedGuests = guests.length;
+  const capacity = useMemo(
+    () => calculateWeddingStudioCapacity({ ...plan, guestCount: invitedGuests }),
+    [plan, invitedGuests]
+  );
   const comfort = comfortFromCapacity(capacity.capacityStatus);
-  const seatedCount = Math.min(plan.guestCount, capacity.totalCapacity);
-  const seatsRemaining = Math.max(0, capacity.totalCapacity - plan.guestCount);
-  const unseatedCount = Math.max(0, plan.guestCount - seatedCount);
+  const seatedCount = Math.min(invitedGuests, capacity.totalCapacity);
+  const seatsRemaining = Math.max(0, capacity.totalCapacity - invitedGuests);
+  const unseatedCount = Math.max(0, invitedGuests - seatedCount);
 
   const viewMode: StudioViewMode = canvasTab === "plan" ? "top" : "3d";
   const cameraOverride =
@@ -208,21 +215,9 @@ export function CeremonyStudio() {
           <div className="setup-field">
             <div className="setup-field-head">
               <span className="setup-label">{t("Guest Count")}</span>
-              <span className="setup-value">{plan.guestCount}</span>
+              <span className="setup-value">{invitedGuests}</span>
             </div>
-            <input
-              aria-label={t("Guest Count")}
-              className="setup-range"
-              max={180}
-              min={20}
-              onChange={(event) => applyPlan({ ...plan, guestCount: clampGuestCount(Number(event.target.value)) })}
-              type="range"
-              value={plan.guestCount}
-            />
-            <div className="setup-range-scale">
-              <span>20</span>
-              <span>180</span>
-            </div>
+            <p className="setup-hint">{t("From your guest list — edit it on the Guests page.")}</p>
           </div>
 
           <div className="setup-field">
@@ -547,7 +542,7 @@ export function CeremonyStudio() {
               <div className="studio-inspector-row">
                 <dt>{t("Guests")}</dt>
                 <dd>
-                  {plan.guestCount} {t("invited")} · {seatedCount} {t("seated")}
+                  {invitedGuests} {t("invited")} · {seatedCount} {t("seated")}
                 </dd>
               </div>
               <div className="studio-inspector-row">
@@ -628,7 +623,7 @@ export function CeremonyStudio() {
           </div>
           <div className="studio-card-stats">
             <div>
-              <strong>{plan.guestCount}</strong>
+              <strong>{invitedGuests}</strong>
               <span>{t("Invited")}</span>
             </div>
             <div>

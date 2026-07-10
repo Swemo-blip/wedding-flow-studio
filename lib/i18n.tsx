@@ -997,6 +997,7 @@ const sv: Record<string, string> = {
   "No connected items for this moment.": "Inga anslutna objekt för detta ögonblick.",
   "Open the connected studio to finish this action.": "Öppna den anslutna studion för att slutföra åtgärden.",
   "Recovery plan applied to the local wedding digital twin.": "Återhämtningsplan tillämpad på den lokala digitala bröllopstvillingen.",
+  "From your guest list — edit it on the Guests page.": "Från din gästlista — redigera den på Gäster-sidan.",
   "Studio Context": "Studiokontext",
   "Workflow and module metrics beyond the active role.": "Arbetsflöde och modulmått utöver den aktiva rollen.",
   "Choose section": "Välj avsnitt",

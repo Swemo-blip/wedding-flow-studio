@@ -71,7 +71,12 @@ export function OverviewDashboard() {
   const [daysToGo, setDaysToGo] = useState<number | null>(null);
 
   const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
-  const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
+  // The live guest list is the single source of truth for headcount, so the 3D
+  // hero capacity fills to the real invited count — not a separate slider value.
+  const capacity = useMemo(
+    () => calculateWeddingStudioCapacity({ ...plan, guestCount: localProject.guests.length }),
+    [plan, localProject.guests.length]
+  );
   const sceneStep: StudioPlanningStepId = heroScene.startsWith("reception") ? "reception" : "preview";
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
@@ -344,7 +349,7 @@ export function OverviewDashboard() {
                     <X aria-hidden="true" size={16} strokeWidth={1.8} />
                   </button>
                 </div>
-                <SceneEditor capacity={capacity} onChange={updatePlan} plan={plan} />
+                <SceneEditor capacity={capacity} onChange={updatePlan} plan={{ ...plan, guestCount: invitedGuests }} />
               </div>
             ) : null}
           </section>

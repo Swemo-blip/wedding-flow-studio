@@ -4,7 +4,6 @@ import type { ChangeEvent } from "react";
 import { useTranslation } from "@/lib/i18n";
 import {
   clampAccessibilitySeats,
-  clampGuestCount,
   colorDirectionOptions,
   decorLevelOptions,
   mapDecorLevelToBudget,
@@ -36,10 +35,6 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
 
   function updatePlan(updates: Partial<WeddingStudioPlan>) {
     onChange({ ...plan, ...updates });
-  }
-
-  function updateGuestCount(event: ChangeEvent<HTMLInputElement>) {
-    updatePlan({ guestCount: clampGuestCount(Number(event.target.value)) });
   }
 
   return (
@@ -121,8 +116,8 @@ export function SceneEditor({ capacity, onChange, plan }: SceneEditorProps) {
           {t("Guests")}
           <strong>{plan.guestCount}</strong>
         </legend>
-        <input aria-label={t("Guest count")} max={180} min={10} onChange={updateGuestCount} type="range" value={plan.guestCount} />
         <p className="scene-editor-note">{capacity.capacityLabel}</p>
+        <p className="scene-editor-note">{t("From your guest list — edit it on the Guests page.")}</p>
       </fieldset>
 
       <fieldset className="scene-editor-group">
