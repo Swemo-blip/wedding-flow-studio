@@ -88,15 +88,8 @@ export function SpeechStudio() {
 
   return (
     <StudioRouteFrame
-      description="Order the toasts, protect the dinner rhythm, and keep surprise moments hidden until the reveal."
       eyebrow="Speeches"
-      meta={[
-        { label: "Speeches", value: `${speeches.length}` },
-        { label: "Before cake", value: `${totalSpeechMinutesBeforeCake} min` },
-        { label: "Secret", value: `${secretCount}` }
-      ]}
       primaryAction={{ href: "/director", label: "Open Director Mode" }}
-      secondaryAction={{ label: "Reset speeches", onClick: resetSpeeches }}
       title="The words of the day."
     >
       <div className="detail-studio">

@@ -81,13 +81,7 @@ export function VendorSourcingStudio() {
 
   return (
     <StudioRouteFrame
-      description="Turn each party need into a local search, save the best candidates, and track quotes and bookings in one place."
       eyebrow="Vendors"
-      meta={[
-        { label: "Booked", value: `${intelligence.bookedCount}` },
-        { label: "Booked cost", value: formatCurrency(bookedTotal) },
-        { label: "Open gaps", value: `${intelligence.openRequiredCount}` }
-      ]}
       primaryAction={{ href: "/exports", label: "Prepare vendor brief" }}
       title="The team behind the day."
     >

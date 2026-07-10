@@ -63,9 +63,7 @@ export function AccountView() {
 
   return (
     <StudioRouteFrame
-      description="Create an account now. Your plan is saved on this device today — cloud backup and sharing are coming soon."
       eyebrow="Account"
-      meta={[{ label: "Cloud", value: configured ? (user ? "Signed in" : "Ready") : "Local only" }]}
       title="Your wedding, everywhere."
     >
       <div className="account-screen">

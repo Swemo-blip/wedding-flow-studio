@@ -29,15 +29,8 @@ export function DirectorBoard() {
 
   return (
     <StudioRouteFrame
-      description="Switch roles and give each person the exact timing, handoff, warning, and brief they need."
       eyebrow="Director Mode"
-      meta={[
-        { label: "Role", value: activeBrief.title },
-        { label: "Moments", value: `${activeBrief.relevantTimelineItemIds.length}` },
-        { label: "Checklist", value: `${activeBrief.checklistItems.length}` }
-      ]}
       primaryAction={{ href: "/exports", label: "Prepare Brief" }}
-      secondaryAction={{ href: "/preview", label: "Preview Day" }}
       title="Run the wedding day by role."
     >
     <div className="director-mode-page studio-route-content">

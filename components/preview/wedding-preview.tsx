@@ -11,15 +11,8 @@ export function WeddingPreview() {
 
   return (
     <StudioRouteFrame
-      description="Play the wedding day as a connected sequence before anyone has to live it for real."
       eyebrow="Preview Wedding Day"
-      meta={[
-        { label: "Mode", value: "Cinematic" },
-        { label: "Focus", value: "Next moment" },
-        { label: "Output", value: "Run of Show" }
-      ]}
       primaryAction={{ href: "/day-flow", label: "Repair Flow" }}
-      secondaryAction={{ href: "/exports", label: "Export Brief" }}
       title="See the day before it unfolds."
     >
       <WeddingDayPlayer />

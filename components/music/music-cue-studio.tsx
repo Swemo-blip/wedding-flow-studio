@@ -68,15 +68,8 @@ export function MusicCueStudio() {
 
   return (
     <StudioRouteFrame
-      description="Keep every song, who starts it, and the backup plan in one cue sheet — so the music lands on time."
       eyebrow="Music"
-      meta={[
-        { label: "Cues", value: `${musicCues.length}` },
-        { label: "Confirmed", value: `${confirmedCueCount}/${musicCues.length}` },
-        { label: "To review", value: `${musicRisks.length}` }
-      ]}
       primaryAction={{ href: "/preview", label: "Preview cues" }}
-      secondaryAction={{ label: "Reset music", onClick: resetMusicCues }}
       title="The soundtrack of the day."
     >
       <div className="detail-studio">

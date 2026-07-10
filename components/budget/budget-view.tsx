@@ -107,13 +107,7 @@ export function BudgetView() {
 
   return (
     <StudioRouteFrame
-      description="Track every cost in one place — estimate each line, log what's paid, and always see what's left."
       eyebrow="Budget"
-      meta={[
-        { label: "Estimated", value: formatCurrency(totals.estimate) },
-        { label: "Paid", value: formatCurrency(totals.paid) },
-        { label: "Left to pay", value: formatCurrency(remaining) }
-      ]}
       primaryAction={{ href: "/exports", label: "Export summary" }}
       title="Where the money goes."
     >

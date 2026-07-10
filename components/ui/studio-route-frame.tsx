@@ -11,18 +11,10 @@ type StudioRouteAction = {
   variant?: "primary" | "secondary" | "ghost";
 };
 
-type StudioRouteMeta = {
-  label: string;
-  value: string;
-};
-
 type StudioRouteFrameProps = {
   children: ReactNode;
-  description: string;
   eyebrow: string;
-  meta?: StudioRouteMeta[];
   primaryAction?: StudioRouteAction;
-  secondaryAction?: StudioRouteAction;
   title: string;
 };
 

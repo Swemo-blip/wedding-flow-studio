@@ -83,13 +83,7 @@ export function GuestsView() {
 
   return (
     <StudioRouteFrame
-      description="Track who is coming, where they sit, and any dietary or accessibility needs — one source of truth for every guest."
       eyebrow="Guest list"
-      meta={[
-        { label: "Attending", value: `${counts.attending}` },
-        { label: "Pending", value: `${counts.pending}` },
-        { label: "Declined", value: `${counts.declined}` }
-      ]}
       primaryAction={{ href: "/reception", label: "Open seating" }}
       title="The people of the day."
     >

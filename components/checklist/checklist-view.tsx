@@ -64,13 +64,7 @@ export function ChecklistView() {
 
   return (
     <StudioRouteFrame
-      description="Every task on the road to the day — grouped by how far out, checked off as you go."
       eyebrow="Checklist"
-      meta={[
-        { label: "Done", value: `${counts.done}` },
-        { label: "Open", value: `${counts.open}` },
-        { label: "Complete", value: `${percent}%` }
-      ]}
       primaryAction={{ href: "/day-flow", label: "Open timeline" }}
       title="The road to the day."
     >

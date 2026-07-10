@@ -22,15 +22,8 @@ export function ExportStudio() {
 
   return (
     <StudioRouteFrame
-      description="Choose one focused handoff, review the source run of show, and prepare a clear role-ready production sheet."
       eyebrow="Brief Builder"
-      meta={[
-        { label: "Selected", value: selectedExport.title },
-        { label: "Types", value: `${exportTypes.length}` },
-        { label: "Format", value: "Print-ready" }
-      ]}
       primaryAction={{ label: "Print Preview", onClick: () => window.print() }}
-      secondaryAction={{ href: "/director", label: "Director Mode" }}
       title="Turn the plan into one clear brief at a time."
     >
       <div className="export-studio">

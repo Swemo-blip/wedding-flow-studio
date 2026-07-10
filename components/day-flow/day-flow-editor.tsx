@@ -309,15 +309,8 @@ export function DayFlowEditor() {
 
   return (
     <StudioRouteFrame
-      description="Walk the day moment by moment, see what each one needs, and close timing, cue, and role gaps in one place."
       eyebrow="Timeline"
-      meta={[
-        { label: "Moments", value: `${project.items.length}` },
-        { label: "To review", value: `${risks.length}` },
-        { label: "Ready", value: `${readyMomentCount}/${momentEntries.length}` }
-      ]}
       primaryAction={{ href: "/preview", label: "Preview the day" }}
-      secondaryAction={{ label: "Reset timeline", onClick: resetTimeline }}
       title="The shape of the day."
     >
       {fixQueue.length > 0 ? (

@@ -636,8 +636,7 @@ a {
   min-width: 0;
 }
 
-.studio-route-copy span,
-.studio-route-meta dt {
+.studio-route-copy span {
   color: var(--muted);
   font-size: 0.7rem;
   font-weight: 620;
@@ -653,46 +652,6 @@ a {
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.02;
-}
-
-.studio-route-copy p {
-  display: -webkit-box;
-  max-width: 760px;
-  overflow: hidden;
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.42;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.studio-route-meta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(96px, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid rgba(146, 118, 73, 0.07);
-  border-radius: var(--radius-control);
-  background: rgba(23, 23, 19, 0.06);
-  margin: 0;
-}
-
-.studio-route-meta > div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  background: rgba(255, 253, 248, 0.82);
-  padding: 9px 10px;
-}
-
-.studio-route-meta dd {
-  overflow: hidden;
-  margin: 0;
-  color: var(--ink);
-  font-size: 0.84rem;
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .studio-route-actions {
@@ -11364,10 +11323,6 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .studio-route-meta {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .studio-route-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
@@ -12166,7 +12121,6 @@ a {
     width: 100%;
   }
 
-  .studio-route-meta,
   .studio-route-actions {
     grid-template-columns: 1fr;
   }
@@ -12317,11 +12271,6 @@ a {
 
   .studio-route-copy h1 {
     font-size: clamp(1.45rem, 6.8vw, 2rem);
-  }
-
-  .studio-route-copy p,
-  .studio-route-meta {
-    display: none;
   }
 
   .studio-route-actions {

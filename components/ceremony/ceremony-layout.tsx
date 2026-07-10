@@ -42,15 +42,8 @@ export function CeremonyLayoutView() {
 
   return (
     <StudioRouteFrame
-      description="Shape the chapel around sightlines, aisle flow, family rows, music cues, and photographer positions."
       eyebrow="Ceremony Studio"
-      meta={[
-        { label: "Moment", value: moment },
-        { label: "Guests", value: `${guestCount}` },
-        { label: "Capacity", value: `${usedPercent}% used` }
-      ]}
       primaryAction={{ href: "/preview", label: "Preview Ceremony" }}
-      secondaryAction={{ href: "/music", label: "Open Cue Sheet" }}
       title="Build the ceremony around what guests will see."
     >
       <StudioSceneSurface
