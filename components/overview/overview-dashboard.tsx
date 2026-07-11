@@ -52,7 +52,6 @@ type HeroScene = "ceremony" | "ceremony-outdoor" | "reception-indoor" | "recepti
 // image here falls back to the live 3D, so dropping a new file in + adding a
 // key is all it takes to make that scene photoreal too.
 const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {
-  ceremony: "/images/ceremony-church.svg",
   "reception-indoor": "/images/reception-atmosphere.png",
   "reception-outdoor": "/images/reception-atmosphere.png"
 };
