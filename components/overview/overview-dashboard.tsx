@@ -52,6 +52,7 @@ type HeroScene = "ceremony" | "ceremony-outdoor" | "reception-indoor" | "recepti
 // image here falls back to the live 3D, so dropping a new file in + adding a
 // key is all it takes to make that scene photoreal too.
 const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {
+  ceremony: "/images/ceremony-church.svg",
   "reception-indoor": "/images/reception-atmosphere.png",
   "reception-outdoor": "/images/reception-atmosphere.png"
 };
@@ -62,7 +63,7 @@ export function OverviewDashboard() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
-  const [heroScene, setHeroScene] = useState<HeroScene>("reception-indoor");
+  const [heroScene, setHeroScene] = useState<HeroScene>("ceremony");
   const [dimension, setDimension] = useState<"2d" | "3d">("3d");
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [zoom, setZoom] = useState(1);
@@ -248,7 +249,7 @@ export function OverviewDashboard() {
           <section aria-label="3D venue preview" className="venue-hero" ref={heroRef}>
             <div className="venue-hero-topline">
               <div className="venue-hero-label">
-                <span>{t("3D Venue Preview")}</span>
+                <span>{heroImage ? t("Venue Preview") : t("3D Venue Preview")}</span>
                 <select
                   aria-label={t("Choose preview scene")}
                   onChange={(event) => setHeroScene(event.target.value as HeroScene)}
@@ -293,7 +294,7 @@ export function OverviewDashboard() {
 
             {heroImage ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img alt={t("Photoreal preview of your wedding day")} className="venue-hero-photo" src={assetPath(heroImage)} />
+              <img alt={t("Cinematic preview of your wedding day")} className="venue-hero-photo" src={assetPath(heroImage)} />
             ) : (
               <CeremonyScene
                 activeStep={sceneStep}
@@ -314,7 +315,7 @@ export function OverviewDashboard() {
 
             <div className="venue-hero-bottomline">
               {heroImage ? (
-                <span className="venue-hero-caption">{t("Photoreal preview")}</span>
+                <span className="venue-hero-caption">{t("Cinematic preview")}</span>
               ) : (
                 <div className="venue-zoom-tools" role="group" aria-label={t("Zoom controls")}>
                   <button aria-label={t("Zoom out")} onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.15).toFixed(2))))} type="button">
