@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, useGLTF, useTexture } from "@react-three/drei";
-import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { ContactShadows, SoftShadows, useGLTF, useTexture } from "@react-three/drei";
+import { Bloom, BrightnessContrast, DepthOfField, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
@@ -72,7 +72,10 @@ function useSurfaceMaps(set: SurfaceTextureSet, repeatX: number, repeatY: number
       clone.wrapS = THREE.RepeatWrapping;
       clone.wrapT = THREE.RepeatWrapping;
       clone.repeat.set(repeatX, repeatY);
-      clone.anisotropy = 4;
+      // Max anisotropic filtering keeps the stone floor and wood crisp at the
+      // grazing angle down the aisle instead of smearing to mush near the altar.
+      // three clamps this to the GPU's real max at upload, so 16 is a safe ceiling.
+      clone.anisotropy = 16;
       clone.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       clone.needsUpdate = true;
       return clone;
@@ -360,6 +363,11 @@ export function CeremonyScene({
           shadows={{ type: THREE.PCFShadowMap }}
         >
           <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={venueType} viewMode={viewMode} zoom={zoom} />
+          {/* PCSS-style penumbras: the pews, columns and figures cast shadows that
+              soften with distance from the caster instead of the hard PCF edge —
+              the difference between a rendering and a photograph. Desktop-only
+              (highQuality) so mobile keeps the cheaper PCF path. */}
+          {highQuality ? <SoftShadows focus={0.85} samples={12} size={26} /> : null}
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
@@ -427,6 +435,17 @@ export function CeremonyScene({
           {highQuality ? (
             <EffectComposer multisampling={4}>
               <N8AO aoRadius={0.8} distanceFalloff={0.75} halfRes intensity={3} quality="medium" />
+              {/* Gentle cinema lens: focus rides mid-aisle in WORLD space with a
+                  wide focus range, so the whole ceremony (couple + altar) stays
+                  readable and only the far back wall, near edges and far side pews
+                  fall into soft bokeh — photographic depth without ever mushing the
+                  subject. Deliberately restrained: target beats raw focusDistance
+                  (the nave is deep and perspective depth is non-linear). */}
+              {venueType === "church" ? (
+                <DepthOfField bokehScale={1.3} focalLength={0.03} target={[0, 1.15, 1]} worldFocusRange={14} />
+              ) : (
+                <DepthOfField bokehScale={1.2} focalLength={0.03} target={[0, 1.1, 0]} worldFocusRange={14} />
+              )}
               <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
               <Vignette darkness={isDay ? 0.28 : 0.55} eskil={false} offset={0.3} />
               <Noise opacity={0.05} premultiply />
