@@ -13371,6 +13371,14 @@ a {
   justify-content: space-between;
   background: linear-gradient(0deg, rgba(10, 11, 5, 0.55), transparent);
   padding: 14px 16px;
+  /* The bar spans full width but only holds a control at each end — let its
+     empty centre pass clicks through to the Play/Restart controls beneath
+     (otherwise this z-index:5 bar swallows the Play button click). */
+  pointer-events: none;
+}
+
+.venue-hero-bottomline > * {
+  pointer-events: auto;
 }
 
 .venue-zoom-tools {

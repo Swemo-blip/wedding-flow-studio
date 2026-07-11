@@ -56,20 +56,13 @@ const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {
   "reception-outdoor": "/images/reception-atmosphere.png"
 };
 
-const styleSwatches: Record<string, string[]> = {
-  classic: ["#6b7b62", "#9caf88", "#e9dcc0", "#dbb9a4", "#c9a767"],
-  modern: ["#5d6d60", "#aebdb0", "#dfe0d4", "#bdc8be", "#aebdb0"],
-  romantic: ["#7d6660", "#d8a79c", "#ecdcd0", "#e3bdb2", "#c9a767"],
-  rustic: ["#6d5b3f", "#b08a52", "#e4d4b2", "#d4b993", "#c2a065"]
-};
-
 export function OverviewDashboard() {
   const localProject = useLocalProject();
   const { t } = useTranslation();
   const heroRef = useRef<HTMLDivElement>(null);
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
-  const [heroScene, setHeroScene] = useState<HeroScene>("ceremony");
+  const [heroScene, setHeroScene] = useState<HeroScene>("reception-indoor");
   const [dimension, setDimension] = useState<"2d" | "3d">("3d");
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [zoom, setZoom] = useState(1);
@@ -99,7 +92,6 @@ export function OverviewDashboard() {
         ? "hall"
         : plan.venueType;
   const styleLabel = t(styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic");
-  const themeColors = styleSwatches[plan.style] ?? styleSwatches.classic;
   // Photoreal still for this scene, if we have one; else fall back to the live 3D.
   const heroImage = SCENE_HERO_IMAGES[heroScene];
 
@@ -399,17 +391,6 @@ export function OverviewDashboard() {
               </Button>
             </section>
 
-            <section aria-label={t("Style & Design")} className="glance-card">
-              <h3>{t("Style & Design")}</h3>
-              <div className="glance-style-tiles">
-                {themeColors.slice(0, 4).map((color, index) => (
-                  <span key={index} style={{ background: `linear-gradient(160deg, ${color}, ${themeColors[(index + 1) % themeColors.length]})` }} />
-                ))}
-              </div>
-              <Button className="glance-action" onClick={() => setIsEditing(true)} size="small" variant="secondary">
-                {t("Open Style Studio")}
-              </Button>
-            </section>
           </div>
         </div>
 
@@ -448,14 +429,6 @@ export function OverviewDashboard() {
                 <strong>
                   {styleLabel} {venueLabel}
                 </strong>
-              </li>
-              <li className="rail-theme-row">
-                <span>{t("Theme Colors")}</span>
-                <span className="rail-theme-dots">
-                  {themeColors.map((color, index) => (
-                    <i key={index} style={{ background: color }} />
-                  ))}
-                </span>
               </li>
             </ul>
             {localProject.hasLocalProject ? (
