@@ -723,6 +723,7 @@ function WeddingStageInterior({
       {activeStep === "reception" ? (
         <ReceptionInterior
           capacity={capacity}
+          highQuality={highQuality}
           onMoveObject={onMoveObject}
           onSelectObject={onSelectObject}
           palette={palette}
@@ -1237,26 +1238,53 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
     if (!highQuality) {
       smoothed.computeVertexNormals();
     }
-    // Mute the baked skin/hair/clothing colours toward a cohesive, softly warm
-    // palette so the crowd reads editorial and designed instead of a saturated
-    // game crowd — individual variation stays, just calmer.
+    // Fold a cohesive regrade AND a baked soft occlusion into the single vertex
+    // pass that already ran to calm the colours — this is what turns the "clay
+    // clumps" into a designed alabaster assembly, and it works in the FORWARD
+    // render (N8AO lives only in the HD composer, so the crowd had zero crevice
+    // shading with post off and collapsed to flat lumps):
+    //   1. crush the palette to a near-monochrome warm-ivory band so no saturated
+    //      "coloured NPC" survives (individual tone still varies, just quietly);
+    //   2. darken TRUE undersides (downward-facing normals) + a thin seat-contact
+    //      band, so every figure reads shaped — chin, lap shelf, arm/thigh
+    //      undersides, seat contact — identical with post on or off.
     const colorAttr = smoothed.getAttribute("color") as THREE.BufferAttribute | undefined;
-    if (colorAttr) {
+    const posAttr = smoothed.getAttribute("position") as THREE.BufferAttribute | undefined;
+    let normalAttr = smoothed.getAttribute("normal") as THREE.BufferAttribute | undefined;
+    if (colorAttr && posAttr) {
+      if (!normalAttr) {
+        smoothed.computeVertexNormals();
+        normalAttr = smoothed.getAttribute("normal") as THREE.BufferAttribute;
+      }
+      smoothed.computeBoundingBox();
+      const minY = smoothed.boundingBox?.min.y ?? 0;
+      const maxY = smoothed.boundingBox?.max.y ?? 1;
+      const contactTop = minY + 0.12 * Math.max(maxY - minY, 0.0001);
       const color = new THREE.Color();
       const hsl = { h: 0, s: 0, l: 0 };
       for (let i = 0; i < colorAttr.count; i += 1) {
         color.fromBufferAttribute(colorAttr, i);
         color.getHSL(hsl);
-        color.setHSL(hsl.h, hsl.s * 0.62, Math.min(0.82, hsl.l * 0.98 + 0.03));
+        const ny = normalAttr.getY(i);
+        const contactBand = 1 - THREE.MathUtils.smoothstep(posAttr.getY(i), minY, contactTop);
+        const occ = Math.max(0.55, 1 - 0.42 * Math.max(0, -ny) - 0.22 * contactBand);
+        color.setHSL(
+          THREE.MathUtils.lerp(hsl.h, 0.09, 0.6),
+          hsl.s * 0.3,
+          Math.min(0.86, hsl.l * 0.9 + 0.06) * occ
+        );
         colorAttr.setXYZ(i, color.r, color.g, color.b);
       }
       colorAttr.needsUpdate = true;
     }
     return smoothed;
   }, [scene, highQuality]);
-  // Matte, non-metallic skin/cloth so figures read as soft sculpture, not
-  // plastic game props.
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.94, metalness: 0 }), []);
+  // Satin alabaster, non-metallic: a touch of specular rolloff (roughness 0.7,
+  // not dead-matte 0.94) lets the warm directional key wrap the heads/shoulders
+  // so the crowd reads as sculpted stone, not dry clay. envMapIntensity lifts the
+  // HDRI sheen a hair. Kept as MeshStandard so the crowd stays in the SAME lit
+  // medium as the skinned couple/officiant and still answers day/dusk + god-rays.
+  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0, envMapIntensity: 1.1 }), []);
   const meshRef = useRef<THREE.InstancedMesh>(null);
 
   useLayoutEffect(() => {
@@ -1270,16 +1298,34 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
     const euler = new THREE.Euler();
     const scale = new THREE.Vector3();
     const position = new THREE.Vector3();
+    const tint = new THREE.Color();
 
     seats.forEach((seat, index) => {
-      euler.set(0, seat.rotationY, 0);
+      // Deterministic per-seat hash in [0,1) so the same guest always gets the
+      // same subtle identity (survives re-renders) — this is what breaks the
+      // stamped-clone grid that reads as "game crowd".
+      let hashAcc = 0;
+      for (let c = 0; c < seat.id.length; c += 1) {
+        hashAcc = (hashAcc * 31 + seat.id.charCodeAt(c)) % 100000;
+      }
+      const h = (hashAcc % 1000) / 1000;
+      // Micro scale + a whisper of forward/back lean so a pew row stops reading
+      // as identical stamps — organic, never posed.
+      euler.set(0.02 * (h - 0.5), seat.rotationY, 0);
       quaternion.setFromEuler(euler);
       position.set(seat.position[0], seat.position[1], seat.position[2]);
-      scale.setScalar(CONGREGATION_SCALE);
+      scale.setScalar(CONGREGATION_SCALE * (0.97 + 0.06 * h));
       matrix.compose(position, quaternion, scale);
       mesh.setMatrixAt(index, matrix);
+      // Whisper-tint in a narrow warm ivory<->stone band (near-white multiplier,
+      // never saturated) so identity reads without any game-crowd colour.
+      tint.setHSL(0.085 + 0.02 * (h - 0.5), 0.09, 0.94 + 0.08 * (h - 0.5));
+      mesh.setColorAt(index, tint);
     });
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) {
+      mesh.instanceColor.needsUpdate = true;
+    }
     mesh.computeBoundingSphere();
   }, [seats]);
 
@@ -1596,8 +1642,8 @@ function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): Congre
         result.push({
           id: `church-guest-${row}-${sideCenter}-${seat}`,
           position: [sideCenter + seatOffsets[seat], 0, z + 0.04],
-          variant: seed % CONGREGATION_MODELS.length,
-          rotationY: Math.PI + ((seed % 5) - 2) * 0.05
+          variant: (seed * 7 + row * 3) % CONGREGATION_MODELS.length,
+          rotationY: Math.PI + ((seed % 7) - 3) * 0.03
         });
         count += 1;
       }
@@ -2244,6 +2290,7 @@ function OverflowCluster({ guestCount, palette }: { guestCount: number; palette:
 
 function ReceptionInterior({
   capacity,
+  highQuality = true,
   onMoveObject,
   onSelectObject,
   palette,
@@ -2253,6 +2300,7 @@ function ReceptionInterior({
   viewMode
 }: {
   capacity: WeddingStudioCapacity;
+  highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
@@ -2313,7 +2361,7 @@ function ReceptionInterior({
           <ReceptionTable key={tableIndex} palette={palette} position={position} />
         ))}
         <Suspense fallback={null}>
-          <ChurchCongregation seats={receptionSeats} />
+          <ChurchCongregation highQuality={highQuality} seats={receptionSeats} />
         </Suspense>
       </EditableSceneObject>
 
@@ -2671,8 +2719,8 @@ function buildReceptionSeats(tablePositions: Array<[number, number, number]>, se
       seats.push({
         id: `reception-${tableIndex}-${seat}`,
         position: [gx, 0, gz],
-        rotationY: Math.atan2(tx - gx, tz - gz),
-        variant: (tableIndex * 3 + seat * 5) % CONGREGATION_MODELS.length
+        rotationY: Math.atan2(tx - gx, tz - gz) + ((seat % 5) - 2) * 0.04,
+        variant: (tableIndex * 7 + seat * 3) % CONGREGATION_MODELS.length
       });
     }
   });
