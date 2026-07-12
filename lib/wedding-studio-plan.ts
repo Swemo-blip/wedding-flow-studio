@@ -72,19 +72,9 @@ export const venueOptions: Array<{
     value: "church"
   },
   {
-    description: "A refined outdoor ceremony with lawn, aisle, arch, and garden boundaries.",
-    label: "Garden",
+    description: "A refined open-air ceremony with lawn, aisle, arch, and garden boundaries.",
+    label: "Outdoor",
     value: "garden"
-  },
-  {
-    description: "A coastal ceremony model with sand, waterline, aisle, and wind-aware spacing.",
-    label: "Beach",
-    value: "beach"
-  },
-  {
-    description: "An indoor hall model for ceremony, reception, stage, and service flow.",
-    label: "Hall",
-    value: "hall"
   }
 ];
 

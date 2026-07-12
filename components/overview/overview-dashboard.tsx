@@ -41,20 +41,18 @@ import {
   type StudioPlanningStepId,
   type StudioSceneEdits,
   type StudioSceneObjectId,
+  type StudioVenueType,
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
-type HeroScene = "ceremony" | "ceremony-outdoor" | "reception-indoor" | "reception-outdoor";
+// The three previewable scenes, per the owner's brief: a church, an outdoor
+// ceremony, and one dinner (food) view — all live 3D.
+type HeroScene = "ceremony" | "ceremony-outdoor" | "reception";
 
-// Photoreal hero stills per scene — these are the premium "preview" (the live
-// real-time 3D can't reach photoreal, so the home leads with a rendered image
-// and the interactive twin sits behind "Edit in 3D Studio"). A scene with no
-// image here falls back to the live 3D, so dropping a new file in + adding a
-// key is all it takes to make that scene photoreal too.
-const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {
-  "reception-indoor": "/images/reception-atmosphere.png",
-  "reception-outdoor": "/images/reception-atmosphere.png"
-};
+// Optional photoreal hero stills per scene — a scene with no image here (all of
+// them, currently) falls back to the live 3D twin, so dropping a file in + adding
+// a key is all it takes to make that scene photoreal instead.
+const SCENE_HERO_IMAGES: Partial<Record<HeroScene, string>> = {};
 
 export function OverviewDashboard() {
   const localProject = useLocalProject();
@@ -79,18 +77,14 @@ export function OverviewDashboard() {
     () => calculateWeddingStudioCapacity({ ...plan, guestCount: localProject.guests.length }),
     [plan, localProject.guests.length]
   );
-  const sceneStep: StudioPlanningStepId = heroScene.startsWith("reception") ? "reception" : "preview";
+  const sceneStep: StudioPlanningStepId = heroScene === "reception" ? "reception" : "preview";
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
   const venueLabel = t(venueOptions.find((option) => option.value === plan.venueType)?.label ?? "Venue");
-  // Outdoor options preview in an open-air garden venue; indoor reception uses
-  // the hall (banquet room), regardless of the wedding's own ceremony venue.
-  const sceneVenueType =
-    heroScene === "ceremony-outdoor" || heroScene === "reception-outdoor"
-      ? "garden"
-      : heroScene === "reception-indoor"
-        ? "hall"
-        : plan.venueType;
+  // Three fixed preview scenes: the church, an open-air (garden) ceremony, and
+  // the evening dinner (also open-air). Independent of the wedding's own saved
+  // venue so the home stays a clean 3-scene gallery.
+  const sceneVenueType: StudioVenueType = heroScene === "ceremony" ? "church" : "garden";
   const styleLabel = t(styleOptions.find((option) => option.value === plan.style)?.label ?? "Classic");
   // Photoreal still for this scene, if we have one; else fall back to the live 3D.
   const heroImage = SCENE_HERO_IMAGES[heroScene];
@@ -254,10 +248,9 @@ export function OverviewDashboard() {
                   onChange={(event) => setHeroScene(event.target.value as HeroScene)}
                   value={heroScene}
                 >
-                  <option value="ceremony">{t("Ceremony")} – {venueLabel}</option>
-                  <option value="ceremony-outdoor">{t("Ceremony")} – {t("Garden (outdoors)")}</option>
-                  <option value="reception-indoor">{t("Reception")} – {t("Indoors")}</option>
-                  <option value="reception-outdoor">{t("Reception")} – {t("Garden (outdoors)")}</option>
+                  <option value="ceremony">{t("Ceremony")} – {t("Church")}</option>
+                  <option value="ceremony-outdoor">{t("Ceremony")} – {t("Outdoor")}</option>
+                  <option value="reception">{t("Reception")} – {t("Dinner")}</option>
                 </select>
               </div>
               <div className="venue-hero-tools">

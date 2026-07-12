@@ -71,6 +71,7 @@ const sv: Record<string, string> = {
   "Accessible seats": "Tillgänglighetsplatser",
   // Venue / style / decor option labels
   "Church": "Kyrka",
+  "Outdoor": "Utomhus",
   "Garden": "Trädgård",
   "Beach": "Strand",
   "Hall": "Festlokal",
