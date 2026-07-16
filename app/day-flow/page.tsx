@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { DayFlowEditor } from "@/components/day-flow/day-flow-editor";
 
 export const metadata: Metadata = {
-  title: "Visual Day Flow",
+  title: "Timeline",
   description:
-    "Edit the wedding-day timeline, inspect moment readiness, and repair timing, cue, role, and guest-flow risks from one visual production surface."
+    "Shape your wedding-day timeline, see how each moment connects, and smooth out any timing clashes before the day arrives."
 };
 
 export default function DayFlowPage() {

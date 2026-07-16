@@ -89,7 +89,7 @@ export function SpeechStudio() {
   return (
     <StudioRouteFrame
       eyebrow="Speeches"
-      primaryAction={{ href: "/director", label: "Open Director Mode" }}
+      primaryAction={{ href: "/director", label: "See the plan by role" }}
       title="The words of the day."
     >
       <div className="detail-studio">

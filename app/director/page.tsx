@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { DirectorBoard } from "@/components/director/director-board";
 
 export const metadata: Metadata = {
-  title: "Director Mode",
+  title: "Roles",
   description:
-    "Give each wedding-day role a focused production board with relevant timeline items, warnings, cues, contacts, checklists, and copy-ready briefs."
+    "Give everyone helping on the day their own clear brief — just the moments, cues, contacts and to-dos they need."
 };
 
 export default function DirectorPage() {

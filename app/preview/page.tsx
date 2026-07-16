@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { WeddingPreview } from "@/components/preview/wedding-preview";
 
 export const metadata: Metadata = {
-  title: "Preview Wedding Day",
+  title: "Preview Day",
   description:
-    "Walk through the wedding day moment by moment with connected locations, people, music cues, risks, role handoffs, and next-phase context."
+    "Watch your wedding day unfold moment by moment — the places, the people, and the music, in the order they happen."
 };
 
 export default function PreviewPage() {

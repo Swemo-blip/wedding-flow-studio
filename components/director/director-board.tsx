@@ -29,9 +29,9 @@ export function DirectorBoard() {
 
   return (
     <StudioRouteFrame
-      eyebrow="Director Mode"
-      primaryAction={{ href: "/exports", label: "Prepare Brief" }}
-      title="Run the wedding day by role."
+      eyebrow="Who does what"
+      primaryAction={{ href: "/exports", label: "Share these briefs" }}
+      title="Everyone's part in the day."
     >
     <div className="director-mode-page studio-route-content">
       <RoleProductionBoard

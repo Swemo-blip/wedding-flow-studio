@@ -22,25 +22,23 @@ const bodySans = Inter({
 export const metadata: Metadata = {
   applicationName: "Wedding Flow Studio",
   title: {
-    default: "Wedding Flow Studio | Wedding Day Digital Twin",
+    default: "Wedding Flow Studio | Preview your wedding day",
     template: "%s | Wedding Flow Studio"
   },
   description:
-    "A premium visual wedding-day production studio for previewing ceremony flow, reception timing, music cues, seating, vendors, role briefs, and the full run of show before the day unfolds.",
+    "A calm, beautiful studio to plan your wedding day and preview it before it unfolds — timeline, guests, seating, budget, music, speeches and vendors, all in one place.",
   keywords: [
     "wedding planning",
-    "wedding day timeline",
-    "run of show",
-    "wedding production",
-    "vendor brief",
-    "ceremony layout",
-    "reception seating",
-    "music cue sheet",
-    "director mode"
+    "wedding timeline",
+    "wedding budget",
+    "guest list",
+    "seating plan",
+    "wedding checklist",
+    "wedding day preview"
   ],
   openGraph: {
     description:
-      "Preview the wedding day before it unfolds with a visual production studio for ceremony, reception, cues, guests, vendors, and role handoffs.",
+      "Plan your wedding day and preview it before it unfolds — timeline, guests, seating, budget, music and more, all in one calm place.",
     locale: "en_US",
     siteName: "Wedding Flow Studio",
     title: "Wedding Flow Studio | Preview the day before it unfolds",
@@ -53,7 +51,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     description:
-      "A premium visual wedding-day production studio for previews, timelines, cues, vendors, seating, and role-specific briefs.",
+      "A calm, beautiful studio to plan your wedding day and preview it before it unfolds.",
     title: "Wedding Flow Studio"
   }
 };

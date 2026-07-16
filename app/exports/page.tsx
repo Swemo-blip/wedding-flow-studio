@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ExportStudio } from "@/components/exports/export-studio";
 
 export const metadata: Metadata = {
-  title: "Exportable Run of Show",
+  title: "Exports",
   description:
-    "Turn the wedding digital twin into focused run-of-show, cue sheet, vendor brief, seating, ceremony, catering, and venue setup previews."
+    "Turn your plan into clean, share-ready sheets — the day's schedule, seating, and a brief for each vendor and helper."
 };
 
 export default function ExportsPage() {

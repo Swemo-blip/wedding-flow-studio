@@ -22,7 +22,7 @@ export function ExportStudio() {
 
   return (
     <StudioRouteFrame
-      eyebrow="Brief Builder"
+      eyebrow="Exports"
       primaryAction={{ label: "Print Preview", onClick: () => window.print() }}
       title="Turn the plan into one clear brief at a time."
     >

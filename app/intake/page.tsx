@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { WeddingProducerIntake } from "@/components/intake/wedding-producer-intake";
 
 export const metadata: Metadata = {
-  title: "Wedding Producer Intake",
+  title: "Create your wedding",
   description:
-    "Create the first wedding-day digital twin from a calm guided intake for date, venues, guest count, style, team, priorities, and production notes."
+    "Start your wedding plan with a few calm questions — your date, venues, guest count, style, and what matters most to you."
 };
 
 export default function IntakePage() {

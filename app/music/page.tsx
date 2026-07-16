@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MusicCueStudio } from "@/components/music/music-cue-studio";
 
 export const metadata: Metadata = {
-  title: "Music Cue Sheet",
+  title: "Music",
   description:
     "Coordinate ceremony and reception music cues, responsible people, start cues, backup plans, statuses, and timeline-linked notes."
 };

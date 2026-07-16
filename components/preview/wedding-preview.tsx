@@ -11,8 +11,8 @@ export function WeddingPreview() {
 
   return (
     <StudioRouteFrame
-      eyebrow="Preview Wedding Day"
-      primaryAction={{ href: "/day-flow", label: "Repair Flow" }}
+      eyebrow="Preview Day"
+      primaryAction={{ href: "/day-flow", label: "Fine-tune the timing" }}
       title="See the day before it unfolds."
     >
       <WeddingDayPlayer />

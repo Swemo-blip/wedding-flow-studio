@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { SpeechStudio } from "@/components/speeches/speech-studio";
 
 export const metadata: Metadata = {
-  title: "Speech Studio",
+  title: "Speeches",
   description:
-    "Plan wedding speeches, program timing, surprise items, technical needs, microphone cues, intro people, and Secret Layers for Director Mode."
+    "Plan the speeches and toasts — who speaks when, any surprises, microphone needs, and who introduces each one."
 };
 
 export default function SpeechesPage() {
