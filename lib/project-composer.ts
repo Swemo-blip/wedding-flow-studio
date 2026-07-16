@@ -108,7 +108,7 @@ export function composeWeddingProducerPlan(input: WeddingProducerIntake): Weddin
   const cues = composeMusicCues(input, timeline);
   const program = composeSpeeches(input, timeline, partnerOneName, partnerTwoName);
   const composedTables = composeDinnerTables(guestCount);
-  const composedGuests = composeGuests(input, composedTables, partnerOneName, partnerTwoName);
+  const composedGuests = composeGuests(partnerOneName, partnerTwoName);
   const assignedTables = assignGuestsToTables(composedTables, composedGuests);
 
   return {
@@ -172,7 +172,12 @@ function composeSpeeches(
   return speeches.slice(0, speechLimit).map((speech) => ({
     ...speech,
     notes: `${speech.notes} Producer Intake: Keep this program item aligned with ${receptionFormatLabels[input.receptionFormat].toLowerCase()}.`,
-    speakerName: speech.speakerName === "Emma & James" ? `${getFirstName(partnerOneName)} & ${getFirstName(partnerTwoName)}` : speech.speakerName,
+    // Keep the program skeleton (title + relation), but never invent a real
+    // person: the couple's own toast fills in, everyone else is "TBD" for them
+    // to name.
+    speakerName:
+      speech.speakerName === "Emma & James" ? `${getFirstName(partnerOneName)} & ${getFirstName(partnerTwoName)}` : "TBD",
+    introPerson: speech.introPerson && speech.introPerson !== "None" ? "TBD" : speech.introPerson,
     timelineItemId: timeline.find((item) => item.id === speech.timelineItemId)?.id ?? speech.timelineItemId
   }));
 }
@@ -207,44 +212,32 @@ function composeDinnerTables(guestCount: number): DinnerTable[] {
   ];
 }
 
-function composeGuests(
-  input: WeddingProducerIntake,
-  tables: DinnerTable[],
-  partnerOneName: string,
-  partnerTwoName: string
-): Guest[] {
-  const representativeGuests = guests
-    .filter((guest) => guest.id !== "emma-carter" && guest.id !== "james-bennett")
-    .slice(0, Math.min(18, Math.max(8, Math.ceil(input.guestCount / 8))))
-    .map((guest, index) => {
-      const table = tables[(index % Math.max(1, tables.length - 1)) + 1] ?? tables[0];
-
-      return {
-        ...guest,
-        id: `generated-${guest.id}`,
-        preferredGuestIds: [],
-        conflictGuestIds: guest.conflictGuestIds.map((guestId) => `generated-${guestId}`),
-        tableId: table.id,
-        seatIndex: index % table.capacity
-      };
-    });
-
-  const couple: Guest[] = [
+function composeGuests(partnerOneName: string, partnerTwoName: string): Guest[] {
+  // Seed ONLY the couple — never a crowd of fictional guests. A new couple must
+  // see their own plan (with an "add your first guest" empty state on /guests),
+  // not a stranger's wedding they never entered.
+  return [
     {
       ...guests[0],
       id: "partner-one",
       name: partnerOneName,
-      tableId: "sweetheart-table"
+      relationship: "Couple",
+      preferredGuestIds: [],
+      conflictGuestIds: [],
+      tableId: "sweetheart-table",
+      seatIndex: 0
     },
     {
       ...guests[1],
       id: "partner-two",
       name: partnerTwoName,
-      tableId: "sweetheart-table"
+      relationship: "Couple",
+      preferredGuestIds: [],
+      conflictGuestIds: [],
+      tableId: "sweetheart-table",
+      seatIndex: 1
     }
   ];
-
-  return [...couple, ...representativeGuests];
 }
 
 function assignGuestsToTables(tables: DinnerTable[], guestItems: Guest[]) {
