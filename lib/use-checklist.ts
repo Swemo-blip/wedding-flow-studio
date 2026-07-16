@@ -29,11 +29,11 @@ export const VENDOR_CATEGORY_TO_CHECKLIST_TASK: Record<string, string> = {
 };
 
 const DEFAULT_CHECKLIST: ChecklistTask[] = [
-  { id: "c-date", title: "Set the date", phase: "12+ months", done: true },
-  { id: "c-budget", title: "Agree a budget", phase: "12+ months", done: true },
-  { id: "c-venue", title: "Book the venue", phase: "12+ months", done: true },
+  { id: "c-date", title: "Set the date", phase: "12+ months", done: false },
+  { id: "c-budget", title: "Agree a budget", phase: "12+ months", done: false },
+  { id: "c-venue", title: "Book the venue", phase: "12+ months", done: false },
   { id: "c-guests", title: "Draft the guest list", phase: "12+ months", done: false },
-  { id: "c-photo", title: "Book photographer & videographer", phase: "9 months", done: true },
+  { id: "c-photo", title: "Book photographer & videographer", phase: "9 months", done: false },
   { id: "c-cater", title: "Book the caterer", phase: "9 months", done: false },
   { id: "c-party", title: "Choose the wedding party", phase: "9 months", done: false },
   { id: "c-save", title: "Send save-the-dates", phase: "6 months", done: false },

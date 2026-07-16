@@ -47,15 +47,17 @@ export const VENDOR_TO_BUDGET_CATEGORY: Record<string, string> = {
   childcare: "Other"
 };
 
+// Suggested estimates are a helpful starting scaffold; nothing is marked paid,
+// because a new couple hasn't paid anything yet. No fictional venue name either.
 const DEFAULT_BUDGET: BudgetItem[] = [
-  { id: "b-venue", category: "Venue", label: "Rosewood Hall — venue hire", estimate: 12000, paid: 6000 },
-  { id: "b-catering", category: "Catering", label: "Dinner & drinks", estimate: 16800, paid: 4000 },
-  { id: "b-photo", category: "Photography", label: "Photographer + videographer", estimate: 5200, paid: 1500 },
+  { id: "b-venue", category: "Venue", label: "Venue hire", estimate: 12000, paid: 0 },
+  { id: "b-catering", category: "Catering", label: "Dinner & drinks", estimate: 16800, paid: 0 },
+  { id: "b-photo", category: "Photography", label: "Photographer + videographer", estimate: 5200, paid: 0 },
   { id: "b-flowers", category: "Flowers", label: "Arch, aisle & centerpieces", estimate: 3800, paid: 0 },
-  { id: "b-music", category: "Music", label: "String quartet + live band", estimate: 4500, paid: 1000 },
-  { id: "b-attire", category: "Attire", label: "Dress, suit & alterations", estimate: 4200, paid: 2200 },
-  { id: "b-stationery", category: "Stationery", label: "Invitations & signage", estimate: 1200, paid: 1200 },
-  { id: "b-rings", category: "Rings", label: "Wedding bands", estimate: 3000, paid: 3000 },
+  { id: "b-music", category: "Music", label: "Music & entertainment", estimate: 4500, paid: 0 },
+  { id: "b-attire", category: "Attire", label: "Dress, suit & alterations", estimate: 4200, paid: 0 },
+  { id: "b-stationery", category: "Stationery", label: "Invitations & signage", estimate: 1200, paid: 0 },
+  { id: "b-rings", category: "Rings", label: "Wedding bands", estimate: 3000, paid: 0 },
   { id: "b-cake", category: "Cake", label: "Cake & desserts", estimate: 900, paid: 0 },
   { id: "b-transport", category: "Transport", label: "Car & guest shuttle", estimate: 1400, paid: 0 }
 ];
