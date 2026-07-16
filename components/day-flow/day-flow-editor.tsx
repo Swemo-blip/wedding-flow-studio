@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { ActionDock } from "@/components/action/action-dock";
 import { MomentInspector } from "@/components/moment/moment-inspector";
 import { Badge } from "@/components/ui/badge";
@@ -218,6 +219,47 @@ export function DayFlowEditor() {
     });
   }
 
+  function addMoment() {
+    setActionStatus(null);
+    setProject((currentProject) => {
+      const lastItem = currentProject.items[currentProject.items.length - 1];
+      const newItem: TimelineItem = {
+        id: `moment-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e5).toString(36)}`,
+        time: lastItem?.time ?? "3:00 PM",
+        title: "New moment",
+        phase: lastItem?.phase ?? currentProject.items[0]?.phase ?? "Ceremony",
+        location: lastItem?.location ?? "",
+        responsibleRole: "",
+        responsiblePerson: "",
+        notes: "",
+        visibility: "everyone",
+        durationMinutes: 15
+      };
+
+      return {
+        ...currentProject,
+        items: [...currentProject.items, newItem],
+        selectedId: newItem.id,
+        updatedAt: new Date().toISOString()
+      };
+    });
+  }
+
+  function removeMoment(id: string) {
+    setActionStatus(null);
+    setProject((currentProject) => {
+      const remaining = currentProject.items.filter((item) => item.id !== id);
+      const nextSelectedId = currentProject.selectedId === id ? (remaining[0]?.id ?? "") : currentProject.selectedId;
+
+      return {
+        ...currentProject,
+        items: remaining,
+        selectedId: nextSelectedId,
+        updatedAt: new Date().toISOString()
+      };
+    });
+  }
+
   function applyActiveResolution() {
     if (!activeResolveRisk || !activeResolutionRecipe) {
       return;
@@ -341,42 +383,56 @@ export function DayFlowEditor() {
             const itemIntelligence = timelineMomentMap.get(item.id);
 
             return (
-              <button
-                aria-pressed={isSelected}
-                className="editable-timeline-card"
-                data-selected={isSelected}
-                key={item.id}
-                onClick={() => {
-                  setActionStatus(null);
-                  setProject((currentProject) => ({
-                    ...currentProject,
-                    selectedId: item.id
-                  }));
-                }}
-                onFocus={() => {
-                  if (item.id !== activeResolutionRecipe?.timelineItemId) {
-                    setActiveResolveRiskId(null);
-                    setResolutionStatus(null);
+              <div className="editable-timeline-row" key={item.id}>
+                <button
+                  aria-pressed={isSelected}
+                  className="editable-timeline-card"
+                  data-selected={isSelected}
+                  onClick={() => {
                     setActionStatus(null);
-                  }
-                }}
-                type="button"
-              >
-                <span className="timeline-time">{item.time}</span>
-                <span className="editable-timeline-body">
-                  <span className="summary-between">
-                    <strong>{item.title}</strong>
-                    {itemIntelligence ? (
-                      <Badge tone={itemIntelligence.readinessTone}>{itemIntelligence.readinessScore}%</Badge>
-                    ) : null}
+                    setProject((currentProject) => ({
+                      ...currentProject,
+                      selectedId: item.id
+                    }));
+                  }}
+                  onFocus={() => {
+                    if (item.id !== activeResolutionRecipe?.timelineItemId) {
+                      setActiveResolveRiskId(null);
+                      setResolutionStatus(null);
+                      setActionStatus(null);
+                    }
+                  }}
+                  type="button"
+                >
+                  <span className="timeline-time">{item.time}</span>
+                  <span className="editable-timeline-body">
+                    <span className="summary-between">
+                      <strong>{item.title}</strong>
+                      {itemIntelligence ? (
+                        <Badge tone={itemIntelligence.readinessTone}>{itemIntelligence.readinessScore}%</Badge>
+                      ) : null}
+                    </span>
+                    <span className="timeline-meta">
+                      {item.location} · {item.responsiblePerson}
+                    </span>
                   </span>
-                  <span className="timeline-meta">
-                    {item.location} · {item.responsiblePerson}
-                  </span>
-                </span>
-              </button>
+                </button>
+                <button
+                  aria-label={t("Remove {title}", { title: item.title })}
+                  className="editable-timeline-remove"
+                  onClick={() => removeMoment(item.id)}
+                  type="button"
+                >
+                  <Trash2 aria-hidden="true" size={15} strokeWidth={1.7} />
+                </button>
+              </div>
             );
           })}
+
+          <button className="editable-timeline-add" onClick={addMoment} type="button">
+            <Plus aria-hidden="true" size={16} strokeWidth={1.9} />
+            {t("Add moment")}
+          </button>
         </div>
 
         <details className="day-flow-detail-drawer">

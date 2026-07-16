@@ -446,6 +446,8 @@ const sv: Record<string, string> = {
   "Table": "Bord",
   "Meal": "Måltid",
   "Notes": "Anteckningar",
+  "Add moment": "Lägg till moment",
+  "Remove {title}": "Ta bort {title}",
   "Seat": "Plats",
   "Speech": "Tal",
   "Speaking": "Håller tal",

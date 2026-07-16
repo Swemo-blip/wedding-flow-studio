@@ -7202,6 +7202,63 @@ a {
   background: var(--line);
 }
 
+.editable-timeline-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.editable-timeline-row .editable-timeline-card {
+  flex: 1;
+}
+
+.editable-timeline-remove {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.editable-timeline-remove:hover,
+.editable-timeline-remove:focus-visible {
+  color: #a6472e;
+  border-color: rgba(166, 71, 46, 0.4);
+  background: rgba(166, 71, 46, 0.06);
+}
+
+.editable-timeline-add {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.editable-timeline-add:hover,
+.editable-timeline-add:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .editable-timeline-card {
   position: relative;
   z-index: 1;
