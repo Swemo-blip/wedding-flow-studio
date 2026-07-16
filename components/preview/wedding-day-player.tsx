@@ -13,6 +13,7 @@ import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
+import { derivePreviewPhases, waypointIndexForPhase } from "@/lib/preview-phases";
 import { previewPhases } from "@/lib/wedding-data";
 
 const scenePositions = [
@@ -55,8 +56,17 @@ export function WeddingDayPlayer() {
       ),
     [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems]
   );
-  const phase = previewPhases[index];
-  const nextPhase = previewPhases[index + 1];
+  // The Preview is now the couple's OWN day: phases are derived at runtime from
+  // their real timeline (grouped by phase, in their order), so editing the
+  // timeline changes what they watch. Falls back to the sample reel only if the
+  // timeline is somehow empty.
+  const phases = useMemo(() => {
+    const derived = derivePreviewPhases(timelineItems);
+    return derived.length ? derived : previewPhases;
+  }, [timelineItems]);
+  const safeIndex = Math.min(index, phases.length - 1);
+  const phase = phases[safeIndex];
+  const nextPhase = phases[safeIndex + 1];
   const relatedTimeline = useMemo(
     () => getTimelineItemsByIds(timelineItems, phase.relatedTimelineItemIds),
     [phase.relatedTimelineItemIds, timelineItems]
@@ -67,13 +77,13 @@ export function WeddingDayPlayer() {
         cues: musicCues,
         nextPhase,
         phase,
-        phaseIndex: index,
+        phaseIndex: safeIndex,
         relatedTimeline,
         risks,
         speechItems: speeches,
-        totalPhases: previewPhases.length
+        totalPhases: phases.length
       }),
-    [index, musicCues, nextPhase, phase, relatedTimeline, risks, speeches]
+    [safeIndex, musicCues, nextPhase, phase, phases.length, relatedTimeline, risks, speeches]
   );
   const momentIntelligence = useMemo(
     () =>
@@ -83,17 +93,17 @@ export function WeddingDayPlayer() {
         guests,
         nextPhase,
         phase,
-        phaseIndex: index,
+        phaseIndex: safeIndex,
         relatedTimeline,
         risks,
         speeches,
-        totalPhases: previewPhases.length
+        totalPhases: phases.length
       }),
-    [dinnerTables, guests, index, musicCues, nextPhase, phase, relatedTimeline, risks, speeches]
+    [dinnerTables, guests, safeIndex, musicCues, nextPhase, phase, phases.length, relatedTimeline, risks, speeches]
   );
   const resolvedCount = resolvedRiskIds.length;
   const canGoPrevious = index > 0;
-  const canGoNext = index < previewPhases.length - 1;
+  const canGoNext = safeIndex < phases.length - 1;
 
   useEffect(() => {
     if (!isPlaying) {
@@ -102,7 +112,7 @@ export function WeddingDayPlayer() {
 
     const interval = window.setInterval(() => {
       setIndex((currentIndex) => {
-        if (currentIndex >= previewPhases.length - 1) {
+        if (currentIndex >= phases.length - 1) {
           setIsPlaying(false);
           return currentIndex;
         }
@@ -112,7 +122,7 @@ export function WeddingDayPlayer() {
     }, 3000);
 
     return () => window.clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, phases.length]);
 
   function goToPreviousMoment() {
     setIndex((currentIndex) => Math.max(0, currentIndex - 1));
@@ -120,14 +130,14 @@ export function WeddingDayPlayer() {
   }
 
   function goToNextMoment() {
-    setIndex((currentIndex) => Math.min(previewPhases.length - 1, currentIndex + 1));
+    setIndex((currentIndex) => Math.min(phases.length - 1, currentIndex + 1));
     setIsPlaying(false);
   }
 
   return (
     <section className="preview-day-player preview-command-center" aria-label="Preview Wedding Day Command Center">
       <div className="preview-walkthrough-band" aria-label="Cinematic walkthrough of the wedding day">
-        <PreviewWalkthrough phaseIndex={index} />
+        <PreviewWalkthrough phaseIndex={waypointIndexForPhase(phase.title)} />
         <div className="preview-walkthrough-overlay">
           <span>{phase.timeRange}</span>
           <strong>{t(phase.title)}</strong>
@@ -173,8 +183,8 @@ export function WeddingDayPlayer() {
       </div>
 
       <ol className="preview-moment-rail preview-command-rail" aria-label="Wedding day preview sequence">
-        {previewPhases.map((previewPhase, phaseIndex) => (
-          <li data-active={phaseIndex === index} data-complete={phaseIndex < index} key={previewPhase.id}>
+        {phases.map((previewPhase, phaseIndex) => (
+          <li data-active={phaseIndex === safeIndex} data-complete={phaseIndex < safeIndex} key={previewPhase.id}>
             <button
               onClick={() => {
                 setIndex(phaseIndex);
