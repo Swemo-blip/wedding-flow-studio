@@ -610,7 +610,6 @@ export function CeremonyStudio() {
           <div className="studio-rail-block">
             <p className="eyebrow">{t("Notes")}</p>
             <p className="studio-rail-note">{t("The couple would like soft candlelight for the ceremony.")}</p>
-            <p className="rail-byline">{t("Updated today by {name}", { name: "Olivia Hart" })}</p>
           </div>
         </aside>
       </div>
@@ -633,10 +632,6 @@ export function CeremonyStudio() {
             <div>
               <strong>{unseatedCount}</strong>
               <span>{t("Unseated")}</span>
-            </div>
-            <div>
-              <strong>6</strong>
-              <span>{t("Vendors")}</span>
             </div>
           </div>
           <a className="rail-link" href="/guests">

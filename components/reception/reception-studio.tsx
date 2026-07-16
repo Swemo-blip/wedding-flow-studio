@@ -543,7 +543,6 @@ export function ReceptionStudio() {
           <div className="studio-rail-block">
             <p className="eyebrow">{t("Notes")}</p>
             <p className="studio-rail-note">{t("Live band plays 6:00–10:30 PM. Uplighting in warm amber.")}</p>
-            <p className="rail-byline">{t("Updated today by {name}", { name: "Olivia Hart" })}</p>
           </div>
         </aside>
       </div>
@@ -566,10 +565,6 @@ export function ReceptionStudio() {
             <div>
               <strong>{unseatedCount}</strong>
               <span>{t("Unseated")}</span>
-            </div>
-            <div>
-              <strong>6</strong>
-              <span>{t("Vendors")}</span>
             </div>
           </div>
           <a className="rail-link" href="/guests">

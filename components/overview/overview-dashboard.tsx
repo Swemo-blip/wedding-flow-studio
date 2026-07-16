@@ -318,10 +318,15 @@ export function OverviewDashboard() {
                   </button>
                 </div>
               )}
-              <button className="venue-edit-button" onClick={() => setIsEditing((value) => !value)} type="button">
-                <PencilRuler aria-hidden="true" size={15} strokeWidth={1.8} />
-                {isEditing ? t("Close 3D Studio") : t("Edit in 3D Studio")}
-              </button>
+              <div className="venue-hero-actions">
+                <Button className="venue-preview-cta" href="/preview" size="small">
+                  {t("Preview the day")}
+                </Button>
+                <button className="venue-edit-button" onClick={() => setIsEditing((value) => !value)} type="button">
+                  <PencilRuler aria-hidden="true" size={15} strokeWidth={1.8} />
+                  {isEditing ? t("Close 3D Studio") : t("Edit in 3D Studio")}
+                </button>
+              </div>
             </div>
 
             {isEditing ? (
