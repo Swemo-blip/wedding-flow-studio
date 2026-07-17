@@ -74,7 +74,7 @@ function isItemActive(item: SideNavItem, pathname: string) {
     return false;
   }
   if (item.href === "/") {
-    return pathname === "/" || pathname.startsWith("/studio");
+    return pathname === "/";
   }
   return pathname.startsWith(item.href);
 }
