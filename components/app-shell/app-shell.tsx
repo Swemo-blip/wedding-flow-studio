@@ -48,7 +48,10 @@ export function AppShell({ children, wedding }: AppShellProps) {
         </div>
       </aside>
       <div className="workspace">
-        <TopBar wedding={wedding} />
+        {/* The home route IS the 3D studio workspace — it brings its own minimal
+            header (scene selector, Edit/Preview mode, save state, one primary
+            action), so the global top bar would only duplicate CTAs above it. */}
+        {pathname === "/" ? null : <TopBar wedding={wedding} />}
         <SampleRibbon />
         <main className="page-shell" id="main-content" tabIndex={-1}>
           {children}

@@ -40,7 +40,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Plan",
     items: [
-      { href: "/", icon: LayoutGrid, label: "Overview" },
+      { href: "/", icon: LayoutGrid, label: "Studio" },
       { href: "/ceremony", icon: Church, label: "Ceremony" },
       { href: "/reception", icon: UtensilsCrossed, label: "Reception" },
       { href: "/day-flow", icon: CalendarClock, label: "Timeline" }

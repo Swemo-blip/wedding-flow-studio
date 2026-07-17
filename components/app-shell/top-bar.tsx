@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, HardDrive, Share2, Sparkles, TriangleAlert } from "lucide-react";
+import { Eye, Share2 } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
+import { SavedChip } from "@/components/app-shell/saved-chip";
 import { useTranslation } from "@/lib/i18n";
 import { formatWeddingDate } from "@/lib/utils";
-import { getPersistenceState, subscribePersistence } from "@/lib/persistence-status";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
@@ -15,16 +15,9 @@ type TopBarProps = {
   wedding: Wedding;
 };
 
-// Server snapshot must be a stable reference — returning a fresh object every
-// call makes React re-render in a loop ("getServerSnapshot should be cached"),
-// which remounted the 3D canvas ~8x per route and blanked it for 20s+.
-const SERVER_PERSISTENCE_STATE = { ok: true, reason: null } as const;
-const getServerPersistenceState = () => SERVER_PERSISTENCE_STATE;
-
 export function TopBar({ wedding }: TopBarProps) {
   const { language, setLanguage, t } = useTranslation();
   const { guests, hasLocalProject, timelineItems, updatedAt, wedding: localWedding } = useLocalProject();
-  const persistence = useSyncExternalStore(subscribePersistence, getPersistenceState, getServerPersistenceState);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const activeWedding = hasLocalProject ? localWedding : wedding;
 
@@ -68,26 +61,7 @@ export function TopBar({ wedding }: TopBarProps) {
               SV
             </button>
           </div>
-          {!hasLocalProject ? (
-            <Link className="studio-saved-chip studio-saved-chip-link" data-state="sample" href="/intake">
-              <Sparkles aria-hidden="true" size={16} strokeWidth={1.7} />
-              {t("Create your wedding")}
-            </Link>
-          ) : persistence.ok ? (
-            <span
-              className="studio-saved-chip"
-              data-state="saved"
-              title={t("Saved in this browser. Sign in to back up to the cloud.")}
-            >
-              <HardDrive aria-hidden="true" size={16} strokeWidth={1.7} />
-              {t("Saved in this browser")}
-            </span>
-          ) : (
-            <span className="studio-saved-chip" data-state="error" role="status">
-              <TriangleAlert aria-hidden="true" size={16} strokeWidth={1.9} />
-              {persistence.reason === "quota" ? t("Couldn't save — storage full") : t("Couldn't save changes")}
-            </span>
-          )}
+          <SavedChip />
           <button className="button button-secondary button-small studio-share-button" onClick={copyStudioLink} type="button">
             <Share2 aria-hidden="true" size={15} strokeWidth={1.8} />
             {shareStatus ?? t("Copy link")}

@@ -17110,3 +17110,967 @@ a {
   letter-spacing: 0.02em;
 }
 
+
+/* ============================================================
+   Venue Studio — the home 3D workspace (edit / preview modes)
+   ============================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.vstudio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- Minimal header --- */
+
+.vstudio-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(74, 64, 40, 0.05);
+}
+
+.vstudio-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vstudio-identity h1 {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vstudio-identity span {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.vstudio-scene-select select {
+  padding: 7px 30px 7px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vstudio-scene-static {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.vstudio-mode {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.vstudio-mode button {
+  padding: 7px 16px;
+  border: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 620;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vstudio-mode button + button {
+  border-left: 1px solid var(--line);
+}
+
+.vstudio-mode button[data-active="true"] {
+  background: var(--accent);
+  color: #f4efe3;
+}
+
+.vstudio-header-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.vstudio-primary {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #f4efe3;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vstudio-primary:hover {
+  background: var(--accent-deep);
+}
+
+/* --- Overflow menu --- */
+
+.vstudio-menu {
+  position: relative;
+}
+
+.vstudio-menu summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.vstudio-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.vstudio-menu summary:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.vstudio-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  gap: 8px;
+  width: 250px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px -16px rgba(74, 64, 40, 0.35);
+}
+
+.vstudio-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.vstudio-menu-lang {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vstudio-menu-lang button {
+  padding: 4px 10px;
+  border: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.vstudio-menu-lang button[data-active="true"] {
+  background: var(--accent);
+  color: #f4efe3;
+}
+
+.vstudio-menu-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-menu-action:hover {
+  border-color: var(--accent);
+}
+
+.vstudio-menu-danger {
+  color: #a6472e;
+}
+
+.vstudio-menu-danger:hover {
+  border-color: rgba(166, 71, 46, 0.5);
+}
+
+.vstudio-menu-url {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface-warm);
+  color: var(--ink);
+  font-size: 0.76rem;
+}
+
+.vstudio-header .mobile-nav {
+  margin-top: 0;
+}
+
+/* --- Workspace body: rail | canvas | inspector --- */
+
+.vstudio-body {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 300px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.vstudio-body[data-inspector="closed"] {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.vstudio-body-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vstudio-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: start;
+  padding: 8px 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.vstudio-rail button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vstudio-rail button:hover {
+  background: var(--surface-warm);
+  color: var(--ink);
+}
+
+.vstudio-rail button[data-active="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+/* --- Canvas --- */
+
+.vstudio-canvas {
+  position: relative;
+  min-height: min(70vh, 760px);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: #1c2115;
+}
+
+.vstudio-canvas .ceremony-scene-shell,
+.vstudio-canvas .ceremony-canvas-frame {
+  height: 100%;
+  min-height: min(70vh, 760px);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.vstudio-canvas .ceremony-scene-caption {
+  display: none;
+}
+
+/* Playback belongs to Preview mode's single transport — the in-scene
+   processional pill would be a second, competing player here. */
+.vstudio-canvas .ceremony-processional-controls {
+  display: none;
+}
+
+.vstudio-camera {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px;
+  background: rgba(18, 20, 9, 0.6);
+  border: 1px solid rgba(240, 234, 216, 0.22);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.vstudio-camera button {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: rgba(244, 239, 227, 0.82);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vstudio-camera button:hover {
+  background: rgba(244, 239, 227, 0.14);
+  color: #fffdf6;
+}
+
+.vstudio-camera button[data-active="true"] {
+  background: rgba(244, 239, 227, 0.92);
+  color: #26281f;
+}
+
+.vstudio-camera i {
+  width: 1px;
+  height: 18px;
+  background: rgba(240, 234, 216, 0.22);
+}
+
+.vstudio-preview-overlay {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #f7f2e6;
+  text-shadow: 0 1px 10px rgba(10, 11, 5, 0.65);
+  pointer-events: none;
+}
+
+.vstudio-preview-overlay span {
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: rgba(247, 242, 230, 0.85);
+}
+
+.vstudio-preview-overlay strong {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+/* --- Inspector --- */
+
+.vstudio-inspector {
+  overflow-y: auto;
+  max-height: min(70vh, 760px);
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.vstudio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vstudio-panel h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.vstudio-panel h3 {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.vstudio-panel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.vstudio-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.vstudio-facts > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.vstudio-facts dt {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.vstudio-facts dd {
+  margin: 0;
+  font-size: 0.83rem;
+  font-weight: 620;
+  color: var(--ink);
+  text-align: right;
+}
+
+.vstudio-allclear {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(65, 76, 55, 0.28);
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.vstudio-warnings {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vstudio-warnings a {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border: 1px solid rgba(176, 116, 42, 0.34);
+  border-radius: 9px;
+  background: rgba(176, 116, 42, 0.09);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-warnings a:hover {
+  border-color: rgba(176, 116, 42, 0.62);
+}
+
+.vstudio-warnings span {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.vstudio-warnings em {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 650;
+  color: #7f5518;
+}
+
+.vstudio-quick {
+  display: grid;
+  gap: 6px;
+}
+
+.vstudio-quick button,
+.vstudio-quick-link {
+  padding: 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-quick button:hover,
+.vstudio-quick-link:hover {
+  border-color: var(--accent);
+}
+
+.vstudio-field {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.vstudio-field > span,
+.vstudio-field legend {
+  font-size: 0.78rem;
+  font-weight: 630;
+  color: var(--muted);
+  padding: 0;
+}
+
+.vstudio-field-split {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.vstudio-field-split strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.vstudio-field select {
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.vstudio-field input[type="range"] {
+  accent-color: var(--accent);
+}
+
+.vstudio-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vstudio-choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vstudio-choice-grid button,
+.vstudio-choice-row button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.vstudio-choice-row button {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.vstudio-choice-grid button i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex: none;
+}
+
+.vstudio-choice-grid button[data-active="true"],
+.vstudio-choice-row button[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.vstudio-object-list {
+  display: grid;
+  gap: 6px;
+}
+
+.vstudio-object-list button {
+  padding: 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.vstudio-object-list button[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.vstudio-nudge {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  gap: 5px;
+  justify-content: center;
+}
+
+.vstudio-nudge button {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-nudge button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.vstudio-nudge button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.vstudio-offset {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.vstudio-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.vstudio-link:hover {
+  color: var(--accent-deep);
+}
+
+/* --- Status bar (edit mode) --- */
+
+.vstudio-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.vstudio-status-selected {
+  color: var(--ink);
+}
+
+.vstudio-status-check {
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-status-check[data-tone="ok"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.vstudio-status-check[data-tone="warn"] {
+  background: rgba(176, 116, 42, 0.12);
+  color: #7f5518;
+}
+
+.vstudio-status-check:hover {
+  border-color: currentColor;
+}
+
+/* --- Playback bar (preview mode) --- */
+
+.vstudio-playbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.vstudio-playbar-transport {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.vstudio-playbar-transport button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-playbar-transport button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.vstudio-playbar-transport button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.vstudio-playbar-play {
+  width: 40px !important;
+  height: 40px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: var(--accent) !important;
+  color: #f4efe3 !important;
+}
+
+.vstudio-playbar-play:hover {
+  background: var(--accent-deep) !important;
+}
+
+.vstudio-playbar-now {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+.vstudio-playbar-now strong {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.vstudio-playbar-now span {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.vstudio-playbar-track {
+  display: flex;
+  flex: 1 1 200px;
+  gap: 4px;
+  align-items: center;
+}
+
+.vstudio-playbar-track button {
+  flex: 1;
+  /* Visible bar stays ~7px, but the click/tap target is a comfortable 24px tall
+     (background paints only the content box). */
+  height: 24px;
+  padding: 8.5px 0;
+  min-width: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  background-clip: content-box;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vstudio-playbar-track button[data-state="done"] {
+  background-color: var(--accent);
+}
+
+.vstudio-playbar-track button[data-state="active"] {
+  background-color: var(--gilt, #b39152);
+}
+
+.vstudio-playbar-track button:hover {
+  background-color: var(--accent-deep);
+}
+
+.vstudio-playbar-count {
+  font-size: 0.76rem;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.vstudio-playbar-exit {
+  padding: 7px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 640;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.vstudio-playbar-exit:hover {
+  border-color: var(--accent);
+}
+
+/* --- Focus states --- */
+
+.vstudio button:focus-visible,
+.vstudio select:focus-visible,
+.vstudio input:focus-visible,
+.vstudio summary:focus-visible,
+.vstudio a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The camera controls sit on a dark glass pill — the ink focus ring is invisible
+   there, so give those controls a light ring instead. */
+.vstudio-camera button:focus-visible {
+  outline-color: rgba(244, 239, 227, 0.9);
+}
+
+/* --- Responsive: tablet and below --- */
+
+@media (max-width: 1100px) {
+  .vstudio-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vstudio-body[data-inspector="closed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vstudio-rail {
+    flex-direction: row;
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .vstudio-canvas {
+    min-height: 56vh;
+  }
+
+  .vstudio-canvas .ceremony-scene-shell,
+  .vstudio-canvas .ceremony-canvas-frame {
+    min-height: 56vh;
+  }
+
+  /* On narrow screens the inspector stacks under the canvas as a drawer,
+     never squeezing the 3D view. */
+  .vstudio-inspector {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .vstudio-identity {
+    order: -2;
+    width: 100%;
+  }
+
+  .vstudio-header-end {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .vstudio-primary {
+    flex: 1;
+  }
+
+  .vstudio-canvas {
+    min-height: 46vh;
+  }
+
+  .vstudio-canvas .ceremony-scene-shell,
+  .vstudio-canvas .ceremony-canvas-frame {
+    min-height: 46vh;
+  }
+
+  .vstudio-playbar-now {
+    min-width: 0;
+  }
+}

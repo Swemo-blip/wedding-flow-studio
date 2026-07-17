@@ -25,10 +25,11 @@ const PHASE_SUMMARIES: Record<string, string> = {
 };
 
 // Reception-side keywords, for classifying a phase whose name we don't recognise
-// so the 3D walkthrough still shows the right room.
+// so the 3D walkthrough still shows the right room. Exported so the home studio
+// can sort timeline moments and warnings into the scene they belong to.
 const RECEPTION_HINTS = ["reception", "cocktail", "dinner", "meal", "speech", "toast", "cake", "dance", "party", "evening"];
 
-function isReceptionPhase(phaseName: string): boolean {
+export function isReceptionPhase(phaseName: string): boolean {
   const key = phaseName.toLowerCase();
   return RECEPTION_HINTS.some((hint) => key.includes(hint));
 }

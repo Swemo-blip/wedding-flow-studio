@@ -11,7 +11,8 @@ import {
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
   type StudioSceneEdits,
-  type StudioPlanningStepId
+  type StudioPlanningStepId,
+  type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
 type Waypoint = {
@@ -47,21 +48,26 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
   const { hasLocalProject, wedding } = useLocalProject();
   const activeWedding = hasLocalProject ? wedding : sampleWedding;
 
-  const plan = useMemo(() => createWeddingStudioPlanFromWedding(activeWedding, defaultWeddingStudioPlan), [activeWedding]);
-  const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
+  const derivedPlan = useMemo(() => createWeddingStudioPlanFromWedding(activeWedding, defaultWeddingStudioPlan), [activeWedding]);
 
-  // Reflect the couple's actual scene edits (object nudges) instead of the
-  // defaults — the preview used to ignore them, so it disagreed with the home
-  // hero for anyone who moved anything. Read post-mount to stay hydration-safe.
+  // Reflect the couple's actual saved studio plan AND scene edits (style, decor,
+  // seating, object nudges) — the preview used to ignore both, so switching
+  // Edit → Preview on the home studio visibly reverted the look. Read post-mount
+  // to stay hydration-safe.
+  const [storedPlan, setStoredPlan] = useState<WeddingStudioPlan | null>(null);
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   useEffect(() => {
     queueMicrotask(() => {
       const stored = readStoredWeddingStudioLayout();
       if (stored) {
+        setStoredPlan(stored.plan);
         setSceneEdits(stored.sceneEdits);
       }
     });
   }, []);
+
+  const plan = storedPlan ?? derivedPlan;
+  const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
 
   const waypoint = walkthrough[Math.min(phaseIndex, walkthrough.length - 1)] ?? walkthrough[0];
 
