@@ -39,6 +39,8 @@ const sv: Record<string, string> = {
   "You are viewing a sample wedding.": "Du tittar på ett exempelbröllop.",
   "Explore freely — then create your own in about two minutes.": "Utforska fritt — skapa sedan ert eget på cirka två minuter.",
   "Create your wedding": "Skapa ert bröllop",
+  "You're exploring a sample wedding — create yours to make everything your own.":
+    "Du utforskar ett exempelbröllop — skapa ert eget så blir allt ert.",
   "Dismiss welcome message": "Stäng välkomstmeddelandet",
   // Venue hero
   "3D Venue Preview": "3D-förhandsvisning av lokal",

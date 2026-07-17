@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Navigation } from "@/components/app-shell/navigation";
+import { SampleRibbon } from "@/components/app-shell/sample-ribbon";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { useTranslation } from "@/lib/i18n";
 import type { Wedding } from "@/lib/wedding-types";
@@ -48,6 +49,7 @@ export function AppShell({ children, wedding }: AppShellProps) {
       </aside>
       <div className="workspace">
         <TopBar wedding={wedding} />
+        <SampleRibbon />
         <main className="page-shell" id="main-content" tabIndex={-1}>
           {children}
         </main>

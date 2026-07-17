@@ -576,6 +576,53 @@ a {
   outline: none;
 }
 
+.sample-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: var(--gold-tint, rgba(176, 143, 79, 0.14));
+  border: 1px solid var(--line-strong);
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+
+.sample-ribbon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.sample-ribbon-text svg {
+  color: var(--gilt, #b0913f);
+  flex: none;
+}
+
+.sample-ribbon-cta {
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+}
+
+.sample-ribbon-cta:hover,
+.sample-ribbon-cta:focus-visible {
+  border-bottom-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .sample-ribbon {
+    border-radius: 14px;
+  }
+}
+
 .page-grid {
   display: grid;
   gap: 14px;
