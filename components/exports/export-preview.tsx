@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
 import { buildGuestProfile } from "@/lib/guest-identity";
+import { formatWeddingDate } from "@/lib/utils";
 import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
@@ -113,7 +114,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
               <p className="eyebrow">{t("Export Preview")}</p>
               <h3 className="card-title">{exportType.title}</h3>
               <p className="card-copy">
-                {wedding.coupleNames} - {wedding.date}
+                {wedding.coupleNames} - {formatWeddingDate(wedding.date)}
               </p>
             </div>
             <div className="export-contact">
@@ -240,7 +241,7 @@ function buildExportBriefText(
 
   return [
     exportType.title,
-    `${wedding.coupleNames} - ${wedding.date}`,
+    `${wedding.coupleNames} - ${formatWeddingDate(wedding.date)}`,
     `Contact: ${exportType.contactPerson}`,
     "",
     exportType.description,

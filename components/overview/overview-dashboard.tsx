@@ -19,6 +19,7 @@ import { SceneEditor } from "@/components/overview/scene-editor";
 import { Donut } from "@/components/ui/donut";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { assetPath } from "@/lib/asset-path";
+import { formatWeddingDate } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
@@ -405,7 +406,7 @@ export function OverviewDashboard() {
                 <CalendarDays aria-hidden="true" size={16} strokeWidth={1.7} />
                 <span>{t("Date")}</span>
                 <strong>
-                  {activeWedding.date}
+                  {formatWeddingDate(activeWedding.date)}
                   {daysToGo !== null ? <em className="rail-countdown">{daysToGo} {t("days to go")}</em> : null}
                 </strong>
               </li>

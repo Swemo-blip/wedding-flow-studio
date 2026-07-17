@@ -16,7 +16,7 @@ export const sampleWedding: Wedding = {
   coupleNames: "Emma & James",
   partnerOneName: "Emma Carter",
   partnerTwoName: "James Bennett",
-  date: "June 14, 2027",
+  date: "2027-06-14",
   ceremonyLocation: "St. James Chapel",
   receptionLocation: "Rosewood Hall",
   guestCount: 112,

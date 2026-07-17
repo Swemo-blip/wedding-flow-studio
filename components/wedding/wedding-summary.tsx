@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { coreTeam, sampleWedding } from "@/lib/wedding-data";
+import { formatWeddingDate } from "@/lib/utils";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 
 export function WeddingSummary() {
@@ -17,7 +18,7 @@ export function WeddingSummary() {
         <div className="summary-grid">
           <div>
             <span className="summary-label">Date</span>
-            <strong>{sampleWedding.date}</strong>
+            <strong>{formatWeddingDate(sampleWedding.date)}</strong>
           </div>
           <div>
             <span className="summary-label">Ceremony</span>

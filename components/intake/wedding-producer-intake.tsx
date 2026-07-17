@@ -17,6 +17,7 @@ import {
   type WeddingProducerIntake as WeddingProducerIntakeState,
   type WeddingStylePreset
 } from "@/lib/project-composer";
+import { formatWeddingDate } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { createStoredProjectDraft, readStoredProject, writeStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
@@ -250,7 +251,7 @@ export function WeddingProducerIntake() {
             <p className="eyebrow">{t("Generated Twin Preview")}</p>
             <h2>{plan.wedding.coupleNames}</h2>
             <p>
-              {plan.wedding.date} {t("at")} {plan.wedding.ceremonyLocation} {t("and")} {plan.wedding.receptionLocation}
+              {formatWeddingDate(plan.wedding.date)} {t("at")} {plan.wedding.ceremonyLocation} {t("and")} {plan.wedding.receptionLocation}
             </p>
           </div>
 
@@ -317,7 +318,7 @@ export function WeddingProducerIntake() {
           </label>
           <label>
             <span>{t("Wedding date")}</span>
-            <input onChange={(event) => updateIntake({ date: event.target.value })} value={intake.date} />
+            <input onChange={(event) => updateIntake({ date: event.target.value })} type="date" value={intake.date} />
           </label>
         </div>
       );

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Printer } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { formatWeddingDate } from "@/lib/utils";
 import { useLocalProject } from "@/lib/use-local-project";
 import { formatCurrency } from "@/lib/wedding-budget";
 import { useBudget } from "@/lib/use-budget";
@@ -60,7 +61,7 @@ export function SummaryView() {
           <p className="eyebrow">{t("Wedding summary")}</p>
           <h1 className="summary-couple">{wedding.coupleNames}</h1>
           <p className="summary-meta">
-            {wedding.date}
+            {formatWeddingDate(wedding.date)}
             {daysToGo !== null ? ` · ${daysToGo} ${t("days to go")}` : ""} · {wedding.ceremonyLocation}
             {wedding.receptionLocation && wedding.receptionLocation !== wedding.ceremonyLocation ? ` → ${wedding.receptionLocation}` : ""}
           </p>

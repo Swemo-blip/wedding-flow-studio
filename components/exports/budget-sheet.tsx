@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { formatWeddingDate } from "@/lib/utils";
 import { useBudget } from "@/lib/use-budget";
 import { useLocalProject } from "@/lib/use-local-project";
 import { formatCurrency } from "@/lib/wedding-budget";
@@ -39,7 +40,7 @@ export function BudgetSheet() {
           <p className="eyebrow">{t("Budget Overview")}</p>
           <h3 className="card-title">{t("Wedding Budget")}</h3>
           <p className="card-copy">
-            {wedding.coupleNames} · {wedding.date}
+            {wedding.coupleNames} · {formatWeddingDate(wedding.date)}
           </p>
         </div>
         <div className="export-contact">

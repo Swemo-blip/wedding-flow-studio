@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Eye, HardDrive, Share2, Sparkles, TriangleAlert } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { useTranslation } from "@/lib/i18n";
+import { formatWeddingDate } from "@/lib/utils";
 import { getPersistenceState, subscribePersistence } from "@/lib/persistence-status";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -54,7 +55,7 @@ export function TopBar({ wedding }: TopBarProps) {
           <h1>{hasLocalProject ? activeWedding.coupleNames : t("Your Wedding Studio")}</h1>
           <p>
             {hasLocalProject
-              ? `${activeWedding.date} · ${activeWedding.receptionLocation}`
+              ? `${formatWeddingDate(activeWedding.date)} · ${activeWedding.receptionLocation}`
               : t("Preview your wedding day before it unfolds")}
           </p>
         </div>

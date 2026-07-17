@@ -35,7 +35,7 @@ export const defaultWeddingProducerIntake: WeddingProducerIntake = {
   ceremonyFormat: "chapel",
   ceremonyLocation: "St. James Chapel",
   complexity: "balanced",
-  date: "June 14, 2027",
+  date: "2027-06-14",
   guestCount: 112,
   partnerOneName: "Emma Carter",
   partnerTwoName: "James Bennett",
