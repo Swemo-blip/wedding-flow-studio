@@ -345,10 +345,10 @@ export function CeremonyStudio() {
             </select>
             <div className="setup-ensemble">
               <Music aria-hidden="true" size={15} />
-              <span>{t("String Quartet")}</span>
-              <button aria-label={t("Preview music")} className="setup-ensemble-play" type="button">
+              <span>{t(musicSetup)}</span>
+              <a aria-label={t("Open music")} className="setup-ensemble-play" href="/music">
                 <Play aria-hidden="true" size={12} />
-              </button>
+              </a>
             </div>
           </div>
         </aside>

@@ -567,6 +567,7 @@ const sv: Record<string, string> = {
   "Acoustic": "Akustiskt",
   "String Quartet": "Stråkkvartett",
   "Preview music": "Förhandslyssna",
+  "Open music": "Öppna musik",
   "Canvas view": "Vyval",
   "3D Studio": "3D-studio",
   "Plan View": "Planvy",
