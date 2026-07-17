@@ -13,6 +13,8 @@ import {
   colorDirectionOptions,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
+  MAX_AISLE_WIDTH_FEET,
+  MIN_AISLE_WIDTH_FEET,
   styleOptions,
   type StudioColorDirection,
   type StudioSceneObjectId,
@@ -121,10 +123,9 @@ export function CeremonyStudio() {
   const [highQuality, setHighQuality] = useState(true);
 
   // Setup-panel state. Guest count, style, color and lighting drive the scene;
-  // the remaining controls hold their own state to keep the panel fully live.
-  const [seatingLayout, setSeatingLayout] = useState(SEATING_LAYOUTS[0]);
+  // Seating layout + aisle width now live on the persisted plan (shared with the
+  // home studio and the venue-setup export); the rest hold local UI state.
   const [lightingMoodId, setLightingMoodId] = useState("airy");
-  const [aisleWidth, setAisleWidth] = useState(5);
   const [musicSetup, setMusicSetup] = useState(MUSIC_SETUPS[0]);
   const [decisionsDone, setDecisionsDone] = useState<Record<string, boolean>>({});
 
@@ -225,8 +226,8 @@ export function CeremonyStudio() {
             <select
               aria-label={t("Seating Layout")}
               className="setup-select"
-              onChange={(event) => setSeatingLayout(event.target.value)}
-              value={seatingLayout}
+              onChange={(event) => applyPlan({ ...plan, seatingLayout: event.target.value })}
+              value={plan.seatingLayout}
             >
               {SEATING_LAYOUTS.map((option) => (
                 <option key={option} value={option}>
@@ -311,17 +312,17 @@ export function CeremonyStudio() {
             <div className="setup-field-head">
               <span className="setup-label">{t("Aisle Width")}</span>
               <span className="setup-value">
-                {aisleWidth} {t("ft")}
+                {plan.aisleWidthFeet} {t("ft")}
               </span>
             </div>
             <input
               aria-label={t("Aisle Width")}
               className="setup-range"
-              max={8}
-              min={3}
-              onChange={(event) => setAisleWidth(Number(event.target.value))}
+              max={MAX_AISLE_WIDTH_FEET}
+              min={MIN_AISLE_WIDTH_FEET}
+              onChange={(event) => applyPlan({ ...plan, aisleWidthFeet: Number(event.target.value) })}
               type="range"
-              value={aisleWidth}
+              value={plan.aisleWidthFeet}
             />
             <div className="setup-range-scale">
               <span>3 {t("ft")}</span>
@@ -543,6 +544,12 @@ export function CeremonyStudio() {
                 <dt>{t("Guests")}</dt>
                 <dd>
                   {invitedGuests} {t("invited")} · {seatedCount} {t("seated")}
+                </dd>
+              </div>
+              <div className="studio-inspector-row">
+                <dt>{t("Seating")}</dt>
+                <dd>
+                  {t(plan.seatingLayout)} · {plan.aisleWidthFeet} {t("ft")} {t("aisle")}
                 </dd>
               </div>
               <div className="studio-inspector-row">

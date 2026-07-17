@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
 import { buildGuestProfile } from "@/lib/guest-identity";
+import { defaultWeddingStudioPlan } from "@/lib/wedding-studio-plan";
+import { readStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import { formatWeddingDate } from "@/lib/utils";
 import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
@@ -91,9 +93,10 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
         : [],
     [dinnerTables, guestNotes, guests, shouldShowGuestNotes, speeches, timelineTimeById]
   );
+  const ceremonySetup = useMemo(() => readStoredWeddingStudioLayout()?.plan ?? defaultWeddingStudioPlan, []);
   const briefText = useMemo(
-    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows, wedding),
-    [exportType, guestBriefRows, items, relatedCues, relatedSpeeches, risks, wedding]
+    () => buildExportBriefText(exportType, items, risks, relatedSpeeches, relatedCues, guestBriefRows, wedding, ceremonySetup),
+    [ceremonySetup, exportType, guestBriefRows, items, relatedCues, relatedSpeeches, risks, wedding]
   );
 
   async function copyBrief() {
@@ -124,6 +127,15 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
             </div>
           </div>
           <p className="card-copy">{exportType.description}</p>
+
+          {exportType.id === "venue-setup-brief" ? (
+            <div className="export-section">
+              <h4>{t("Ceremony Setup")}</h4>
+              <p className="card-copy">
+                {t(ceremonySetup.seatingLayout)} · {ceremonySetup.aisleWidthFeet} {t("ft")} {t("aisle")}
+              </p>
+            </div>
+          ) : null}
 
           <div className="export-section">
             <h4>{t("Relevant Timeline")}</h4>
@@ -216,7 +228,8 @@ function buildExportBriefText(
   relatedSpeeches: Array<{ title: string; speakerName: string; durationMinutes: number; technicalNeeds: string[] }>,
   relatedCues: Array<{ moment: string; songTitle: string; artist: string; startCue: string; backupPlan: string }>,
   guestRows: GuestBriefRow[],
-  wedding: { coupleNames: string; date: string }
+  wedding: { coupleNames: string; date: string },
+  ceremonySetup: { seatingLayout: string; aisleWidthFeet: number }
 ) {
   const timelineText = items
     .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.responsiblePerson}\n  Notes: ${item.notes}`)
@@ -245,6 +258,14 @@ function buildExportBriefText(
     `Contact: ${exportType.contactPerson}`,
     "",
     exportType.description,
+    ...(exportType.id === "venue-setup-brief"
+      ? [
+          "",
+          "Ceremony Setup",
+          `- Seating layout: ${ceremonySetup.seatingLayout}`,
+          `- Aisle width: ${ceremonySetup.aisleWidthFeet} ft`
+        ]
+      : []),
     "",
     "Relevant Timeline",
     timelineText || "No timeline items assigned.",

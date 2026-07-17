@@ -6,6 +6,8 @@ import {
   decorLevelOptions,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
+  MAX_AISLE_WIDTH_FEET,
+  MIN_AISLE_WIDTH_FEET,
   planningSteps,
   styleOptions,
   venueOptions,
@@ -97,10 +99,20 @@ function createWeddingStudioPlanDraft(source: Partial<WeddingStudioPlan> | undef
         : defaultWeddingStudioPlan.budgetLevel,
     colorDirection,
     decorLevel,
+    aisleWidthFeet: clampAisleWidth(typeof source?.aisleWidthFeet === "number" ? source.aisleWidthFeet : defaultWeddingStudioPlan.aisleWidthFeet),
     guestCount: clampGuestCount(typeof source?.guestCount === "number" ? source.guestCount : defaultWeddingStudioPlan.guestCount),
+    seatingLayout:
+      typeof source?.seatingLayout === "string" && source.seatingLayout.trim() ? source.seatingLayout : defaultWeddingStudioPlan.seatingLayout,
     style,
     venueType
   };
+}
+
+function clampAisleWidth(value: number) {
+  if (Number.isNaN(value)) {
+    return defaultWeddingStudioPlan.aisleWidthFeet;
+  }
+  return Math.min(MAX_AISLE_WIDTH_FEET, Math.max(MIN_AISLE_WIDTH_FEET, Math.round(value)));
 }
 
 function createStudioSceneEditsDraft(source: Partial<StudioSceneEdits> | undefined): StudioSceneEdits {

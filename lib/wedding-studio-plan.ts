@@ -28,9 +28,11 @@ export type StudioSceneEdits = Record<StudioSceneObjectId, StudioSceneOffset>;
 
 export type WeddingStudioPlan = {
   accessibilitySeats: number;
+  aisleWidthFeet: number;
   colorDirection: StudioColorDirection;
   decorLevel: StudioDecorLevel;
   guestCount: number;
+  seatingLayout: string;
   venueType: StudioVenueType;
   style: StudioStyle;
   budgetLevel: StudioBudgetLevel;
@@ -53,13 +55,19 @@ export type WeddingStudioCapacity = {
 
 export const defaultWeddingStudioPlan: WeddingStudioPlan = {
   accessibilitySeats: 2,
+  aisleWidthFeet: 5,
   budgetLevel: "elevated",
   colorDirection: "neutral",
   decorLevel: "balanced",
   guestCount: 112,
+  seatingLayout: "Traditional",
   style: "classic",
   venueType: "church"
 };
+
+export const seatingLayoutOptions = ["Traditional", "Semi-circle", "Curved rows", "Spaced rows"];
+export const MIN_AISLE_WIDTH_FEET = 3;
+export const MAX_AISLE_WIDTH_FEET = 10;
 
 export const venueOptions: Array<{
   description: string;
