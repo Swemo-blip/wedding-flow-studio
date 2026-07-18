@@ -8,6 +8,7 @@ import { type ComponentRef, Suspense, useEffect, useMemo, useRef, useState } fro
 import * as THREE from "three";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
+import { DinnerTablescape } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
@@ -17,7 +18,7 @@ export type ReceptionCameraMode = "walk" | "orbit" | "fly";
 // Camera framings for the Walk / Orbit / Fly controls. Applied to the live
 // OrbitControls so the guest can still orbit freely afterwards.
 const CAMERA_MODES: Record<ReceptionCameraMode, { position: [number, number, number]; target: [number, number, number] }> = {
-  orbit: { position: [0, 5, 6.6], target: [0, 0.3, 0] },
+  orbit: { position: [0, 5, 6.9], target: [0, 0.55, 0] },
   walk: { position: [0, 1.7, 5.6], target: [0, 1, 0] },
   fly: { position: [0, 9.2, 7], target: [0, 0, 0] }
 };
@@ -57,6 +58,15 @@ const GUEST_SCALE = 0.2;
 const SEAT_RADIUS = 0.96;
 const TABLE_RADIUS = 0.62;
 const DROP_RADIUS = 1.7;
+
+// Warm evening dressing for the tablescape, matching the app's palette (the
+// editor has no per-plan palette, so these are fixed champagne/blush tones).
+const EDITOR_TABLESCAPE_COLORS = {
+  accent: "#b39152",
+  candle: "#ffca8c",
+  cloth: "#f6eedb",
+  floral: "#d8b6ad"
+};
 // Head height for the seated photo faces — tuned to sit on the figure's head;
 // nudge if a screenshot shows it floating or sinking.
 const RECEPTION_FACE_HEIGHT = 0.62;
@@ -279,6 +289,50 @@ function SeatedGuest({
   );
 }
 
+// A dollhouse room around the seating grid: low warm walls with glowing dusk
+// window bands so the tables sit inside the couple's evening room instead of a
+// cream void. Kept low + open-topped so the elevated orbit clears the walls and
+// drag-to-reseat still works from above. Walls never intercept pointer rays.
+function ReceptionRoom({ extent = 4.7, height = 2.2 }: { extent?: number; height?: number }) {
+  const wall = "#efe4cf";
+  const skip = () => null;
+  const spans = [-extent * 0.55, 0, extent * 0.55];
+
+  return (
+    <group>
+      {([
+        { pos: [0, height / 2, -extent] as [number, number, number], size: [extent * 2, height, 0.16] as [number, number, number], horizontal: true },
+        { pos: [0, height / 2, extent] as [number, number, number], size: [extent * 2, height, 0.16] as [number, number, number], horizontal: true },
+        { pos: [-extent, height / 2, 0] as [number, number, number], size: [0.16, height, extent * 2] as [number, number, number], horizontal: false },
+        { pos: [extent, height / 2, 0] as [number, number, number], size: [0.16, height, extent * 2] as [number, number, number], horizontal: false }
+      ]).map((face, index) => (
+        <group key={index}>
+          <mesh position={face.pos} raycast={skip} receiveShadow>
+            <boxGeometry args={face.size} />
+            <meshStandardMaterial color={wall} roughness={0.9} />
+          </mesh>
+          {/* Warm window band glowing on each wall. */}
+          {spans.map((span) => (
+            <mesh
+              key={span}
+              position={
+                face.horizontal
+                  ? [span, height * 0.6, face.pos[2] + (face.pos[2] < 0 ? 0.09 : -0.09)]
+                  : [face.pos[0] + (face.pos[0] < 0 ? 0.09 : -0.09), height * 0.6, span]
+              }
+              raycast={skip}
+              rotation={face.horizontal ? [0, 0, 0] : [0, Math.PI / 2, 0]}
+            >
+              <planeGeometry args={[0.9, height * 0.5]} />
+              <meshStandardMaterial color="#f6ead0" emissive="#ffe2ad" emissiveIntensity={0.6} roughness={0.5} side={THREE.DoubleSide} toneMapped={false} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function SeatingScene({
   draggedId,
   guests,
@@ -363,6 +417,8 @@ function SeatingScene({
         <ReceptionFloor />
       </Suspense>
 
+      <ReceptionRoom />
+
       {dragActive ? (
         <mesh
           onPointerMove={(event) => {
@@ -389,19 +445,8 @@ function SeatingScene({
               <meshBasicMaterial color="#c8a45b" opacity={0.85} transparent />
             </mesh>
           ) : null}
-          <mesh castShadow position={[0, 0.36, 0]} receiveShadow>
-            <cylinderGeometry args={[TABLE_RADIUS, TABLE_RADIUS, 0.06, 36]} />
-            <meshStandardMaterial color="#f6eedb" roughness={0.6} />
-          </mesh>
-          <mesh position={[0, 0.18, 0]}>
-            <cylinderGeometry args={[0.07, 0.09, 0.36, 12]} />
-            <meshStandardMaterial color="#d8c7a4" roughness={0.7} />
-          </mesh>
-          <mesh castShadow position={[0, 0.46, 0]}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshStandardMaterial color="#e9d2cf" roughness={0.8} />
-          </mesh>
-          <Html center distanceFactor={11} position={[0, 0.78, 0]} zIndexRange={[10, 0]}>
+          <DinnerTablescape colors={EDITOR_TABLESCAPE_COLORS} radius={TABLE_RADIUS} seed={center[0] * 2.3 + center[2] * 1.7} />
+          <Html center distanceFactor={11} position={[0, 1.2, 0]} zIndexRange={[10, 0]}>
             <div className="seat3d-table-label">{table.name}</div>
           </Html>
         </group>
