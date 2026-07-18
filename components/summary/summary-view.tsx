@@ -8,12 +8,15 @@ import { useLocalProject } from "@/lib/use-local-project";
 import { formatCurrency } from "@/lib/wedding-budget";
 import { useBudget } from "@/lib/use-budget";
 import { useChecklist } from "@/lib/use-checklist";
+import { useCouplePhotos } from "@/lib/use-couple-photos";
 
 export function SummaryView() {
   const { t } = useTranslation();
   const { guests, timelineItems, wedding } = useLocalProject();
   const { items: budgetItems, target } = useBudget();
   const { tasks } = useChecklist();
+  const { bride, groom } = useCouplePhotos();
+  const couplePortraits = [groom, bride].filter((photo): photo is string => Boolean(photo));
   const [daysToGo, setDaysToGo] = useState<number | null>(null);
 
   useEffect(() => {
@@ -58,6 +61,14 @@ export function SummaryView() {
 
       <article className="summary-sheet">
         <header className="summary-head">
+          {couplePortraits.length > 0 ? (
+            <div className="summary-portraits" aria-hidden="true">
+              {couplePortraits.map((photo, index) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt="" className="summary-portrait" key={index} src={photo} />
+              ))}
+            </div>
+          ) : null}
           <p className="eyebrow">{t("Wedding summary")}</p>
           <h1 className="summary-couple">{wedding.coupleNames}</h1>
           <p className="summary-meta">

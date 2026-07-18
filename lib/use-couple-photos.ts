@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { safeSetItem } from "@/lib/persistence-status";
 
-// The couple's uploaded face photos, shown as portrait cameos on the bride and
-// groom in the 3D ceremony. Stored per-role in localStorage (browser-only, no
-// backend) under the app prefix, so they ride along in the backup file too.
+// The couple's uploaded face photos, shown as portraits on the shareable
+// summary sheet and in the guest studio. Stored per-role in localStorage
+// (browser-only, no backend) under the app prefix, so they ride along in the
+// backup file too.
 export type CoupleRole = "groom" | "bride";
 
 const key = (role: CoupleRole) => `wedding-flow-studio.couple-photo.${role}`;

@@ -16575,6 +16575,25 @@ a {
   border-bottom: 1px solid var(--line);
 }
 
+.summary-portraits {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.summary-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(40, 33, 20, 0.14);
+}
+
+.summary-portrait:not(:first-child) {
+  margin-left: -18px;
+}
+
 .summary-couple {
   margin: 4px 0 6px;
   color: var(--ink);

@@ -788,7 +788,7 @@ const sv: Record<string, string> = {
   "Mute music": "Stäng av musik",
   "Unmute music": "Sätt på musik",
   "Your photos": "Era foton",
-  "Add a photo of each of you — kept with your plan so the studio always feels like yours.": "Lägg till ett foto på var och en av er — sparas med er plan så att studion alltid känns som er.",
+  "Add a photo of each of you — your portraits appear on the shareable summary.": "Lägg till ett foto på var och en av er — era porträtt visas på den delbara sammanfattningen.",
   "Wedding summary": "Bröllopssammanfattning",
   "A one-page overview to print or share with your partner and vendors.": "En ensides översikt att skriva ut eller dela med din partner och leverantörer.",
   "Print / Save as PDF": "Skriv ut / Spara som PDF",

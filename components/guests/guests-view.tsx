@@ -91,7 +91,7 @@ export function GuestsView() {
         <section aria-label={t("Your photos")} className="couple-faces-card">
           <div className="couple-faces-copy">
             <span className="eyebrow">{t("Your photos")}</span>
-            <p>{t("Add a photo of each of you — kept with your plan so the studio always feels like yours.")}</p>
+            <p>{t("Add a photo of each of you — your portraits appear on the shareable summary.")}</p>
           </div>
           <div className="couple-faces-slots">
             {couplePhotos.map(({ label, photo, role }) => (
