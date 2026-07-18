@@ -2415,15 +2415,25 @@ function ReceptionInterior({
   const tablePositions = useMemo(() => buildReceptionTablePositions(tableCount), [tableCount]);
   const seatCounts = useMemo(() => {
     if (hasRealTables) {
-      return tablePositions.map((_, index) => {
-        const table = dinnerTables![index];
-        return Math.min(10, Math.max(1, table?.assignedGuestIds.length || table?.capacity || 6));
-      });
+      // Only the guests actually seated at a table get a chair — an unseated
+      // table stands empty rather than inventing people who don't exist.
+      return tablePositions.map((_, index) => Math.min(10, dinnerTables![index]?.assignedGuestIds.length ?? 0));
     }
     const perTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
     return tablePositions.map(() => perTable);
   }, [capacity.seatsPerRow, dinnerTables, hasRealTables, tablePositions]);
   const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatCounts), [seatCounts, tablePositions]);
+  // The couple, seated at the head table (z=-4.3), just behind it and facing the
+  // room (+z). Appended to the guest seats so one instanced congregation draws
+  // everyone — the couple always appear, even before any guests are seated.
+  const receptionSeatsWithCouple = useMemo<CongregationSeat[]>(
+    () => [
+      ...receptionSeats,
+      { id: "dinner-couple-groom", position: [-0.34, 0, -4.86], rotationY: 0, variant: 0 },
+      { id: "dinner-couple-bride", position: [0.34, 0, -4.86], rotationY: 0, variant: 6 }
+    ],
+    [receptionSeats]
+  );
   const tablescapeColors = useMemo<TablescapeColors>(
     () => ({ accent: palette.accent, candle: palette.candle, cloth: "#f6eedb", floral: palette.blush }),
     [palette.accent, palette.blush, palette.candle]
@@ -2451,21 +2461,24 @@ function ReceptionInterior({
 
       <VenueBoundary palette={palette} venueType={receptionVenue} viewMode={viewMode} />
 
+      {/* The dance floor sits at the FRONT of the room (near the entrance),
+          clear of the banquet grid behind it — head table → guest tables →
+          dance floor → entrance, a natural evening flow. */}
       <EditableSceneObject
         objectId="danceFloor"
         onMoveObject={onMoveObject}
         onSelectObject={onSelectObject}
-        outlineCenter={[0, 0.9]}
+        outlineCenter={[0, 4.3]}
         sceneEdits={sceneEdits}
         selectedObjectId={selectedObjectId}
         size={[2.9, 2.55]}
       >
-        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, 0.9]}>
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, 4.3]}>
           <planeGeometry args={[2.45, 2.15]} />
           <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.62} />
         </mesh>
 
-        <mesh castShadow receiveShadow position={[0, 0.04, 0.9]}>
+        <mesh castShadow receiveShadow position={[0, 0.04, 4.3]}>
           <boxGeometry args={[2.52, 0.08, 2.2]} />
           <meshStandardMaterial color={palette.accent} roughness={0.54} />
         </mesh>
@@ -2486,23 +2499,27 @@ function ReceptionInterior({
           </group>
         ))}
         <Suspense fallback={null}>
-          <ChurchCongregation highQuality={highQuality} seats={receptionSeats} />
+          {/* One congregation instance covers the guest tables AND the couple at
+              the head table, so the couple ride the same instanced meshes rather
+              than spawning a second full 9-variant congregation. */}
+          <ChurchCongregation highQuality={highQuality} seats={receptionSeatsWithCouple} />
         </Suspense>
       </EditableSceneObject>
 
-      {/* The couple's head table faces the room from the front, dressed like the
-          guest tables, with the two of them seated at its centre. */}
-      <group position={[0, 0, -3.7]}>
-        <mesh castShadow receiveShadow position={[0, 0.37, 0]}>
-          <boxGeometry args={[2.4, 0.74, 0.72]} />
+      {/* The couple's head table sits at the back, facing the room, dressed like
+          the guest tables. The couple figures themselves are seated via the
+          shared congregation above. */}
+      <group position={[0, 0, -4.3]}>
+        <mesh castShadow receiveShadow position={[0, 0.33, 0]}>
+          <boxGeometry args={[2.4, 0.66, 0.72]} />
           <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.85} />
         </mesh>
-        <mesh receiveShadow position={[0, 0.742, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh receiveShadow position={[0, 0.662, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[2.4, 0.72]} />
           <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.8} />
         </mesh>
         {[-0.7, 0, 0.7].map((x) => (
-          <group key={x} position={[x, 0.76, 0]}>
+          <group key={x} position={[x, 0.68, 0]}>
             <mesh castShadow position={[0, 0.13, 0]}>
               <cylinderGeometry args={[0.02, 0.024, 0.26, 10]} />
               <meshStandardMaterial color="#f3ead2" roughness={0.55} />
@@ -2510,16 +2527,7 @@ function ReceptionInterior({
             <FlickerFlame base={2.3} color={palette.candle} position={[0, 0.29, 0]} radius={0.023} seed={x * 6.1} />
           </group>
         ))}
-        <FlowerCluster palette={palette} position={[0, 0.79, 0.02]} radius={0.2} />
-        <Suspense fallback={null}>
-          <ChurchCongregation
-            highQuality={highQuality}
-            seats={[
-              { id: "dinner-couple-groom", position: [-0.34, 0, -0.62], rotationY: 0, variant: 0 },
-              { id: "dinner-couple-bride", position: [0.34, 0, -0.62], rotationY: 0, variant: 6 }
-            ]}
-          />
-        </Suspense>
+        <FlowerCluster palette={palette} position={[0, 0.71, 0.02]} radius={0.2} />
       </group>
 
       <EditableSceneObject
@@ -2541,8 +2549,10 @@ function ReceptionInterior({
         <boxGeometry args={[1.6, 0.68, 0.62]} />
         <meshStandardMaterial color={palette.wall} roughness={0.74} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.25, -4.65]}>
-        <boxGeometry args={[2.15, 0.5, 0.36]} />
+      {/* Cake table tucked into the back-left corner, clear of the head table
+          and the couple seated behind it. */}
+      <mesh castShadow receiveShadow position={[-2.9, 0.25, -4.9]}>
+        <boxGeometry args={[1.3, 0.5, 0.36]} />
         <meshStandardMaterial color={palette.blush} roughness={0.66} />
       </mesh>
 
@@ -2853,16 +2863,20 @@ function buildReceptionTablePositions(tableCount: number): Array<[number, number
   const count = Math.max(1, Math.min(12, tableCount));
   const cols = count <= 2 ? count : count <= 6 ? 2 : 3;
   const xSpan = cols === 3 ? 2.5 : 2.9;
-  const zSpan = 1.85;
+  const zSpan = 1.5;
   const positions: Array<[number, number, number]> = [];
   let placed = 0;
 
+  // Tables sit ON the floor (y=0): their seated guests are placed at y=0 too, so
+  // a lifted table would float its cloth and swallow the guests' heads. The grid
+  // fills the central band between the head table (back) and the dance floor
+  // (front), never colliding with either.
   for (let row = 0; placed < count; row += 1) {
     const rowCount = Math.min(cols, count - placed);
     for (let col = 0; col < rowCount; col += 1) {
       const x = (col - (rowCount - 1) / 2) * xSpan;
-      const z = -2.5 + row * zSpan;
-      positions.push([x, 0.23, z]);
+      const z = -2.4 + row * zSpan;
+      positions.push([x, 0, z]);
       placed += 1;
     }
   }
@@ -2874,7 +2888,9 @@ function buildReceptionTablePositions(tableCount: number): Array<[number, number
 // on the floor — reuses the instanced congregation meshes.
 function buildReceptionSeats(tablePositions: Array<[number, number, number]>, seatsPerTable: number | number[]): CongregationSeat[] {
   const seats: CongregationSeat[] = [];
-  const radius = 0.95;
+  // Tight enough that the seat ring clears the head table / dance floor by the
+  // room's margins, wide enough that guests sit just outside the 0.58 cloth.
+  const radius = 0.85;
 
   tablePositions.forEach(([tx, , tz], tableIndex) => {
     const seatsHere = Array.isArray(seatsPerTable) ? seatsPerTable[tableIndex] ?? 0 : seatsPerTable;

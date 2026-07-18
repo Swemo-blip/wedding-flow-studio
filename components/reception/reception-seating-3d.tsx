@@ -4,7 +4,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { Billboard, Html, OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import { BrightnessContrast, EffectComposer, HueSaturation, N8AO, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { type ComponentRef, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentRef, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
@@ -70,6 +70,10 @@ const EDITOR_TABLESCAPE_COLORS = {
 // Head height for the seated photo faces — tuned to sit on the figure's head;
 // nudge if a screenshot shows it floating or sinking.
 const RECEPTION_FACE_HEIGHT = 0.62;
+
+// Hoisted so the floor material doesn't allocate a new Vector2 on every render
+// (SeatingScene re-renders on each drag-move frame).
+const FLOOR_NORMAL_SCALE = new THREE.Vector2(0.5, 0.5);
 
 // While a guest is being dragged, the seated figures must stop intercepting
 // pointer rays so the large ground plane underneath can report the cursor
@@ -191,7 +195,7 @@ function ReceptionFloor() {
   return (
     <mesh position={[0, -0.02, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[20, 20]} />
-      <meshStandardMaterial {...tiled} color="#efe7d4" envMapIntensity={1.1} metalness={0.05} normalScale={new THREE.Vector2(0.5, 0.5)} roughness={0.92} />
+      <meshStandardMaterial {...tiled} color="#efe7d4" envMapIntensity={1.1} metalness={0.05} normalScale={FLOOR_NORMAL_SCALE} roughness={0.92} />
     </mesh>
   );
 }
@@ -293,7 +297,7 @@ function SeatedGuest({
 // window bands so the tables sit inside the couple's evening room instead of a
 // cream void. Kept low + open-topped so the elevated orbit clears the walls and
 // drag-to-reseat still works from above. Walls never intercept pointer rays.
-function ReceptionRoom({ extent = 4.7, height = 2.2 }: { extent?: number; height?: number }) {
+const ReceptionRoom = memo(function ReceptionRoom({ extent = 4.7, height = 2.2 }: { extent?: number; height?: number }) {
   const wall = "#efe4cf";
   const skip = () => null;
   const spans = [-extent * 0.55, 0, extent * 0.55];
@@ -331,7 +335,7 @@ function ReceptionRoom({ extent = 4.7, height = 2.2 }: { extent?: number; height
       ))}
     </group>
   );
-}
+});
 
 function SeatingScene({
   draggedId,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -16,6 +16,11 @@ export type TablescapeColors = {
   cloth: string;
   floral: string;
 };
+
+// The seated planning figures are short (~0.8 m), so the table sits a touch
+// below a real 0.75 m dining height to keep guests reading as adults at the
+// table rather than children peeking over it.
+const TABLE_HEIGHT = 0.66;
 
 // A single candle flame that breathes. No light attached — the glow is carried
 // by the bloom pass, so N candles cost N tiny emissive spheres, not N lights.
@@ -53,10 +58,11 @@ function TaperCandle({ candleColor, height, position, seed }: { candleColor: str
 
 // A full round dinner table: a floor-length linen cloth, a low floral ring, and
 // a trio of tapers at its centre. `radius` matches the caller's table size so
-// the cloth lines up with the seat ring.
-export function DinnerTablescape({
+// the cloth lines up with the seat ring. Memoized because the seating editor
+// re-renders its whole scene on every drag frame — the static tables must not.
+function DinnerTablescapeImpl({
   colors,
-  height = 0.74,
+  height = TABLE_HEIGHT,
   radius = 0.6,
   seed = 0
 }: {
@@ -66,24 +72,25 @@ export function DinnerTablescape({
   seed?: number;
 }) {
   // Draped cloth: a gently flared cylinder from the floor to the tabletop, so
-  // the table reads as a linen-covered round rather than a floating disc.
+  // the table reads as a linen-covered round rather than a floating disc. The
+  // flat top cap (rotated into the XZ plane) closes the open cylinder top.
   const topRadius = radius;
   const hemRadius = radius * 1.06;
 
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, height / 2, 0]}>
-        <cylinderGeometry args={[topRadius, hemRadius, height, 40, 1, true]} />
+        <cylinderGeometry args={[topRadius, hemRadius, height, 28, 1, true]} />
         <meshStandardMaterial color={colors.cloth} roughness={0.85} side={THREE.DoubleSide} />
       </mesh>
-      <mesh receiveShadow position={[0, height + 0.002, 0]}>
-        <circleGeometry args={[topRadius, 40]} />
+      <mesh receiveShadow position={[0, height + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[topRadius, 28]} />
         <meshStandardMaterial color={colors.cloth} roughness={0.8} />
       </mesh>
 
-      {/* Low floral ring hugging the centre. */}
-      <mesh castShadow position={[0, height + 0.05, 0]}>
-        <torusGeometry args={[0.15, 0.055, 10, 24]} />
+      {/* Low floral ring lying flat on the cloth, hugging the centre. */}
+      <mesh castShadow position={[0, height + 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.16, 0.042, 10, 24]} />
         <meshStandardMaterial color={colors.floral} roughness={0.82} />
       </mesh>
 
@@ -104,3 +111,5 @@ export function DinnerTablescape({
     </group>
   );
 }
+
+export const DinnerTablescape = memo(DinnerTablescapeImpl);
