@@ -517,6 +517,7 @@ export function OverviewDashboard() {
                 aisleWidthFeet={plan.aisleWidthFeet}
                 budgetLevel={plan.budgetLevel}
                 capacity={capacity}
+                dinnerTables={localProject.dinnerTables}
                 seatingLayout={plan.seatingLayout}
                 colorDirection={plan.colorDirection}
                 lighting={lighting}

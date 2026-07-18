@@ -48,7 +48,7 @@ type PreviewWalkthroughProps = {
 };
 
 export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
-  const { hasLocalProject, wedding } = useLocalProject();
+  const { dinnerTables, hasLocalProject, wedding } = useLocalProject();
   const activeWedding = hasLocalProject ? wedding : sampleWedding;
 
   const derivedPlan = useMemo(() => createWeddingStudioPlanFromWedding(activeWedding, defaultWeddingStudioPlan), [activeWedding]);
@@ -85,6 +85,7 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
       aisleWidthFeet={plan.aisleWidthFeet}
       autoProcessional={autoProcessional}
       budgetLevel={plan.budgetLevel}
+      dinnerTables={dinnerTables}
       seatingLayout={plan.seatingLayout}
       cameraOverride={waypoint.camera}
       capacity={capacity}

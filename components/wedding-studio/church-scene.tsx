@@ -11,8 +11,10 @@ import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
+import { DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
+import type { DinnerTable } from "@/lib/wedding-types";
 import {
   type StudioBudgetLevel,
   type StudioColorDirection,
@@ -130,6 +132,9 @@ type CeremonySceneProps = {
   // world (runner width, pew angles/spacing), so the controls never lie.
   aisleWidthFeet?: number;
   seatingLayout?: string;
+  // The couple's actual dinner tables. When provided, the dinner scene renders
+  // their real table count + seated headcount instead of a capacity guess.
+  dinnerTables?: DinnerTable[];
   autoProcessional?: boolean;
   budgetLevel: StudioBudgetLevel;
   cameraOverride?: SceneCameraOverride | null;
@@ -299,6 +304,7 @@ export function CeremonyScene({
   autoProcessional,
   aisleWidthFeet = 5,
   seatingLayout = "Traditional",
+  dinnerTables,
   cameraOverride = null,
   firstPerson = null,
   highQuality = true,
@@ -480,6 +486,7 @@ export function CeremonyScene({
             aisleWidthFeet={aisleWidthFeet}
             budgetLevel={budgetLevel}
             capacity={capacity}
+            dinnerTables={dinnerTables}
             seatingLayout={seatingLayout}
             coupleHeadsRef={coupleHeadsRef}
             firstPerson={firstPerson}
@@ -682,6 +689,7 @@ function WeddingStageInterior({
   budgetLevel,
   capacity,
   coupleHeadsRef,
+  dinnerTables,
   firstPerson = null,
   highQuality = true,
   onMoveObject,
@@ -701,6 +709,7 @@ function WeddingStageInterior({
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
   coupleHeadsRef?: { current: CoupleHeads };
+  dinnerTables?: DinnerTable[];
   firstPerson?: CeremonyFirstPerson;
   highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
@@ -751,6 +760,7 @@ function WeddingStageInterior({
       {activeStep === "reception" ? (
         <ReceptionInterior
           capacity={capacity}
+          dinnerTables={dinnerTables}
           highQuality={highQuality}
           onMoveObject={onMoveObject}
           onSelectObject={onSelectObject}
@@ -2373,6 +2383,7 @@ function OverflowCluster({ guestCount, palette }: { guestCount: number; palette:
 
 function ReceptionInterior({
   capacity,
+  dinnerTables,
   highQuality = true,
   onMoveObject,
   onSelectObject,
@@ -2383,6 +2394,7 @@ function ReceptionInterior({
   viewMode
 }: {
   capacity: WeddingStudioCapacity;
+  dinnerTables?: DinnerTable[];
   highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
@@ -2392,10 +2404,30 @@ function ReceptionInterior({
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
 }) {
-  const tableCount = Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
+  // Prefer the couple's REAL tables: their actual count laid out in a tidy grid,
+  // each ringed by its actual seated headcount. The room fits ~12 tables, so
+  // larger plans render a representative dozen (the exact number lives in the
+  // inspector). Fall back to a capacity estimate only when no tables exist yet.
+  const hasRealTables = Boolean(dinnerTables && dinnerTables.length > 0);
+  const tableCount = hasRealTables
+    ? Math.min(12, dinnerTables!.length)
+    : Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
   const tablePositions = useMemo(() => buildReceptionTablePositions(tableCount), [tableCount]);
-  const seatsPerTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
-  const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatsPerTable), [seatsPerTable, tablePositions]);
+  const seatCounts = useMemo(() => {
+    if (hasRealTables) {
+      return tablePositions.map((_, index) => {
+        const table = dinnerTables![index];
+        return Math.min(10, Math.max(1, table?.assignedGuestIds.length || table?.capacity || 6));
+      });
+    }
+    const perTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
+    return tablePositions.map(() => perTable);
+  }, [capacity.seatsPerRow, dinnerTables, hasRealTables, tablePositions]);
+  const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatCounts), [seatCounts, tablePositions]);
+  const tablescapeColors = useMemo<TablescapeColors>(
+    () => ({ accent: palette.accent, candle: palette.candle, cloth: "#f6eedb", floral: palette.blush }),
+    [palette.accent, palette.blush, palette.candle]
+  );
   // The dinner is ALWAYS the indoor hall — the couple's evening room, never an
   // open-air stand-in. (CeremonyScene clamps the venue too; this is the belt.)
   const receptionVenue: StudioVenueType = "hall";
@@ -2449,12 +2481,46 @@ function ReceptionInterior({
         size={[7.4, 7.4]}
       >
         {tablePositions.map((position, tableIndex) => (
-          <ReceptionTable key={tableIndex} palette={palette} position={position} />
+          <group key={tableIndex} position={position}>
+            <DinnerTablescape colors={tablescapeColors} radius={0.58} seed={position[0] * 2.3 + position[2] * 1.7} />
+          </group>
         ))}
         <Suspense fallback={null}>
           <ChurchCongregation highQuality={highQuality} seats={receptionSeats} />
         </Suspense>
       </EditableSceneObject>
+
+      {/* The couple's head table faces the room from the front, dressed like the
+          guest tables, with the two of them seated at its centre. */}
+      <group position={[0, 0, -3.7]}>
+        <mesh castShadow receiveShadow position={[0, 0.37, 0]}>
+          <boxGeometry args={[2.4, 0.74, 0.72]} />
+          <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.85} />
+        </mesh>
+        <mesh receiveShadow position={[0, 0.742, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[2.4, 0.72]} />
+          <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.8} />
+        </mesh>
+        {[-0.7, 0, 0.7].map((x) => (
+          <group key={x} position={[x, 0.76, 0]}>
+            <mesh castShadow position={[0, 0.13, 0]}>
+              <cylinderGeometry args={[0.02, 0.024, 0.26, 10]} />
+              <meshStandardMaterial color="#f3ead2" roughness={0.55} />
+            </mesh>
+            <FlickerFlame base={2.3} color={palette.candle} position={[0, 0.29, 0]} radius={0.023} seed={x * 6.1} />
+          </group>
+        ))}
+        <FlowerCluster palette={palette} position={[0, 0.79, 0.02]} radius={0.2} />
+        <Suspense fallback={null}>
+          <ChurchCongregation
+            highQuality={highQuality}
+            seats={[
+              { id: "dinner-couple-groom", position: [-0.34, 0, -0.62], rotationY: 0, variant: 0 },
+              { id: "dinner-couple-bride", position: [0.34, 0, -0.62], rotationY: 0, variant: 6 }
+            ]}
+          />
+        </Suspense>
+      </group>
 
       <EditableSceneObject
         objectId="bar"
@@ -2486,28 +2552,6 @@ function ReceptionInterior({
       </mesh>
 
       <LightingRibbon decorScale={0.82} palette={palette} venueType={receptionVenue} />
-    </group>
-  );
-}
-
-function ReceptionTable({
-  palette,
-  position
-}: {
-  palette: Palette;
-  position: [number, number, number];
-}) {
-  return (
-    <group position={position}>
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[0.58, 0.58, 0.12, 32]} />
-        <meshStandardMaterial color="#f6eedb" roughness={0.64} />
-      </mesh>
-      <mesh castShadow position={[0, 0.09, 0]}>
-        <cylinderGeometry args={[0.36, 0.4, 0.05, 32]} />
-        <meshStandardMaterial color={palette.blush} roughness={0.68} />
-      </mesh>
-      {/* Guests are seated around the table by ReceptionSeating (instanced). */}
     </group>
   );
 }
@@ -2803,31 +2847,39 @@ function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, a
 }
 
 function buildReceptionTablePositions(tableCount: number): Array<[number, number, number]> {
-  const allPositions: Array<[number, number, number]> = [
-    [-2.75, 0.23, -2.6],
-    [2.75, 0.23, -2.6],
-    [-2.85, 0.23, -1.05],
-    [2.85, 0.23, -1.05],
-    [-2.85, 0.23, 1.25],
-    [2.85, 0.23, 1.25],
-    [-2.35, 0.23, 2.9],
-    [2.35, 0.23, 2.9],
-    [-0.95, 0.23, 3.65],
-    [0.95, 0.23, 3.65]
-  ];
+  // A tidy banquet grid in front of the head table (which sits at z ≈ -4.5),
+  // filling the hall footprint from the dais toward the entrance. Two columns up
+  // to six tables, three columns beyond, so the room never feels lopsided.
+  const count = Math.max(1, Math.min(12, tableCount));
+  const cols = count <= 2 ? count : count <= 6 ? 2 : 3;
+  const xSpan = cols === 3 ? 2.5 : 2.9;
+  const zSpan = 1.85;
+  const positions: Array<[number, number, number]> = [];
+  let placed = 0;
 
-  return allPositions.slice(0, tableCount);
+  for (let row = 0; placed < count; row += 1) {
+    const rowCount = Math.min(cols, count - placed);
+    for (let col = 0; col < rowCount; col += 1) {
+      const x = (col - (rowCount - 1) / 2) * xSpan;
+      const z = -2.5 + row * zSpan;
+      positions.push([x, 0.23, z]);
+      placed += 1;
+    }
+  }
+
+  return positions;
 }
 
 // Real seated guests ringed around each dinner table, facing the centre, feet
 // on the floor — reuses the instanced congregation meshes.
-function buildReceptionSeats(tablePositions: Array<[number, number, number]>, seatsPerTable: number): CongregationSeat[] {
+function buildReceptionSeats(tablePositions: Array<[number, number, number]>, seatsPerTable: number | number[]): CongregationSeat[] {
   const seats: CongregationSeat[] = [];
   const radius = 0.95;
 
   tablePositions.forEach(([tx, , tz], tableIndex) => {
-    for (let seat = 0; seat < seatsPerTable; seat += 1) {
-      const angle = (seat / seatsPerTable) * Math.PI * 2 + (tableIndex % 2) * 0.42;
+    const seatsHere = Array.isArray(seatsPerTable) ? seatsPerTable[tableIndex] ?? 0 : seatsPerTable;
+    for (let seat = 0; seat < seatsHere; seat += 1) {
+      const angle = (seat / seatsHere) * Math.PI * 2 + (tableIndex % 2) * 0.42;
       const gx = tx + Math.cos(angle) * radius;
       const gz = tz + Math.sin(angle) * radius;
       seats.push({
