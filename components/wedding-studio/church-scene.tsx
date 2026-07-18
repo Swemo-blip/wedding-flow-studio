@@ -127,6 +127,10 @@ type CoupleHeads = { groom: THREE.Vector3; bride: THREE.Vector3; arrived: boolea
 
 type CeremonySceneProps = {
   activeStep: StudioPlanningStepId;
+  // The couple's persisted ceremony choices — these visibly reshape the 3D
+  // world (runner width, pew angles/spacing), so the controls never lie.
+  aisleWidthFeet?: number;
+  seatingLayout?: string;
   autoProcessional?: boolean;
   budgetLevel: StudioBudgetLevel;
   cameraOverride?: SceneCameraOverride | null;
@@ -294,6 +298,8 @@ export function CeremonyScene({
   venueType,
   viewMode,
   autoProcessional,
+  aisleWidthFeet = 5,
+  seatingLayout = "Traditional",
   cameraOverride = null,
   firstPerson = null,
   highQuality = true,
@@ -453,8 +459,10 @@ export function CeremonyScene({
           <DustMotes intensity={isDay ? 0.18 : 0.42} />
           <WeddingStageInterior
             activeStep={activeStep}
+            aisleWidthFeet={aisleWidthFeet}
             budgetLevel={budgetLevel}
             capacity={capacity}
+            seatingLayout={seatingLayout}
             coupleHeadsRef={coupleHeadsRef}
             firstPerson={firstPerson}
             highQuality={highQuality}
@@ -652,6 +660,7 @@ function DustMotes({ intensity = 0.42 }: { intensity?: number }) {
 
 function WeddingStageInterior({
   activeStep,
+  aisleWidthFeet = 5,
   budgetLevel,
   capacity,
   coupleHeadsRef,
@@ -663,12 +672,14 @@ function WeddingStageInterior({
   processionalKey,
   processionalPlaying,
   sceneEdits,
+  seatingLayout = "Traditional",
   selectedObjectId,
   showSinger,
   venueType,
   viewMode
 }: {
   activeStep: StudioPlanningStepId;
+  aisleWidthFeet?: number;
   budgetLevel: StudioBudgetLevel;
   capacity: WeddingStudioCapacity;
   coupleHeadsRef?: { current: CoupleHeads };
@@ -680,6 +691,7 @@ function WeddingStageInterior({
   processionalKey: number;
   processionalPlaying: boolean;
   sceneEdits: StudioSceneEdits;
+  seatingLayout?: string;
   selectedObjectId: StudioSceneObjectId;
   showSinger: boolean;
   venueType: StudioVenueType;
@@ -691,13 +703,27 @@ function WeddingStageInterior({
   // Church + open-air ceremonies (garden/beach) all seat a real congregation
   // and run the processional; only the venue shell differs.
   const ceremonyVenue = venueType === "church" || venueType === "garden" || venueType === "beach";
-  const seatedGuests = useMemo(
-    () => (ceremonyVenue ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers) : []),
-    [capacity.visibleGuestMarkers, ceremonyVenue, visibleRows]
-  );
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
   const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
   const surface = getVenueSurface(venueType, palette);
+
+  // The persisted ceremony choices reshape the real geometry: the runner widens
+  // from its 5 ft baseline, pews slide outward to keep their aisle margin, rows
+  // spread or angle toward the altar. Both the pew blocks and the seated
+  // congregation derive from the SAME numbers so they never drift apart.
+  const aisleScale = Math.max(0.5, aisleWidthFeet / 5);
+  const runnerWidth = surface.aisleWidth * aisleScale;
+  const aisleShift = (runnerWidth - surface.aisleWidth) / 2;
+  const rowSpacing = seatingLayout === "Spaced rows" ? 0.8 : 0.62;
+  const pewYaw = seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0;
+  const seatLayout = useMemo<SeatLayoutParams>(
+    () => ({ aisleShift, pewYaw, rowSpacing }),
+    [aisleShift, pewYaw, rowSpacing]
+  );
+  const seatedGuests = useMemo(
+    () => (ceremonyVenue ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers, seatLayout) : []),
+    [capacity.visibleGuestMarkers, ceremonyVenue, seatLayout, visibleRows]
+  );
 
   // Buildings do not move: the old whole-scene sway rotated the architecture
   // itself, a subconscious "floating game level" tell. Camera motion (a slow
@@ -749,7 +775,7 @@ function WeddingStageInterior({
             size={[1.35, 11.8]}
           >
             <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.018, 0.45]}>
-              <planeGeometry args={[surface.aisleWidth, 11.8]} />
+              <planeGeometry args={[runnerWidth, 11.8]} />
               {/* The runner is a decal on the floor: a clear gap plus a forward
                   polygonOffset so it always wins the depth test (no flicker at
                   grazing angles). */}
@@ -792,19 +818,23 @@ function WeddingStageInterior({
             objectId="guestSeating"
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
-            outlineCenter={[0, -2.4 + Math.max(0, visibleRows - 1) * 0.31]}
+            outlineCenter={[0, -2.4 + (Math.max(0, visibleRows - 1) * rowSpacing) / 2]}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
-            size={[6.4, Math.max(2.4, visibleRows * 0.7)]}
+            size={[6.4 + aisleShift * 2, Math.max(2.4, visibleRows * (rowSpacing + 0.08))]}
           >
             <Suspense fallback={null}>
               {rowIndexes.map((rowIndex) => {
-                const z = -2.4 + rowIndex * 0.62;
+                const z = -2.4 + rowIndex * rowSpacing;
 
                 return (
                   <group key={rowIndex}>
-                    <CeremonySeatBlock palette={palette} position={[-1.82, 0.18, z]} venueType={venueType} />
-                    <CeremonySeatBlock palette={palette} position={[1.82, 0.18, z]} venueType={venueType} />
+                    <group position={[-(1.82 + aisleShift), 0.18, z]} rotation={[0, -pewYaw, 0]}>
+                      <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
+                    </group>
+                    <group position={[1.82 + aisleShift, 0.18, z]} rotation={[0, pewYaw, 0]}>
+                      <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
+                    </group>
                   </group>
                 );
               })}
@@ -817,20 +847,23 @@ function WeddingStageInterior({
               ? rowIndexes
                   .filter((rowIndex) => rowIndex % 2 === 0)
                   .map((rowIndex) => {
-                    const z = -2.4 + rowIndex * 0.62;
+                    const z = -2.4 + rowIndex * rowSpacing;
+                    // The candle border hugs the runner's edge, so widening the
+                    // aisle visibly moves the whole candlelit corridor with it.
+                    const candleX = runnerWidth / 2 + 0.295;
 
                     return (
                       <group key={`aisle-candle-${rowIndex}`}>
-                        <CandleStand candleColor={palette.candle} position={[-0.82, 0, z]} scale={decorScale * 0.82} />
-                        <CandleStand candleColor={palette.candle} position={[0.82, 0, z]} scale={decorScale * 0.82} />
+                        <CandleStand candleColor={palette.candle} position={[-candleX, 0, z]} scale={decorScale * 0.82} />
+                        <CandleStand candleColor={palette.candle} position={[candleX, 0, z]} scale={decorScale * 0.82} />
                         {/* Each lantern pools warm light on the stone beneath it —
                             the pooled-candlelight gradient of the reference aisle. */}
-                        <CandleFloorPool position={[-0.82, 0.004, z]} />
-                        <CandleFloorPool position={[0.82, 0.004, z]} />
+                        <CandleFloorPool position={[-candleX, 0.004, z]} />
+                        <CandleFloorPool position={[candleX, 0.004, z]} />
                         {/* White floral posies nestled beside each candle so the
                             aisle reads as a continuous candlelit-floral border. */}
-                        <FlowerCluster palette={palette} position={[-0.92, 0.12, z]} radius={0.16} />
-                        <FlowerCluster palette={palette} position={[0.92, 0.12, z]} radius={0.16} />
+                        <FlowerCluster palette={palette} position={[-(candleX + 0.1), 0.12, z]} radius={0.16} />
+                        <FlowerCluster palette={palette} position={[candleX + 0.1, 0.12, z]} radius={0.16} />
                       </group>
                     );
                   })
@@ -1608,26 +1641,44 @@ function Processional({
   );
 }
 
-function buildChurchSeatedGuests(visibleRows: number, maxGuests: number): CongregationSeat[] {
+type SeatLayoutParams = {
+  aisleShift: number;
+  pewYaw: number;
+  rowSpacing: number;
+};
+
+const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpacing: 0.62 };
+
+function buildChurchSeatedGuests(
+  visibleRows: number,
+  maxGuests: number,
+  layout: SeatLayoutParams = DEFAULT_SEAT_LAYOUT
+): CongregationSeat[] {
   const result: CongregationSeat[] = [];
   const seatOffsets = [-0.86, -0.29, 0.29, 0.86];
   let count = 0;
 
   for (let row = 0; row < visibleRows; row += 1) {
-    const z = -2.4 + row * 0.62;
+    const z = -2.4 + row * layout.rowSpacing;
 
-    for (const sideCenter of [-1.82, 1.82]) {
+    for (const side of [-1, 1]) {
+      // The figures sit ON the pew block, so they inherit its aisle shift and
+      // rotate around the same block centre when the layout curves the rows.
+      const sideCenter = side * (1.82 + layout.aisleShift);
+      const yaw = side * layout.pewYaw;
+
       for (let seat = 0; seat < seatOffsets.length; seat += 1) {
         if (count >= maxGuests) {
           return result;
         }
 
-        const seed = row * 4 + seat * 5 + (sideCenter < 0 ? 0 : 7);
+        const seed = row * 4 + seat * 5 + (side < 0 ? 0 : 7);
+        const dx = seatOffsets[seat];
         result.push({
           id: `church-guest-${row}-${sideCenter}-${seat}`,
-          position: [sideCenter + seatOffsets[seat], 0, z + 0.04],
+          position: [sideCenter + dx * Math.cos(yaw), 0, z + 0.04 - dx * Math.sin(yaw)],
           variant: (seed * 7 + row * 3) % CONGREGATION_MODELS.length,
-          rotationY: Math.PI + ((seed % 7) - 3) * 0.03
+          rotationY: Math.PI + yaw + ((seed % 7) - 3) * 0.03
         });
         count += 1;
       }

@@ -79,8 +79,10 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
   return (
     <CeremonyScene
       activeStep={waypoint.step}
+      aisleWidthFeet={plan.aisleWidthFeet}
       autoProcessional={autoProcessional}
       budgetLevel={plan.budgetLevel}
+      seatingLayout={plan.seatingLayout}
       cameraOverride={waypoint.camera}
       capacity={capacity}
       colorDirection={plan.colorDirection}

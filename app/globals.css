@@ -15819,8 +15819,16 @@ a {
 }
 
 .stage-overlay-center {
+  /* The camera row lives along the TOP of the canvas, just below the tab pill —
+     the bottom belongs to the processional player and the HD/fullscreen cluster,
+     so nothing overlaps. */
+  top: 64px;
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .stage-overlay-right {

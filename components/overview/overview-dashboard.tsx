@@ -517,8 +517,10 @@ export function OverviewDashboard() {
             <section aria-label={t("3D venue workspace")} className="vstudio-canvas" ref={canvasRef}>
               <CeremonyScene
                 activeStep={sceneStep}
+                aisleWidthFeet={plan.aisleWidthFeet}
                 budgetLevel={plan.budgetLevel}
                 capacity={capacity}
+                seatingLayout={plan.seatingLayout}
                 colorDirection={plan.colorDirection}
                 lighting={lighting}
                 onMoveObject={moveSceneObject}

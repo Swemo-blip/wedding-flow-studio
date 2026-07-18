@@ -602,6 +602,7 @@ const sv: Record<string, string> = {
   "Warm": "Varm",
   "Blue": "Blå",
   "Bold": "Djärv",
+  "Your own reference images — open when you want them.": "Era egna referensbilder — öppna när ni vill.",
   "Ceremony playback": "Uppspelning av dagen",
   "Playback controls": "Uppspelningskontroller",
   "Previous moment": "Föregående moment",
