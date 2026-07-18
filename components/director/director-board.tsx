@@ -56,7 +56,7 @@ export function DirectorBoard() {
               { label: "Active role", value: activeBrief.title },
               { label: "Timeline moments", value: `${activeBrief.relevantTimelineItemIds.length}` },
               { label: "Checklist", tone: "confirmed", value: `${activeBrief.checklistItems.length} items` },
-              { label: "Contact", value: activeBrief.contactPerson }
+              { label: "Coordinate with", value: activeBrief.contactPerson }
             ]}
             status={{ label: "Role board live", tone: "confirmed" }}
             title="Give every role exactly what they need."

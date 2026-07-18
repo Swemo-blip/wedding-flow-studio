@@ -31,8 +31,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Signal catering before each serving pause",
         "Cue cake cutting after the surprise performance"
       ],
-      contactPerson: "Daniel Brooks",
-      keyContacts: ["Olivia Hart", "Sophia Grant", "Miles Reed"]
+      contactPerson: "Wedding Planner",
+      keyContacts: ["Catering", "DJ / Musician"]
     },
     {
       role: "photographer",
@@ -49,8 +49,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Watch golden hour timing",
         "Confirm balcony approval with venue"
       ],
-      contactPerson: "Clara Hayes",
-      keyContacts: ["Olivia Hart", "Henry Cole", "Daniel Brooks"]
+      contactPerson: "Wedding Planner",
+      keyContacts: ["Venue", "Toastmaster / MC"]
     },
     {
       role: "dj",
@@ -67,8 +67,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Test ballroom sound system",
         "Coordinate reception entrance with Toastmaster"
       ],
-      contactPerson: "Miles Reed",
-      keyContacts: ["Daniel Brooks", "Olivia Hart", "Chapel Organist"]
+      contactPerson: "Toastmaster / MC",
+      keyContacts: ["Wedding Planner", "Officiant"]
     },
     {
       role: "catering",
@@ -85,8 +85,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Coordinate speech pauses with Toastmaster",
         "Keep service path clear"
       ],
-      contactPerson: "Sophia Grant",
-      keyContacts: ["Daniel Brooks", "Henry Cole", "Olivia Hart"]
+      contactPerson: "Toastmaster / MC",
+      keyContacts: ["Venue", "Wedding Planner"]
     },
     {
       role: "venue",
@@ -103,8 +103,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Check accessibility route",
         "Confirm balcony access for photographer"
       ],
-      contactPerson: "Henry Cole",
-      keyContacts: ["Olivia Hart", "Sophia Grant", "Clara Hayes"]
+      contactPerson: "Wedding Planner",
+      keyContacts: ["Catering", "Photographer"]
     },
     {
       role: "officiant",
@@ -121,8 +121,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Review ceremony readings",
         "Confirm couple entrance pause"
       ],
-      contactPerson: "Reverend Thomas Allen",
-      keyContacts: ["Olivia Hart", "Chapel Organist", "Miles Reed"]
+      contactPerson: "Wedding Planner",
+      keyContacts: ["DJ / Musician"]
     },
     {
       role: "planner",
@@ -157,8 +157,8 @@ export function buildRoleBriefs(): RoleBrief[] {
         "Confirm timeline buffers",
         "Send role briefs"
       ],
-      contactPerson: "Olivia Hart",
-      keyContacts: ["Daniel Brooks", "Clara Hayes", "Miles Reed", "Sophia Grant", "Henry Cole", "Reverend Thomas Allen"]
+      contactPerson: "The couple",
+      keyContacts: ["Toastmaster / MC", "Photographer", "DJ / Musician", "Catering", "Venue", "Officiant"]
     }
   ];
 }

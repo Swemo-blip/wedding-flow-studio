@@ -197,7 +197,7 @@ function buildRoleProductionCopy(board: RoleProductionBoard) {
     "Checklist",
     board.checklistItems.map((item) => `- ${item}`).join("\n"),
     "",
-    "Contacts",
+    "Coordinate with",
     board.contacts.join(", ")
   ].join("\n");
 }

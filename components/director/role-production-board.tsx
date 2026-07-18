@@ -144,7 +144,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
           <Card>
             <CardContent>
-              <p className="eyebrow">{t("Primary Contact")}</p>
+              <p className="eyebrow">{t("Coordinate with")}</p>
               <h3 className="card-title">{board.contacts[0]}</h3>
               <div className="contact-list">
                 <span>{board.readyToBrief ? t("Brief can be sent after final review.") : t("Review warnings before sending the brief.")}</span>
@@ -178,8 +178,8 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
           <Card>
             <CardContent>
-              <p className="eyebrow">{t("Contacts")}</p>
-              <h3 className="card-title">{t("Important contacts")}</h3>
+              <p className="eyebrow">{t("Coordinate with")}</p>
+              <h3 className="card-title">{t("Roles to coordinate")}</h3>
               <div className="contact-list">
                 {board.contacts.map((contact, index) => (
                   index === 0 ? <strong key={contact}>{contact}</strong> : <span key={contact}>{contact}</span>
