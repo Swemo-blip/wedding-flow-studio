@@ -30,7 +30,7 @@ export function ActionDock({ action, emphasis = "primary", onApply, status }: Ac
         <p className="card-copy">{t(action.detail)}</p>
         <div className="action-dock-meta">
           <span>{action.execution === "inline" ? t("Applies right here") : t("Opens the right view")}</span>
-          {action.riskId ? <strong>{action.riskId}</strong> : <strong>{t("moment action")}</strong>}
+          <strong>{action.riskId ? t("Production note") : t("moment action")}</strong>
         </div>
         {canApply ? (
           <Button onClick={() => onApply?.(action)} size="small" variant={emphasis}>

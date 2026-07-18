@@ -27,6 +27,7 @@ import { buildMomentIntelligence, type MomentIntelligence } from "@/lib/moment-i
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { applyRiskResolutionToTimeline, getRiskResolutionRecipeForRisk } from "@/lib/risk-resolution";
 import { useTranslation } from "@/lib/i18n";
+import { derivePreviewPhases } from "@/lib/preview-phases";
 import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases, timelineItems } from "@/lib/wedding-data";
@@ -116,21 +117,29 @@ export function DayFlowEditor() {
   const isActiveRiskResolved = activeResolveRisk ? resolvedRiskIds.includes(activeResolveRisk.id) : false;
   const phases = useMemo(() => Array.from(new Set(project.items.map((item) => item.phase))), [project.items]);
   const saveStatus = hasMounted && project.updatedAt ? `Saved locally ${formatSavedAt(project.updatedAt)}` : "Autosave ready";
+  // Derive the phases from the LIVE edited timeline so the readiness badges,
+  // the "next moment to review" strip, and the Moment Intelligence drawer track
+  // what the couple actually edits (owner, time, location) — falling back to the
+  // static sample only when the timeline is empty. Matches the overview + player.
+  const activePhases = useMemo(() => {
+    const derived = derivePreviewPhases(project.items);
+    return derived.length > 0 ? derived : previewPhases;
+  }, [project.items]);
   const momentEntries = useMemo(
     () =>
-      previewPhases.map((phase, phaseIndex) => {
+      activePhases.map((phase, phaseIndex) => {
         const relatedTimeline = getTimelineItemsForPhase(project.items, phase);
         const intelligence = buildMomentIntelligence({
           cues: localMusicCues,
           dinnerTables,
           guests,
-          nextPhase: previewPhases[phaseIndex + 1],
+          nextPhase: activePhases[phaseIndex + 1],
           phase,
           phaseIndex,
           relatedTimeline,
           risks,
           speeches: localSpeeches,
-          totalPhases: previewPhases.length
+          totalPhases: activePhases.length
         });
 
         return {
@@ -140,7 +149,7 @@ export function DayFlowEditor() {
           relatedTimeline
         };
       }),
-    [dinnerTables, guests, localMusicCues, localSpeeches, project.items, risks]
+    [activePhases, dinnerTables, guests, localMusicCues, localSpeeches, project.items, risks]
   );
   const timelineMomentMap = useMemo(() => {
     const nextMap = new Map<string, MomentIntelligence>();
