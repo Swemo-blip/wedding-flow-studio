@@ -199,21 +199,26 @@ export function VendorSourcingStudio() {
                         <strong>{candidate.name}</strong>
                         <p>{candidate.notes}</p>
                       </div>
-                      <div className="vendor-candidate-stats">
-                        <div className="vendor-fit-score">
-                          <span>{t("Fit")}</span>
-                          <strong>{candidate.fitScore}%</strong>
-                        </div>
-                        {candidate.quote > 0 ? (
+                      {candidate.quote > 0 ? (
+                        <div className="vendor-candidate-stats">
                           <div className="vendor-fit-score vendor-quote-figure">
                             <span>{t("Quote")}</span>
                             <strong>{formatCurrency(candidate.quote)}</strong>
                           </div>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="vendor-candidate-controls">
+                      <label className="vendor-candidate-name-field">
+                        {t("Vendor name")}
+                        <input
+                          aria-label={`${t("Vendor name")} – ${candidate.name}`}
+                          onChange={(event) => updateVendorCandidate(candidate.id, { name: event.target.value })}
+                          type="text"
+                          value={candidate.name}
+                        />
+                      </label>
                       <label>
                         {t("Status")}
                         <select

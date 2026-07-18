@@ -79,7 +79,10 @@ function writeStoredBudget(items: BudgetItem[]) {
 }
 
 const TARGET_KEY = "wedding-flow-studio.budget-target.v1";
-const DEFAULT_TARGET = 50000;
+// No invented target: the couple sets their own, and the over/under-budget
+// verdict stays hidden until they do — so an untouched page never judges a
+// budget they haven't entered.
+const DEFAULT_TARGET = 0;
 
 function readStoredTarget(): number | null {
   if (typeof window === "undefined") return null;

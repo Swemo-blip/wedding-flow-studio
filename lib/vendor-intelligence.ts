@@ -50,7 +50,7 @@ export function createVendorCandidateFromSuggestion(
     locationLabel: suggestion.locationLabel,
     mapsUrl: suggestion.mapsUrl,
     name: `${suggestion.label} candidate ${candidateNumber} near ${suggestion.locationLabel}`,
-    notes: "Saved from the location-aware sourcing workflow. Replace this placeholder with the real vendor name after reviewing external results.",
+    notes: "Saved from the location-aware sourcing workflow.",
     priceTier: "unknown",
     quote: 0,
     sourceQuery: suggestion.query,
@@ -77,7 +77,7 @@ export function buildVendorIntelligence(
     const categoryCandidates = candidates.filter((candidate) => candidate.categoryId === category.id);
     const bestCandidate = getBestCandidate(categoryCandidates);
     const status = getDecisionStatus(categoryCandidates);
-    const readinessScore = getDecisionReadinessScore(category.priority, status, bestCandidate);
+    const readinessScore = getDecisionReadinessScore(category.priority, status);
 
     entries.push({
       bestCandidate,
@@ -125,7 +125,6 @@ export function buildVendorCandidateBrief(candidate: VendorCandidate, category: 
     `Location basis: ${candidate.locationLabel}`,
     `Status: ${formatVendorStatus(candidate.status)}`,
     `Price tier: ${formatPriceTier(candidate.priceTier)}`,
-    `Fit score: ${candidate.fitScore}%`,
     `Connected moments: ${category.neededFor.join("; ")}`,
     `Source query: ${candidate.sourceQuery}`,
     `Notes: ${candidate.notes}`
@@ -176,7 +175,10 @@ function getDecisionStatus(candidates: VendorCandidate[]): VendorDecisionStatus 
   return "open";
 }
 
-function getDecisionReadinessScore(priority: SourcingPriority, status: VendorDecisionStatus, candidate: VendorCandidate | null) {
+// Readiness reflects only real, couple-set signals — how far each decision has
+// progressed (status) tuned by how essential the category is (priority). No
+// invented per-vendor "fit" number feeds this.
+function getDecisionReadinessScore(priority: SourcingPriority, status: VendorDecisionStatus) {
   const statusScore: Record<VendorDecisionStatus, number> = {
     booked: 100,
     "quote-requested": 74,
@@ -189,9 +191,8 @@ function getDecisionReadinessScore(priority: SourcingPriority, status: VendorDec
     recommended: 0,
     optional: 8
   };
-  const candidateScore = candidate ? Math.round(candidate.fitScore * 0.18) : 0;
 
-  return Math.max(0, Math.min(100, statusScore[status] + priorityAdjustment[priority] + candidateScore));
+  return Math.max(0, Math.min(100, statusScore[status] + priorityAdjustment[priority]));
 }
 
 function getReadinessLabel(status: VendorDecisionStatus) {

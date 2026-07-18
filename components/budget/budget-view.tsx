@@ -83,7 +83,9 @@ export function BudgetView() {
   }, [bookedByCategory, items, totals.estimate]);
 
   const remaining = Math.max(0, committed - totals.paid);
-  const overBudget = committed > target;
+  // Only judge over/under budget once the couple has set a real target.
+  const hasTarget = target > 0;
+  const overBudget = hasTarget && committed > target;
 
   // Categories that have a booked vendor but no budget line yet — surfaced so a
   // booking never hides just because you haven't budgeted for it.
@@ -122,7 +124,9 @@ export function BudgetView() {
           <div className="budget-summary-stats">
             <div>
               <span>{t("Estimated total")}</span>
-              <strong>{formatCurrency(totals.estimate)}</strong>
+              {/* Committed = estimates plus any booked-vendor spend beyond them,
+                  so the trio always ties out (Estimated − Paid = Left). */}
+              <strong>{formatCurrency(committed)}</strong>
             </div>
             <div>
               <span>{t("Paid so far")}</span>
@@ -149,11 +153,15 @@ export function BudgetView() {
                 />
               </span>
             </label>
-            <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
-              {overBudget
-                ? t("{amount} over budget", { amount: formatCurrency(committed - target) })
-                : t("{amount} under budget", { amount: formatCurrency(target - committed) })}
-            </span>
+            {hasTarget ? (
+              <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
+                {overBudget
+                  ? t("{amount} over budget", { amount: formatCurrency(committed - target) })
+                  : t("{amount} under budget", { amount: formatCurrency(target - committed) })}
+              </span>
+            ) : (
+              <span className="budget-target-badge">{t("Set your budget to track over/under.")}</span>
+            )}
           </div>
         </section>
 

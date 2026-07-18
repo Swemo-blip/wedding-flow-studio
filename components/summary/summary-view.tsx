@@ -38,7 +38,7 @@ export function SummaryView() {
   const budgetStats = useMemo(() => {
     const estimate = budgetItems.reduce((sum, item) => sum + (Number(item.estimate) || 0), 0);
     const paid = budgetItems.reduce((sum, item) => sum + (Number(item.paid) || 0), 0);
-    return { estimate, paid, remaining: Math.max(0, estimate - paid), overBudget: estimate > target, target };
+    return { estimate, paid, remaining: Math.max(0, estimate - paid), hasTarget: target > 0, overBudget: target > 0 && estimate > target, target };
   }, [budgetItems, target]);
 
   const checklistStats = useMemo(() => {
@@ -91,11 +91,13 @@ export function SummaryView() {
               <li><span>{t("Paid")}</span><strong>{formatCurrency(budgetStats.paid)}</strong></li>
               <li><span>{t("Left to pay")}</span><strong>{formatCurrency(budgetStats.remaining)}</strong></li>
             </ul>
-            <p className="summary-note" data-tone={budgetStats.overBudget ? "alert" : "good"}>
-              {budgetStats.overBudget
-                ? t("{amount} over budget", { amount: formatCurrency(budgetStats.estimate - budgetStats.target) })
-                : t("{amount} under budget", { amount: formatCurrency(budgetStats.target - budgetStats.estimate) })}
-            </p>
+            {budgetStats.hasTarget ? (
+              <p className="summary-note" data-tone={budgetStats.overBudget ? "alert" : "good"}>
+                {budgetStats.overBudget
+                  ? t("{amount} over budget", { amount: formatCurrency(budgetStats.estimate - budgetStats.target) })
+                  : t("{amount} under budget", { amount: formatCurrency(budgetStats.target - budgetStats.estimate) })}
+              </p>
+            ) : null}
           </section>
 
           <section className="summary-block">
