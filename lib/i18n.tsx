@@ -603,6 +603,7 @@ const sv: Record<string, string> = {
   "Blue": "Blå",
   "Bold": "Djärv",
   "Your own reference images — open when you want them.": "Era egna referensbilder — öppna när ni vill.",
+  "Drag a guest in the 3D room to change their seat — it saves instantly.": "Dra en gäst i 3D-rummet för att byta plats — det sparas direkt.",
   "Ceremony playback": "Uppspelning av dagen",
   "Playback controls": "Uppspelningskontroller",
   "Previous moment": "Föregående moment",
