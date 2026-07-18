@@ -14,7 +14,6 @@ import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boo
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import {
-  venueOptions,
   type StudioBudgetLevel,
   type StudioColorDirection,
   type StudioPlanningStepId,
@@ -309,6 +308,12 @@ export function CeremonyScene({
   const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
   const preset = lightingPresets[lighting];
   const isDay = lighting === "day";
+  // The product has exactly TWO scenes: the church ceremony and the indoor
+  // dinner. The reception step always renders the hall room, whatever venue a
+  // caller passes — the dinner never previews outdoors.
+  const effectiveVenue: StudioVenueType = activeStep === "reception" ? "hall" : venueType;
+  // Both scenes are interiors; they share the enclosed-room lighting treatment.
+  const interiorVenue = effectiveVenue === "church" || effectiveVenue === "hall";
   const { t } = useTranslation();
   const [processionalPlaying, setProcessionalPlaying] = useState(false);
   const [processionalKey, setProcessionalKey] = useState(0);
@@ -361,28 +366,37 @@ export function CeremonyScene({
       >
         <SceneBootGate>
         <Canvas
-          camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, venueType, activeStep) }}
+          camera={{ far: 90, fov: 40, near: 0.3, position: getCameraPosition(viewMode, effectiveVenue, activeStep) }}
           dpr={highQuality ? [1, 2] : [1, 1.3]}
           gl={{ preserveDrawingBuffer: true }}
           // three 0.184 removed PCFSoftShadowMap (it silently downgraded and
           // logged a deprecation warning every frame) — PCF is what actually ran.
           shadows={{ type: THREE.PCFShadowMap }}
         >
-          <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={venueType} viewMode={viewMode} zoom={zoom} />
+          <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={effectiveVenue} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
           <SkyDome mode={lighting} />
-          {venueType === "garden" || venueType === "beach" ? <HillSilhouettes /> : null}
-          {/* Directional-over-fill: the church runs on a low ambient base so
+          {effectiveVenue === "garden" || effectiveVenue === "beach" ? <HillSilhouettes /> : null}
+          {/* Directional-over-fill: both interiors run on a low ambient base so
               corners darken and the candle pools read — the chiaroscuro of the
               reference. Open venues keep their brighter presets. */}
-          <hemisphereLight args={[preset.hemisphereSky, preset.hemisphereGround, venueType === "church" ? 0.38 : preset.hemisphereIntensity]} />
-          <ambientLight color={preset.ambientColor} intensity={venueType === "church" ? 0.2 : preset.ambientIntensity} />
+          <hemisphereLight
+            args={[
+              preset.hemisphereSky,
+              preset.hemisphereGround,
+              effectiveVenue === "church" ? 0.38 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
+            ]}
+          />
+          <ambientLight
+            color={preset.ambientColor}
+            intensity={effectiveVenue === "church" ? 0.2 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
+          />
           <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 10, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={venueType === "church" ? 2.9 : preset.keyIntensity}
+            intensity={effectiveVenue === "church" ? 2.9 : effectiveVenue === "hall" ? 2.2 : preset.keyIntensity}
             position={[4.5, 9, 5.5]}
             shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
@@ -398,10 +412,14 @@ export function CeremonyScene({
             decay={2}
             distance={10}
             intensity={
-              venueType === "church"
+              interiorVenue
                 ? isDay
-                  ? 1.5
-                  : 9
+                  ? effectiveVenue === "hall"
+                    ? 2.4
+                    : 1.5
+                  : effectiveVenue === "hall"
+                    ? 7
+                    : 9
                 : isDay
                   ? 7
                   : budgetLevel === "signature"
@@ -417,16 +435,16 @@ export function CeremonyScene({
               (Poly Haven "church_museum") so reflections match the room the viewer
               is standing in; open venues keep the warm lounge probe. */}
           <HdrEnvironment
-            intensity={venueType === "church" ? (isDay ? 0.62 : 0.34) : isDay ? 0.72 : 0.45}
-            url={venueType === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
+            intensity={effectiveVenue === "church" ? (isDay ? 0.62 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45}
+            url={effectiveVenue === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
           />
-          {venueType === "church" && activeStep !== "venue" ? <LightShafts isDay={isDay} /> : null}
-          {/* Skip the contact-shadow plane in the church: it's a second
-              floor-parallel plane whose grazing edge z-fights the flat stone
-              floor (the side strips by the pews blink). The directional key
-              light already casts real shadows from the pews, guests and columns,
-              so the church stays grounded without it. Open-air venues keep it. */}
-          {venueType === "church" ? null : (
+          {effectiveVenue === "church" && activeStep !== "venue" ? <LightShafts isDay={isDay} /> : null}
+          {/* Skip the contact-shadow plane in BOTH interiors: it's a second
+              floor-parallel plane whose grazing edge z-fights the textured floor
+              (the side strips by the pews blink). The directional key light
+              already casts real shadows, so the rooms stay grounded without it.
+              Open-air venues keep it. */}
+          {interiorVenue ? null : (
             <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
           )}
           {/* The film look lives here: contact occlusion (N8AO), restrained bloom
@@ -474,7 +492,7 @@ export function CeremonyScene({
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             showSinger={showSinger}
-            venueType={venueType}
+            venueType={effectiveVenue}
             viewMode={viewMode}
           />
         </Canvas>
@@ -519,9 +537,9 @@ export function CeremonyScene({
 
       <div className="ceremony-scene-caption" aria-live="polite">
         <span data-tone={capacity.capacityStatus === "over_capacity" ? "high" : capacity.capacityStatus === "full" ? "medium" : "confirmed"}>
-          {getSceneSignal(activeStep, capacity, venueType)}
+          {getSceneSignal(activeStep, capacity, effectiveVenue)}
         </span>
-        <strong>{getSceneCaption(activeStep, capacity, venueType)}</strong>
+        <strong>{getSceneCaption(activeStep, capacity, effectiveVenue)}</strong>
       </div>
     </section>
   );
@@ -931,12 +949,19 @@ function VenueBoundary({ palette, venueType, viewMode }: { palette: Palette; ven
     return <ChurchNave palette={palette} viewMode={viewMode} />;
   }
 
-  return <RoomFrame palette={palette} venueType={venueType} />;
+  return <RoomFrame palette={palette} venueType={venueType} viewMode={viewMode} />;
 }
 
-function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: StudioVenueType }) {
-  const backWallHeight = venueType === "hall" ? 1.85 : 2.45;
-  const sideWallHeight = venueType === "hall" ? 1.28 : 1.8;
+function RoomFrame({ palette, venueType, viewMode }: { palette: Palette; venueType?: StudioVenueType; viewMode?: StudioViewMode }) {
+  // The dinner hall is a REAL room: full-height walls, a ceiling for the
+  // pendants to hang from, and tall dusk-lit window panes. The old waist-high
+  // box read as a stage prop, not a place you could hold a wedding dinner.
+  const isHall = venueType === "hall";
+  const backWallHeight = isHall ? 3.8 : 2.45;
+  const sideWallHeight = isHall ? 3.8 : 1.8;
+  // The plan view looks straight down — a ceiling would hide the whole room
+  // (same pattern as the church nave's showCeiling).
+  const showCeiling = isHall && viewMode !== "top";
 
   return (
     <group>
@@ -952,12 +977,33 @@ function RoomFrame({ palette, venueType }: { palette: Palette; venueType?: Studi
         <boxGeometry args={[0.18, sideWallHeight, 11.8]} />
         <meshStandardMaterial color={palette.wall} roughness={0.88} />
       </mesh>
+
+      {showCeiling ? (
+        <mesh position={[0, backWallHeight - 0.02, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[9.8, 11.8]} />
+          <meshStandardMaterial color="#efe5cf" roughness={0.92} side={THREE.DoubleSide} />
+        </mesh>
+      ) : null}
+
+      {/* Tall warm-glass panes on the back wall — the evening glow of the room. */}
       {[-3.2, -1.05, 1.05, 3.2].map((xPosition) => (
-        <mesh key={xPosition} position={[xPosition, 1.5, -5.62]}>
-          <boxGeometry args={[0.72, 1.5, 0.08]} />
-          <meshStandardMaterial color="#f6eed6" emissive="#fff2cf" emissiveIntensity={0.9} roughness={0.4} toneMapped={false} />
+        <mesh key={xPosition} position={[xPosition, isHall ? 1.9 : 1.5, -5.62]}>
+          <boxGeometry args={[0.72, isHall ? 2.3 : 1.5, 0.08]} />
+          <meshStandardMaterial color="#f6eed6" emissive="#ffe9bd" emissiveIntensity={isHall ? 0.7 : 0.9} roughness={0.4} toneMapped={false} />
         </mesh>
       ))}
+
+      {/* Side-wall panes so the dusk light wraps the dinner from both sides. */}
+      {isHall
+        ? [-3.4, 0.1, 3.6].map((zPosition) =>
+            [-4.81, 4.81].map((xPosition) => (
+              <mesh key={`${xPosition}-${zPosition}`} position={[xPosition, 2, zPosition]}>
+                <boxGeometry args={[0.06, 2.1, 0.9]} />
+                <meshStandardMaterial color="#f2e6cc" emissive="#ffe2ad" emissiveIntensity={0.55} roughness={0.42} toneMapped={false} />
+              </mesh>
+            ))
+          )
+        : null}
     </group>
   );
 }
@@ -2103,7 +2149,9 @@ function HallFocalPoint({ decorScale, palette }: { decorScale: number; palette: 
 const LANTERN_Z_POSITIONS = [-3.7, -2.1, -0.5, 1.1, 2.7];
 
 function LightingRibbon({ decorScale, palette, venueType }: { decorScale: number; palette: Palette; venueType?: StudioVenueType }) {
-  if (venueType === "church") {
+  // Both interiors hang warm pendants from the ceiling — garden lantern poles
+  // belong outdoors and never appear inside a room.
+  if (venueType === "church" || venueType === "hall") {
     return <ChurchPendantRow candleColor={palette.candle} />;
   }
 
@@ -2348,18 +2396,26 @@ function ReceptionInterior({
   const tablePositions = useMemo(() => buildReceptionTablePositions(tableCount), [tableCount]);
   const seatsPerTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
   const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatsPerTable), [seatsPerTable, tablePositions]);
-  // The reception is held away from the ceremony venue, so a church ceremony
-  // still flows into an open evening reception rather than seating dinner
-  // tables inside the nave.
-  const receptionVenue: StudioVenueType = venueType === "church" ? "garden" : venueType;
+  // The dinner is ALWAYS the indoor hall — the couple's evening room, never an
+  // open-air stand-in. (CeremonyScene clamps the venue too; this is the belt.)
+  const receptionVenue: StudioVenueType = "hall";
   const surface = getVenueSurface(receptionVenue, palette);
+  void venueType;
 
   return (
     <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
-        <planeGeometry args={[10.2, 12.8]} />
-        <meshStandardMaterial color={surface.floor} roughness={0.76} />
-      </mesh>
+      {/* Real PBR stone floor (same loader as the church), tinted warm honey so
+          the room reads as parquet-over-stone in the evening light. */}
+      <Suspense
+        fallback={
+          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
+            <planeGeometry args={[10.2, 12.8]} />
+            <meshStandardMaterial color={surface.floor} roughness={0.76} />
+          </mesh>
+        }
+      >
+        <TexturedGround color="#d9c39b" position={[0, -0.04, 0.25]} size={[10.2, 12.8]} />
+      </Suspense>
 
       <VenueBoundary palette={palette} venueType={receptionVenue} viewMode={viewMode} />
 
@@ -2429,7 +2485,7 @@ function ReceptionInterior({
         <meshStandardMaterial color={palette.candle} depthWrite={false} opacity={0.5} polygonOffset polygonOffsetFactor={-3} polygonOffsetUnits={-3} roughness={0.58} transparent />
       </mesh>
 
-      <LightingRibbon decorScale={0.82} palette={palette} venueType={venueType} />
+      <LightingRibbon decorScale={0.82} palette={palette} venueType={receptionVenue} />
     </group>
   );
 }
@@ -2671,15 +2727,14 @@ function getViewFov(viewMode: StudioViewMode, venueType: StudioVenueType, aspect
     return 42 + portraitBoost;
   }
 
-  return (venueType === "church" ? 32 : 36) + portraitBoost;
+  return (venueType === "church" ? 32 : venueType === "hall" ? 34 : 36) + portraitBoost;
 }
 
 function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
   // The church is an enclosed nave, so the eye sits inside it looking down the
   // aisle toward the altar (matching the reference one-point perspective). The
   // hero "3d" view shoots from standing eye height at the back of the nave —
-  // wedding-photography grammar, not the old drone altitude. The reception
-  // flows to an open venue, so it keeps the standard wide rig.
+  // wedding-photography grammar, not the old drone altitude.
   if (venueType === "church" && activeStep !== "reception") {
     const churchPositions: Record<StudioViewMode, [number, number, number]> = {
       "3d": [0, 1.7, 8.7],
@@ -2689,6 +2744,19 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
     };
 
     return churchPositions[viewMode];
+  }
+
+  // The dinner hall has a real ceiling at ~3.8 m — every eye stays inside the
+  // room, a guest's-height view across the candlelit tables.
+  if (venueType === "hall") {
+    const hallPositions: Record<StudioViewMode, [number, number, number]> = {
+      "3d": [0, 1.85, 7.6],
+      guest: [0, 1.5, 5.4],
+      top: [0, 10.6, 0.5],
+      walkthrough: [0, 1.9, 6.4]
+    };
+
+    return hallPositions[viewMode];
   }
 
   const positions: Record<StudioViewMode, [number, number, number]> = {
@@ -2711,6 +2779,17 @@ function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, a
     };
 
     return churchTargets[viewMode];
+  }
+
+  if (venueType === "hall") {
+    const hallTargets: Record<StudioViewMode, [number, number, number]> = {
+      "3d": [0, 0.95, -2.2],
+      guest: [0, 0.9, -1.4],
+      top: [0, 0, 0.2],
+      walkthrough: [0, 0.95, -2]
+    };
+
+    return hallTargets[viewMode];
   }
 
   const targets: Record<StudioViewMode, [number, number, number]> = {
@@ -2810,7 +2889,16 @@ function getVenueSurface(venueType: StudioVenueType, palette: Palette) {
 }
 
 function formatVenueLabel(venueType: StudioVenueType) {
-  return venueOptions.find((option) => option.value === venueType)?.label ?? "Venue";
+  // Local labels — venueOptions no longer lists every engine venue, and the
+  // dinner room deserves its own name rather than a generic "Venue" fallback.
+  const labels: Record<StudioVenueType, string> = {
+    beach: "Beach",
+    church: "Church",
+    garden: "Garden",
+    hall: "Dinner room"
+  };
+
+  return labels[venueType];
 }
 
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
@@ -2819,7 +2907,7 @@ function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudi
     budget: "Budget level visualized",
     guests: `${capacity.visibleGuestMarkers} guest markers shown`,
     preview: "Preview perspective ready",
-    reception: "Reception flow shown",
+    reception: "Dinner room shown",
     share: "Summary layer ready",
     timeline: "Day flow connected",
     venue: `${formatVenueLabel(venueType)} model`,

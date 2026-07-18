@@ -69,6 +69,10 @@ export const seatingLayoutOptions = ["Traditional", "Semi-circle", "Curved rows"
 export const MIN_AISLE_WIDTH_FEET = 3;
 export const MAX_AISLE_WIDTH_FEET = 10;
 
+// The product has exactly two scenes — the church ceremony and the indoor
+// dinner hall. The ceremony venue is always the church, so this list holds one
+// entry; legacy stored plans on removed venues coerce to it via the storage
+// whitelist.
 export const venueOptions: Array<{
   description: string;
   label: string;
@@ -78,11 +82,6 @@ export const venueOptions: Array<{
     description: "A refined aisle, chapel rows, altar, and warm production lighting.",
     label: "Church",
     value: "church"
-  },
-  {
-    description: "A refined open-air ceremony with lawn, aisle, arch, and garden boundaries.",
-    label: "Outdoor",
-    value: "garden"
   }
 ];
 
@@ -372,47 +371,12 @@ export function createWeddingStudioPlanFromWedding(wedding: Wedding, basePlan: W
 }
 
 function getVenueTypeFromWedding(wedding: Wedding, fallback: StudioVenueType): StudioVenueType {
-  // The ceremony location defines the venue structure we render, so it takes
-  // priority over style adjectives like "garden wedding".
-  const ceremony = wedding.ceremonyLocation.toLowerCase();
-
-  if (ceremony.includes("chapel") || ceremony.includes("church") || ceremony.includes("cathedral") || ceremony.includes("basilica")) {
-    return "church";
-  }
-
-  if (ceremony.includes("beach") || ceremony.includes("coast") || ceremony.includes("shore")) {
-    return "beach";
-  }
-
-  if (ceremony.includes("garden") || ceremony.includes("outdoor") || ceremony.includes("estate") || ceremony.includes("vineyard") || ceremony.includes("orchard")) {
-    return "garden";
-  }
-
-  if (ceremony.includes("hall") || ceremony.includes("ballroom") || ceremony.includes("hotel") || ceremony.includes("loft")) {
-    return "hall";
-  }
-
-  // Fall back to the broader style/reception signal only when the ceremony
-  // location is unspecific.
-  const source = `${wedding.style} ${wedding.receptionLocation}`.toLowerCase();
-
-  if (source.includes("garden") || source.includes("outdoor") || source.includes("estate")) {
-    return "garden";
-  }
-
-  if (source.includes("coastal") || source.includes("beach")) {
-    return "beach";
-  }
-
-  if (source.includes("chapel") || source.includes("church")) {
-    return "church";
-  }
-
-  if (source.includes("hall") || source.includes("ballroom") || source.includes("city") || source.includes("civil")) {
-    return "hall";
-  }
-
-  return fallback;
+  // The product renders exactly two scenes — the church ceremony and the
+  // indoor dinner hall — so the ceremony venue is always the church. (Signature
+  // kept so callers and the fallback contract stay unchanged.)
+  void wedding;
+  void fallback;
+  return "church";
 }
 
 function getStyleFromWedding(wedding: Wedding, fallback: StudioStyle): StudioStyle {
@@ -552,7 +516,15 @@ function getVenueCapacityModel(venueType: StudioVenueType) {
 }
 
 function getComfortLabel(status: CapacityStatus, venueType: StudioVenueType) {
-  const venueLabel = venueOptions.find((option) => option.value === venueType)?.label ?? "venue";
+  // Local labels — venueOptions only lists the choosable venue (church), but
+  // capacity copy must name every engine venue, including the dinner hall.
+  const venueLabels: Record<StudioVenueType, string> = {
+    beach: "beach",
+    church: "church",
+    garden: "garden",
+    hall: "dinner room"
+  };
+  const venueLabel = venueLabels[venueType] ?? "venue";
   const labels: Record<CapacityStatus, string> = {
     balanced: `The ${venueLabel.toLowerCase()} model feels comfortably filled while keeping a clear aisle and guest flow.`,
     full: `The ${venueLabel.toLowerCase()} model is close to its comfortable limit. Keep arrival flow and reserved rows precise.`,

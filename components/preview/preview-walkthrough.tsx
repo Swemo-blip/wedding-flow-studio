@@ -31,13 +31,16 @@ const walkthrough: Waypoint[] = [
   { camera: { position: [0, 1.62, 1.2], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Vows — framing the altar
   { camera: { position: [0, 1.75, 2.6], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
   { camera: { position: [2.4, 1.95, 3], target: [0, 1, -4.2] }, lighting: "day", step: "preview" }, // Group photos — side angle
-  { camera: { position: [0, 4.6, 9], target: [0, 0.5, -1.2] }, lighting: "dusk", step: "reception" }, // Cocktail hour
-  { camera: { position: [0, 5, 9], target: [0, 0.4, -1] }, lighting: "dusk", step: "reception" }, // Reception entrance
-  { camera: { position: [0, 3.3, 6.4], target: [0, 0.4, -0.6] }, lighting: "dusk", step: "reception" }, // Dinner
-  { camera: { position: [0, 2.3, 5.6], target: [0, 0.7, -3.8] }, lighting: "dusk", step: "reception" }, // Speeches
+  // The dinner is an ENCLOSED hall with a ceiling at ~3.8 m — every reception
+  // shot stays inside the room at guest height, entering through the doorway
+  // and gliding between the candlelit tables.
+  { camera: { position: [0, 1.9, 7.4], target: [0, 1, -1.6] }, lighting: "dusk", step: "reception" }, // Cocktail hour — at the doorway
+  { camera: { position: [0, 1.8, 6.2], target: [0, 0.95, -1] }, lighting: "dusk", step: "reception" }, // Entrance — stepping into the room
+  { camera: { position: [0, 2.4, 5.6], target: [0, 0.5, -0.8] }, lighting: "dusk", step: "reception" }, // Dinner — over the tables
+  { camera: { position: [0, 2.1, 5.4], target: [0, 0.8, -3.6] }, lighting: "dusk", step: "reception" }, // Speeches — toward the head table
   { camera: { position: [1.7, 1.7, 3.4], target: [0, 0.6, -0.4] }, lighting: "dusk", step: "reception" }, // Cake
-  { camera: { position: [0, 2.1, 4.6], target: [0, 0.6, 0.9] }, lighting: "dusk", step: "reception" }, // First dance
-  { camera: { position: [0, 3.4, 6.4], target: [0, 0.5, 0.6] }, lighting: "dusk", step: "reception" } // Party
+  { camera: { position: [0, 2, 4.6], target: [0, 0.6, 0.9] }, lighting: "dusk", step: "reception" }, // First dance
+  { camera: { position: [0, 2.5, 5.9], target: [0, 0.6, 0.5] }, lighting: "dusk", step: "reception" } // Party — pulled back inside the room
 ];
 
 type PreviewWalkthroughProps = {

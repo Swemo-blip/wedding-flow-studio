@@ -46,9 +46,9 @@ import {
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
-// The three scenes of the day, per the owner's brief: the church ceremony, an
-// open-air ceremony, and the dinner — all live 3D.
-type HeroScene = "ceremony" | "ceremony-outdoor" | "reception";
+// The two scenes of the day, per the owner's brief: the church ceremony and
+// the indoor dinner — both live 3D.
+type HeroScene = "ceremony" | "reception";
 
 // The workspace has exactly two modes: build the scene, or watch the day.
 // The full edit interface and the full playback interface never show together.
@@ -96,10 +96,10 @@ export function OverviewDashboard() {
   const sceneKind: "ceremony" | "reception" = heroScene === "reception" ? "reception" : "ceremony";
   const editableObjectIds = useMemo(() => getEditableObjectsForStep(sceneStep), [sceneStep]);
   const activeSelectedObjectId = editableObjectIds.includes(selectedObjectId) ? selectedObjectId : (editableObjectIds[0] ?? "focalPoint");
-  // Three fixed scenes: the church, an open-air (garden) ceremony, and the
-  // evening dinner. Independent of the wedding's own saved venue so the studio
-  // stays a clean 3-scene gallery.
-  const sceneVenueType: StudioVenueType = heroScene === "ceremony" ? "church" : "garden";
+  // Two fixed scenes: the church ceremony and the indoor dinner hall. The
+  // engine clamps the reception step to the hall room, so "church" here only
+  // shapes the ceremony scene.
+  const sceneVenueType: StudioVenueType = heroScene === "reception" ? "hall" : "church";
 
   const invitedGuests = localProject.guests.length;
   const seatedGuests = useMemo(
@@ -397,11 +397,8 @@ export function OverviewDashboard() {
               <option value="ceremony">
                 {t("Ceremony")} · {t("Church")}
               </option>
-              <option value="ceremony-outdoor">
-                {t("Ceremony")} · {t("Outdoor")}
-              </option>
               <option value="reception">
-                {t("Reception")} · {t("Dinner")}
+                {t("Dinner")} · {t("Indoors")}
               </option>
             </select>
           </label>
