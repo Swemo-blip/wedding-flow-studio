@@ -88,10 +88,10 @@ export function GuestsView() {
       title="The people of the day."
     >
       <div className="guests-screen">
-        <section aria-label={t("Your faces in the 3D preview")} className="couple-faces-card">
+        <section aria-label={t("Your photos")} className="couple-faces-card">
           <div className="couple-faces-copy">
-            <span className="eyebrow">{t("Your faces in 3D")}</span>
-            <p>{t("Upload a photo of each of you — it appears on the couple walking down the aisle in the 3D ceremony.")}</p>
+            <span className="eyebrow">{t("Your photos")}</span>
+            <p>{t("Add a photo of each of you — kept with your plan so the studio always feels like yours.")}</p>
           </div>
           <div className="couple-faces-slots">
             {couplePhotos.map(({ label, photo, role }) => (

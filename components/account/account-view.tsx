@@ -64,7 +64,7 @@ export function AccountView() {
   return (
     <StudioRouteFrame
       eyebrow="Account"
-      title="Your wedding, everywhere."
+      title="Keep your plan safe."
     >
       <div className="account-screen">
         {!configured ? (
@@ -73,7 +73,7 @@ export function AccountView() {
               <CloudOff aria-hidden="true" size={20} />
               <div>
                 <h2>{t("Cloud sync isn't set up yet")}</h2>
-                <p>{t("The app is running locally — everything saves to this browser. To enable accounts, cloud sync and sharing, connect a free Supabase project.")}</p>
+                <p>{t("The app is running locally — everything saves to this browser. To add an account (cloud backup is coming soon), connect a free Supabase project.")}</p>
               </div>
             </div>
             <p className="account-hint">{t("Setup guide: docs/supabase-setup.md (about 5 minutes, no credit card).")}</p>

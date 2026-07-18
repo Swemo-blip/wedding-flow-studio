@@ -44,7 +44,6 @@ export function ExportStudio() {
               >
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <strong>{exportType.title}</strong>
-                <small>{exportType.contactPerson}</small>
               </button>
             ))}
           </div>
@@ -85,7 +84,7 @@ export function ExportStudio() {
               </CardContent>
             </Card>
           }
-          description={`${selectedExport.contactPerson} receives only the details connected to this handoff.`}
+          description={t("Only the details connected to this handoff.")}
           eyebrow="Print Preview"
           title={selectedExport.title}
         >

@@ -121,8 +121,8 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
               </p>
             </div>
             <div className="export-contact">
-              <span>{t("Contact person")}</span>
-              <strong>{exportType.contactPerson}</strong>
+              <span>{t("Prepared by")}</span>
+              <strong>{wedding.coupleNames}</strong>
               {hasLocalProject ? <em>{t("Using local project edits")}</em> : null}
             </div>
           </div>
@@ -255,7 +255,7 @@ function buildExportBriefText(
   return [
     exportType.title,
     `${wedding.coupleNames} - ${formatWeddingDate(wedding.date)}`,
-    `Contact: ${exportType.contactPerson}`,
+    `Prepared by: ${wedding.coupleNames}`,
     "",
     exportType.description,
     ...(exportType.id === "venue-setup-brief"
