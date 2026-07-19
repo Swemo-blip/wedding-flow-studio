@@ -122,21 +122,6 @@ export function ReceptionStudio() {
             <button aria-label={t("Save a still")} className="stage-icon" onClick={captureView} title={t("Save a still")} type="button">
               <Camera aria-hidden="true" size={16} />
             </button>
-          </div>
-        </div>
-
-        <div className="studio-stage-canvas" ref={stageRef}>
-          <ReceptionSeating3D
-            cameraMode="orbit"
-            guests={guests}
-            highQuality={highQuality}
-            onReassignGuest={assignGuestToTable}
-            onSelectGuest={setSelectedGuestId}
-            selectedGuestId={selectedGuest?.id ?? ""}
-            tables={dinnerTables}
-          />
-
-          <div className="stage-overlay stage-overlay-right">
             <button
               aria-pressed={highQuality}
               className="stage-hd"
@@ -150,6 +135,18 @@ export function ReceptionStudio() {
               <Maximize2 aria-hidden="true" size={15} />
             </button>
           </div>
+        </div>
+
+        <div className="studio-stage-canvas" ref={stageRef}>
+          <ReceptionSeating3D
+            cameraMode="orbit"
+            guests={guests}
+            highQuality={highQuality}
+            onReassignGuest={assignGuestToTable}
+            onSelectGuest={setSelectedGuestId}
+            selectedGuestId={selectedGuest?.id ?? ""}
+            tables={dinnerTables}
+          />
         </div>
       </section>
 

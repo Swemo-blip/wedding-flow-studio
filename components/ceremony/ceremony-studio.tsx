@@ -297,6 +297,20 @@ export function CeremonyStudio() {
                 >
                   <Camera aria-hidden="true" size={16} />
                 </button>
+                {canvasTab === "studio" ? (
+                  <button
+                    aria-pressed={highQuality}
+                    className="stage-hd"
+                    data-active={highQuality}
+                    onClick={() => setHighQuality((previous) => !previous)}
+                    type="button"
+                  >
+                    {t("HD")}
+                  </button>
+                ) : null}
+                <button aria-label={t("Fullscreen")} className="stage-icon" onClick={toggleFullscreen} title={t("Fullscreen")} type="button">
+                  <Maximize2 aria-hidden="true" size={15} />
+                </button>
             </div>
           </div>
 
@@ -358,22 +372,6 @@ export function CeremonyStudio() {
               </div>
             ) : null}
 
-            <div className="stage-overlay stage-overlay-right">
-              {canvasTab === "studio" ? (
-                <button
-                  aria-pressed={highQuality}
-                  className="stage-hd"
-                  data-active={highQuality}
-                  onClick={() => setHighQuality((previous) => !previous)}
-                  type="button"
-                >
-                  {t("HD")}
-                </button>
-              ) : null}
-              <button aria-label={t("Fullscreen")} className="stage-icon" onClick={toggleFullscreen} title={t("Fullscreen")} type="button">
-                <Maximize2 aria-hidden="true" size={15} />
-              </button>
-            </div>
           </div>
         </section>
 

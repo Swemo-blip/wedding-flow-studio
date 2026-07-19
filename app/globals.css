@@ -15524,10 +15524,22 @@ a {
   .studio-stage-canvas {
     min-height: 380px;
   }
-  /* Keep the canvas tabs on one line on phones; scroll the pill if it can't
-     fit rather than wrapping each label across two rows. */
+  /* The top control bar (view tabs + Sun/Reset/Save/HD/Fullscreen) can't all fit
+     across a phone-width canvas, so the whole bar becomes one horizontally
+     scrollable strip instead of wrapping or overflowing. */
   .stage-tabbar {
     justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    pointer-events: auto;
+    scrollbar-width: none;
+  }
+  .stage-tabbar::-webkit-scrollbar {
+    display: none;
+  }
+  .stage-tabs,
+  .stage-icons {
+    flex-shrink: 0;
   }
   .stage-tabs {
     gap: 1px;
@@ -15725,15 +15737,25 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
-  pointer-events: none;
+  /* Contain the view tabs + control icons within the canvas width: when they
+     don't fit (narrow canvas column), the bar scrolls horizontally rather than
+     spilling the icons past the canvas edge into the neighbouring rail. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  pointer-events: auto;
+}
+
+.stage-tabbar::-webkit-scrollbar {
+  display: none;
 }
 
 .stage-tabs {
   display: inline-flex;
   gap: 3px;
-  /* Auto side margins centre the tabs in the free space while keeping the icon
-     group flush right — they share normal flow, so they can never overlap. */
-  margin: 0 auto;
+  flex-shrink: 0;
+  /* Pushed against the icon group (which sits flush right via margin-left:auto);
+     they share normal flow, so they can never overlap. */
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -15771,6 +15793,7 @@ a {
 
 .stage-icons {
   flex-shrink: 0;
+  margin-left: auto;
   display: flex;
   gap: 7px;
   pointer-events: auto;
@@ -15875,7 +15898,31 @@ a {
 }
 
 .stage-hd {
+  height: 32px;
+  padding: 0 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.stage-hd[data-active="true"] {
+  background: var(--ink);
+  color: #fbf6ec;
+  border-color: var(--ink);
 }
 
 .stage-overlay-right .stage-icon {
