@@ -15820,15 +15820,28 @@ a {
 
 .stage-overlay-center {
   /* The camera row lives along the TOP of the canvas, just below the tab pill —
-     the bottom belongs to the processional player and the HD/fullscreen cluster,
-     so nothing overlaps. */
+     the bottom belongs to the processional player and the HD/fullscreen cluster.
+     It stays a SINGLE row that scrolls horizontally when the pills don't fit,
+     rather than wrapping down into the processional player: it fits without
+     scrolling on wide screens and scrolls on narrow/tall mobile canvases. */
   top: 64px;
   bottom: auto;
   left: 50%;
   transform: translateX(-50%);
   max-width: calc(100% - 24px);
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stage-overlay-center::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-overlay-center button {
+  flex: 0 0 auto;
 }
 
 .stage-overlay-right {
