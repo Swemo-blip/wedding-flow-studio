@@ -43,6 +43,12 @@ type AppliedActionStatus = {
 export function DayFlowEditor() {
   const { t } = useTranslation();
   const hasLoadedStoredProject = useRef(false);
+  // Guards the write-back so visiting /day-flow on a fresh install (no stored
+  // project) does NOT silently persist the sample timeline as a real project.
+  // We only write once a real project already exists, or the user actually edits
+  // (project.items diverges from the sample seed we loaded).
+  const storedProjectExisted = useRef(false);
+  const seededItems = useRef<TimelineItem[] | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
   const [project, setProject] = useState(() => createSampleProjectState());
   const [activeResolveRiskId, setActiveResolveRiskId] = useState<string | null>(null);
@@ -66,6 +72,8 @@ export function DayFlowEditor() {
       const stored = readStoredTimeline();
       const loadedItems = stored?.timelineItems ?? createTimelineDraft(timelineItems);
       hasLoadedStoredProject.current = true;
+      storedProjectExisted.current = stored != null;
+      seededItems.current = loadedItems;
 
       setProject({
         items: loadedItems,
@@ -82,6 +90,12 @@ export function DayFlowEditor() {
 
   useEffect(() => {
     if (!hasLoadedStoredProject.current) {
+      return;
+    }
+
+    // Fresh install + no user edit yet: the timeline is still the sample seed we
+    // loaded, so persisting it would fabricate a project the couple never made.
+    if (!storedProjectExisted.current && project.items === seededItems.current) {
       return;
     }
 

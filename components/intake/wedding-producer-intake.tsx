@@ -21,6 +21,9 @@ import { formatWeddingDate } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
 import { createStoredProjectDraft, readStoredProject, writeStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
+import { clearStoredBudget } from "@/lib/use-budget";
+import { clearStoredChecklist } from "@/lib/use-checklist";
+import { clearStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 
 const styleOptions = Object.entries(stylePresetLabels) as Array<[WeddingStylePreset, string]>;
 const ceremonyOptions = Object.entries(ceremonyFormatLabels) as Array<[CeremonyFormat, string]>;
@@ -153,6 +156,15 @@ export function WeddingProducerIntake() {
       setStatus("The browser could not save this project yet. Review storage settings and try again.");
       return;
     }
+
+    // A freshly generated plan must start its sibling stores from defaults, or
+    // the new couple inherits the previous couple's checked-off checklist tasks
+    // and budget (with an empty vendor list, so the checklist would claim a
+    // caterer is "booked" for a couple that has none). Clearing the studio layout
+    // also lets the home studio re-seed style/colour/decor from the new wedding.
+    clearStoredChecklist();
+    clearStoredBudget();
+    clearStoredWeddingStudioLayout();
 
     setStatus("Your first visual wedding plan is ready in this browser.");
 
