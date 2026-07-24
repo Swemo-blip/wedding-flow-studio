@@ -83,7 +83,11 @@ function formatWeddingDate(value: string) {
 export function CeremonyStudio() {
   const { t } = useTranslation();
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
-  const [sceneEdits] = useState(defaultStudioSceneEdits);
+  // Hold the couple's scene-object nudges as real state, hydrated from the shared
+  // layout store on mount. Previously this was frozen at defaults, so every
+  // applyPlan below wrote defaults back into the shared layout blob and silently
+  // wiped the object nudges the couple made on the home studio.
+  const [sceneEdits, setSceneEdits] = useState(defaultStudioSceneEdits);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("guestSeating");
 
   // Canvas view state. The interactive 3D twin is the page's focus: one camera
@@ -102,12 +106,17 @@ export function CeremonyStudio() {
   useEffect(() => {
     const stored = readStoredWeddingStudioLayout();
     if (stored) {
-      queueMicrotask(() => setPlan(stored.plan));
+      queueMicrotask(() => {
+        setPlan(stored.plan);
+        setSceneEdits(stored.sceneEdits);
+      });
     }
   }, []);
 
   function applyPlan(nextPlan: WeddingStudioPlan) {
     setPlan(nextPlan);
+    // Persist alongside the couple's current scene-object nudges (hydrated on
+    // mount) so a ceremony-control change never clobbers them in the shared blob.
     writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
   }
 

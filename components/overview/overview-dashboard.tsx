@@ -256,32 +256,31 @@ export function OverviewDashboard() {
     }
 
     queueMicrotask(() => {
-      // Prefer a saved layout when it is newer than the wedding record, so plan
-      // edits made in the Ceremony studio (or here) flow back both ways. Fall
-      // back to deriving from the wedding when the wedding itself changed last.
+      // The stored layout is authoritative once it exists: it holds everything
+      // the couple edits here or in the Ceremony studio (style, colour, decor,
+      // budget level, seating, aisle width, object nudges). We must NOT re-derive
+      // those fields from the wedding on a later project edit —
+      // createWeddingStudioPlanFromWedding overrides style/colour/decor/budget
+      // from the immutable intake style string, which silently wiped the couple's
+      // Style choices every time an unrelated guest/timeline edit bumped the
+      // project timestamp. We only seed the plan from the wedding on the very
+      // first load, when no layout has been saved yet. (A fresh plan created via
+      // intake clears the layout key, so this path re-seeds correctly then.)
       const storedLayout = readStoredWeddingStudioLayout();
-      const weddingTime = localProject.updatedAt ?? "";
 
-      if (storedLayout && storedLayout.updatedAt >= weddingTime) {
+      if (storedLayout) {
         setPlan(storedLayout.plan);
         setSceneEdits(storedLayout.sceneEdits);
       } else {
-        // The wedding record changed more recently — refresh only the fields the
-        // wedding actually drives (venue/style seed), but KEEP everything the
-        // couple set here (object nudges, seating layout, aisle width, accessible
-        // seats). Basing off the stored layout instead of defaults is what stops
-        // a stray guest/timeline edit from silently wiping this page's own work.
-        const base = storedLayout?.plan ?? defaultWeddingStudioPlan;
-        const nextEdits = storedLayout?.sceneEdits ?? sceneEdits;
-        const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, base);
+        const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, defaultWeddingStudioPlan);
         setPlan(nextPlan);
-        setSceneEdits(nextEdits);
-        writeStoredWeddingStudioLayout(nextPlan, nextEdits, "vision");
+        setSceneEdits(defaultStudioSceneEdits);
+        writeStoredWeddingStudioLayout(nextPlan, defaultStudioSceneEdits, "vision");
       }
 
       setSyncedProjectKey(projectKey);
     });
-  }, [localProject.hasLocalProject, localProject.updatedAt, localProject.wedding, sceneEdits, syncedProjectKey]);
+  }, [localProject.hasLocalProject, localProject.updatedAt, localProject.wedding, syncedProjectKey]);
 
   // A shareable read-only link carrying the plan in its hash, so a recipient
   // sees this couple's plan, not their own localStorage.
