@@ -102,7 +102,9 @@ export function WeddingDayPlayer() {
     [dinnerTables, guests, safeIndex, musicCues, nextPhase, phase, phases.length, relatedTimeline, risks, speeches]
   );
   const resolvedCount = resolvedRiskIds.length;
-  const canGoPrevious = index > 0;
+  // Use the clamped index everywhere so the transport stays consistent if the
+  // phase list shrinks (e.g. a cross-tab timeline edit) while index is stale.
+  const canGoPrevious = safeIndex > 0;
   const canGoNext = safeIndex < phases.length - 1;
 
   useEffect(() => {
@@ -125,12 +127,13 @@ export function WeddingDayPlayer() {
   }, [isPlaying, phases.length]);
 
   function goToPreviousMoment() {
-    setIndex((currentIndex) => Math.max(0, currentIndex - 1));
+    // Step from the clamped index so a stale over-range index can't waste clicks.
+    setIndex(Math.max(0, Math.min(index, phases.length - 1) - 1));
     setIsPlaying(false);
   }
 
   function goToNextMoment() {
-    setIndex((currentIndex) => Math.min(phases.length - 1, currentIndex + 1));
+    setIndex(Math.min(phases.length - 1, Math.min(index, phases.length - 1) + 1));
     setIsPlaying(false);
   }
 

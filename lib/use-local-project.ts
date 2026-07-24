@@ -156,7 +156,7 @@ function updateTimelineItems(updater: TimelineItem[] | ((items: TimelineItem[]) 
       ...currentState,
       hasLocalProject: true,
       timelineItems: storedProject?.timelineItems ?? createTimelineDraft(nextTimelineItems),
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -170,7 +170,7 @@ function updateMusicCue(cueId: string, updates: Partial<MusicCue>) {
       ...currentState,
       hasLocalProject: true,
       musicCues: storedProject?.musicCues ?? nextMusicCues,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -194,7 +194,7 @@ function resetMusicCues() {
       ...currentState,
       hasLocalProject: Boolean(nextProject),
       musicCues: nextProject?.musicCues ?? createMusicCueDraft(musicCues),
-      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: nextProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -208,7 +208,7 @@ function updateSpeech(speechId: string, updates: Partial<Speech>) {
       ...currentState,
       hasLocalProject: true,
       speeches: storedProject?.speeches ?? nextSpeeches,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -232,7 +232,7 @@ function resetSpeeches() {
       ...currentState,
       hasLocalProject: Boolean(nextProject),
       speeches: nextProject?.speeches ?? createSpeechDraft(speeches),
-      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: nextProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -247,7 +247,7 @@ function updateGuest(guestId: string, updates: Partial<Guest>) {
       hasLocalProject: true,
       guests: storedProject?.guests ?? nextGuests,
       dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -279,7 +279,7 @@ function addGuest(partial: Partial<Guest> = {}) {
       hasLocalProject: true,
       guests: storedProject?.guests ?? nextGuests,
       dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -299,7 +299,7 @@ function removeGuest(guestId: string) {
       hasLocalProject: true,
       guests: storedProject?.guests ?? nextGuests,
       dinnerTables: storedProject?.dinnerTables ?? nextTables,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -314,7 +314,7 @@ function updateDinnerTable(tableId: string, updates: Partial<DinnerTable>) {
       hasLocalProject: true,
       guests: storedProject?.guests ?? currentState.guests,
       dinnerTables: storedProject?.dinnerTables ?? nextTables,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -347,7 +347,7 @@ function assignGuestToTable(guestId: string, tableId: string) {
       hasLocalProject: true,
       guests: storedProject?.guests ?? nextGuests,
       dinnerTables: storedProject?.dinnerTables ?? nextTables,
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -372,7 +372,7 @@ function resetReception() {
       hasLocalProject: Boolean(nextProject),
       guests: nextProject?.guests ?? createGuestDraft(guests),
       dinnerTables: nextProject?.dinnerTables ?? createDinnerTableDraft(dinnerTables),
-      updatedAt: nextProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: nextProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -389,7 +389,7 @@ function addVendorCandidate(candidate: VendorCandidate) {
       ...currentState,
       hasLocalProject: true,
       vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }
@@ -405,7 +405,7 @@ function updateVendorCandidate(candidateId: string, updates: Partial<VendorCandi
       ...currentState,
       hasLocalProject: true,
       vendorCandidates: storedProject?.vendorCandidates ?? createVendorCandidateDraft(nextCandidates),
-      updatedAt: storedProject?.updatedAt ?? new Date().toISOString()
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
 }

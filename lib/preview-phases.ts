@@ -42,20 +42,25 @@ export function derivePreviewPhases(items: TimelineItem[]): PreviewPhase[] {
     return [];
   }
 
-  const order: string[] = [];
-  const groups = new Map<string, TimelineItem[]>();
-
+  // Break the (already chronological) timeline into CONTIGUOUS runs of the same
+  // phase. Grouping every same-named item together assumed each phase occupied
+  // one unbroken stretch, but real days interleave them (the Processional splits
+  // the Ceremony; Dinner splits the Speeches). That made one movement absorb a
+  // later item and play before the phase that interrupted it, with a time range
+  // running backward. Contiguous runs keep movements chronological and their
+  // ranges correct, even when a phase recurs.
+  const runs: Array<{ phaseName: string; items: TimelineItem[] }> = [];
   for (const item of items) {
     const phaseName = item.phase?.trim() || "The day";
-    if (!groups.has(phaseName)) {
-      groups.set(phaseName, []);
-      order.push(phaseName);
+    const lastRun = runs[runs.length - 1];
+    if (lastRun && lastRun.phaseName === phaseName) {
+      lastRun.items.push(item);
+    } else {
+      runs.push({ phaseName, items: [item] });
     }
-    groups.get(phaseName)?.push(item);
   }
 
-  return order.map((phaseName, phaseIndex) => {
-    const group = groups.get(phaseName) ?? [];
+  return runs.map(({ phaseName, items: group }, phaseIndex) => {
     const first = group[0];
     const last = group[group.length - 1];
     const people = Array.from(new Set(group.map((item) => item.responsiblePerson).filter((name): name is string => Boolean(name))));

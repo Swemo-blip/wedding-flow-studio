@@ -28,7 +28,14 @@ export function ReceptionStudio() {
 
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const selectedGuest = guests.find((guest) => guest.id === selectedGuestId) ?? guests[0];
+  // The initial useState seed runs against the pre-hydration sample guest list
+  // (localStorage hydrates in a post-commit microtask), so on a direct page load
+  // the seeded id may not exist once the real guests arrive. Re-derive the
+  // effective selection each render whenever the held id isn't in the live list.
+  const effectiveSelectedId = guests.some((guest) => guest.id === selectedGuestId)
+    ? selectedGuestId
+    : guests.find((guest) => !guest.tableId)?.id ?? guests[0]?.id ?? "";
+  const selectedGuest = guests.find((guest) => guest.id === effectiveSelectedId) ?? guests[0];
 
   // Every number is real: seats come from the actual dinner tables, seated from
   // actual assignments — no invented denominators.

@@ -22,7 +22,6 @@ export function BudgetView() {
     return { estimate, paid };
   }, [items]);
 
-  const paidPercent = totals.estimate > 0 ? Math.min(100, Math.round((totals.paid / totals.estimate) * 100)) : 0;
 
   // Spend by category (share of the estimated total) — shows where the money goes.
   const byCategory = useMemo(() => {
@@ -83,6 +82,10 @@ export function BudgetView() {
   }, [bookedByCategory, items, totals.estimate]);
 
   const remaining = Math.max(0, committed - totals.paid);
+  // Paid % divides by the SAME committed base the tiles show, so the donut can
+  // never read 100% while "Left to pay" is still positive (a booked vendor over
+  // its category estimate raises committed above the raw estimate).
+  const paidPercent = committed > 0 ? Math.min(100, Math.round((totals.paid / committed) * 100)) : 0;
   // Only judge over/under budget once the couple has set a real target.
   const hasTarget = target > 0;
   const overBudget = hasTarget && committed > target;
