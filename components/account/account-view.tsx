@@ -1,12 +1,13 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, type ReactNode, useState } from "react";
 import { CloudCheck, CloudOff, Download, HardDrive, Heart, Upload } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
 import { downloadBackup, restoreBackup } from "@/lib/project-backup";
 import { useAuth } from "@/lib/use-auth";
 import { useLocalProject } from "@/lib/use-local-project";
+import type { Wedding } from "@/lib/wedding-types";
 
 // Mirrors how the intake builds the display name, so editing a partner's name
 // keeps the couple line ("Klara & Johan") consistent with a freshly created plan.
@@ -18,25 +19,11 @@ function buildCoupleNames(partnerOneName: string, partnerTwoName: string) {
 export function AccountView() {
   const { t } = useTranslation();
   const { configured, loading, signIn, signOut, signUp, user } = useAuth();
-  const { hasLocalProject, updateWedding, wedding } = useLocalProject();
-  // A local draft so typing doesn't write to the store on every keystroke; the
-  // couple presses Save. Re-seeded whenever the stored wedding changes (e.g. a
-  // restore from backup, or an edit made in another tab).
-  const [draft, setDraft] = useState(wedding);
-  const [draftSource, setDraftSource] = useState(wedding);
+  const { hasLocalProject, updatedAt, updateWedding, wedding } = useLocalProject();
   const [detailsNotice, setDetailsNotice] = useState<string | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  // Re-seed the draft when the stored wedding changes underneath us (a restore
-  // from backup, or an edit in another tab). Adjusted during render rather than
-  // in an effect, so there is no extra pass with a stale form on screen.
-  if (draftSource !== wedding) {
-    setDraftSource(wedding);
-    setDraft(wedding);
-  }
-
-  function handleSaveDetails(event: FormEvent) {
-    event.preventDefault();
+  function handleSaveDetails(draft: Wedding) {
     setDetailsNotice(null);
     setDetailsError(null);
 
@@ -130,52 +117,13 @@ export function AccountView() {
                 <p>{t("Change these whenever plans change — the rest of your plan stays exactly as it is.")}</p>
               </div>
             </div>
-            <form className="account-form" onSubmit={handleSaveDetails}>
-              <label className="account-field">
-                <span>{t("Partner one")}</span>
-                <input onChange={(event) => setDraft({ ...draft, partnerOneName: event.target.value })} value={draft.partnerOneName} />
-              </label>
-              <label className="account-field">
-                <span>{t("Partner two")}</span>
-                <input onChange={(event) => setDraft({ ...draft, partnerTwoName: event.target.value })} value={draft.partnerTwoName} />
-              </label>
-              <label className="account-field">
-                <span>{t("Wedding date")}</span>
-                <input onChange={(event) => setDraft({ ...draft, date: event.target.value })} type="date" value={draft.date} />
-              </label>
-              <label className="account-field">
-                <span>{t("Ceremony venue")}</span>
-                <input
-                  onChange={(event) => setDraft({ ...draft, ceremonyLocation: event.target.value })}
-                  placeholder={t("Not booked yet")}
-                  value={draft.ceremonyLocation}
-                />
-              </label>
-              <label className="account-field">
-                <span>{t("Reception venue")}</span>
-                <input
-                  onChange={(event) => setDraft({ ...draft, receptionLocation: event.target.value })}
-                  placeholder={t("Not booked yet")}
-                  value={draft.receptionLocation}
-                />
-              </label>
-              <label className="account-field">
-                <span>{t("Guest count")}</span>
-                <input
-                  inputMode="numeric"
-                  max={300}
-                  min={2}
-                  onChange={(event) => setDraft({ ...draft, guestCount: Number(event.target.value) })}
-                  type="number"
-                  value={draft.guestCount}
-                />
-              </label>
+            {/* Keyed on the stored wedding's updatedAt so the draft is initialised
+                once per saved version — a restore or another tab's edit remounts it
+                with fresh values, and there is no state written during render. */}
+            <WeddingDetailsForm key={updatedAt ?? "initial"} onSave={handleSaveDetails} wedding={wedding}>
               {detailsError ? <p className="account-error">{detailsError}</p> : null}
               {detailsNotice ? <p className="account-notice">{detailsNotice}</p> : null}
-              <button className="account-button" type="submit">
-                {t("Save details")}
-              </button>
-            </form>
+            </WeddingDetailsForm>
           </section>
         ) : null}
 
@@ -263,5 +211,75 @@ export function AccountView() {
         </section>
       </div>
     </StudioRouteFrame>
+  );
+}
+
+// The wedding-details form owns its own draft so typing never writes to the store;
+// the couple presses Save. Its parent keys it by the stored `updatedAt`, so the
+// draft is seeded from props exactly once per saved version.
+function WeddingDetailsForm({
+  children,
+  onSave,
+  wedding
+}: {
+  children: ReactNode;
+  onSave: (draft: Wedding) => void;
+  wedding: Wedding;
+}) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState(wedding);
+
+  return (
+    <form
+      className="account-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave(draft);
+      }}
+    >
+      <label className="account-field">
+        <span>{t("Partner one")}</span>
+        <input onChange={(event) => setDraft({ ...draft, partnerOneName: event.target.value })} value={draft.partnerOneName} />
+      </label>
+      <label className="account-field">
+        <span>{t("Partner two")}</span>
+        <input onChange={(event) => setDraft({ ...draft, partnerTwoName: event.target.value })} value={draft.partnerTwoName} />
+      </label>
+      <label className="account-field">
+        <span>{t("Wedding date")}</span>
+        <input onChange={(event) => setDraft({ ...draft, date: event.target.value })} type="date" value={draft.date} />
+      </label>
+      <label className="account-field">
+        <span>{t("Ceremony venue")}</span>
+        <input
+          onChange={(event) => setDraft({ ...draft, ceremonyLocation: event.target.value })}
+          placeholder={t("Not booked yet")}
+          value={draft.ceremonyLocation}
+        />
+      </label>
+      <label className="account-field">
+        <span>{t("Reception venue")}</span>
+        <input
+          onChange={(event) => setDraft({ ...draft, receptionLocation: event.target.value })}
+          placeholder={t("Not booked yet")}
+          value={draft.receptionLocation}
+        />
+      </label>
+      <label className="account-field">
+        <span>{t("Guest count")}</span>
+        <input
+          inputMode="numeric"
+          max={300}
+          min={2}
+          onChange={(event) => setDraft({ ...draft, guestCount: Number(event.target.value) })}
+          type="number"
+          value={draft.guestCount}
+        />
+      </label>
+      {children}
+      <button className="account-button" type="submit">
+        {t("Save details")}
+      </button>
+    </form>
   );
 }
