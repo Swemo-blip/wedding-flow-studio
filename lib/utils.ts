@@ -31,3 +31,14 @@ export function formatWeddingDate(value: string): string {
   }
   return date.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
 }
+
+// Joins the parts of a detail line, dropping the ones that are missing. A
+// generated plan carries each moment's ROLE but no invented person for it, so an
+// unassigned owner is an ordinary state — the separator must not survive as a
+// dangling "Ceremony venue · ".
+export function joinDetails(parts: Array<string | null | undefined>, separator = " · "): string {
+  return parts
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(separator);
+}

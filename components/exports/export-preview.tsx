@@ -14,6 +14,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
 import type { ExportType } from "@/lib/wedding-types";
+import { joinDetails } from "@/lib/utils";
 
 type ExportPreviewProps = {
   exportType: ExportType;
@@ -146,7 +147,7 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
                   <div>
                     <strong>{item.title}</strong>
                     <p>
-                      {item.location} - {item.responsiblePerson}
+                      {joinDetails([item.location, item.responsiblePerson], " - ")}
                     </p>
                   </div>
                 </li>
@@ -232,7 +233,7 @@ function buildExportBriefText(
   ceremonySetup: { seatingLayout: string; aisleWidthFeet: number }
 ) {
   const timelineText = items
-    .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.responsiblePerson}\n  Notes: ${item.notes}`)
+    .map((item) => `- ${item.time}: ${item.title} | ${joinDetails([item.location, item.responsiblePerson], " | ")}\n  Notes: ${item.notes}`)
     .join("\n");
   const speechText = relatedSpeeches
     .map((speech) => `- ${speech.title}: ${speech.speakerName}, ${speech.durationMinutes} minutes, ${speech.technicalNeeds.join(", ")}`)

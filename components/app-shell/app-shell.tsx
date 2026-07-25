@@ -5,6 +5,7 @@ import { Navigation } from "@/components/app-shell/navigation";
 import { SampleRibbon } from "@/components/app-shell/sample-ribbon";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { useTranslation } from "@/lib/i18n";
+import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
 
 type AppShellProps = {
@@ -15,6 +16,7 @@ type AppShellProps = {
 export function AppShell({ children, wedding }: AppShellProps) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const { hasLocalProject, wedding: localWedding } = useLocalProject();
 
   // The shared read-only preview is opened by a guest, not the couple — it must
   // stand alone with no editing chrome (sidebar nav, Copy link, Preview Day).
@@ -22,11 +24,21 @@ export function AppShell({ children, wedding }: AppShellProps) {
     return <>{children}</>;
   }
 
-  const plannerInitials = wedding.plannerName
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2);
+  // This block used to show `wedding.plannerName` from the sample data — a
+  // fictional planner ("Olivia Hart") who stayed in the chrome on every route
+  // even after the couple created their own plan. There is no planner account,
+  // so the honest occupant of that slot is the couple themselves. On the home
+  // route there is no TopBar, which makes this the only place their names appear.
+  const identityName = hasLocalProject ? localWedding.coupleNames : null;
+  const identityInitials = identityName
+    ? identityName
+        .split(/\s*&\s*|\s+/)
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : null;
 
   return (
     <div className="app-frame">
@@ -39,13 +51,15 @@ export function AppShell({ children, wedding }: AppShellProps) {
           <p className="brand-kicker">{t("Wedding Flow Studio")}</p>
         </div>
         <Navigation />
-        <div className="sidebar-user">
-          <span aria-hidden="true" className="sidebar-avatar">{plannerInitials}</span>
-          <div>
-            <strong>{wedding.plannerName}</strong>
-            <span>{t("Planner")}</span>
+        {identityName ? (
+          <div className="sidebar-user">
+            <span aria-hidden="true" className="sidebar-avatar">{identityInitials}</span>
+            <div>
+              <strong>{identityName}</strong>
+              <span>{t("Your wedding")}</span>
+            </div>
           </div>
-        </div>
+        ) : null}
       </aside>
       <div className="workspace">
         {/* The home route IS the 3D studio workspace — it brings its own minimal

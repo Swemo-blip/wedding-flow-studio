@@ -570,7 +570,7 @@ export const timelineItems: TimelineItem[] = [
   {
     id: "guest-arrival",
     time: "2:15 PM",
-    title: "Guests arrive at the chapel",
+    title: "Guests arrive",
     phase: "Guest Arrival",
     location: "St. James Chapel",
     responsibleRole: "Venue usher team",
@@ -653,7 +653,7 @@ export const timelineItems: TimelineItem[] = [
   {
     id: "group-photos",
     time: "4:10 PM",
-    title: "Group photos outside the chapel",
+    title: "Group photos",
     phase: "Photography",
     location: "Chapel garden",
     responsibleRole: "Photographer",
@@ -666,7 +666,7 @@ export const timelineItems: TimelineItem[] = [
   {
     id: "cocktail-hour",
     time: "5:30 PM",
-    title: "Cocktail hour at Rosewood Hall",
+    title: "Cocktail hour",
     phase: "Cocktail Hour",
     location: "Rosewood Hall terrace",
     responsibleRole: "Venue manager",

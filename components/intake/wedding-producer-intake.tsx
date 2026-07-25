@@ -129,6 +129,21 @@ export function WeddingProducerIntake() {
   }
 
   function createDigitalTwin(redirectTo?: string) {
+    // The form now starts blank rather than pre-filled with the sample couple, so
+    // guard the essentials: a plan saved without names or a date would leave the
+    // studio, exports and share link headed by a placeholder couple.
+    if (!intake.partnerOneName.trim() || !intake.partnerTwoName.trim()) {
+      setActiveQuestionIndex(0);
+      setStatus(t("Add both of your names before creating the plan."));
+      return;
+    }
+
+    if (!intake.date.trim()) {
+      setActiveQuestionIndex(0);
+      setStatus(t("Add your wedding date before creating the plan."));
+      return;
+    }
+
     if (
       readStoredProject() &&
       !confirmAndBackupBeforeReset(
@@ -322,11 +337,20 @@ export function WeddingProducerIntake() {
         <div className="guided-field-grid">
           <label>
             <span>{t("Partner one")}</span>
-            <input onChange={(event) => updateIntake({ partnerOneName: event.target.value })} value={intake.partnerOneName} />
+            <input
+              autoFocus
+              onChange={(event) => updateIntake({ partnerOneName: event.target.value })}
+              placeholder={t("First name")}
+              value={intake.partnerOneName}
+            />
           </label>
           <label>
             <span>{t("Partner two")}</span>
-            <input onChange={(event) => updateIntake({ partnerTwoName: event.target.value })} value={intake.partnerTwoName} />
+            <input
+              onChange={(event) => updateIntake({ partnerTwoName: event.target.value })}
+              placeholder={t("First name")}
+              value={intake.partnerTwoName}
+            />
           </label>
           <label>
             <span>{t("Wedding date")}</span>
@@ -431,13 +455,23 @@ export function WeddingProducerIntake() {
   function renderAdvancedDetails() {
     return (
       <div className="guided-advanced-grid">
+        {/* Venues stay optional — plenty of couples plan before they have booked —
+            so these carry a hint rather than a required marker. */}
         <label>
           <span>{t("Ceremony venue")}</span>
-          <input onChange={(event) => updateIntake({ ceremonyLocation: event.target.value })} value={intake.ceremonyLocation} />
+          <input
+            onChange={(event) => updateIntake({ ceremonyLocation: event.target.value })}
+            placeholder={t("Not booked yet")}
+            value={intake.ceremonyLocation}
+          />
         </label>
         <label>
           <span>{t("Reception venue")}</span>
-          <input onChange={(event) => updateIntake({ receptionLocation: event.target.value })} value={intake.receptionLocation} />
+          <input
+            onChange={(event) => updateIntake({ receptionLocation: event.target.value })}
+            placeholder={t("Not booked yet")}
+            value={intake.receptionLocation}
+          />
         </label>
         <label>
           <span>{t("Guest count")}</span>

@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useLocalProject } from "@/lib/use-local-project";
+import { joinDetails } from "@/lib/utils";
 
 export function RunOfShow() {
   const { hasLocalProject, timelineItems } = useLocalProject();
@@ -16,7 +17,7 @@ export function RunOfShow() {
             <div>
               <strong>{item.title}</strong>
               <p>
-                {item.location} - {item.responsiblePerson}
+                {joinDetails([item.location, item.responsiblePerson], " - ")}
               </p>
             </div>
           </li>

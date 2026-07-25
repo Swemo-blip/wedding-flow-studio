@@ -31,16 +31,31 @@ export type WeddingProducerPlan = {
   generatedRisks: string[];
 };
 
+// A neutral guest count to size the first plan with — a round number that reads
+// as a default, not as a real wedding's headcount.
+const DEFAULT_GUEST_COUNT = 80;
+
+// Names their venue's ROLE rather than inventing a place, for couples who have
+// not booked yet. It shows up in composed timeline rows until they fill the real
+// venue in, so a location line never reads as someone else's chapel.
+const UNNAMED_CEREMONY_VENUE = "Ceremony venue";
+const UNNAMED_RECEPTION_VENUE = "Reception venue";
+
+// The intake starts EMPTY of identity. It used to open pre-filled with the sample
+// couple — their names, date and venues — so a couple creating their own wedding
+// had to delete a stranger's details first, and could save them by accident.
+// Structural choices (formats, complexity, style, roles) are genuine defaults and
+// stay; anything that belongs to a specific couple starts blank.
 export const defaultWeddingProducerIntake: WeddingProducerIntake = {
   ceremonyFormat: "chapel",
-  ceremonyLocation: "St. James Chapel",
+  ceremonyLocation: "",
   complexity: "balanced",
-  date: "2027-06-14",
-  guestCount: 112,
-  partnerOneName: "Emma Carter",
-  partnerTwoName: "James Bennett",
+  date: "",
+  guestCount: DEFAULT_GUEST_COUNT,
+  partnerOneName: "",
+  partnerTwoName: "",
   receptionFormat: "dinner-and-dancing",
-  receptionLocation: "Rosewood Hall",
+  receptionLocation: "",
   stylePreset: "editorial-garden",
   vendorRoles: ["Wedding Planner", "Toastmaster / MC", "Photographer", "DJ / Musician", "Catering", "Venue", "Officiant"]
 };
@@ -88,13 +103,15 @@ export function composeWeddingProducerPlan(input: WeddingProducerIntake): Weddin
   const partnerOneName = normalizeName(input.partnerOneName, "Partner One");
   const partnerTwoName = normalizeName(input.partnerTwoName, "Partner Two");
   const coupleNames = `${getFirstName(partnerOneName)} & ${getFirstName(partnerTwoName)}`;
-  const ceremonyLocation = input.ceremonyLocation.trim() || defaultWeddingProducerIntake.ceremonyLocation;
-  const receptionLocation = input.receptionLocation.trim() || defaultWeddingProducerIntake.receptionLocation;
+  // Fall back to the venue's ROLE, never to a sample venue — an unbooked venue is
+  // an ordinary situation and must not silently inherit someone else's chapel.
+  const ceremonyLocation = input.ceremonyLocation.trim() || UNNAMED_CEREMONY_VENUE;
+  const receptionLocation = input.receptionLocation.trim() || UNNAMED_RECEPTION_VENUE;
   const guestCount = clampGuestCount(input.guestCount);
   const wedding: Wedding = {
     ceremonyLocation,
     coupleNames,
-    date: input.date.trim() || defaultWeddingProducerIntake.date,
+    date: input.date.trim(),
     guestCount,
     id: slugify(`${coupleNames}-${input.date || "wedding"}`),
     partnerOneName,
@@ -142,7 +159,12 @@ function composeTimeline(input: WeddingProducerIntake, wedding: Wedding): Timeli
           : isPhotos
             ? `${wedding.ceremonyLocation} portrait location`
             : item.location,
-      notes: `${item.notes} Producer Intake: ${ceremonyDescriptor} ceremony with ${receptionDescriptor}; ${input.complexity === "high-touch" ? "protect detailed role cues" : "keep handoffs calm and clear"}.`
+      notes: `${item.notes} Producer Intake: ${ceremonyDescriptor} ceremony with ${receptionDescriptor}; ${input.complexity === "high-touch" ? "protect detailed role cues" : "keep handoffs calm and clear"}.`,
+      // Keep the ROLE the template suggests ("Photographer", "Venue usher team")
+      // — that is useful structure — but never the sample's invented PEOPLE.
+      // A couple's own run of show said "Olivia Hart" owned their welcome toast.
+      // Unassigned is the honest state, and it reads as a real thing to fill in.
+      responsiblePerson: ""
     };
   });
 }

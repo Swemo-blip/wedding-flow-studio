@@ -39,7 +39,7 @@ export function buildRoleBriefs(): RoleBrief[] {
       title: "Photographer",
       description: "Ceremony positions, family photo list, chapel exit, golden hour, and key people.",
       currentPriority: "Prepare the family photo list and confirm chapel garden timing.",
-      nextUp: "Group photos outside the chapel at 4:10 PM",
+      nextUp: "Group photos at 4:10 PM",
       relevantTimelineItemIds: ["guest-arrival", "ceremony-begins", "recessional", "group-photos", "cake-cutting", "first-dance"],
       relevantWarningIds: warnings(["risk-group-photo-time", "risk-balcony-approval"]),
       checklistItems: [

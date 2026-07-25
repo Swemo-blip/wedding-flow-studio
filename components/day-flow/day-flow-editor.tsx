@@ -32,6 +32,7 @@ import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases, timelineItems } from "@/lib/wedding-data";
 import type { PreviewPhase, RiskItem, RiskSeverity, TimelineItem, Visibility } from "@/lib/wedding-types";
+import { joinDetails } from "@/lib/utils";
 
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
 const riskOptions: Array<RiskSeverity | "none"> = ["none", "low", "medium", "high"];
@@ -436,7 +437,7 @@ export function DayFlowEditor() {
                       ) : null}
                     </span>
                     <span className="timeline-meta">
-                      {item.location} · {item.responsiblePerson}
+                      {joinDetails([item.location, item.responsiblePerson])}
                     </span>
                   </span>
                 </button>

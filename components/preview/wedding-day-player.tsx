@@ -271,8 +271,10 @@ export function WeddingDayPlayer() {
 
             <div className="preview-command-facts">
               <div>
-                <span>Owner</span>
-                <strong>{phase.responsiblePerson}</strong>
+                <span>{t("Owner")}</span>
+                {/* A generated moment carries its role but no assigned person, so
+                    name the gap rather than showing an empty line. */}
+                <strong>{phase.responsiblePerson || t("Not assigned")}</strong>
                 <small>{phase.responsibleRole}</small>
               </div>
               <div>
@@ -354,9 +356,16 @@ export function WeddingDayPlayer() {
             </div>
 
             <div className="preview-linked-moments preview-dock-card">
-              <span>Production Layer</span>
+              <span>{t("Production Layer")}</span>
               <p>
-                <strong>{phase.responsiblePerson}</strong> owns this moment as {phase.responsibleRole}.
+                {phase.responsiblePerson ? (
+                  <>
+                    <strong>{phase.responsiblePerson}</strong> {t("owns this moment as")} {phase.responsibleRole}.
+                  </>
+                ) : (
+                  // No invented owner is assigned yet — say what the moment needs.
+                  <>{t("This moment still needs an owner")} ({phase.responsibleRole}).</>
+                )}
               </p>
               <p>{cockpit.musicLabel}</p>
             </div>
