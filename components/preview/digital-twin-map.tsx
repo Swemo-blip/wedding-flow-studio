@@ -8,10 +8,11 @@ import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases } from "@/lib/wedding-data";
+import { getReadinessLabel } from "@/lib/moment-intelligence";
 
 export function DigitalTwinMap() {
   const [selectedNodeId, setSelectedNodeId] = useState(previewPhases[0]?.id ?? "");
-  const { dinnerTables, guests, musicCues, speeches, timelineItems } = useLocalProject();
+  const { dinnerTables, guests, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const risks = useMemo(
     () =>
@@ -21,11 +22,12 @@ export function DigitalTwinMap() {
           guestItems: guests,
           speechItems: speeches,
           tables: dinnerTables,
-          timeline: timelineItems
+          timeline: timelineItems,
+          wedding
         }),
         resolvedRiskIds
       ),
-    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems]
+    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
   );
   const digitalTwinMap = useMemo(
     () =>
@@ -103,7 +105,7 @@ export function DigitalTwinMap() {
               {selectedNode.riskTone === "confirmed" ? "clear" : `${selectedNode.riskTone} watch`}
             </Badge>
             <Badge tone={selectedNode.readiness === "ready" ? "confirmed" : selectedNode.readiness === "review" ? "medium" : "high"}>
-              {selectedNode.readinessScore}% ready
+              {getReadinessLabel(selectedNode.readiness)}
             </Badge>
           </div>
           <div>

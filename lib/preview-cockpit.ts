@@ -256,7 +256,9 @@ function getPrimaryAction({
   return {
     label: `Open ${directorTitle}`,
     href: `/director?role=${directorRole}`,
-    detail: `${phase.responsiblePerson} owns this moment. Review their focused production board.`
+    detail: phase.responsiblePerson
+      ? `${phase.responsiblePerson} owns this moment. Review their focused production board.`
+      : `This moment still needs an owner. Review the ${directorTitle} production board.`
   };
 }
 

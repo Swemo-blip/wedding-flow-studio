@@ -63,7 +63,8 @@ export function DayFlowEditor() {
     speeches: localSpeeches,
     updateGuest,
     updateMusicCue,
-    updateSpeech
+    updateSpeech,
+    wedding
   } = useLocalProject();
   const { resolvedRiskIds, resolveRisk } = useRiskResolutions();
 
@@ -114,9 +115,10 @@ export function DayFlowEditor() {
         cues: localMusicCues,
         speechItems: localSpeeches,
         guestItems: guests,
-        tables: dinnerTables
+        tables: dinnerTables,
+        wedding
       }),
-    [dinnerTables, guests, localMusicCues, localSpeeches, project.items]
+    [dinnerTables, guests, localMusicCues, localSpeeches, project.items, wedding]
   );
   const risks = useMemo(() => filterResolvedRisks(rawRisks, resolvedRiskIds), [rawRisks, resolvedRiskIds]);
   const selectedRisks = useMemo(
@@ -289,7 +291,22 @@ export function DayFlowEditor() {
       return;
     }
 
+    // The recipe targets a moment by id. If the couple's timeline has no such
+    // moment the map below is a no-op — so check for a real change before
+    // reporting success and, above all, before hiding the warning. Resolving a
+    // risk is permanent: it filters that id out of the studio, day flow, preview,
+    // director boards and exports for good. Announcing "resolved" while changing
+    // nothing was the worst thing this app did.
+    const nextItems = applyRiskResolutionToTimeline(project.items, activeResolutionRecipe);
+    const changed = nextItems.some((item, index) => item !== project.items[index]);
+
+    if (!changed) {
+      setResolutionStatus(t("This fix belongs to a moment that isn't in your timeline. Open the connected studio to finish it."));
+      return;
+    }
+
     setProject((currentProject) => ({
+      ...currentProject,
       items: applyRiskResolutionToTimeline(currentProject.items, activeResolutionRecipe),
       selectedId: activeResolutionRecipe.timelineItemId,
       updatedAt: new Date().toISOString()
@@ -304,13 +321,20 @@ export function DayFlowEditor() {
     let didApply = false;
 
     if (action.timelineItemId || action.timelineNoteToAppend || action.timelineUpdates) {
-      setProject((currentProject) => ({
-        ...currentProject,
-        items: applyProductionActionToTimeline(currentProject.items, action),
-        selectedId: action.timelineItemId ?? currentProject.selectedId,
-        updatedAt: new Date().toISOString()
-      }));
-      didApply = true;
+      // Only count this as applied if a moment actually matched — the action's
+      // target id may not exist in the couple's own timeline, in which case the
+      // map below returns every item unchanged.
+      const nextItems = applyProductionActionToTimeline(project.items, action);
+
+      if (nextItems.some((item, index) => item !== project.items[index])) {
+        setProject((currentProject) => ({
+          ...currentProject,
+          items: applyProductionActionToTimeline(currentProject.items, action),
+          selectedId: action.timelineItemId ?? currentProject.selectedId,
+          updatedAt: new Date().toISOString()
+        }));
+        didApply = true;
+      }
     }
 
     if (action.musicCueId) {
@@ -325,7 +349,9 @@ export function DayFlowEditor() {
     if (action.guestId) {
       const guest = guests.find((item) => item.id === action.guestId);
 
-      if (action.guestTableId) {
+      // The guest and table ids can come from the action's fallbacks, which are
+      // sample ids — reseating requires that BOTH actually exist in this plan.
+      if (guest && action.guestTableId && dinnerTables.some((table) => table.id === action.guestTableId)) {
         assignGuestToTable(action.guestId, action.guestTableId);
         didApply = true;
       }
@@ -345,15 +371,18 @@ export function DayFlowEditor() {
       }
     }
 
-    if (action.riskId) {
+    // Dismiss the warning ONLY when something really changed. This used to fire
+    // unconditionally, so an action that matched nothing still hid its risk
+    // everywhere, permanently, while the problem stayed in the data.
+    if (action.riskId && didApply) {
       resolveRisk(action.riskId);
     }
 
     setActiveResolveRiskId(null);
-    setResolutionStatus(action.successLabel);
+    setResolutionStatus(didApply ? action.successLabel : null);
     setActionStatus({
       actionId: action.id,
-      label: didApply ? action.successLabel : "Open the connected studio to finish this action."
+      label: didApply ? action.successLabel : t("Nothing to change here yet — open the connected studio to finish this action.")
     });
   }
 
@@ -433,7 +462,7 @@ export function DayFlowEditor() {
                     <span className="summary-between">
                       <strong>{item.title}</strong>
                       {itemIntelligence ? (
-                        <Badge tone={itemIntelligence.readinessTone}>{itemIntelligence.readinessScore}%</Badge>
+                        <Badge tone={itemIntelligence.readinessTone}>{t(itemIntelligence.readinessShortLabel)}</Badge>
                       ) : null}
                     </span>
                     <span className="timeline-meta">

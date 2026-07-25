@@ -15,16 +15,16 @@ const musicRiskIds = ["risk-music-backup", "risk-music-start-cue", "risk-couple-
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
-  const { musicCues, resetMusicCues, timelineItems, updateMusicCue } = useLocalProject();
+  const { musicCues, resetMusicCues, timelineItems, updateMusicCue, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedCueId, setSelectedCueId] = useState(musicCues[0]?.id ?? "");
   const selectedCue = musicCues.find((cue) => cue.id === selectedCueId) ?? musicCues[0];
   const musicRisks = useMemo(
     () =>
-      filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues }), resolvedRiskIds).filter((risk) =>
+      filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, wedding }), resolvedRiskIds).filter((risk) =>
         musicRiskIds.includes(risk.id)
       ),
-    [musicCues, resolvedRiskIds, timelineItems]
+    [musicCues, resolvedRiskIds, timelineItems, wedding]
   );
   const selectedCueRisks = selectedCue ? musicRisks.filter((risk) => risk.relatedEntityId === selectedCue.id) : [];
   const confirmedCueCount = musicCues.filter((cue) => cue.status === "confirmed").length;

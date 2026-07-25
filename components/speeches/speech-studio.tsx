@@ -16,7 +16,7 @@ const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "p
 
 export function SpeechStudio() {
   const { t } = useTranslation();
-  const { dinnerTables, guests, resetSpeeches, speeches, timelineItems, updateSpeech } = useLocalProject();
+  const { dinnerTables, guests, resetSpeeches, speeches, timelineItems, updateSpeech, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
@@ -35,10 +35,10 @@ export function SpeechStudio() {
   const speakerTable = speakerGuest ? dinnerTables.find((table) => table.id === speakerGuest.tableId) ?? null : null;
   const speechRisks = useMemo(
     () =>
-      filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, speechItems: speeches }), resolvedRiskIds).filter((risk) =>
+      filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, speechItems: speeches, wedding }), resolvedRiskIds).filter((risk) =>
         speechRiskIds.includes(risk.id)
       ),
-    [resolvedRiskIds, speeches, timelineItems]
+    [resolvedRiskIds, speeches, timelineItems, wedding]
   );
   const selectedSpeechRisks = selectedSpeech
     ? speechRisks.filter((risk) => risk.relatedEntityId === selectedSpeech.id || risk.relatedEntityId === "all-speeches")

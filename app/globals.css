@@ -15,7 +15,10 @@
   --studio-linen: #e7dfcc;
   --studio-clay: #9c6f45;
   --studio-rosewood: #9a6d63;
-  --studio-plum: #6a5f7a;
+  /* Was a cool plum (#6a5f7a) left over from a rejected palette, still rendering
+     on the Director board's "secret" tone. Gold is the in-palette way to mark
+     something special, so the name is kept (many call sites) and re-pointed. */
+  --studio-plum: var(--gilt);
   --accent: #414c37;
   --accent-deep: #313a29;
   --accent-soft: #e8ece0;
@@ -39,7 +42,11 @@
   --sage: var(--accent);
   --fig: var(--studio-charcoal);
   --rose: var(--peach);
-  --blue: #5f6bd0;
+  /* Was a periwinkle indigo (#5f6bd0) — an off-palette hue that had spread to 24
+     call sites: text links, the progress bar, and every disclosure chevron in the
+     app. Re-pointed at the locked accent so all of them fall in line at once
+     rather than being corrected one by one. */
+  --blue: var(--accent);
   --success: #4e7a4a;
   --warning: #b98a3f;
   --danger: #c0603f;
@@ -7044,7 +7051,7 @@ a {
 .progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--sage), var(--blue));
+  background: linear-gradient(90deg, var(--accent), var(--gilt));
 }
 
 .analysis-list,
@@ -9680,8 +9687,8 @@ a {
 }
 
 .reception-view-toggle button[data-active="true"] {
-  background: linear-gradient(180deg, #e8cd8b, #c8a45b);
-  color: #2a2110;
+  background: var(--accent);
+  color: var(--background);
 }
 
 .reception-seating-3d {
@@ -13069,8 +13076,8 @@ a {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(150deg, #e7d4aa, #c8a45b);
-  color: #3a2c10;
+  background: var(--accent);
+  color: var(--background);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -13086,6 +13093,13 @@ a {
 .sidebar-user span {
   color: var(--muted);
   font-size: 0.7rem;
+}
+
+/* The avatar is also a span inside .sidebar-user, so the rule above outranked
+   .sidebar-avatar on specificity and painted the initials muted-on-green. */
+.sidebar-user .sidebar-avatar {
+  color: var(--background);
+  font-size: 0.72rem;
 }
 
 .sidebar-footer {
@@ -15328,10 +15342,10 @@ a {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border: 1px solid #c19a52;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: #c19a52;
-  color: #2a2113;
+  background: var(--accent);
+  color: var(--background);
   font-family: var(--font-sans);
   font-size: 0.82rem;
   font-weight: 640;
@@ -15822,9 +15836,9 @@ a {
 }
 
 .stage-icon[data-active="true"] {
-  border-color: #c19a52;
-  background: #c19a52;
-  color: #2a2113;
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--background);
 }
 
 .stage-overlay {
@@ -16934,10 +16948,10 @@ a {
 
 .account-button {
   padding: 10px 16px;
-  border: 1px solid #c19a52;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: #c19a52;
-  color: #2a2113;
+  background: var(--accent);
+  color: var(--background);
   font-family: var(--font-sans);
   font-size: 0.88rem;
   font-weight: 640;

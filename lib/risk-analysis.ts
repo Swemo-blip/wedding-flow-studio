@@ -46,7 +46,9 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   const tables = source.tables ?? dinnerTables;
   const risks: RiskItem[] = [];
 
-  const groupPhotos = timeline.find((item) => item.id === "group-photos");
+  // Match on the phase rather than the sample's item id, so this also fires for a
+  // timeline the couple built themselves.
+  const groupPhotos = timeline.find((item) => item.phase.toLowerCase().includes("photograph"));
   if (groupPhotos?.durationMinutes && groupPhotos.durationMinutes < 30 && wedding.guestCount > 80) {
     risks.push({
       id: "risk-group-photo-time",
@@ -215,25 +217,11 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
-  risks.push({
-    id: "risk-balcony-approval",
-    severity: "low",
-    title: "Photographer balcony position requires venue approval.",
-    description: "The ceremony plan includes a balcony photographer position that should be approved by the chapel.",
-    relatedEntityType: "ceremonyLayout",
-    relatedEntityId: "st-james-chapel-layout",
-    suggestedFix: "Ask the venue manager to confirm balcony access during rehearsal."
-  });
-
-  risks.push({
-    id: "risk-service-path",
-    severity: "low",
-    title: "Keep the catering service path clear.",
-    description: "The east wall service path must remain open during dinner and speeches.",
-    relatedEntityType: "venueLayout",
-    relatedEntityId: "rosewood-hall-ballroom",
-    suggestedFix: "Confirm table spacing with the venue manager before guest arrival."
-  });
+  // Two risks used to be pushed here unconditionally, for every plan: a
+  // photographer's balcony position and a catering service path along "the east
+  // wall". Both described the SAMPLE venues' layouts, so every couple was warned
+  // about a balcony their venue may not have. A warning that cannot be derived
+  // from the couple's own plan is noise dressed as insight — removed.
 
   return risks;
 }

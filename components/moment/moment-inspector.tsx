@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import type { MomentIntelligence } from "@/lib/moment-intelligence";
 
 type MomentInspectorProps = {
@@ -22,7 +21,6 @@ export function MomentInspector({ intelligence }: MomentInspectorProps) {
             <Badge tone={intelligence.readinessTone}>{intelligence.readiness}</Badge>
           </div>
           <strong>{intelligence.readinessLabel}</strong>
-          <Progress label={`${intelligence.title} readiness`} value={intelligence.readinessScore} />
         </div>
       </div>
 

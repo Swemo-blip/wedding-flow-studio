@@ -19,6 +19,7 @@ export type MomentIntelligence = {
   readiness: MomentReadiness;
   readinessLabel: string;
   readinessScore: number;
+  readinessShortLabel: string;
   readinessTone: "confirmed" | "medium" | "high";
   primaryAction: ProductionAction;
   missingSignals: string[];
@@ -107,7 +108,8 @@ export function buildMomentIntelligence({
     id: phase.id,
     title: phase.title,
     readiness,
-    readinessLabel: getReadinessLabel(readiness, readinessScore),
+    readinessLabel: getReadinessLabel(readiness),
+    readinessShortLabel: getReadinessShortLabel(readiness),
     readinessScore,
     readinessTone: readiness === "blocked" ? "high" : readiness === "review" ? "medium" : "confirmed",
     primaryAction,
@@ -380,16 +382,30 @@ function getReadiness(score: number, risks: RiskItem[]): MomentReadiness {
   return "ready";
 }
 
-function getReadinessLabel(readiness: MomentReadiness, score: number) {
+// The readiness SCORE is a weighted count of risks and missing signals. The
+// weights (34/20/10 per risk, 6 per gap) are editorial, not measured, so showing
+// "78%" claimed a precision this cannot support — the same reason the vendor
+// "Fit %" was removed. The score still ranks moments internally; what the couple
+// reads is the state it implies.
+export function getReadinessLabel(readiness: MomentReadiness) {
   if (readiness === "blocked") {
-    return `Blocked until reviewed (${score}%)`;
+    return "Blocked until reviewed";
   }
 
   if (readiness === "review") {
-    return `Needs review (${score}%)`;
+    return "Needs review";
   }
 
-  return `Ready to rehearse (${score}%)`;
+  return "Ready to rehearse";
+}
+
+// A one-word form for badges, where the full label does not fit.
+function getReadinessShortLabel(readiness: MomentReadiness) {
+  if (readiness === "blocked") {
+    return "Blocked";
+  }
+
+  return readiness === "review" ? "Review" : "Ready";
 }
 
 function buildVendorHandoff(

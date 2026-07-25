@@ -127,7 +127,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
       guestId: risk.relatedEntityType === "guest" ? risk.relatedEntityId : "anna-carter",
       guestTagToAdd: "allergy brief sent",
       timelineItemId: timelineItemId ?? "first-course",
-      timelineNoteToAppend: "Action Engine: Final allergy details marked for Sophia Grant and catering service."
+      timelineNoteToAppend: "Action Engine: Final allergy details marked for the catering service."
     };
   }
 
@@ -188,7 +188,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
       guestTableId: "table-4",
       guestTagToAdd: "seating conflict resolved",
       timelineItemId: timelineItemId ?? "reception-doors",
-      timelineNoteToAppend: "Action Engine: Lisa Ek moved away from the conflict table and marked for planner review."
+      timelineNoteToAppend: "Action Engine: Guest moved away from the conflict table and marked for planner review."
     };
   }
 
@@ -319,7 +319,9 @@ export function buildProductionActionForMoment({
     id: `action-open-role-${affectedRoleId ?? "planner"}`,
     label: affectedRoleLabel ? `Open ${affectedRoleLabel}` : "Open Director Mode",
     detail: affectedRoleLabel
-      ? `${phase.responsiblePerson} owns this moment. Review the focused production board.`
+      ? phase.responsiblePerson
+        ? `${phase.responsiblePerson} owns this moment. Review the focused production board.`
+        : `This moment still needs an owner. Review the ${affectedRoleLabel} production board.`
       : "Review role-specific timing, handoffs, and checklist items.",
     href: affectedRoleId ? `/director?role=${affectedRoleId}` : "/director",
     scope: "navigation",

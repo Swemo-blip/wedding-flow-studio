@@ -779,6 +779,10 @@ const sv: Record<string, string> = {
   "Not booked yet": "Inte bokad än",
   "Your wedding": "Ert bröllop",
   "Not assigned": "Inte tillsatt",
+  "This fix belongs to a moment that isn't in your timeline. Open the connected studio to finish it.":
+    "Den här åtgärden hör till ett moment som inte finns i er tidslinje. Öppna den kopplade studion för att slutföra den.",
+  "Nothing to change here yet — open the connected studio to finish this action.":
+    "Inget att ändra här än — öppna den kopplade studion för att slutföra åtgärden.",
   "owns this moment as": "ansvarar för det här momentet som",
   "This moment still needs an owner": "Det här momentet behöver en ansvarig",
   "Account created. Check your email to confirm, then sign in.": "Kontot skapat. Kolla din e-post för att bekräfta, logga sedan in.",

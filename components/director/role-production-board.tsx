@@ -20,15 +20,15 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
   const { t } = useTranslation();
   const [copyStatus, setCopyStatus] = useState(t("Ready to brief"));
   const [showManualCopy, setShowManualCopy] = useState(false);
-  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
+  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const risks = useMemo(
     () =>
       filterResolvedRisks(
-        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables }),
+        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables, wedding }),
         resolvedRiskIds
       ),
-    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems]
+    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
   );
   const board = useMemo(
     () => buildRoleProductionBoard(brief, timelineItems, risks, musicCues, speeches),

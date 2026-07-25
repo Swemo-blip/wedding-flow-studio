@@ -54,11 +54,11 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
       getRisksByIds(
         exportType.warningIds,
         filterResolvedRisks(
-          analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables }),
+          analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables, wedding }),
           resolvedRiskIds
         )
       ),
-    [dinnerTables, exportType.warningIds, guests, musicCues, resolvedRiskIds, speeches, timelineItems]
+    [dinnerTables, exportType.warningIds, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
   );
   const relatedSpeeches = speeches.filter((speech) => exportType.timelineItemIds.includes(speech.timelineItemId));
   const relatedCues = musicCues.filter((cue) => exportType.timelineItemIds.includes(cue.timelineItemId));

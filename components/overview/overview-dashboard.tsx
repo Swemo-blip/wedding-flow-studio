@@ -131,9 +131,10 @@ export function OverviewDashboard() {
         guestItems: localProject.guests,
         speechItems: localProject.speeches,
         tables: localProject.dinnerTables,
-        timeline: localProject.timelineItems
+        timeline: localProject.timelineItems,
+        wedding: activeWedding
       }),
-    [localProject.dinnerTables, localProject.guests, localProject.musicCues, localProject.speeches, localProject.timelineItems]
+    [activeWedding, localProject.dinnerTables, localProject.guests, localProject.musicCues, localProject.speeches, localProject.timelineItems]
   );
 
   // Scene check: real, actionable problems only — each links to the place where

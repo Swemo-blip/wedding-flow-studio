@@ -16,7 +16,7 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
   {
     riskId: "risk-group-photo-time",
     title: "Extend the group photo window.",
-    description: "Give the photographer enough time for 112 guests, immediate family, wedding party, and grandparents.",
+    description: "Give the photographer enough time for the full guest list, immediate family, wedding party, and grandparents.",
     primaryActionLabel: "Apply 35-minute photo buffer",
     resolvedLabel: "Photo buffer added",
     timelineItemId: "group-photos",
@@ -78,7 +78,7 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
     primaryActionLabel: "Mark allergy brief for catering",
     resolvedLabel: "Catering allergy brief marked",
     timelineItemId: "first-course",
-    noteToAppend: "Resolve Mode: Send final allergy details to Sophia Grant and mark Anna Carter's seat before service."
+    noteToAppend: "Resolve Mode: Send final allergy details to the caterer and mark the affected seat before service."
   },
   {
     riskId: "risk-accessibility",
@@ -96,7 +96,7 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
     primaryActionLabel: "Mark seating conflict for planner",
     resolvedLabel: "Seating conflict marked",
     timelineItemId: "reception-doors",
-    noteToAppend: "Resolve Mode: Planner to review Johan Ek and Lisa Ek seating before exporting the final seating plan."
+    noteToAppend: "Resolve Mode: Review the conflicting guests' seating before exporting the final seating plan."
   },
   {
     riskId: "risk-secret-technical",
@@ -114,7 +114,7 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
     primaryActionLabel: "Add venue approval note",
     resolvedLabel: "Venue approval note added",
     timelineItemId: "ceremony-begins",
-    noteToAppend: "Resolve Mode: Ask Henry Cole to confirm chapel balcony access for Clara Hayes during rehearsal."
+    noteToAppend: "Resolve Mode: Ask the venue to confirm access for the photographer during rehearsal."
   },
   {
     riskId: "risk-service-path",

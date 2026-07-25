@@ -149,7 +149,6 @@ export function VendorSourcingStudio() {
             <div className="sourcing-role-card">
               <span>{t("Decision status")}</span>
               <strong>{selectedDecision.readinessLabel}</strong>
-              <small>{selectedDecision.readinessScore}% {t("ready")}</small>
             </div>
           </div>
 

@@ -46,15 +46,15 @@ export function WeddingDayPlayer() {
       audio.pause();
     }
   }, [isPlaying]);
-  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems } = useLocalProject();
+  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const risks = useMemo(
     () =>
       filterResolvedRisks(
-        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables }),
+        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables, wedding }),
         resolvedRiskIds
       ),
-    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems]
+    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
   );
   // The Preview is now the couple's OWN day: phases are derived at runtime from
   // their real timeline (grouped by phase, in their order), so editing the
@@ -330,7 +330,7 @@ export function WeddingDayPlayer() {
             </div>
             <div>
               <span>Readiness score</span>
-              <strong>{momentIntelligence.readinessScore}%</strong>
+              <strong>{t(momentIntelligence.readinessLabel)}</strong>
               <small>{momentIntelligence.readiness}</small>
             </div>
             <div>
