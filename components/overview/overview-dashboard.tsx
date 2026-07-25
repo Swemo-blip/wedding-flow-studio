@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Armchair,
   Compass,
@@ -460,19 +461,32 @@ export function OverviewDashboard() {
                   </button>
                 </span>
               </div>
-              <button className="vstudio-menu-action" onClick={copyStudioLink} type="button">
-                <Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
-                {shareStatus ?? t("Copy link")}
-              </button>
-              {shareFallbackUrl ? (
-                <input
-                  aria-label={t("Shareable link")}
-                  className="vstudio-menu-url"
-                  onFocus={(event) => event.target.select()}
-                  readOnly
-                  value={shareFallbackUrl}
-                />
-              ) : null}
+              {/* Sharing is offered only once there is a real plan. Before that the
+                  studio runs on the sample wedding, and a link built from it would
+                  present sample names, dates and venues to the recipient as if they
+                  were the couple's own. */}
+              {localProject.hasLocalProject ? (
+                <>
+                  <button className="vstudio-menu-action" onClick={copyStudioLink} type="button">
+                    <Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
+                    {shareStatus ?? t("Copy link")}
+                  </button>
+                  {shareFallbackUrl ? (
+                    <input
+                      aria-label={t("Shareable link")}
+                      className="vstudio-menu-url"
+                      onFocus={(event) => event.target.select()}
+                      readOnly
+                      value={shareFallbackUrl}
+                    />
+                  ) : null}
+                </>
+              ) : (
+                <Link className="vstudio-menu-action" href="/intake">
+                  <Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
+                  {t("Create your wedding to share it")}
+                </Link>
+              )}
               {localProject.hasLocalProject ? (
                 <button className="vstudio-menu-action vstudio-menu-danger" onClick={startOver} type="button">
                   {t("Start over with a new project")}

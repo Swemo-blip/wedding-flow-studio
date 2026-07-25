@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { decodeSnapshot, readShareHash, type ShareSnapshot } from "@/lib/share-snapshot";
+import { formatWeddingDate } from "@/lib/utils";
 
 type LoadState = { status: "loading" } | { status: "empty" } | { status: "ready"; snapshot: ShareSnapshot };
 
@@ -39,8 +40,11 @@ export default function SharedPage() {
   }
 
   const { snapshot } = state;
+  // This is the one surface people outside the couple see, so the date reads the
+  // same way it does everywhere else in the app rather than as a raw ISO string.
+  const weddingDate = formatWeddingDate(snapshot.wedding.date);
   const facts: Array<{ label: string; value: string }> = [
-    { label: t("Date"), value: snapshot.wedding.date },
+    { label: t("Date"), value: weddingDate },
     { label: t("Ceremony"), value: snapshot.wedding.ceremonyLocation },
     { label: t("Reception"), value: snapshot.wedding.receptionLocation },
     { label: t("Guests"), value: `${snapshot.guests.attending} / ${snapshot.guests.invited}` },
@@ -53,7 +57,7 @@ export default function SharedPage() {
         <span className="eyebrow">{t("A wedding preview")}</span>
         <h1 className="shared-couple">{snapshot.wedding.coupleNames}</h1>
         <p className="shared-meta">
-          {snapshot.wedding.date}
+          {weddingDate}
           {snapshot.wedding.ceremonyLocation ? ` · ${snapshot.wedding.ceremonyLocation}` : ""}
         </p>
       </header>

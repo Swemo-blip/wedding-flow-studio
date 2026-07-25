@@ -47,25 +47,73 @@ Then read:
 
 ## Current Design Direction
 
-The app uses a "light gallery, dark jewel" design language: airy warm-light chrome with a small number of deep evening-green jewel surfaces. Keep that contrast rhythm.
+The palette is **LOCKED** (chosen from the couple's own reference dashboard): warm
+cream canvas, deep forest-green as the single primary accent, gold as a small
+metallic detail only. Lavender/peach and plum were tried and rejected — do not
+reintroduce them. The tokens in `app/globals.css` `:root` are the source of truth.
 
-- Chrome and working surfaces: warm light gallery (`#fffdf8`-`#f2ebdb` family), ink text `#211d14`, bronze hairlines (`rgba(146, 118, 73, …)`), very soft warm shadows.
-- Jewel surfaces stay dark evening-green: the icon sidebar, the 3D canvas, and the Preview cinema stage. Primary buttons are champagne-gold gradients with dark text; secondary buttons are quiet outlines.
-- The shell follows the reference dashboard: gold WF serif monogram + lucide icon nav + "Digital Twin Active" callout + planner chip in the sidebar; a light header with couple names, saved status, Share Studio, and gold Preview Day; a tab bar for planning sections.
-- The home route is an Overview dashboard: large 3D venue hero with scene dropdown, 2D/3D toggle, fullscreen, zoom, and an "Edit in 3D Studio" drawer; four glance cards (timeline, guest donut, seating dots, style tiles); a right rail with wedding facts, plan-readiness donut, and cue-sheet meter.
-- Typography discipline: Cormorant Garamond (`--font-serif`, via `next/font`) only for couple names and one display headline per surface; Inter (`--font-sans`) for everything else. Eyebrow labels are rare, small, tracked, muted — no decorative rules or gold dashes on labels.
-- Text restraint: no paragraph under a headline if one line works; command-surface descriptions clamp to one line; avoid stat strips and repeated meta. The couple's names, date, venue, and guest count are the emotional anchor — ops language stays out of first viewports.
-- One-surface principle: the home route is a single framed atelier panel (dark hero band, light control/stage/next-move zones split by hairlines). Prefer zones within one surface over new cards. One primary CTA per surface ("Preview the day" on home).
-- The 3D studio scene is an evening/golden-hour mood: dark venue palettes, glow halo, lantern poles with catenary string lights, candle stands, flower arch on a dais, drifting gold dust motes, slow camera drift in 3D view.
-- Exports remain paper-like sheets (light background, dark ink); print styles force dark text on white.
+- Canvas and surfaces: warm cream `--background` / `--canvas` `#f4efe3`, white
+  cards `--surface`, warm off-white `--surface-soft` `#fbf8f1`; ink text `--ink`
+  `#2b2d24`; warm hairlines `--line` `rgba(120, 106, 74, 0.16)`; soft warm shadows.
+- Primary accent is forest green `--accent` `#414c37`: primary buttons are a solid
+  green fill with cream text (`.button-primary`), plus active nav and focus rings.
+  Secondary buttons are quiet outlines on near-white. Gold `--gilt` `#b39152` is a
+  restrained metallic detail (monogram, small accents) — **not** a button fill.
+- Typography: **Fraunces** (`--font-display` → `--font-serif`, via `next/font`)
+  only for couple names and one display headline per surface; **Inter**
+  (`--font-body` → `--font-sans`) for everything else. Eyebrow labels are rare,
+  small, tracked, muted — no decorative rules or gold dashes on labels.
+- Shell: sidebar with the gold WF serif monogram and a grouped lucide icon nav
+  (Plan / Details / Output — see `components/app-shell/navigation.tsx`, the single
+  source of truth for routes); a light header with couple names, saved status,
+  Share Studio, and the Preview Day CTA.
+- The home route (`/`) is a focused **3D studio workspace**: an Edit/Preview
+  switch, a tool rail, an inspector, and one playback bar — not a dashboard of
+  glance cards. See `components/overview/overview-dashboard.tsx`.
+- Text restraint: no paragraph under a headline if one line works; command-surface
+  descriptions clamp to one line; avoid stat strips and repeated meta. The
+  couple's names, date, venue, and guest count are the emotional anchor — ops
+  language stays out of first viewports.
+- One-surface principle: prefer zones within one framed surface over new cards.
+  One primary CTA per surface.
+- Everything shown must be **real**: no sample data presented as the couple's, no
+  dead controls, no invented percentages. A control that cannot do anything yet
+  must not ship — this is what previously made the product feel fake.
+- The 3D renders exactly **two scenes**: the warm church ceremony and the indoor
+  candlelit dinner hall (`components/wedding-studio/church-scene.tsx`).
+  `venueOptions` offers only Church and `getVenueTypeFromWedding` always returns
+  `"church"`, so the `garden`/`beach` branches in the scene are unreachable legacy
+  paths — do not build on them, and do not re-expose outdoor venues.
+  Camera motion is a locked-axis dolly (wedding-videography grammar); the old
+  sin/cos hover that read as a drone was deliberately removed — don't bring it back.
+- Exports remain paper-like sheets (light background, dark ink); print styles force
+  dark text on white.
 
 ## Best Next Work
 
-1. Continue dark-theme QA on less-visited surfaces (drawers, dialogs, deep states) and fix any remaining light-on-light leaks.
-2. Verify 3D scene performance on real mobile hardware; reduce dust motes or string-light bulbs if needed.
-3. Keep expanding useful 3D planning interactions without turning the app into a scattered control panel.
-4. Lift the `/studio` workspace and remaining modules to the same compositional level as the home atelier.
+1. The remaining 3D jump is the Blender baked-GI venue shell — spec'd in
+   `docs/blender-baked-venue.md`. This is skilled manual 3D work (Johan or an
+   artist), not an agent task; the agent's job is the wire-in and the fallback.
+2. Cheaper 3D wins that come first: stained-glass light shafts, and the figure
+   silhouette (a rigged CC0 character swap — taste-sensitive, show a still first).
+3. Cloud sync / share link / RSVP / collaboration still need the Supabase backend
+   wired (allowed, free tier). Keep localStorage as the offline fallback so the app
+   always runs with zero setup.
+4. QA less-visited surfaces (drawers, dialogs, deep states) at mobile widths.
 5. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
+
+## Verification Traps (learned the hard way)
+
+- **The 3D HD/postprocessing path renders blank in the agent's preview sandbox.**
+  Never ship a change to the 3D *look* that could not be verified — verify it on
+  the live deploy instead, or don't make it. Reverting an unverifiable 3D change is
+  the correct call.
+- **`wedding-flow-studio.layout.v1` is shared** by the home studio and
+  `/ceremony`. Always persist the *live hydrated* `sceneEdits`, and never
+  re-derive style fields from `wedding.style` once a layout is saved — both
+  mistakes silently wiped the couple's edits before.
+- `rg` is not always on PATH here; a scan written as `rg … || echo CLEAN` will
+  report a false pass. Use `grep -rn '[åäöÅÄÖ]'` and check the real output.
 
 ## Verification
 

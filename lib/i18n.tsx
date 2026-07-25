@@ -772,6 +772,7 @@ const sv: Record<string, string> = {
   "Couldn't save — storage full": "Kunde inte spara — lagringen är full",
   "Couldn't save changes": "Kunde inte spara ändringar",
   "Copy link": "Kopiera länk",
+  "Create your wedding to share it": "Skapa ert bröllop för att dela det",
   "Account created. Check your email to confirm, then sign in.": "Kontot skapat. Kolla din e-post för att bekräfta, logga sedan in.",
   "Signed in. Your plan is still saved on this device — cloud backup is coming soon.": "Inloggad. Din plan sparas fortfarande på den här enheten — molnbackup kommer snart.",
   "Back up your plan": "Säkerhetskopiera din plan",

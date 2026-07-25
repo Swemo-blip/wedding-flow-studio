@@ -62,10 +62,16 @@ export function TopBar({ wedding }: TopBarProps) {
             </button>
           </div>
           <SavedChip />
-          <button className="button button-secondary button-small studio-share-button" onClick={copyStudioLink} type="button">
-            <Share2 aria-hidden="true" size={15} strokeWidth={1.8} />
-            {shareStatus ?? t("Copy link")}
-          </button>
+          {/* Sharing is offered only once there is a real plan. Before that the
+              studio runs on the sample wedding, and a link built from it would
+              present sample names, dates and venues to the recipient as if they
+              were the couple's own. */}
+          {hasLocalProject ? (
+            <button className="button button-secondary button-small studio-share-button" onClick={copyStudioLink} type="button">
+              <Share2 aria-hidden="true" size={15} strokeWidth={1.8} />
+              {shareStatus ?? t("Copy link")}
+            </button>
+          ) : null}
           <Link className="button button-primary button-small studio-preview-button" href="/preview">
             <Eye aria-hidden="true" size={15} strokeWidth={1.8} />
             {t("Preview Day")}
