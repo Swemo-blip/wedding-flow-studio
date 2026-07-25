@@ -778,6 +778,11 @@ const sv: Record<string, string> = {
   "First name": "Förnamn",
   "Not booked yet": "Inte bokad än",
   "Your wedding": "Ert bröllop",
+  "Your wedding details": "Era bröllopsuppgifter",
+  "Change these whenever plans change — the rest of your plan stays exactly as it is.": "Ändra dessa när planerna ändras — resten av er plan lämnas orörd.",
+  "Save details": "Spara uppgifter",
+  "Wedding details saved.": "Bröllopsuppgifterna är sparade.",
+  "Edit wedding details": "Redigera bröllopsuppgifter",
   "Not assigned": "Inte tillsatt",
   "This fix belongs to a moment that isn't in your timeline. Open the connected studio to finish it.":
     "Den här åtgärden hör till ett moment som inte finns i er tidslinje. Öppna den kopplade studion för att slutföra den.",

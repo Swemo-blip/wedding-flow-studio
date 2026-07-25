@@ -27,12 +27,21 @@ export function buildShareSnapshot(input: { guests: Guest[]; timelineItems: Time
       guestCount: input.wedding.guestCount,
       style: input.wedding.style
     },
-    timeline: input.timelineItems.map((item) => ({
-      time: item.time,
-      title: item.title,
-      location: item.location,
-      phase: item.phase
-    })),
+    // ONLY moments marked for everyone. The share link is opened by guests, and
+    // this used to publish the whole timeline verbatim — so a moment the couple
+    // deliberately marked "secret" (a surprise speech, a surprise send-off) was
+    // handed straight to the people it was meant to surprise. Every other
+    // visibility (couple, partnerOne/Two, toastmaster, planner, vendor, secret)
+    // is internal by definition, so the guest-safe rule is a strict allow-list:
+    // a new visibility value can never leak by being forgotten here.
+    timeline: input.timelineItems
+      .filter((item) => item.visibility === "everyone")
+      .map((item) => ({
+        time: item.time,
+        title: item.title,
+        location: item.location,
+        phase: item.phase
+      })),
     guests: {
       invited: input.guests.length,
       attending: input.guests.filter((guest) => guest.rsvpStatus === "attending").length

@@ -1,15 +1,66 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
-import { CloudCheck, CloudOff, Download, HardDrive, Upload } from "lucide-react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { CloudCheck, CloudOff, Download, HardDrive, Heart, Upload } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
 import { downloadBackup, restoreBackup } from "@/lib/project-backup";
 import { useAuth } from "@/lib/use-auth";
+import { useLocalProject } from "@/lib/use-local-project";
+
+// Mirrors how the intake builds the display name, so editing a partner's name
+// keeps the couple line ("Klara & Johan") consistent with a freshly created plan.
+function buildCoupleNames(partnerOneName: string, partnerTwoName: string) {
+  const firstName = (value: string) => value.trim().split(/\s+/)[0] ?? "";
+  return [firstName(partnerOneName), firstName(partnerTwoName)].filter(Boolean).join(" & ");
+}
 
 export function AccountView() {
   const { t } = useTranslation();
   const { configured, loading, signIn, signOut, signUp, user } = useAuth();
+  const { hasLocalProject, updateWedding, wedding } = useLocalProject();
+  // A local draft so typing doesn't write to the store on every keystroke; the
+  // couple presses Save. Re-seeded whenever the stored wedding changes (e.g. a
+  // restore from backup, or an edit made in another tab).
+  const [draft, setDraft] = useState(wedding);
+  const [draftSource, setDraftSource] = useState(wedding);
+  const [detailsNotice, setDetailsNotice] = useState<string | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  // Re-seed the draft when the stored wedding changes underneath us (a restore
+  // from backup, or an edit in another tab). Adjusted during render rather than
+  // in an effect, so there is no extra pass with a stale form on screen.
+  if (draftSource !== wedding) {
+    setDraftSource(wedding);
+    setDraft(wedding);
+  }
+
+  function handleSaveDetails(event: FormEvent) {
+    event.preventDefault();
+    setDetailsNotice(null);
+    setDetailsError(null);
+
+    if (!draft.partnerOneName.trim() || !draft.partnerTwoName.trim()) {
+      setDetailsError(t("Add both of your names before creating the plan."));
+      return;
+    }
+
+    if (!draft.date.trim()) {
+      setDetailsError(t("Add your wedding date before creating the plan."));
+      return;
+    }
+
+    updateWedding({
+      coupleNames: buildCoupleNames(draft.partnerOneName, draft.partnerTwoName),
+      ceremonyLocation: draft.ceremonyLocation.trim(),
+      date: draft.date.trim(),
+      guestCount: Math.max(2, Math.min(300, Math.round(draft.guestCount) || 2)),
+      partnerOneName: draft.partnerOneName.trim(),
+      partnerTwoName: draft.partnerTwoName.trim(),
+      receptionLocation: draft.receptionLocation.trim()
+    });
+    setDetailsNotice(t("Wedding details saved."));
+  }
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +118,67 @@ export function AccountView() {
       title="Keep your plan safe."
     >
       <div className="account-screen">
+        {/* The couple's own facts were writable only by the intake, which replaces
+            the entire plan — so correcting a date meant destroying guests, seating,
+            timeline, speeches, budget and checklist and starting again. */}
+        {hasLocalProject ? (
+          <section className="account-card">
+            <div className="account-status" data-tone="on">
+              <Heart aria-hidden="true" size={20} />
+              <div>
+                <h2>{t("Your wedding details")}</h2>
+                <p>{t("Change these whenever plans change — the rest of your plan stays exactly as it is.")}</p>
+              </div>
+            </div>
+            <form className="account-form" onSubmit={handleSaveDetails}>
+              <label className="account-field">
+                <span>{t("Partner one")}</span>
+                <input onChange={(event) => setDraft({ ...draft, partnerOneName: event.target.value })} value={draft.partnerOneName} />
+              </label>
+              <label className="account-field">
+                <span>{t("Partner two")}</span>
+                <input onChange={(event) => setDraft({ ...draft, partnerTwoName: event.target.value })} value={draft.partnerTwoName} />
+              </label>
+              <label className="account-field">
+                <span>{t("Wedding date")}</span>
+                <input onChange={(event) => setDraft({ ...draft, date: event.target.value })} type="date" value={draft.date} />
+              </label>
+              <label className="account-field">
+                <span>{t("Ceremony venue")}</span>
+                <input
+                  onChange={(event) => setDraft({ ...draft, ceremonyLocation: event.target.value })}
+                  placeholder={t("Not booked yet")}
+                  value={draft.ceremonyLocation}
+                />
+              </label>
+              <label className="account-field">
+                <span>{t("Reception venue")}</span>
+                <input
+                  onChange={(event) => setDraft({ ...draft, receptionLocation: event.target.value })}
+                  placeholder={t("Not booked yet")}
+                  value={draft.receptionLocation}
+                />
+              </label>
+              <label className="account-field">
+                <span>{t("Guest count")}</span>
+                <input
+                  inputMode="numeric"
+                  max={300}
+                  min={2}
+                  onChange={(event) => setDraft({ ...draft, guestCount: Number(event.target.value) })}
+                  type="number"
+                  value={draft.guestCount}
+                />
+              </label>
+              {detailsError ? <p className="account-error">{detailsError}</p> : null}
+              {detailsNotice ? <p className="account-notice">{detailsNotice}</p> : null}
+              <button className="account-button" type="submit">
+                {t("Save details")}
+              </button>
+            </form>
+          </section>
+        ) : null}
+
         {!configured ? (
           <section className="account-card">
             <div className="account-status" data-tone="off">

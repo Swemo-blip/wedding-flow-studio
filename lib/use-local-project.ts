@@ -18,6 +18,7 @@ import {
   writeStoredReception,
   writeStoredSpeeches,
   writeStoredTimeline,
+  writeStoredWedding,
   writeStoredVendorCandidates
 } from "@/lib/local-project-store";
 import { clearStoredBudget } from "@/lib/use-budget";
@@ -156,6 +157,24 @@ function updateTimelineItems(updater: TimelineItem[] | ((items: TimelineItem[]) 
       ...currentState,
       hasLocalProject: true,
       timelineItems: storedProject?.timelineItems ?? createTimelineDraft(nextTimelineItems),
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+// Lets the couple correct their own facts — names, date, venues, guest count —
+// without the destructive "Start over" that wipes guests, seating, timeline,
+// speeches, budget and checklist. Merges into the CURRENT wedding so a partial
+// edit can never blank the fields it didn't touch.
+function updateWedding(updates: Partial<Wedding>) {
+  setStoreState((currentState) => {
+    const nextWedding = { ...currentState.wedding, ...updates };
+    const storedProject = writeStoredWedding(nextWedding);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      wedding: storedProject?.wedding ?? nextWedding,
       updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
@@ -440,6 +459,7 @@ export function useLocalProject() {
   return {
     ...snapshot,
     updateTimelineItems,
+    updateWedding,
     updateMusicCue,
     resetMusicCues,
     updateSpeech,

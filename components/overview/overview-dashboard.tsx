@@ -6,6 +6,7 @@ import {
   Armchair,
   Compass,
   Expand,
+  Heart,
   Minus,
   MoreHorizontal,
   Move,
@@ -488,6 +489,14 @@ export function OverviewDashboard() {
                   {t("Create your wedding to share it")}
                 </Link>
               )}
+              {/* Sits next to "Start over" because that used to be the ONLY way
+                  back to the wedding's own facts — and it wiped everything. */}
+              {localProject.hasLocalProject ? (
+                <Link className="vstudio-menu-action" href="/account">
+                  <Heart aria-hidden="true" size={14} strokeWidth={1.8} />
+                  {t("Edit wedding details")}
+                </Link>
+              ) : null}
               {localProject.hasLocalProject ? (
                 <button className="vstudio-menu-action vstudio-menu-danger" onClick={startOver} type="button">
                   {t("Start over with a new project")}

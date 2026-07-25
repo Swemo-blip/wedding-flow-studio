@@ -235,6 +235,31 @@ export function writeStoredTimeline(items: TimelineItem[]) {
   } satisfies StoredTimelineProject;
 }
 
+// The couple's own facts — names, date, venues, guest count — were writable ONLY
+// by the intake, which replaces the whole project. So changing a date meant
+// destroying the plan and starting over. This writes just the wedding slice and
+// leaves guests, seating, timeline, speeches, budget and checklist untouched.
+export function writeStoredWedding(wedding: Wedding) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const currentProject = readStoredProject() ?? createStoredProjectDraft();
+  const project = writeStoredProject({
+    ...currentProject,
+    wedding
+  });
+
+  if (!project) {
+    return null;
+  }
+
+  return {
+    updatedAt: project.updatedAt,
+    wedding: project.wedding
+  };
+}
+
 export function readStoredMusicCues() {
   const project = readStoredProject();
 
