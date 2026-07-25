@@ -1186,16 +1186,6 @@ a {
   min-width: 0;
 }
 
-.studio-focus-copy span,
-.studio-focus-brief span,
-.studio-guide-drawer > summary small {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .studio-focus-copy span {
   color: rgba(255, 255, 255, 0.72);
 }
@@ -1992,56 +1982,6 @@ a {
   font-size: 1.05rem;
   font-weight: 650;
   line-height: 1.25;
-}
-
-.studio-guide-drawer {
-  overflow: hidden;
-  border: 1px solid rgba(23, 29, 27, 0.1);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.58);
-}
-
-.studio-guide-drawer > summary {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 14px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.studio-guide-drawer > summary::-webkit-details-marker {
-  display: none;
-}
-
-.studio-guide-drawer > summary::after {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(69, 106, 115, 0.2);
-  border-radius: 999px;
-  color: var(--blue);
-  content: "+";
-  font-weight: 650;
-}
-
-.studio-guide-drawer[open] > summary::after {
-  content: "-";
-}
-
-.studio-guide-drawer > summary span {
-  color: var(--ink);
-  font-weight: 650;
-}
-
-.studio-guide-drawer-content {
-  display: grid;
-  gap: 10px;
-  border-top: 1px solid rgba(23, 29, 27, 0.08);
-  padding: 12px;
 }
 
 .studio-impact-details {
@@ -4343,112 +4283,6 @@ a {
   font-weight: 500;
 }
 
-.overview-cockpit-dock {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid rgba(216, 185, 119, 0.24);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.overview-cockpit-dock > div {
-  display: grid;
-  gap: 4px;
-  border-right: 1px solid var(--line);
-  padding: 14px;
-}
-
-.overview-cockpit-dock > div:last-child {
-  border-right: 0;
-}
-
-.overview-cockpit-dock strong {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: 1.08rem;
-  font-weight: 600;
-}
-
-.overview-cockpit-dock small {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.cockpit-context-details {
-  overflow: hidden;
-  border: 1px solid rgba(60, 47, 36, 0.1);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.58);
-}
-
-.cockpit-context-details > summary {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.cockpit-context-details > summary::-webkit-details-marker {
-  display: none;
-}
-
-.cockpit-context-details > summary::after {
-  content: "+";
-  display: grid;
-  width: 26px;
-  height: 26px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(129, 95, 47, 0.2);
-  border-radius: 999px;
-  color: var(--champagne-dark);
-  font-weight: 650;
-}
-
-.cockpit-context-details[open] > summary::after {
-  content: "-";
-}
-
-.cockpit-context-details > summary span {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: 1.08rem;
-  font-weight: 650;
-}
-
-.cockpit-context-details > summary small {
-  color: var(--muted);
-  line-height: 1.38;
-}
-
-.cockpit-context-content {
-  display: grid;
-  gap: 12px;
-  border-top: 1px solid rgba(60, 47, 36, 0.09);
-  padding: 14px;
-}
-
-.overview-cockpit-footer {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid rgba(216, 185, 119, 0.24);
-  padding-top: 16px;
-}
-
-.overview-cockpit-footer p {
-  max-width: 780px;
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
 .overview-secondary-details {
   overflow: hidden;
   border: 1px solid rgba(71, 55, 39, 0.12);
@@ -4756,16 +4590,6 @@ a {
   line-height: 1.48;
 }
 
-.studio-step-drawer > summary span,
-.studio-side-drawer > summary span,
-.studio-quick-drawer > summary span {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .studio-control-group {
   display: grid;
   gap: 10px;
@@ -4791,22 +4615,6 @@ a {
 .studio-plain-note {
   display: grid;
   gap: 5px;
-}
-
-.studio-step-intro span,
-.studio-plain-note span,
-.studio-moment-mini-list span,
-.studio-quick-strip label span,
-.studio-quick-range label,
-.studio-readiness-topline span,
-.studio-smart-recommendations span,
-.studio-ai-panel span,
-.studio-plan-summary dt {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .studio-step-intro strong,
@@ -4934,61 +4742,6 @@ a {
   color: var(--ink);
   padding: 7px 9px;
   text-transform: none;
-}
-
-.studio-step-drawer,
-.studio-advanced-editor,
-.studio-side-drawer,
-.studio-quick-drawer {
-  overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.075);
-  border-radius: var(--radius-control);
-  background: rgba(255, 255, 255, 0.42);
-}
-
-.studio-step-drawer > summary,
-.studio-advanced-editor > summary,
-.studio-side-drawer > summary,
-.studio-quick-drawer > summary {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  list-style: none;
-  padding: 12px;
-}
-
-.studio-step-drawer > summary::-webkit-details-marker,
-.studio-advanced-editor > summary::-webkit-details-marker,
-.studio-side-drawer > summary::-webkit-details-marker,
-.studio-quick-drawer > summary::-webkit-details-marker {
-  display: none;
-}
-
-.studio-advanced-editor > summary span {
-  color: var(--ink);
-  font-weight: 650;
-}
-
-.studio-step-drawer > summary small,
-.studio-advanced-editor > summary small,
-.studio-side-drawer > summary small,
-.studio-quick-drawer > summary small {
-  color: var(--muted);
-  line-height: 1.35;
-  text-align: right;
-}
-
-.studio-step-drawer[open] > summary,
-.studio-advanced-editor[open] > summary,
-.studio-side-drawer[open] > summary,
-.studio-quick-drawer[open] > summary {
-  border-bottom: 1px solid rgba(120, 106, 74, 0.08);
-}
-
-.studio-step-drawer .planning-stepper {
-  padding: 10px;
 }
 
 .studio-inline-drawer-content {
@@ -10456,14 +10209,6 @@ a {
     justify-content: flex-start;
   }
 
-  .studio-quick-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .studio-quick-range {
-    grid-column: span 2;
-  }
-
   .director-live-actions,
   .preview-player-controls,
   .preview-os-actions,
@@ -10550,22 +10295,6 @@ a {
 
   .overview-moment-rail button {
     flex: 0 0 128px;
-  }
-
-  .overview-cockpit-dock {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .overview-cockpit-dock > div:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .overview-cockpit-dock > div {
-    border-bottom: 1px solid var(--line);
-  }
-
-  .overview-cockpit-dock > div:nth-last-child(-n + 1) {
-    border-bottom: 0;
   }
 
   .hero-primary-path {
@@ -10901,16 +10630,6 @@ a {
     text-align: left;
   }
 
-  .studio-quick-strip,
-  .studio-plan-summary,
-  .studio-ai-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .studio-quick-range {
-    grid-column: auto;
-  }
-
   .studio-toolkit-grid,
   .studio-intelligence-links {
     grid-template-columns: 1fr;
@@ -10922,10 +10641,6 @@ a {
 
   .hero-primary-path .button {
     justify-content: center;
-  }
-
-  .overview-cockpit {
-    padding: 16px;
   }
 
   .studio-workspace {
@@ -10975,11 +10690,6 @@ a {
     padding-left: 0;
   }
 
-  .overview-cockpit-header h2,
-  .overview-stage-copy h3 {
-    font-size: clamp(1.75rem, 8.5vw, 2.45rem);
-  }
-
   .studio-workspace-canvas {
     min-height: 0;
   }
@@ -11013,10 +10723,6 @@ a {
   .studio-map-zone-right {
     right: 12px;
     top: 18px;
-  }
-
-  .overview-cockpit-stage {
-    min-height: 620px;
   }
 
   .overview-stage-map {
@@ -11065,17 +10771,6 @@ a {
     align-items: stretch;
   }
 
-  .overview-health-card > div,
-  .overview-cockpit-dock > div {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .overview-health-card > div:last-child,
-  .overview-cockpit-dock > div:last-child {
-    border-bottom: 0;
-  }
-
   .rehearsal-score-strip > div {
     border-right: 0;
     border-bottom: 1px solid var(--line);
@@ -11083,11 +10778,6 @@ a {
 
   .rehearsal-score-strip > div:last-child {
     border-bottom: 0;
-  }
-
-  .overview-cockpit-footer {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .intake-preview-metrics,
