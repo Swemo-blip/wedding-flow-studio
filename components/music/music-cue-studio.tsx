@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { CueStatusBadge } from "@/components/music/cue-status-badge";
 import { Button } from "@/components/ui/button";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
@@ -15,7 +16,7 @@ const musicRiskIds = ["risk-music-backup", "risk-music-start-cue", "risk-couple-
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
-  const { musicCues, resetMusicCues, timelineItems, updateMusicCue, wedding } = useLocalProject();
+  const { addMusicCue, musicCues, removeMusicCue, resetMusicCues, timelineItems, updateMusicCue, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedCueId, setSelectedCueId] = useState(musicCues[0]?.id ?? "");
   const selectedCue = musicCues.find((cue) => cue.id === selectedCueId) ?? musicCues[0];
@@ -98,6 +99,12 @@ export function MusicCueStudio() {
               </button>
             );
           })}
+          {/* The cue list was edit-only: a couple could not add a song for a
+              moment the sample never had, nor delete one they didn't want. */}
+          <button className="guests-add" onClick={() => addMusicCue()} type="button">
+            <Plus aria-hidden="true" size={15} />
+            {t("Add cue")}
+          </button>
         </div>
 
         {selectedCue ? (
@@ -110,7 +117,22 @@ export function MusicCueStudio() {
                   {t(selectedCue.moment)} · {selectedCue.artist}
                 </p>
               </div>
-              <CueStatusBadge status={selectedCue.status} />
+              <span style={{ alignItems: "center", display: "inline-flex", gap: 8 }}>
+                <CueStatusBadge status={selectedCue.status} />
+                <button
+                  aria-label={t("Remove cue")}
+                  className="guests-remove"
+                  onClick={() => {
+                    const nextId = musicCues.find((cue) => cue.id !== selectedCue.id)?.id ?? "";
+                    removeMusicCue(selectedCue.id);
+                    setSelectedCueId(nextId);
+                  }}
+                  title={t("Remove cue")}
+                  type="button"
+                >
+                  <X aria-hidden="true" size={14} />
+                </button>
+              </span>
             </div>
 
             <dl className="studio-inspector-list">

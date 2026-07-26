@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { SecretLayerBadge } from "@/components/speeches/secret-layer-badge";
 import { Button } from "@/components/ui/button";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
@@ -16,7 +17,7 @@ const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "p
 
 export function SpeechStudio() {
   const { t } = useTranslation();
-  const { dinnerTables, guests, resetSpeeches, speeches, timelineItems, updateSpeech, wedding } = useLocalProject();
+  const { addSpeech, dinnerTables, guests, removeSpeech, resetSpeeches, speeches, timelineItems, updateSpeech, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
@@ -121,6 +122,12 @@ export function SpeechStudio() {
               </button>
             );
           })}
+          {/* Intake generates speech placeholders with speaker "TBD" that the
+              couple could not delete, and there was no way to add their own. */}
+          <button className="guests-add" onClick={() => addSpeech()} type="button">
+            <Plus aria-hidden="true" size={15} />
+            {t("Add speech")}
+          </button>
         </div>
 
         {selectedSpeech ? (
@@ -133,7 +140,22 @@ export function SpeechStudio() {
                   {selectedSpeech.speakerName} · {speakerTable ? `${selectedSpeech.relation} · ${speakerTable.name}` : selectedSpeech.relation}
                 </p>
               </div>
-              <SecretLayerBadge isSecret={selectedSpeech.isSecret} />
+              <span style={{ alignItems: "center", display: "inline-flex", gap: 8 }}>
+                <SecretLayerBadge isSecret={selectedSpeech.isSecret} />
+                <button
+                  aria-label={t("Remove speech")}
+                  className="guests-remove"
+                  onClick={() => {
+                    const nextId = speeches.find((speech) => speech.id !== selectedSpeech.id)?.id ?? "";
+                    removeSpeech(selectedSpeech.id);
+                    setSelectedSpeechId(nextId);
+                  }}
+                  title={t("Remove speech")}
+                  type="button"
+                >
+                  <X aria-hidden="true" size={14} />
+                </button>
+              </span>
             </div>
 
             <dl className="studio-inspector-list">

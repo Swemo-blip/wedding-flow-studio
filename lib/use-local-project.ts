@@ -194,6 +194,144 @@ function updateMusicCue(cueId: string, updates: Partial<MusicCue>) {
   });
 }
 
+// Music cues, speeches and dinner tables could only ever be EDITED — the store
+// had no add or remove for any of them. So a couple could not give their own
+// "Father-daughter dance" a song, could not delete a generated speech placeholder
+// they didn't want, and could not add a table when their guest list grew past what
+// the intake sized for. Seating in particular was impossible to finish.
+function addMusicCue(partial: Partial<MusicCue> = {}) {
+  setStoreState((currentState) => {
+    const newCue: MusicCue = {
+      id: `cue-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      moment: "",
+      songTitle: "",
+      artist: "",
+      responsiblePerson: "",
+      link: "",
+      startCue: "",
+      backupPlan: "",
+      status: "needs-confirmation",
+      notes: "",
+      timelineItemId: "",
+      ...partial
+    };
+    const nextMusicCues = [...currentState.musicCues, newCue];
+    const storedProject = writeStoredMusicCues(nextMusicCues);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      musicCues: storedProject?.musicCues ?? nextMusicCues,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function removeMusicCue(cueId: string) {
+  setStoreState((currentState) => {
+    const nextMusicCues = currentState.musicCues.filter((cue) => cue.id !== cueId);
+    const storedProject = writeStoredMusicCues(nextMusicCues);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      musicCues: storedProject?.musicCues ?? nextMusicCues,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function addSpeech(partial: Partial<Speech> = {}) {
+  setStoreState((currentState) => {
+    const newSpeech: Speech = {
+      id: `speech-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title: "",
+      speakerName: "",
+      relation: "",
+      durationMinutes: 4,
+      timing: "",
+      visibility: "everyone",
+      isSecret: false,
+      technicalNeeds: [],
+      introPerson: "",
+      notes: "",
+      timelineItemId: "",
+      ...partial
+    };
+    const nextSpeeches = [...currentState.speeches, newSpeech];
+    const storedProject = writeStoredSpeeches(nextSpeeches);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      speeches: storedProject?.speeches ?? nextSpeeches,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function removeSpeech(speechId: string) {
+  setStoreState((currentState) => {
+    const nextSpeeches = currentState.speeches.filter((speech) => speech.id !== speechId);
+    const storedProject = writeStoredSpeeches(nextSpeeches);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      speeches: storedProject?.speeches ?? nextSpeeches,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function addDinnerTable(partial: Partial<DinnerTable> = {}) {
+  setStoreState((currentState) => {
+    const newTable: DinnerTable = {
+      id: `table-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: `Table ${currentState.dinnerTables.length + 1}`,
+      type: "guest",
+      shape: "round",
+      capacity: 8,
+      // Placed just off-centre so a new table is visible in the room rather than
+      // stacked exactly on top of an existing one.
+      position: { x: 0.5, y: 0.4 + (currentState.dinnerTables.length % 3) * 0.12 },
+      assignedGuestIds: [],
+      ...partial
+    };
+    const nextTables = [...currentState.dinnerTables, newTable];
+    const storedProject = writeStoredReception(currentState.guests, nextTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      dinnerTables: storedProject?.dinnerTables ?? nextTables,
+      guests: storedProject?.guests ?? currentState.guests,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function removeDinnerTable(tableId: string) {
+  setStoreState((currentState) => {
+    const nextTables = currentState.dinnerTables.filter((table) => table.id !== tableId);
+    // Unseat everyone who sat there, or they would keep a tableId pointing at a
+    // table that no longer exists — the guest would look seated in the list while
+    // vanishing from the room.
+    const nextGuests = currentState.guests.map((guest) =>
+      guest.tableId === tableId ? { ...guest, tableId: "", seatIndex: 0 } : guest
+    );
+    const storedProject = writeStoredReception(nextGuests, nextTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      dinnerTables: storedProject?.dinnerTables ?? nextTables,
+      guests: storedProject?.guests ?? nextGuests,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
 function resetMusicCues() {
   setStoreState((currentState) => {
     const nextProject = writeStoredProject(
@@ -461,13 +599,19 @@ export function useLocalProject() {
     updateTimelineItems,
     updateWedding,
     updateMusicCue,
+    addMusicCue,
+    removeMusicCue,
     resetMusicCues,
     updateSpeech,
+    addSpeech,
+    removeSpeech,
     resetSpeeches,
     updateGuest,
     addGuest,
     removeGuest,
     updateDinnerTable,
+    addDinnerTable,
+    removeDinnerTable,
     assignGuestToTable,
     resetReception,
     addVendorCandidate,

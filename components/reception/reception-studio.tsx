@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Camera, ChevronRight, Maximize2 } from "lucide-react";
+import { Camera, ChevronRight, Maximize2, Plus, X } from "lucide-react";
 import { ReceptionSeating3D } from "@/components/reception/reception-seating-3d";
 import { Donut } from "@/components/ui/donut";
 import { useTranslation } from "@/lib/i18n";
@@ -17,7 +17,7 @@ function formatWeddingDate(value: string) {
 
 export function ReceptionStudio() {
   const { t } = useTranslation();
-  const { assignGuestToTable, dinnerTables, guests, wedding } = useLocalProject();
+  const { addDinnerTable, assignGuestToTable, dinnerTables, guests, removeDinnerTable, updateDinnerTable, wedding } = useLocalProject();
 
   // Seed selection with the first unseated guest (the one most worth placing),
   // falling back to the first guest — never a hardcoded name.
@@ -93,6 +93,12 @@ export function ReceptionStudio() {
           <p className="setup-hint">{t("From your guest list — edit it on the Guests page.")}</p>
         </div>
 
+        {/* Tables used to be read-only text. The count and every capacity were
+            frozen at intake time, from a guest count that then changed — so a plan
+            made for 20 guests that grew to 60 had no way to add a table, and
+            seating could not be finished at all. Each row can now be renamed,
+            resized and removed; removing one unseats its guests rather than
+            leaving them pointing at a table that no longer exists. */}
         <div className="setup-field">
           <div className="setup-field-head">
             <span className="setup-label">{t("Tables")}</span>
@@ -101,6 +107,42 @@ export function ReceptionStudio() {
           <p className="setup-hint">
             {t("{seats} seats across {tables} tables", { seats: totalSeats, tables: dinnerTables.length })}
           </p>
+          {/* Layout is inline only because a CSS consolidation pass was in flight
+              in globals.css; move these two wrappers into it when that settles. */}
+          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
+            {dinnerTables.map((table) => (
+              <div key={table.id} style={{ alignItems: "center", display: "grid", gap: 6, gridTemplateColumns: "1fr 72px auto" }}>
+                <input
+                  aria-label={t("Table name")}
+                  onChange={(event) => updateDinnerTable(table.id, { name: event.target.value })}
+                  value={table.name}
+                />
+                <input
+                  aria-label={t("Seats")}
+                  max={20}
+                  min={1}
+                  onChange={(event) =>
+                    updateDinnerTable(table.id, { capacity: Math.max(1, Math.min(20, Number(event.target.value) || 1)) })
+                  }
+                  type="number"
+                  value={table.capacity}
+                />
+                <button
+                  aria-label={t("Remove {name}", { name: table.name })}
+                  className="guests-remove"
+                  onClick={() => removeDinnerTable(table.id)}
+                  title={t("Remove table")}
+                  type="button"
+                >
+                  <X aria-hidden="true" size={14} />
+                </button>
+              </div>
+            ))}
+            <button className="guests-add" onClick={() => addDinnerTable()} type="button">
+              <Plus aria-hidden="true" size={15} />
+              {t("Add table")}
+            </button>
+          </div>
         </div>
 
         <div className="setup-field">
