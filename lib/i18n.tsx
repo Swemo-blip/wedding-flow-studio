@@ -778,6 +778,14 @@ const sv: Record<string, string> = {
   "First name": "Förnamn",
   "Not booked yet": "Inte bokad än",
   "Your wedding": "Ert bröllop",
+  "Two moments overlap.": "Två moment krockar.",
+  "\"{first}\" runs until {endsAt}, but \"{second}\" starts at {startsAt}.":
+    "\"{first}\" pågår till {endsAt}, men \"{second}\" börjar {startsAt}.",
+  "Shorten the first moment or move the second one later.": "Korta det första momentet eller flytta det andra senare.",
+  "There is a long gap with nothing planned.": "Det finns en lång lucka utan något inplanerat.",
+  "{minutes} minutes are unaccounted for between \"{first}\" and \"{second}\".":
+    "{minutes} minuter är oredovisade mellan \"{first}\" och \"{second}\".",
+  "Add a moment for that stretch, or extend the one before it.": "Lägg till ett moment för den stunden, eller förläng det föregående.",
   "Add cue": "Lägg till inslag",
   "Remove cue": "Ta bort inslag",
   "Add speech": "Lägg till tal",

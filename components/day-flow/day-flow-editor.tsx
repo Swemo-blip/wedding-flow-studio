@@ -32,7 +32,7 @@ import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases, timelineItems } from "@/lib/wedding-data";
 import type { PreviewPhase, RiskItem, RiskSeverity, TimelineItem, Visibility } from "@/lib/wedding-types";
-import { joinDetails } from "@/lib/utils";
+import { getMomentEndMinutes, formatMinutesAsTime, joinDetails, sortTimelineByTime } from "@/lib/utils";
 
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
 const riskOptions: Array<RiskSeverity | "none"> = ["none", "low", "medium", "high"];
@@ -264,7 +264,11 @@ export function DayFlowEditor() {
 
       return {
         ...currentProject,
-        items: [...currentProject.items, newItem],
+        // Sorted on ADD so the new moment visibly lands in the right place. Not
+        // sorted on every keystroke while a time is being edited — rows jumping
+        // under the cursor mid-typing is worse than settling a moment later, and
+        // the store sorts on write regardless.
+        items: sortTimelineByTime([...currentProject.items, newItem]),
         selectedId: newItem.id,
         updatedAt: new Date().toISOString()
       };

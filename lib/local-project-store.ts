@@ -1,5 +1,6 @@
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
 import { safeSetItem } from "@/lib/persistence-status";
+import { sortTimelineByTime } from "@/lib/utils";
 import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 export const projectStorageKey = "wedding-flow-studio.project.v1";
@@ -60,8 +61,13 @@ export type StoredRiskResolution = {
   resolvedAt: string;
 };
 
+// Every read and write path for the timeline funnels through here, which makes it
+// the one place to guarantee chronological order. New moments used to be appended
+// to the END of the array, and `preview-phases.ts` states outright that it assumes
+// a chronological timeline — so a 9:00 AM moment added late rendered below "Party
+// begins", and Preview, the exports and the .ics all inherited that order.
 export function createTimelineDraft(items: TimelineItem[]) {
-  return items.map((item) => ({ ...item }));
+  return sortTimelineByTime(items.map((item) => ({ ...item })));
 }
 
 export function createMusicCueDraft(items: MusicCue[]) {

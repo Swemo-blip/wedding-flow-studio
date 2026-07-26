@@ -1,4 +1,5 @@
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
+import { formatMinutesAsTime, getMomentEndMinutes, parseTimeToMinutes } from "@/lib/utils";
 import type { DinnerTable, Guest, MusicCue, RiskItem, Speech, TimelineItem, Wedding } from "@/lib/wedding-types";
 
 type RiskSource = {
@@ -222,6 +223,57 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   // wall". Both described the SAMPLE venues' layouts, so every couple was warned
   // about a balcony their venue may not have. A warning that cannot be derived
   // from the couple's own plan is noise dressed as insight — removed.
+
+  // Does the day actually fit? Until now nothing could answer that: `time` was
+  // free text with no parser anywhere, and `durationMinutes` was stored, editable
+  // and used for nothing but an .ics duration. These two rules are derived purely
+  // from the couple's own moments — one risk per offending pair, keyed to the
+  // entity, so resolving one never silences the next.
+  const timed = timeline
+    .map((item) => ({ item, start: parseTimeToMinutes(item.time), end: getMomentEndMinutes(item.time, item.durationMinutes) }))
+    .filter((entry): entry is { item: TimelineItem; start: number; end: number | null } => entry.start !== null)
+    .sort((left, right) => left.start - right.start);
+
+  for (let index = 0; index < timed.length - 1; index += 1) {
+    const current = timed[index];
+    const next = timed[index + 1];
+
+    if (current.end !== null && current.end > next.start) {
+      risks.push({
+        id: `risk-timeline-overlap:${current.item.id}`,
+        severity: "medium",
+        title: "Two moments overlap.",
+        ...localizedDescription('"{first}" runs until {endsAt}, but "{second}" starts at {startsAt}.', {
+          first: current.item.title,
+          endsAt: formatMinutesAsTime(current.end),
+          second: next.item.title,
+          startsAt: formatMinutesAsTime(next.start)
+        }),
+        relatedEntityType: "timeline",
+        relatedEntityId: current.item.id,
+        suggestedFix: "Shorten the first moment or move the second one later."
+      });
+      continue;
+    }
+
+    // A long unaccounted stretch between moments is the other half of the same
+    // question. 45 minutes is the smallest gap worth mentioning without nagging.
+    if (current.end !== null && next.start - current.end >= 45) {
+      risks.push({
+        id: `risk-timeline-gap:${current.item.id}`,
+        severity: "low",
+        title: "There is a long gap with nothing planned.",
+        ...localizedDescription('{minutes} minutes are unaccounted for between "{first}" and "{second}".', {
+          minutes: next.start - current.end,
+          first: current.item.title,
+          second: next.item.title
+        }),
+        relatedEntityType: "timeline",
+        relatedEntityId: current.item.id,
+        suggestedFix: "Add a moment for that stretch, or extend the one before it."
+      });
+    }
+  }
 
   return risks;
 }
