@@ -29,6 +29,7 @@ import { derivePreviewPhases, isReceptionPhase, waypointIndexForPhase } from "@/
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
+import { clearStoredCurrency } from "@/lib/use-currency";
 import { useLocalProject } from "@/lib/use-local-project";
 import { formatWeddingDate } from "@/lib/utils";
 import { previewPhases, sampleWedding } from "@/lib/wedding-data";
@@ -362,6 +363,9 @@ export function OverviewDashboard() {
 
     clearStoredProject();
     clearStoredWeddingStudioLayout();
+    // The currency lives outside the project blob, so a reset has to drop it too
+    // or the next couple inherits the previous couple's choice.
+    clearStoredCurrency();
     localProject.resetLocalProject();
     setPlan(defaultWeddingStudioPlan);
     setSceneEdits(defaultStudioSceneEdits);

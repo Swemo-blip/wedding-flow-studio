@@ -22,6 +22,7 @@ import { useTranslation } from "@/lib/i18n";
 import { createStoredProjectDraft, readStoredProject, writeStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { clearStoredBudget } from "@/lib/use-budget";
+import { clearStoredCurrency } from "@/lib/use-currency";
 import { clearStoredChecklist } from "@/lib/use-checklist";
 import { clearStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 
@@ -179,6 +180,7 @@ export function WeddingProducerIntake() {
     // also lets the home studio re-seed style/colour/decor from the new wedding.
     clearStoredChecklist();
     clearStoredBudget();
+    clearStoredCurrency();
     clearStoredWeddingStudioLayout();
 
     setStatus("Your first visual wedding plan is ready in this browser.");

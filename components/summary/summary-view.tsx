@@ -9,8 +9,10 @@ import { formatCurrency } from "@/lib/wedding-budget";
 import { useBudget } from "@/lib/use-budget";
 import { useChecklist } from "@/lib/use-checklist";
 import { useCouplePhotos } from "@/lib/use-couple-photos";
+import { useCurrency } from "@/lib/use-currency";
 
 export function SummaryView() {
+  const { currency } = useCurrency();
   const { t } = useTranslation();
   const { guests, timelineItems, wedding } = useLocalProject();
   const { items: budgetItems, target } = useBudget();
@@ -97,16 +99,16 @@ export function SummaryView() {
           <section className="summary-block">
             <h2>{t("Budget")}</h2>
             <ul className="summary-stats">
-              <li><span>{t("Total budget")}</span><strong>{formatCurrency(budgetStats.target)}</strong></li>
-              <li><span>{t("Estimated")}</span><strong>{formatCurrency(budgetStats.estimate)}</strong></li>
-              <li><span>{t("Paid")}</span><strong>{formatCurrency(budgetStats.paid)}</strong></li>
-              <li><span>{t("Left to pay")}</span><strong>{formatCurrency(budgetStats.remaining)}</strong></li>
+              <li><span>{t("Total budget")}</span><strong>{formatCurrency(budgetStats.target, currency)}</strong></li>
+              <li><span>{t("Estimated")}</span><strong>{formatCurrency(budgetStats.estimate, currency)}</strong></li>
+              <li><span>{t("Paid")}</span><strong>{formatCurrency(budgetStats.paid, currency)}</strong></li>
+              <li><span>{t("Left to pay")}</span><strong>{formatCurrency(budgetStats.remaining, currency)}</strong></li>
             </ul>
             {budgetStats.hasTarget ? (
               <p className="summary-note" data-tone={budgetStats.overBudget ? "alert" : "good"}>
                 {budgetStats.overBudget
-                  ? t("{amount} over budget", { amount: formatCurrency(budgetStats.estimate - budgetStats.target) })
-                  : t("{amount} under budget", { amount: formatCurrency(budgetStats.target - budgetStats.estimate) })}
+                  ? t("{amount} over budget", { amount: formatCurrency(budgetStats.estimate - budgetStats.target, currency) })
+                  : t("{amount} under budget", { amount: formatCurrency(budgetStats.target - budgetStats.estimate, currency) })}
               </p>
             ) : null}
           </section>

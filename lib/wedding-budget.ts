@@ -1,3 +1,4 @@
+import { defaultCurrency, getCurrencyLocale, type SupportedCurrency } from "@/lib/use-currency";
 // Single source for the mock wedding budget. Amounts are in USD to match the
 // Napa Valley sample wedding. Keep all budget mock data here, never scattered
 // across components.
@@ -37,14 +38,38 @@ export function calculateBudgetSummary(categories: BudgetCategory[] = budgetCate
   return { total, spent, remaining, spentPercent, categories };
 }
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0
-});
+// One formatter per currency, built on demand and reused — constructing an
+// Intl.NumberFormat is not cheap and these run on every budget row.
+const currencyFormatters = new Map<string, Intl.NumberFormat>();
 
-export function formatCurrency(amount: number): string {
+// The currency is an explicit argument rather than module state, so no surface can
+// silently render a different one from its neighbour. Callers read it from
+// `useCurrency()`.
+export function formatCurrency(amount: number, currency: SupportedCurrency = defaultCurrency): string {
   const rounded = Math.round(amount) || 0;
+  let formatter = currencyFormatters.get(currency);
 
-  return currencyFormatter.format(rounded);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(getCurrencyLocale(currency), {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0
+    });
+    currencyFormatters.set(currency, formatter);
+  }
+
+  return formatter.format(rounded);
+}
+
+// The bare symbol, for the input adornments that sit beside a number field where a
+// full formatted amount would be wrong. Derived from the same formatter, so it can
+// never drift from what the amounts render as.
+export function getCurrencySymbol(currency: SupportedCurrency = defaultCurrency): string {
+  const parts = new Intl.NumberFormat(getCurrencyLocale(currency), {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0
+  }).formatToParts(0);
+
+  return parts.find((part) => part.type === "currency")?.value ?? currency;
 }

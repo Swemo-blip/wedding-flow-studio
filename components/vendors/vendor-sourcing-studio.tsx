@@ -17,11 +17,13 @@ import { VENDOR_CATEGORY_TO_CHECKLIST_TASK, useChecklist } from "@/lib/use-check
 import { buildVendorSearchSuggestions, getVendorSourcingSummary, vendorSourcingCategories } from "@/lib/vendor-sourcing";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { SourcingPriority, VendorCandidate, VendorCandidateStatus, VendorPriceTier, VendorSearchSuggestion } from "@/lib/wedding-types";
+import { useCurrency } from "@/lib/use-currency";
 
 const vendorStatusOptions: VendorCandidateStatus[] = ["shortlisted", "contacted", "quote-requested", "booked", "rejected"];
 const priceTierOptions: VendorPriceTier[] = ["unknown", "budget", "standard", "premium", "luxury"];
 
 export function VendorSourcingStudio() {
+  const { currency } = useCurrency();
   const { t } = useTranslation();
   const { addVendorCandidate, updateVendorCandidate, vendorCandidates, wedding } = useLocalProject();
   const { markTaskDone } = useChecklist();
@@ -179,7 +181,7 @@ export function VendorSourcingStudio() {
                 <strong>{selectedDecision.nextAction}</strong>
                 {bookedTotal > 0 ? (
                   <small className="vendor-panel-money">
-                    <strong>{formatCurrency(bookedTotal)}</strong> {t("committed to booked vendors")}
+                    <strong>{formatCurrency(bookedTotal, currency)}</strong> {t("committed to booked vendors")}
                   </small>
                 ) : null}
               </div>
@@ -202,7 +204,7 @@ export function VendorSourcingStudio() {
                         <div className="vendor-candidate-stats">
                           <div className="vendor-fit-score vendor-quote-figure">
                             <span>{t("Quote")}</span>
-                            <strong>{formatCurrency(candidate.quote)}</strong>
+                            <strong>{formatCurrency(candidate.quote, currency)}</strong>
                           </div>
                         </div>
                       ) : null}

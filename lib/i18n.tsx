@@ -778,6 +778,7 @@ const sv: Record<string, string> = {
   "First name": "Förnamn",
   "Not booked yet": "Inte bokad än",
   "Your wedding": "Ert bröllop",
+  "Currency": "Valuta",
   "Two moments overlap.": "Två moment krockar.",
   "\"{first}\" runs until {endsAt}, but \"{second}\" starts at {startsAt}.":
     "\"{first}\" pågår till {endsAt}, men \"{second}\" börjar {startsAt}.",

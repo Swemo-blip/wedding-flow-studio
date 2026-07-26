@@ -5,13 +5,16 @@ import { Plus, X } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { Donut } from "@/components/ui/donut";
 import { useTranslation } from "@/lib/i18n";
-import { formatCurrency } from "@/lib/wedding-budget";
+import { formatCurrency, getCurrencySymbol } from "@/lib/wedding-budget";
 import { BUDGET_CATEGORIES, VENDOR_TO_BUDGET_CATEGORY, useBudget } from "@/lib/use-budget";
 import { useLocalProject } from "@/lib/use-local-project";
+import { supportedCurrencies, useCurrency } from "@/lib/use-currency";
 
 type BookedVendor = { id: string; name: string; quote: number };
 
 export function BudgetView() {
+  const { currency, setCurrency } = useCurrency();
+  const currencySymbol = getCurrencySymbol(currency);
   const { t } = useTranslation();
   const { addItem, items, removeItem, setTarget, target, updateItem } = useBudget();
   const { vendorCandidates } = useLocalProject();
@@ -103,7 +106,7 @@ export function BudgetView() {
         {booked.map((vendor) => (
           <li key={vendor.id}>
             <span className="budget-vendor-name">{vendor.name}</span>
-            <span className="budget-vendor-quote">{vendor.quote > 0 ? formatCurrency(vendor.quote) : t("Booked")}</span>
+            <span className="budget-vendor-quote">{vendor.quote > 0 ? formatCurrency(vendor.quote, currency) : t("Booked")}</span>
           </li>
         ))}
       </ul>
@@ -129,22 +132,22 @@ export function BudgetView() {
               <span>{t("Estimated total")}</span>
               {/* Committed = estimates plus any booked-vendor spend beyond them,
                   so the trio always ties out (Estimated − Paid = Left). */}
-              <strong>{formatCurrency(committed)}</strong>
+              <strong>{formatCurrency(committed, currency)}</strong>
             </div>
             <div>
               <span>{t("Paid so far")}</span>
-              <strong>{formatCurrency(totals.paid)}</strong>
+              <strong>{formatCurrency(totals.paid, currency)}</strong>
             </div>
             <div data-tone={remaining > 0 ? "due" : "clear"}>
               <span>{t("Left to pay")}</span>
-              <strong>{formatCurrency(remaining)}</strong>
+              <strong>{formatCurrency(remaining, currency)}</strong>
             </div>
           </div>
           <div className="budget-target">
             <label className="budget-target-field">
               <span>{t("Your total budget")}</span>
               <span className="budget-target-input">
-                <span aria-hidden="true" className="budget-money-prefix">$</span>
+                <span aria-hidden="true" className="budget-money-prefix">{currencySymbol}</span>
                 <input
                   aria-label={t("Your total budget")}
                   className="guests-cell-input"
@@ -156,11 +159,30 @@ export function BudgetView() {
                 />
               </span>
             </label>
+            {/* Currency is its own choice, not a consequence of the EN/SV toggle —
+                a Swedish couple may use the English interface and still budget in
+                kronor. Switching changes the symbol only; amounts are plain numbers
+                and are never converted. */}
+            <label className="budget-target-field">
+              <span>{t("Currency")}</span>
+              <select
+                aria-label={t("Currency")}
+                className="guests-cell-input"
+                onChange={(event) => setCurrency(event.target.value as typeof supportedCurrencies[number])}
+                value={currency}
+              >
+                {supportedCurrencies.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
+            </label>
             {hasTarget ? (
               <span className="budget-target-badge" data-over={overBudget ? "true" : undefined}>
                 {overBudget
-                  ? t("{amount} over budget", { amount: formatCurrency(committed - target) })
-                  : t("{amount} under budget", { amount: formatCurrency(target - committed) })}
+                  ? t("{amount} over budget", { amount: formatCurrency(committed - target, currency) })
+                  : t("{amount} under budget", { amount: formatCurrency(target - committed, currency) })}
               </span>
             ) : (
               <span className="budget-target-badge">{t("Set your budget to track over/under.")}</span>
@@ -174,7 +196,7 @@ export function BudgetView() {
               <h3>{t("Where it goes")}</h3>
               {bookedTotal > 0 ? (
                 <span className="budget-breakdown-booked">
-                  <strong>{formatCurrency(bookedTotal)}</strong> {t("booked with vendors")}
+                  <strong>{formatCurrency(bookedTotal, currency)}</strong> {t("booked with vendors")}
                 </span>
               ) : null}
             </div>
@@ -191,13 +213,13 @@ export function BudgetView() {
                         <span style={{ width: `${row.pct}%` }} />
                       </span>
                       <span className="budget-breakdown-amount">
-                        {formatCurrency(row.amount)} · {row.pct}%
+                        {formatCurrency(row.amount, currency)} · {row.pct}%
                       </span>
                     </div>
                     {booked.length > 0 ? renderBookedVendors(booked) : null}
                     {overBooked ? (
                       <span className="budget-breakdown-over">
-                        {t("Booked {amount} over this estimate", { amount: formatCurrency(bookedSum - row.amount) })}
+                        {t("Booked {amount} over this estimate", { amount: formatCurrency(bookedSum - row.amount, currency) })}
                       </span>
                     ) : null}
                   </div>
@@ -262,7 +284,7 @@ export function BudgetView() {
                   </select>
                 </span>
                 <span className="budget-num" role="cell">
-                  <span aria-hidden="true" className="budget-money-prefix">$</span>
+                  <span aria-hidden="true" className="budget-money-prefix">{currencySymbol}</span>
                   <input
                     aria-label={t("Estimate")}
                     className="guests-cell-input budget-money-input"
@@ -274,7 +296,7 @@ export function BudgetView() {
                   />
                 </span>
                 <span className="budget-num" role="cell">
-                  <span aria-hidden="true" className="budget-money-prefix">$</span>
+                  <span aria-hidden="true" className="budget-money-prefix">{currencySymbol}</span>
                   <input
                     aria-label={t("Paid")}
                     className="guests-cell-input budget-money-input"
@@ -286,7 +308,7 @@ export function BudgetView() {
                   />
                 </span>
                 <span className="budget-num budget-left" data-due={left > 0 ? "true" : undefined} role="cell">
-                  {formatCurrency(left)}
+                  {formatCurrency(left, currency)}
                 </span>
                 <span className="guests-cell-actions" role="cell">
                   <button

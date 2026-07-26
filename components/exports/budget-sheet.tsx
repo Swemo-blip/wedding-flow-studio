@@ -6,10 +6,12 @@ import { formatWeddingDate } from "@/lib/utils";
 import { useBudget } from "@/lib/use-budget";
 import { useLocalProject } from "@/lib/use-local-project";
 import { formatCurrency } from "@/lib/wedding-budget";
+import { useCurrency } from "@/lib/use-currency";
 
 type CategoryRow = { allocated: number; category: string; spent: number };
 
 export function BudgetSheet() {
+  const { currency } = useCurrency();
   const { t } = useTranslation();
   const { items } = useBudget();
   const { wedding } = useLocalProject();
@@ -45,7 +47,7 @@ export function BudgetSheet() {
         </div>
         <div className="export-contact">
           <span>{t("Total Budget")}</span>
-          <strong>{formatCurrency(total)}</strong>
+          <strong>{formatCurrency(total, currency)}</strong>
         </div>
       </div>
 
@@ -63,18 +65,18 @@ export function BudgetSheet() {
           {rows.map((row) => (
             <tr key={row.category}>
               <td>{t(row.category)}</td>
-              <td>{formatCurrency(row.allocated)}</td>
-              <td>{formatCurrency(row.spent)}</td>
-              <td>{formatCurrency(row.allocated - row.spent)}</td>
+              <td>{formatCurrency(row.allocated, currency)}</td>
+              <td>{formatCurrency(row.spent, currency)}</td>
+              <td>{formatCurrency(row.allocated - row.spent, currency)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
             <td>{t("Total")}</td>
-            <td>{formatCurrency(total)}</td>
-            <td>{formatCurrency(spent)}</td>
-            <td>{formatCurrency(total - spent)}</td>
+            <td>{formatCurrency(total, currency)}</td>
+            <td>{formatCurrency(spent, currency)}</td>
+            <td>{formatCurrency(total - spent, currency)}</td>
           </tr>
         </tfoot>
         </table>
