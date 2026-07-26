@@ -32,6 +32,9 @@
   --surface-warm: #f1ebdd;
   --surface-glass: rgba(255, 255, 255, 0.82);
   --canvas: #f4efe3;
+  /* Cream used as INK, on the green/dark surfaces. Same value as the canvas,
+     but naming it after its job keeps `color:` declarations readable. */
+  --ink-on-accent: var(--background);
   --ink: #2b2d24;
   --muted: #857f6f;
   --subtle: #a9a28e;
@@ -293,7 +296,7 @@ a {
 
 @media (max-width: 640px) {
   .sample-ribbon {
-    border-radius: 14px;
+    border-radius: var(--radius);
   }
 }
 
@@ -549,7 +552,7 @@ a {
   gap: 18px;
   overflow: hidden;
   border: 1px solid rgba(36, 45, 41, 0.12);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(249, 245, 234, 0.92) 58%, rgba(69, 106, 115, 0.07)),
     var(--surface);
@@ -568,7 +571,7 @@ a {
 .sourcing-detail,
 .sourcing-full-list {
   border: 1px solid rgba(36, 45, 41, 0.1);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 14px 38px rgba(25, 34, 30, 0.06);
 }
@@ -726,7 +729,7 @@ a {
   gap: 10px;
   border: 1px solid rgba(67, 93, 109, 0.16);
   border-left: 3px solid rgba(67, 93, 109, 0.42);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(247, 243, 232, 0.72);
   padding: 14px;
 }
@@ -765,7 +768,7 @@ a {
   display: grid;
   gap: 12px;
   border: 1px solid rgba(36, 45, 41, 0.1);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.76);
   padding: 14px;
 }
@@ -1009,7 +1012,7 @@ a {
   gap: 18px;
   align-items: stretch;
   border: 1px solid rgba(216, 185, 119, 0.28);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
     rgba(255, 255, 255, 0.88);
@@ -1112,7 +1115,7 @@ a {
   gap: 10px;
   margin: 0;
   border: 1px solid rgba(216, 185, 119, 0.2);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 13px;
 }
 
@@ -1160,7 +1163,7 @@ a {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid rgba(216, 185, 119, 0.24);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.62);
 }
 
@@ -1220,7 +1223,7 @@ a {
 .guided-intake-hero {
   grid-template-columns: minmax(0, 1fr) minmax(190px, 0.24fr);
   border-color: rgba(102, 120, 109, 0.22);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background:
     radial-gradient(circle at 88% 8%, rgba(216, 185, 119, 0.2), transparent 28%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(249, 245, 234, 0.86)),
@@ -1247,7 +1250,7 @@ a {
 .guided-preview-panel {
   overflow: hidden;
   border: 1px solid rgba(120, 106, 74, 0.09);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 241, 228, 0.74)),
     rgba(255, 255, 255, 0.86);
@@ -1794,7 +1797,7 @@ a {
   min-height: 76px;
   gap: 5px;
   border: 1px solid rgba(71, 55, 39, 0.14);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(249, 245, 234, 0.84);
   padding: 10px;
   color: var(--ink);
@@ -2031,12 +2034,12 @@ a {
 
 .ceremony-processional-controls button:first-child {
   background: var(--accent);
-  color: #f4efe3;
+  color: var(--ink-on-accent);
 }
 
 .ceremony-processional-controls button:first-child:hover {
   background: #556141;
-  color: #f4efe3;
+  color: var(--ink-on-accent);
 }
 
 .ceremony-processional-controls button[data-active="true"] {
@@ -2108,7 +2111,7 @@ a {
   gap: 12px;
   min-height: 72px;
   border: 1px solid rgba(120, 106, 74, 0.09);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(249, 245, 234, 0.68)),
     rgba(255, 255, 255, 0.72);
@@ -2330,9 +2333,9 @@ a {
 }
 
 .button-primary {
-  color: #f4efe3;
+  color: var(--ink-on-accent);
   border-color: transparent;
-  background: #414c37;
+  background: var(--accent);
   box-shadow: var(--shadow-button);
 }
 
@@ -2714,7 +2717,7 @@ a {
 
 .day-flow-moment-inspector .moment-inspector {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   padding: 16px;
 }
@@ -2751,7 +2754,7 @@ a {
   display: grid;
   gap: 5px;
   border: 1px solid rgba(216, 185, 119, 0.26);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.64);
   padding: 11px 12px;
 }
@@ -3130,7 +3133,7 @@ a {
 .preview-day-player {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(249, 245, 234, 0.88)),
     var(--surface);
@@ -4216,7 +4219,7 @@ a {
 
 .reception-view-toggle button[data-active="true"] {
   background: var(--accent);
-  color: var(--background);
+  color: var(--ink-on-accent);
 }
 
 .reception-seating-3d {
@@ -4328,7 +4331,7 @@ a {
   overflow: hidden;
   margin-top: 16px;
   border: 1px solid rgba(36, 45, 41, 0.1);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.58);
 }
 
@@ -4455,7 +4458,7 @@ a {
   gap: 4px;
   padding: 14px 16px;
   border: 1px solid rgba(120, 106, 74, 0.18);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.7);
 }
 
@@ -4489,7 +4492,7 @@ a {
   grid-template-columns: 92px 1fr;
   gap: 16px;
   padding: 14px 0;
-  border-top: 1px solid rgba(120, 106, 74, 0.16);
+  border-top: 1px solid var(--line);
 }
 
 .shared-timeline li:first-child {
@@ -5904,7 +5907,7 @@ a {
   place-items: center;
   border-radius: 50%;
   background: var(--accent);
-  color: var(--background);
+  color: var(--ink-on-accent);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -5925,7 +5928,7 @@ a {
 /* The avatar is also a span inside .sidebar-user, so the rule above outranked
    .sidebar-avatar on specificity and painted the initials muted-on-green. */
 .sidebar-user .sidebar-avatar {
-  color: var(--background);
+  color: var(--ink-on-accent);
   font-size: 0.72rem;
 }
 
@@ -6323,8 +6326,8 @@ a {
    ============================================================ */
 
 .studio-command {
-  border: 1px solid rgba(120, 106, 74, 0.16);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-card);
 }
@@ -6394,8 +6397,8 @@ a {
 }
 
 .studio-lang-toggle button[data-active="true"] {
-  background: #414c37;
-  color: #f4efe3;
+  background: var(--accent);
+  color: var(--ink-on-accent);
 }
 
 @media (max-width: 680px) {
@@ -6552,7 +6555,7 @@ a {
 .studio-pane-inspector {
   overflow-y: auto;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
   padding: 16px;
 }
@@ -6875,7 +6878,7 @@ a {
 .guests-list {
   display: grid;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
 }
@@ -6943,7 +6946,7 @@ a {
   padding: 16px 20px;
   margin-bottom: 16px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -7108,7 +7111,7 @@ a {
   border: 1px solid transparent;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--background);
+  color: var(--ink-on-accent);
   font-family: var(--font-sans);
   font-size: 0.82rem;
   font-weight: 640;
@@ -7527,7 +7530,7 @@ a {
 .stage-icon[data-active="true"] {
   border-color: transparent;
   background: var(--accent);
-  color: var(--background);
+  color: var(--ink-on-accent);
 }
 
 .stage-overlay {
@@ -7748,7 +7751,7 @@ a {
   display: grid;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -7884,7 +7887,7 @@ a {
 .checklist-phase {
   padding: 14px 18px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -8287,7 +8290,7 @@ a {
   border: 1px solid transparent;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--background);
+  color: var(--ink-on-accent);
   font-family: var(--font-sans);
   font-size: 0.88rem;
   font-weight: 640;
@@ -8388,7 +8391,7 @@ a {
 .budget-breakdown {
   padding: 18px 20px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--surface);
 }
 
@@ -8568,7 +8571,7 @@ a {
   padding: 10px 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
   box-shadow: 0 1px 2px rgba(74, 64, 40, 0.05);
 }
 
@@ -8638,7 +8641,7 @@ a {
 
 .vstudio-mode button[data-active="true"] {
   background: var(--accent);
-  color: #f4efe3;
+  color: var(--ink-on-accent);
 }
 
 .vstudio-header-end {
@@ -8653,7 +8656,7 @@ a {
   border: 0;
   border-radius: 9px;
   background: var(--accent);
-  color: #f4efe3;
+  color: var(--ink-on-accent);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 650;
@@ -8736,7 +8739,7 @@ a {
 
 .vstudio-menu-lang button[data-active="true"] {
   background: var(--accent);
-  color: #f4efe3;
+  color: var(--ink-on-accent);
 }
 
 .vstudio-menu-action {
@@ -8947,7 +8950,7 @@ a {
   padding: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
 }
 
 .vstudio-panel {
@@ -9301,7 +9304,7 @@ a {
   padding: 10px 14px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius);
 }
 
 .vstudio-playbar-transport {
