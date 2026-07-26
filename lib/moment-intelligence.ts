@@ -1,5 +1,6 @@
 import { buildProductionActionForMoment, type ProductionAction } from "@/lib/action-engine";
 import { exportTypes } from "@/lib/wedding-data";
+import { getRiskKind, isRiskOfKind } from "@/lib/risk-analysis";
 import type {
   DinnerTable,
   ExportType,
@@ -149,11 +150,11 @@ function getMomentRisks(phase: PreviewPhase, relatedTimeline: TimelineItem[], ri
     }
 
     if (risk.relatedEntityType === "guest") {
-      if (risk.id === "risk-accessibility") {
+      if (isRiskOfKind(risk, "risk-accessibility")) {
         return text.includes("guest-arrival") || text.includes("reception");
       }
 
-      if (risk.id === "risk-catering-allergy" || risk.id === "risk-vegan-meal" || risk.id === "risk-child-meal") {
+      if (isRiskOfKind(risk, "risk-catering-allergy") || isRiskOfKind(risk, "risk-vegan-meal") || isRiskOfKind(risk, "risk-child-meal")) {
         return text.includes("dinner") || text.includes("reception");
       }
 
@@ -285,7 +286,7 @@ function buildAffectedExports(relatedTimeline: TimelineItem[], risks: RiskItem[]
     .filter(
       (exportType) =>
         exportType.timelineItemIds.some((id) => timelineIds.includes(id)) ||
-        exportType.warningIds.some((id) => riskIds.includes(id))
+        exportType.warningIds.some((kind) => riskIds.some((riskId) => getRiskKind(riskId) === kind))
     )
     .map((exportType) => ({
       id: exportType.id,

@@ -1,9 +1,10 @@
-import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { analyzeWeddingFlow, isRiskOfKind } from "@/lib/risk-analysis";
 import type { RoleBrief } from "@/lib/wedding-types";
 
 export function buildRoleBriefs(): RoleBrief[] {
   const risks = analyzeWeddingFlow();
-  const riskExists = (id: string) => risks.some((risk) => risk.id === id);
+  // Match the risk KIND, since ids now carry an entity suffix.
+  const riskExists = (kind: string) => risks.some((risk) => isRiskOfKind(risk, kind));
   const warnings = (ids: string[]) => ids.filter(riskExists);
 
   return [
@@ -41,7 +42,7 @@ export function buildRoleBriefs(): RoleBrief[] {
       currentPriority: "Prepare the family photo list and confirm chapel garden timing.",
       nextUp: "Group photos at 4:10 PM",
       relevantTimelineItemIds: ["guest-arrival", "ceremony-begins", "recessional", "group-photos", "cake-cutting", "first-dance"],
-      relevantWarningIds: warnings(["risk-group-photo-time", "risk-balcony-approval"]),
+      relevantWarningIds: warnings(["risk-group-photo-time"]),
       checklistItems: [
         "Capture chapel exit",
         "Prepare family photo list",
@@ -59,7 +60,7 @@ export function buildRoleBriefs(): RoleBrief[] {
       currentPriority: "Prepare a recessional backup and confirm first dance timestamp.",
       nextUp: "Reception Entrance cue at 6:00 PM",
       relevantTimelineItemIds: ["prelude", "wedding-party-entrance", "couple-entrance", "recessional", "reception-doors", "first-dance", "party-begins"],
-      relevantWarningIds: warnings(["risk-music-backup", "risk-music-start-cue", "risk-couple-entrance-confirmation"]),
+      relevantWarningIds: warnings(["risk-music-backup", "risk-music-start-cue", "risk-cue-confirmation"]),
       checklistItems: [
         "Confirm ceremony cue sheet",
         "Prepare recessional backup",
@@ -95,7 +96,7 @@ export function buildRoleBriefs(): RoleBrief[] {
       currentPriority: "Confirm the accessible route from entrance to immediate family seating.",
       nextUp: "Cocktail hour terrace at 5:30 PM",
       relevantTimelineItemIds: ["guest-arrival", "cocktail-hour", "reception-doors", "first-course", "main-course", "party-begins"],
-      relevantWarningIds: warnings(["risk-accessibility", "risk-service-path", "risk-balcony-approval"]),
+      relevantWarningIds: warnings(["risk-accessibility"]),
       checklistItems: [
         "Keep service path clear",
         "Confirm chair layout",
@@ -113,7 +114,7 @@ export function buildRoleBriefs(): RoleBrief[] {
       currentPriority: "Review vows, ring exchange timing, and final recessional cue.",
       nextUp: "Ceremony begins at 3:00 PM",
       relevantTimelineItemIds: ["ceremony-begins", "wedding-party-entrance", "couple-entrance", "ring-exchange", "recessional"],
-      relevantWarningIds: warnings(["risk-couple-entrance-confirmation", "risk-music-backup"]),
+      relevantWarningIds: warnings(["risk-cue-confirmation", "risk-music-backup"]),
       checklistItems: [
         "Confirm processional order",
         "Confirm vows and ring exchange timing",

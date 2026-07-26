@@ -1,5 +1,6 @@
 import { createResolutionHref } from "@/lib/risk-resolution";
 import type { MusicCue, PreviewPhase, RiskItem, Speech, TimelineItem } from "@/lib/wedding-types";
+import { isRiskOfKind } from "@/lib/risk-analysis";
 
 export type PreviewCockpitContext = {
   musicCue: MusicCue | null;
@@ -158,11 +159,11 @@ function isRiskRelevantToPhase(
   }
 
   if (risk.relatedEntityType === "guest") {
-    if (risk.id === "risk-accessibility") {
+    if (isRiskOfKind(risk, "risk-accessibility")) {
       return phase.id === "phase-guest-arrival" || phase.id === "phase-reception-entrance";
     }
 
-    if (risk.id === "risk-catering-allergy" || risk.id === "risk-vegan-meal" || risk.id === "risk-child-meal") {
+    if (isRiskOfKind(risk, "risk-catering-allergy") || isRiskOfKind(risk, "risk-vegan-meal") || isRiskOfKind(risk, "risk-child-meal")) {
       return phase.id === "phase-dinner" || phase.id === "phase-reception-entrance";
     }
 

@@ -6,13 +6,14 @@ import { CueStatusBadge } from "@/components/music/cue-status-badge";
 import { Button } from "@/components/ui/button";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
-import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { analyzeWeddingFlow, isRiskOfKind } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { MusicCue, MusicCueStatus } from "@/lib/wedding-types";
 
 const musicCueStatuses: MusicCueStatus[] = ["confirmed", "needs-confirmation", "needs-backup", "needs-cue"];
-const musicRiskIds = ["risk-music-backup", "risk-music-start-cue", "risk-couple-entrance-confirmation"];
+// Risk KINDS shown on this surface; ids now carry an entity suffix.
+const musicRiskKinds = ["risk-music-backup", "risk-music-start-cue", "risk-cue-confirmation"];
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ export function MusicCueStudio() {
   const musicRisks = useMemo(
     () =>
       filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, wedding }), resolvedRiskIds).filter((risk) =>
-        musicRiskIds.includes(risk.id)
+        musicRiskKinds.some((kind) => isRiskOfKind(risk, kind))
       ),
     [musicCues, resolvedRiskIds, timelineItems, wedding]
   );
@@ -43,7 +44,7 @@ export function MusicCueStudio() {
       return;
     }
 
-    if (selectedCueRisks.some((risk) => risk.id === "risk-music-backup")) {
+    if (selectedCueRisks.some((risk) => isRiskOfKind(risk, "risk-music-backup"))) {
       updateSelectedCue({
         backupPlan: "DJ local file and offline ceremony playlist",
         status: selectedCue.status === "needs-backup" ? "confirmed" : selectedCue.status
@@ -51,7 +52,7 @@ export function MusicCueStudio() {
       return;
     }
 
-    if (selectedCueRisks.some((risk) => risk.id === "risk-music-start-cue")) {
+    if (selectedCueRisks.some((risk) => isRiskOfKind(risk, "risk-music-start-cue"))) {
       updateSelectedCue({
         startCue: "Start at 0:00 on Toastmaster's nod; fade after final chorus",
         status: "confirmed"
@@ -59,7 +60,7 @@ export function MusicCueStudio() {
       return;
     }
 
-    if (selectedCueRisks.some((risk) => risk.id === "risk-couple-entrance-confirmation")) {
+    if (selectedCueRisks.some((risk) => isRiskOfKind(risk, "risk-cue-confirmation"))) {
       updateSelectedCue({
         status: "confirmed",
         notes: appendNote(selectedCue.notes, "Confirmed arrangement length and cue point for rehearsal.")

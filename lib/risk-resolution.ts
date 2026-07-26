@@ -1,5 +1,6 @@
 import { musicCues, speeches } from "@/lib/wedding-data";
 import type { RiskItem, TimelineItem } from "@/lib/wedding-types";
+import { getRiskKind, isRiskOfKind } from "@/lib/risk-analysis";
 
 export type RiskResolutionRecipe = {
   riskId: string;
@@ -51,7 +52,7 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
     noteToAppend: "Resolve Mode: Confirm exact first dance timestamp, fade plan, and start signal with the DJ."
   },
   {
-    riskId: "risk-couple-entrance-confirmation",
+    riskId: "risk-cue-confirmation",
     title: "Confirm the couple entrance arrangement.",
     description: "The processional needs arrangement length and a clear start cue before rehearsal.",
     primaryActionLabel: "Mark entrance cue confirmed",
@@ -106,29 +107,12 @@ const resolutionRecipes: RiskResolutionRecipe[] = [
     resolvedLabel: "Secret audio handoff added",
     timelineItemId: "friends-song",
     noteToAppend: "Resolve Mode: Keep the surprise hidden from the couple and confirm microphone plus speaker input with the DJ."
-  },
-  {
-    riskId: "risk-balcony-approval",
-    title: "Request balcony position approval.",
-    description: "The ceremony photographer position needs chapel approval before rehearsal.",
-    primaryActionLabel: "Add venue approval note",
-    resolvedLabel: "Venue approval note added",
-    timelineItemId: "ceremony-begins",
-    noteToAppend: "Resolve Mode: Ask the venue to confirm access for the photographer during rehearsal."
-  },
-  {
-    riskId: "risk-service-path",
-    title: "Protect the catering service path.",
-    description: "Dinner service needs a clear route along the east wall during speeches.",
-    primaryActionLabel: "Add service path note",
-    resolvedLabel: "Service path note added",
-    timelineItemId: "main-course",
-    noteToAppend: "Resolve Mode: Confirm east wall service path spacing with the venue manager before guest arrival."
   }
 ];
 
 export function getRiskResolutionRecipe(riskId: string) {
-  const directRecipe = resolutionRecipes.find((recipe) => recipe.riskId === riskId);
+  // Recipes are written per KIND, so strip the entity suffix before matching.
+  const directRecipe = resolutionRecipes.find((recipe) => recipe.riskId === getRiskKind(riskId));
 
   if (directRecipe) {
     return directRecipe;
@@ -206,7 +190,7 @@ function getTimelineItemIdForRisk(risk: RiskItem) {
   }
 
   if (risk.relatedEntityType === "guest") {
-    return risk.id === "risk-accessibility" ? "guest-arrival" : "first-course";
+    return isRiskOfKind(risk, "risk-accessibility") ? "guest-arrival" : "first-course";
   }
 
   if (risk.relatedEntityType === "dinnerTable") {

@@ -1,5 +1,6 @@
 import { createResolutionHref, getRiskResolutionRecipeForRisk } from "@/lib/risk-resolution";
 import type { Guest, MusicCue, PreviewPhase, RiskItem, Speech, TimelineItem } from "@/lib/wedding-types";
+import { isRiskOfKind } from "@/lib/risk-analysis";
 
 export type ProductionActionScope = "timeline" | "music" | "guest" | "speech" | "navigation" | "compound";
 export type ProductionActionExecution = "inline" | "navigate";
@@ -50,7 +51,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     timelineUpdates: recipe?.timelineUpdates
   };
 
-  if (risk.id === "risk-group-photo-time") {
+  if (isRiskOfKind(risk, "risk-group-photo-time")) {
     return {
       ...baseAction,
       id: "action-extend-group-photos",
@@ -64,7 +65,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-music-backup") {
+  if (isRiskOfKind(risk, "risk-music-backup")) {
     return {
       ...baseAction,
       id: "action-add-recessional-backup",
@@ -82,7 +83,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-music-start-cue") {
+  if (isRiskOfKind(risk, "risk-music-start-cue")) {
     return {
       ...baseAction,
       id: "action-confirm-first-dance-cue",
@@ -100,7 +101,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-couple-entrance-confirmation") {
+  if (isRiskOfKind(risk, "risk-cue-confirmation")) {
     return {
       ...baseAction,
       id: "action-confirm-couple-entrance",
@@ -116,7 +117,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-catering-allergy") {
+  if (isRiskOfKind(risk, "risk-catering-allergy")) {
     return {
       ...baseAction,
       id: "action-send-allergy-brief",
@@ -131,7 +132,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-vegan-meal") {
+  if (isRiskOfKind(risk, "risk-vegan-meal")) {
     return {
       ...baseAction,
       id: "action-confirm-vegan-meal",
@@ -146,7 +147,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-child-meal") {
+  if (isRiskOfKind(risk, "risk-child-meal")) {
     return {
       ...baseAction,
       id: "action-confirm-child-setup",
@@ -161,7 +162,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-accessibility") {
+  if (isRiskOfKind(risk, "risk-accessibility")) {
     return {
       ...baseAction,
       id: "action-confirm-accessibility-flow",
@@ -176,7 +177,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-seating-conflict") {
+  if (isRiskOfKind(risk, "risk-seating-conflict")) {
     return {
       ...baseAction,
       id: "action-resolve-seating-conflict",
@@ -192,7 +193,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-speech-length") {
+  if (isRiskOfKind(risk, "risk-speech-length")) {
     return {
       ...baseAction,
       id: "action-protect-speech-timing",
@@ -205,7 +206,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-secret-technical") {
+  if (isRiskOfKind(risk, "risk-secret-technical")) {
     return {
       ...baseAction,
       id: "action-coordinate-secret-audio",
@@ -220,31 +221,7 @@ export function buildProductionActionForRisk(risk: RiskItem): ProductionAction {
     };
   }
 
-  if (risk.id === "risk-balcony-approval") {
-    return {
-      ...baseAction,
-      id: "action-request-balcony-approval",
-      label: "Request Balcony Approval",
-      scope: "timeline",
-      execution: "inline",
-      successLabel: "Balcony approval requested",
-      timelineItemId: timelineItemId ?? "ceremony-begins",
-      timelineNoteToAppend: "Action Engine: Venue manager to confirm balcony access for photographer before rehearsal."
-    };
-  }
 
-  if (risk.id === "risk-service-path") {
-    return {
-      ...baseAction,
-      id: "action-protect-service-path",
-      label: "Protect Service Path",
-      scope: "timeline",
-      execution: "inline",
-      successLabel: "Service path protected",
-      timelineItemId: timelineItemId ?? "main-course",
-      timelineNoteToAppend: "Action Engine: East wall service path spacing marked for venue and catering before guest arrival."
-    };
-  }
 
   return {
     ...baseAction,

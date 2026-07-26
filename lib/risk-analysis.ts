@@ -65,44 +65,47 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
-  const cueWithoutBackup = cues.find((cue) => cue.backupPlan.trim().toLowerCase() === "missing" || cue.backupPlan.trim() === "");
-  if (cueWithoutBackup) {
+  // These rules used to `.find()` the FIRST offender and emit one risk under a
+  // fixed id. Two things followed, both bad: only one offender was ever visible,
+  // and resolving that risk suppressed the id permanently — so the next cue with no
+  // backup plan, tomorrow or next month, was silent everywhere. One risk per
+  // offending entity, keyed to that entity, fixes both. The lists are
+  // self-limiting: fixing a cue removes it from its own filter.
+  for (const cue of cues.filter((item) => item.backupPlan.trim().toLowerCase() === "missing" || item.backupPlan.trim() === "")) {
     risks.push({
-      id: "risk-music-backup",
+      id: `risk-music-backup:${cue.id}`,
       severity: "medium",
       title: "A music cue is missing a backup plan.",
-      ...localizedDescription("{moment} music is missing a backup plan.", { moment: cueWithoutBackup.moment }),
+      ...localizedDescription("{moment} music is missing a backup plan.", { moment: cue.moment }),
       relatedEntityType: "musicCue",
-      relatedEntityId: cueWithoutBackup.id,
+      relatedEntityId: cue.id,
       suggestedFix: "Ask the responsible musician or DJ to prepare a local backup file."
     });
   }
 
-  const cueWithoutExactStart = cues.find((cue) => cue.startCue.toLowerCase().includes("missing"));
-  if (cueWithoutExactStart) {
+  for (const cue of cues.filter((item) => item.startCue.toLowerCase().includes("missing"))) {
     risks.push({
-      id: "risk-music-start-cue",
+      id: `risk-music-start-cue:${cue.id}`,
       severity: "medium",
       title: "A music cue needs an exact start cue.",
-      ...localizedDescription("{moment} is missing an exact start cue.", { moment: cueWithoutExactStart.moment }),
+      ...localizedDescription("{moment} is missing an exact start cue.", { moment: cue.moment }),
       relatedEntityType: "musicCue",
-      relatedEntityId: cueWithoutExactStart.id,
+      relatedEntityId: cue.id,
       suggestedFix: "Confirm the exact timestamp and fade plan with the DJ."
     });
   }
 
-  const unconfirmedCue = cues.find((cue) => cue.status === "needs-confirmation");
-  if (unconfirmedCue) {
+  for (const cue of cues.filter((item) => item.status === "needs-confirmation")) {
     risks.push({
-      id: "risk-couple-entrance-confirmation",
+      id: `risk-cue-confirmation:${cue.id}`,
       severity: "low",
       title: "A ceremony music cue still needs confirmation.",
       ...localizedDescription("{moment} still needs confirmation with {person}.", {
-        moment: unconfirmedCue.moment,
-        person: unconfirmedCue.responsiblePerson
+        moment: cue.moment,
+        person: cue.responsiblePerson
       }),
       relatedEntityType: "musicCue",
-      relatedEntityId: unconfirmedCue.id,
+      relatedEntityId: cue.id,
       suggestedFix: "Confirm the arrangement length and cue point before rehearsal."
     });
   }
@@ -123,59 +126,61 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
-  const guestWithAllergy = guestItems.find((guest) => guest.allergies.length > 0 && !hasTag(guest, "allergy brief sent"));
-  if (guestWithAllergy) {
+  // Same correction as the cue rules, and this is the one that mattered most: with
+  // a fixed id, briefing catering about one guest's allergy silenced the warning for
+  // every guest with an allergy, forever — including one added months later. A
+  // catering brief is per guest, so the risk is too.
+  for (const guest of guestItems.filter((item) => item.allergies.length > 0 && !hasTag(item, "allergy brief sent"))) {
     risks.push({
-      id: "risk-catering-allergy",
+      id: `risk-catering-allergy:${guest.id}`,
       severity: "high",
       title: "Catering needs final allergy details.",
       ...localizedDescription("{name} has a {allergy} - notify catering.", {
-        name: guestWithAllergy.name,
-        allergy: guestWithAllergy.allergies.join(", ").toLowerCase()
+        name: guest.name,
+        allergy: guest.allergies.join(", ").toLowerCase()
       }),
       relatedEntityType: "guest",
-      relatedEntityId: guestWithAllergy.id,
+      relatedEntityId: guest.id,
       suggestedFix: "Send final allergy details to the catering lead and mark the guest seat."
     });
   }
 
-  const veganGuest = guestItems.find((guest) => guest.mealChoice.toLowerCase() === "vegan" && !hasTag(guest, "meal confirmed"));
-  if (veganGuest) {
+  for (const guest of guestItems.filter((item) => item.mealChoice.toLowerCase() === "vegan" && !hasTag(item, "meal confirmed"))) {
     risks.push({
-      id: "risk-vegan-meal",
+      id: `risk-vegan-meal:${guest.id}`,
       severity: "low",
       title: "Meal preferences need final confirmation.",
-      ...localizedDescription("{name} has a vegan meal preference.", { name: veganGuest.name }),
+      ...localizedDescription("{name} has a vegan meal preference.", { name: guest.name }),
       relatedEntityType: "guest",
-      relatedEntityId: veganGuest.id,
+      relatedEntityId: guest.id,
       suggestedFix: "Confirm plated meal markers with catering."
     });
   }
 
-  const childMealGuest = guestItems.find(
-    (guest) => guest.tags.some((tag) => tag.toLowerCase().includes("child meal")) && !hasTag(guest, "child setup confirmed")
-  );
-  if (childMealGuest) {
+  for (const guest of guestItems.filter(
+    (item) => item.tags.some((tag) => tag.toLowerCase().includes("child meal")) && !hasTag(item, "child setup confirmed")
+  )) {
     risks.push({
-      id: "risk-child-meal",
+      id: `risk-child-meal:${guest.id}`,
       severity: "low",
       title: "Child meals need setup notes.",
-      ...localizedDescription("{name} needs a child meal and Table 5 requires one child seat.", { name: childMealGuest.name }),
+      // Dropped "Table 5" from the wording — that was the SAMPLE seating plan's
+      // table, named at a couple whose tables are their own.
+      ...localizedDescription("{name} needs a child meal and a child seat at their table.", { name: guest.name }),
       relatedEntityType: "guest",
-      relatedEntityId: childMealGuest.id,
+      relatedEntityId: guest.id,
       suggestedFix: "Confirm child meal count and chair setup with catering and venue."
     });
   }
 
-  const accessibleGuest = guestItems.find((guest) => guest.accessibilityNotes.length > 0 && !hasTag(guest, "accessibility route confirmed"));
-  if (accessibleGuest) {
+  for (const guest of guestItems.filter((item) => item.accessibilityNotes.length > 0 && !hasTag(item, "accessibility route confirmed"))) {
     risks.push({
-      id: "risk-accessibility",
+      id: `risk-accessibility:${guest.id}`,
       severity: "medium",
       title: "Review accessibility seating and guest flow.",
-      ...localizedDescription("{name} should be seated close to the entrance with a clear route.", { name: accessibleGuest.name }),
+      ...localizedDescription("{name} should be seated close to the entrance with a clear route.", { name: guest.name }),
       relatedEntityType: "guest",
-      relatedEntityId: accessibleGuest.id,
+      relatedEntityId: guest.id,
       suggestedFix: "Move the assigned table closer to the entrance or confirm a clear path."
     });
   }
@@ -278,8 +283,24 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   return risks;
 }
 
+// A risk id is either `kind` or `kind:entityId`. The KIND is what curated lists,
+// resolution recipes and per-risk copy key on; the entity suffix is what keeps two
+// occurrences of the same kind distinct so resolving one cannot silence the other.
+// Everything that used to compare a whole id compares the kind instead.
+export function getRiskKind(riskId: string): string {
+  const separator = riskId.indexOf(":");
+  return separator === -1 ? riskId : riskId.slice(0, separator);
+}
+
+export function isRiskOfKind(risk: Pick<RiskItem, "id">, kind: string): boolean {
+  return getRiskKind(risk.id) === kind;
+}
+
+// Selects by KIND, so a curated list like ["risk-music-backup"] now picks up every
+// cue that is missing a backup plan rather than only the one the old fixed id
+// happened to name.
 export function getRisksByIds(ids: string[], risks = analyzeWeddingFlow()) {
-  return ids.map((id) => risks.find((risk) => risk.id === id)).filter((risk): risk is RiskItem => Boolean(risk));
+  return ids.flatMap((id) => risks.filter((risk) => isRiskOfKind(risk, id)));
 }
 
 function findSeatingConflict(guestItems: Guest[], tables: DinnerTable[]) {

@@ -6,13 +6,13 @@ import { SecretLayerBadge } from "@/components/speeches/secret-layer-badge";
 import { Button } from "@/components/ui/button";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { findSpeechGuest } from "@/lib/guest-identity";
-import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { analyzeWeddingFlow, isRiskOfKind } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Speech, Visibility } from "@/lib/wedding-types";
 
-const speechRiskIds = ["risk-speech-length", "risk-secret-technical"];
+const speechRiskKinds = ["risk-speech-length", "risk-secret-technical"];
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
 
 export function SpeechStudio() {
@@ -37,7 +37,7 @@ export function SpeechStudio() {
   const speechRisks = useMemo(
     () =>
       filterResolvedRisks(analyzeWeddingFlow({ timeline: timelineItems, speechItems: speeches, wedding }), resolvedRiskIds).filter((risk) =>
-        speechRiskIds.includes(risk.id)
+        speechRiskKinds.some((kind) => isRiskOfKind(risk, kind))
       ),
     [resolvedRiskIds, speeches, timelineItems, wedding]
   );
@@ -58,7 +58,7 @@ export function SpeechStudio() {
   }
 
   function applySmartProgramFix() {
-    if (selectedSpeechRisks.some((risk) => risk.id === "risk-speech-length")) {
+    if (selectedSpeechRisks.some((risk) => isRiskOfKind(risk, "risk-speech-length"))) {
       const durationTargets: Record<string, number> = {
         "speech-brides-father": 6,
         "speech-grooms-sister": 5,
@@ -77,7 +77,7 @@ export function SpeechStudio() {
       return;
     }
 
-    if (selectedSpeechRisks.some((risk) => risk.id === "risk-secret-technical")) {
+    if (selectedSpeechRisks.some((risk) => isRiskOfKind(risk, "risk-secret-technical"))) {
       const secretTechnicalSpeech = speeches.find((speech) => speech.isSecret && speech.technicalNeeds.length > 0);
       if (secretTechnicalSpeech) {
         updateSpeech(secretTechnicalSpeech.id, {

@@ -1022,7 +1022,7 @@ export const previewPhases: PreviewPhase[] = [
     responsibleRole: "Wedding planner",
     responsiblePerson: "Olivia Hart",
     musicCueId: "music-couple-entrance",
-    riskId: "risk-couple-entrance-confirmation",
+    riskId: "risk-cue-confirmation",
     relatedTimelineItemIds: ["wedding-party-entrance", "couple-entrance"]
   },
   {
@@ -1182,7 +1182,7 @@ export const exportTypes: ExportType[] = [
     description: "All music moments, start cues, backup plans, status, and related timeline items.",
     contactPerson: "Miles Reed",
     timelineItemIds: ["prelude", "wedding-party-entrance", "couple-entrance", "recessional", "reception-doors", "first-dance", "party-begins"],
-    warningIds: ["risk-music-backup", "risk-music-start-cue", "risk-couple-entrance-confirmation"]
+    warningIds: ["risk-music-backup", "risk-music-start-cue", "risk-cue-confirmation"]
   },
   {
     id: "catering-sheet",
@@ -1198,7 +1198,7 @@ export const exportTypes: ExportType[] = [
     description: "Chapel layout, ceremony order, processional cues, music moments, and photography positions.",
     contactPerson: "Reverend Thomas Allen",
     timelineItemIds: ["guest-arrival", "prelude", "ceremony-begins", "wedding-party-entrance", "couple-entrance", "ring-exchange", "recessional"],
-    warningIds: ["risk-music-backup", "risk-balcony-approval"]
+    warningIds: ["risk-music-backup"]
   },
   {
     id: "reception-seating-plan",
@@ -1214,6 +1214,6 @@ export const exportTypes: ExportType[] = [
     description: "Room layout, service path, bar, dance floor, cake table, accessibility route, and setup notes.",
     contactPerson: "Henry Cole",
     timelineItemIds: ["guest-arrival", "cocktail-hour", "reception-doors", "first-course", "main-course", "party-begins"],
-    warningIds: ["risk-accessibility", "risk-service-path"]
+    warningIds: ["risk-accessibility"]
   }
 ];
