@@ -115,6 +115,26 @@ export function createStoredProjectDraft(source: Partial<StoredWeddingProject> =
   };
 }
 
+// The recovery shape for a stored wedding that no longer validates. Deliberately
+// blank rather than the sample: the couple sees empty fields to fill in (and the
+// /account details form can repair them) instead of a stranger's names and venues
+// being presented as theirs — and then persisted on their next edit.
+function blankWedding(): Wedding {
+  return {
+    id: "recovered-wedding",
+    coupleNames: "",
+    partnerOneName: "",
+    partnerTwoName: "",
+    date: "",
+    ceremonyLocation: "",
+    receptionLocation: "",
+    guestCount: 0,
+    style: "",
+    plannerName: "",
+    status: ""
+  };
+}
+
 export function readStoredProject() {
   if (typeof window === "undefined") {
     return null;
@@ -127,12 +147,19 @@ export function readStoredProject() {
       if (isTimelineArray(parsed.timelineItems) && isMusicCueArray(parsed.musicCues)) {
         return createStoredProjectDraft({
           updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined,
-          wedding: isWedding(parsed.wedding) ? parsed.wedding : sampleWedding,
+          // A slice that fails validation falls back to EMPTY, never to the sample.
+          // This is the same reasoning the catch block below already states: sample
+          // data substituted here gets persisted over the couple's real blob on
+          // their next edit. It was also visibly wrong — a couple whose guest array
+          // was even slightly malformed saw the sample's 27 guests, complete with
+          // meal choices, presented as their own on the summary, the exports and in
+          // the 3D room. An empty list says "nothing here yet", which is true.
+          wedding: isWedding(parsed.wedding) ? parsed.wedding : blankWedding(),
           timelineItems: parsed.timelineItems,
           musicCues: parsed.musicCues,
-          speeches: isSpeechArray(parsed.speeches) ? parsed.speeches : speeches,
-          guests: isGuestArray(parsed.guests) ? parsed.guests : guests,
-          dinnerTables: isDinnerTableArray(parsed.dinnerTables) ? parsed.dinnerTables : dinnerTables,
+          speeches: isSpeechArray(parsed.speeches) ? parsed.speeches : [],
+          guests: isGuestArray(parsed.guests) ? parsed.guests : [],
+          dinnerTables: isDinnerTableArray(parsed.dinnerTables) ? parsed.dinnerTables : [],
           vendorCandidates: isVendorCandidateArray(parsed.vendorCandidates) ? parsed.vendorCandidates : [],
           riskResolutions: isRiskResolutionArray(parsed.riskResolutions) ? parsed.riskResolutions : []
         });
