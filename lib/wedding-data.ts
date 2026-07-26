@@ -1151,7 +1151,13 @@ export const exportTypes: ExportType[] = [
     title: "Full Wedding Run of Show",
     description: "The complete production timeline for every major wedding-day moment.",
     contactPerson: "Olivia Hart",
-    timelineItemIds: timelineItems.map((item) => item.id),
+    // Was `timelineItems.map(...)` — a snapshot of the SAMPLE timeline's ids taken
+    // at module load. The brief then filtered the couple's own timeline by those
+    // ids, so "Full Wedding Run of Show" printed an empty run of show for any
+    // moment they added themselves, and an entirely empty one for a timeline they
+    // built from scratch. It covers the whole day by definition, so say that.
+    includesAllMoments: true,
+    timelineItemIds: [],
     warningIds: ["risk-group-photo-time", "risk-speech-length", "risk-music-backup", "risk-music-start-cue"]
   },
   {

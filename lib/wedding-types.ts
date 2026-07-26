@@ -235,6 +235,9 @@ export type ExportType = {
   title: string;
   description: string;
   contactPerson: string;
+  // A brief that covers the whole day sets this instead of listing moment ids, so
+  // it always reflects the couple's live timeline — including moments they add.
+  includesAllMoments?: boolean;
   timelineItemIds: string[];
   warningIds: string[];
 };

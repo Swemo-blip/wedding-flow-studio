@@ -37,8 +37,11 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const items = useMemo(
-    () => getTimelineItemsByIds(timelineItems, exportType.timelineItemIds),
-    [exportType.timelineItemIds, timelineItems]
+    () =>
+      exportType.includesAllMoments
+        ? timelineItems
+        : getTimelineItemsByIds(timelineItems, exportType.timelineItemIds),
+    [exportType.includesAllMoments, exportType.timelineItemIds, timelineItems]
   );
   // The linked timeline item owns each speech's time, so the brief matches the
   // Speeches studio and Day Flow rather than a speech's stale `timing` string.
@@ -60,8 +63,12 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
       ),
     [dinnerTables, exportType.warningIds, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
   );
-  const relatedSpeeches = speeches.filter((speech) => exportType.timelineItemIds.includes(speech.timelineItemId));
-  const relatedCues = musicCues.filter((cue) => exportType.timelineItemIds.includes(cue.timelineItemId));
+  // Derive from the moments this brief ACTUALLY includes, not from the declared id
+  // list — an all-moments brief has no list, and would otherwise print a run of
+  // show with every speech and cue silently missing.
+  const includedItemIds = useMemo(() => new Set(items.map((item) => item.id)), [items]);
+  const relatedSpeeches = speeches.filter((speech) => includedItemIds.has(speech.timelineItemId));
+  const relatedCues = musicCues.filter((cue) => includedItemIds.has(cue.timelineItemId));
   const shouldShowGuestNotes = ["catering-sheet", "reception-seating-plan", "venue-setup-brief"].includes(exportType.id);
   const guestNotes = guests.filter(
     (guest) =>
