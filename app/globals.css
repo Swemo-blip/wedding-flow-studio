@@ -112,7 +112,7 @@ input,
 select,
 textarea {
   color: var(--ink);
-  border: 1px solid rgba(120, 106, 74, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.85);
 }
@@ -150,7 +150,7 @@ a {
   top: 12px;
   left: 12px;
   z-index: 100;
-  border: 1px solid rgba(67, 93, 109, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   background: var(--studio-ink);
   color: #ffffff;
@@ -235,7 +235,7 @@ a {
   display: none;
   width: 100%;
   margin-top: 12px;
-  border: 1px solid rgba(67, 93, 109, 0.2);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--ink);
@@ -346,7 +346,7 @@ a {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 16px;
   align-items: center;
-  border: 1px solid rgba(120, 106, 74, 0.075);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 244, 232, 0.82)),
@@ -408,7 +408,7 @@ a {
 .studio-scene-main,
 .studio-scene-aside {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.08);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(248, 244, 232, 0.76)),
@@ -427,7 +427,7 @@ a {
 .studio-scene-heading {
   display: grid;
   gap: 5px;
-  border-bottom: 1px solid rgba(120, 106, 74, 0.075);
+  border-bottom: 1px solid var(--line);
   padding: 13px 15px;
 }
 
@@ -475,7 +475,7 @@ a {
 .reception-readiness-drawer .flow-analysis,
 .export-brief-library .export-brief-board,
 .export-context-drawer .studio-workflow {
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   padding: 12px;
 }
 
@@ -483,7 +483,7 @@ a {
   display: grid;
   min-height: min(680px, calc(100vh - 150px));
   place-items: center;
-  border: 1px solid rgba(36, 45, 41, 0.12);
+  border: 1px solid var(--line);
   border-radius: 18px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 232, 0.92) 62%, rgba(67, 93, 109, 0.08)),
@@ -551,7 +551,7 @@ a {
   display: grid;
   gap: 18px;
   overflow: hidden;
-  border: 1px solid rgba(36, 45, 41, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(249, 245, 234, 0.92) 58%, rgba(69, 106, 115, 0.07)),
@@ -570,7 +570,7 @@ a {
 .sourcing-queue,
 .sourcing-detail,
 .sourcing-full-list {
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 14px 38px rgba(25, 34, 30, 0.06);
@@ -627,7 +627,7 @@ a {
 .sourcing-queue > div:first-child {
   display: grid;
   gap: 5px;
-  border-bottom: 1px solid rgba(36, 45, 41, 0.09);
+  border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
 }
 
@@ -649,7 +649,7 @@ a {
 .sourcing-category-list button {
   display: grid;
   gap: 4px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(247, 243, 232, 0.72);
   padding: 11px;
@@ -661,7 +661,7 @@ a {
 .sourcing-category-list button:hover,
 .sourcing-category-list button:focus-visible,
 .sourcing-category-list button[data-active="true"] {
-  border-color: rgba(67, 93, 109, 0.32);
+  border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   box-shadow: 0 10px 24px rgba(25, 34, 30, 0.07);
@@ -711,7 +711,7 @@ a {
 .sourcing-role-card {
   display: grid;
   gap: 6px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(247, 243, 232, 0.76);
   padding: 12px;
@@ -727,8 +727,8 @@ a {
 .sourcing-search-card {
   display: grid;
   gap: 10px;
-  border: 1px solid rgba(67, 93, 109, 0.16);
-  border-left: 3px solid rgba(67, 93, 109, 0.42);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
   border-radius: var(--radius);
   background: rgba(247, 243, 232, 0.72);
   padding: 14px;
@@ -767,7 +767,7 @@ a {
 .vendor-intelligence-panel {
   display: grid;
   gap: 12px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.76);
   padding: 14px;
@@ -778,7 +778,7 @@ a {
   gap: 14px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(36, 45, 41, 0.09);
+  border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
 }
 
@@ -806,7 +806,7 @@ a {
 .vendor-candidate-card {
   display: grid;
   gap: 12px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 13px;
   background: rgba(247, 243, 232, 0.72);
   padding: 12px;
@@ -854,7 +854,7 @@ a {
   display: grid;
   gap: 4px;
   justify-items: end;
-  border-left: 1px solid rgba(36, 45, 41, 0.09);
+  border-left: 1px solid var(--line);
   padding-left: 10px;
 }
 
@@ -883,7 +883,7 @@ a {
 .vendor-candidate-controls select,
 .vendor-candidate-controls input {
   width: 100%;
-  border: 1px solid rgba(36, 45, 41, 0.14);
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
@@ -896,7 +896,7 @@ a {
 .vendor-empty-state {
   display: grid;
   gap: 6px;
-  border: 1px dashed rgba(67, 93, 109, 0.26);
+  border: 1px dashed var(--line-strong);
   border-radius: 13px;
   background: rgba(247, 243, 232, 0.62);
   padding: 14px;
@@ -917,7 +917,7 @@ a {
 .sourcing-detail-grid > div {
   display: grid;
   gap: 9px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 13px;
   background: rgba(255, 255, 255, 0.72);
   padding: 13px;
@@ -957,7 +957,7 @@ a {
   height: 26px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(67, 93, 109, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   color: var(--blue);
   font-weight: 650;
@@ -982,14 +982,14 @@ a {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  border-top: 1px solid rgba(36, 45, 41, 0.09);
+  border-top: 1px solid var(--line);
   padding: 14px;
 }
 
 .sourcing-full-list article {
   display: grid;
   gap: 8px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(247, 243, 232, 0.7);
   padding: 12px;
@@ -1011,7 +1011,7 @@ a {
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.28fr);
   gap: 18px;
   align-items: stretch;
-  border: 1px solid rgba(216, 185, 119, 0.28);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
@@ -1041,7 +1041,7 @@ a {
   display: grid;
   align-content: center;
   gap: 8px;
-  border: 1px solid rgba(159, 121, 59, 0.28);
+  border: 1px solid var(--line-strong);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.74);
   padding: 18px;
@@ -1092,7 +1092,7 @@ a {
 
 .intake-segment button {
   min-height: 52px;
-  border: 1px solid rgba(216, 185, 119, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.68);
   padding: 9px;
@@ -1105,7 +1105,7 @@ a {
 }
 
 .intake-segment button[data-active="true"] {
-  border-color: rgba(159, 121, 59, 0.44);
+  border-color: var(--gilt);
   background: rgba(216, 185, 119, 0.18);
   color: var(--ink);
 }
@@ -1114,7 +1114,7 @@ a {
   display: grid;
   gap: 10px;
   margin: 0;
-  border: 1px solid rgba(216, 185, 119, 0.2);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 13px;
 }
@@ -1129,7 +1129,7 @@ a {
   display: flex;
   gap: 8px;
   align-items: center;
-  border: 1px solid rgba(216, 185, 119, 0.18);
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.62);
   padding: 8px 10px;
@@ -1162,7 +1162,7 @@ a {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
-  border: 1px solid rgba(216, 185, 119, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.62);
 }
@@ -1194,7 +1194,7 @@ a {
   grid-template-columns: 72px minmax(0, 0.8fr) minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  border: 1px solid rgba(216, 185, 119, 0.18);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.58);
   padding: 9px 10px;
@@ -1222,7 +1222,7 @@ a {
 
 .guided-intake-hero {
   grid-template-columns: minmax(0, 1fr) minmax(190px, 0.24fr);
-  border-color: rgba(102, 120, 109, 0.22);
+  border-color: var(--line-strong);
   border-radius: var(--radius);
   background:
     radial-gradient(circle at 88% 8%, rgba(216, 185, 119, 0.2), transparent 28%),
@@ -1249,7 +1249,7 @@ a {
 .guided-intake-main,
 .guided-preview-panel {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.09);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 241, 228, 0.74)),
@@ -1287,7 +1287,7 @@ a {
 
 .guided-intake-step:hover,
 .guided-intake-step:focus-visible {
-  border-color: rgba(102, 120, 109, 0.18);
+  border-color: var(--line);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
 }
@@ -1338,7 +1338,7 @@ a {
   display: grid;
   gap: 5px;
   margin-top: 8px;
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   padding: 13px 10px 4px;
 }
 
@@ -1359,7 +1359,7 @@ a {
   gap: 16px;
   min-height: 560px;
   align-content: start;
-  border: 1px solid rgba(120, 106, 74, 0.08);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 232, 0.72)),
@@ -1409,7 +1409,7 @@ a {
 .guided-advanced-grid input {
   min-height: 46px;
   width: 100%;
-  border: 1px solid rgba(120, 106, 74, 0.12);
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--ink);
@@ -1434,7 +1434,7 @@ a {
 .guided-guest-control {
   display: grid;
   gap: 14px;
-  border: 1px solid rgba(102, 120, 109, 0.18);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background:
     linear-gradient(135deg, rgba(249, 245, 234, 0.94), rgba(255, 255, 255, 0.78)),
@@ -1479,7 +1479,7 @@ a {
 .guided-role-presets button {
   display: grid;
   gap: 5px;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--muted);
@@ -1489,7 +1489,7 @@ a {
 }
 
 .guided-role-presets button[data-active="true"] {
-  border-color: rgba(102, 120, 109, 0.34);
+  border-color: var(--line-strong);
   background:
     linear-gradient(135deg, rgba(102, 120, 109, 0.14), rgba(255, 255, 255, 0.9)),
     rgba(255, 255, 255, 0.86);
@@ -1519,7 +1519,7 @@ a {
 
 .guided-intake-details {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.08);
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.58);
 }
@@ -1546,7 +1546,7 @@ a {
 }
 
 .guided-intake-details[open] > summary {
-  border-bottom: 1px solid rgba(120, 106, 74, 0.08);
+  border-bottom: 1px solid var(--line);
 }
 
 .guided-advanced-grid {
@@ -1565,7 +1565,7 @@ a {
   position: relative;
   overflow: hidden;
   min-height: 250px;
-  border: 1px solid rgba(120, 106, 74, 0.08);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background:
     linear-gradient(90deg, rgba(23, 23, 19, 0.045) 1px, transparent 1px) 0 0 / 34px 34px,
@@ -1586,7 +1586,7 @@ a {
 .guided-preview-reception {
   position: absolute;
   left: 50%;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--ink);
@@ -1648,7 +1648,7 @@ a {
 .guided-preview-next {
   display: grid;
   gap: 6px;
-  border: 1px solid rgba(102, 120, 109, 0.18);
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(249, 245, 234, 0.7);
   padding: 13px;
@@ -1842,7 +1842,7 @@ a {
   display: grid;
   align-content: start;
   gap: 14px;
-  border: 1px solid rgba(216, 185, 119, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 18px;
   background: rgba(249, 245, 234, 0.78);
   padding: 16px;
@@ -1876,7 +1876,7 @@ a {
 .digital-twin-detail-grid > div {
   display: grid;
   gap: 4px;
-  border: 1px solid rgba(216, 185, 119, 0.18);
+  border: 1px solid var(--line);
   border-radius: 13px;
   background: rgba(241, 232, 220, 0.34);
   padding: 11px;
@@ -1899,7 +1899,7 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
-  border: 1px solid rgba(216, 185, 119, 0.18);
+  border: 1px solid var(--line);
   border-radius: 13px;
 }
 
@@ -2065,7 +2065,7 @@ a {
 }
 
 .ceremony-scene-caption {
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.64);
 }
 
@@ -2110,7 +2110,7 @@ a {
   justify-content: space-between;
   gap: 12px;
   min-height: 72px;
-  border: 1px solid rgba(120, 106, 74, 0.09);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(249, 245, 234, 0.68)),
@@ -2141,7 +2141,7 @@ a {
 .studio-command {
   display: grid;
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.11);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background:
     radial-gradient(circle at 100% 0%, rgba(182, 154, 91, 0.1), transparent 34%),
@@ -2200,7 +2200,7 @@ a {
 }
 
 .studio-command-control {
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   padding: 12px 14px 14px;
 }
 
@@ -2213,7 +2213,7 @@ a {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  border: 1px solid rgba(120, 106, 74, 0.09);
+  border: 1px solid var(--line);
   border-left: 3px solid rgba(182, 154, 91, 0.54);
   border-radius: var(--radius-control);
   background:
@@ -2347,7 +2347,7 @@ a {
 
 .button-secondary {
   color: var(--ink);
-  border-color: rgba(120, 106, 74, 0.24);
+  border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 8px 20px -14px rgba(74, 64, 40, 0.25);
 }
@@ -2378,7 +2378,7 @@ a {
   gap: 6px;
   width: fit-content;
   min-height: 23px;
-  border: 1px solid rgba(120, 106, 74, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 3px;
   padding: 4px 7px;
   background: rgba(255, 255, 255, 0.82);
@@ -2418,7 +2418,7 @@ a {
 .progress-track {
   height: 9px;
   overflow: hidden;
-  border: 1px solid rgba(67, 93, 109, 0.16);
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(249, 245, 234, 0.78);
 }
@@ -2642,7 +2642,7 @@ a {
 }
 
 .editable-timeline-card[data-selected="true"] .editable-timeline-body {
-  border-color: rgba(159, 121, 59, 0.58);
+  border-color: var(--gilt);
   background: linear-gradient(135deg, rgba(216, 185, 119, 0.18), rgba(255, 255, 255, 0.9));
   box-shadow: 0 14px 36px rgba(143, 108, 54, 0.16);
 }
@@ -2658,7 +2658,7 @@ a {
 
 .day-flow-detail-drawer {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(249, 245, 234, 0.72)),
@@ -2686,7 +2686,7 @@ a {
   height: 26px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(69, 106, 115, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   color: var(--blue);
   content: "+";
@@ -2711,7 +2711,7 @@ a {
 .day-flow-detail-drawer-content {
   display: grid;
   gap: 14px;
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   padding: clamp(14px, 2.4vw, 20px);
 }
 
@@ -2738,7 +2738,7 @@ a {
 }
 
 .action-dock-card {
-  border-color: rgba(159, 121, 59, 0.36);
+  border-color: var(--line-strong);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
     rgba(255, 255, 255, 0.88);
@@ -2753,7 +2753,7 @@ a {
 .action-dock-meta {
   display: grid;
   gap: 5px;
-  border: 1px solid rgba(216, 185, 119, 0.26);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.64);
   padding: 11px 12px;
@@ -2775,7 +2775,7 @@ a {
 }
 
 .resolve-mode-card {
-  border-color: rgba(159, 121, 59, 0.34);
+  border-color: var(--line-strong);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(216, 185, 119, 0.14)),
     rgba(255, 255, 255, 0.86);
@@ -2896,7 +2896,7 @@ a {
 }
 
 .tab-button[data-active="true"] {
-  border-color: rgba(216, 185, 119, 0.42);
+  border-color: var(--gilt);
   background: rgba(216, 185, 119, 0.18);
   color: var(--ink);
 }
@@ -3050,7 +3050,7 @@ a {
 .contact-list strong {
   display: grid;
   gap: 2px;
-  border-left: 2px solid rgba(216, 185, 119, 0.52);
+  border-left: 2px solid var(--gilt);
   padding-left: 10px;
 }
 
@@ -3109,7 +3109,7 @@ a {
 }
 
 .studio-workflow-step[data-active="true"] {
-  border-color: rgba(159, 121, 59, 0.52);
+  border-color: var(--gilt);
   background: rgba(216, 185, 119, 0.16);
 }
 
@@ -3169,7 +3169,7 @@ a {
 }
 
 .preview-moment-rail li[data-active="true"] {
-  border-color: rgba(159, 121, 59, 0.44);
+  border-color: var(--gilt);
   background: rgba(216, 185, 119, 0.18);
   color: var(--ink);
 }
@@ -3179,7 +3179,7 @@ a {
   height: 24px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(159, 121, 59, 0.3);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.78);
   color: var(--champagne-dark);
@@ -3286,7 +3286,7 @@ a {
   min-height: 170px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(159, 121, 59, 0.26);
+  border: 1px solid var(--line-strong);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.56);
   transform: translate(-50%, -50%);
@@ -3318,7 +3318,7 @@ a {
   height: 54px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(216, 185, 119, 0.5);
+  border: 1px solid var(--gilt);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-card);
@@ -3456,7 +3456,7 @@ a {
   position: relative;
   min-height: 620px;
   overflow: hidden;
-  border: 1px solid rgba(159, 121, 59, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(249, 245, 234, 0.76)),
@@ -3518,7 +3518,7 @@ a {
 .preview-stage-map {
   position: absolute;
   inset: 118px 24px 104px;
-  border: 1px solid rgba(159, 121, 59, 0.18);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.28), transparent 52%, rgba(255, 255, 255, 0.28)),
@@ -3527,7 +3527,7 @@ a {
 
 .preview-stage-zone {
   position: absolute;
-  border: 1px solid rgba(159, 121, 59, 0.18);
+  border: 1px solid var(--line);
   border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.72);
   padding: 7px 10px;
@@ -3593,7 +3593,7 @@ a {
 .preview-stage-pulse span {
   position: absolute;
   inset: 0;
-  border: 1px solid rgba(67, 93, 109, 0.16);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   opacity: 0.28;
   animation: preview-stage-pulse 5200ms ease-in-out infinite;
@@ -3653,7 +3653,7 @@ a {
 .preview-next-move-card {
   display: grid;
   gap: 10px;
-  border: 1px solid rgba(159, 121, 59, 0.28);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-panel);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(168, 143, 90, 0.14)),
@@ -3814,7 +3814,7 @@ a {
   height: 24px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(69, 106, 115, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   color: var(--blue);
   content: "+";
@@ -3869,7 +3869,7 @@ a {
 
 .preview-support-details {
   overflow: hidden;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.64);
   box-shadow: 0 14px 34px rgba(25, 34, 30, 0.05);
@@ -3895,7 +3895,7 @@ a {
   height: 26px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(67, 93, 109, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   color: var(--blue);
   content: "+";
@@ -3921,7 +3921,7 @@ a {
 .preview-support-content {
   display: grid;
   gap: 18px;
-  border-top: 1px solid rgba(36, 45, 41, 0.08);
+  border-top: 1px solid var(--line);
   padding: clamp(16px, 2.5vw, 22px);
 }
 
@@ -4003,7 +4003,7 @@ a {
   display: grid;
   align-content: start;
   gap: 10px;
-  border-color: rgba(159, 121, 59, 0.28);
+  border-color: var(--line-strong);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
     rgba(255, 255, 255, 0.86);
@@ -4105,7 +4105,7 @@ a {
   margin: 0 auto 20px;
   display: grid;
   gap: 5px;
-  border: 1px solid rgba(216, 185, 119, 0.42);
+  border: 1px solid var(--gilt);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.88);
   padding: 18px;
@@ -4128,7 +4128,7 @@ a {
 }
 
 .pew-row[data-reserved="true"] .pew-side {
-  border-color: rgba(216, 185, 119, 0.42);
+  border-color: var(--gilt);
   background: rgba(216, 185, 119, 0.14);
 }
 
@@ -4144,8 +4144,8 @@ a {
 
 .aisle {
   height: 32px;
-  border-left: 1px dashed rgba(159, 121, 59, 0.42);
-  border-right: 1px dashed rgba(159, 121, 59, 0.42);
+  border-left: 1px dashed var(--line-strong);
+  border-right: 1px dashed var(--line-strong);
 }
 
 .seat-dot {
@@ -4197,7 +4197,7 @@ a {
   gap: 4px;
   margin-bottom: 12px;
   padding: 4px;
-  border: 1px solid rgba(120, 106, 74, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
 }
@@ -4259,7 +4259,7 @@ a {
   padding: 3px 9px;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(120, 106, 74, 0.3);
+  border: 1px solid var(--line-strong);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 0.66rem;
@@ -4308,7 +4308,7 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-card);
@@ -4318,7 +4318,7 @@ a {
   display: grid;
   min-height: 46px;
   place-items: center;
-  border-right: 1px solid rgba(36, 45, 41, 0.08);
+  border-right: 1px solid var(--line);
   color: var(--muted);
   text-align: center;
 }
@@ -4330,7 +4330,7 @@ a {
 .reception-guest-details {
   overflow: hidden;
   margin-top: 16px;
-  border: 1px solid rgba(36, 45, 41, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.58);
 }
@@ -4355,7 +4355,7 @@ a {
   height: 24px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(67, 93, 109, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   color: var(--blue);
   content: "+";
@@ -4427,7 +4427,7 @@ a {
 .shared-hero {
   text-align: center;
   padding-bottom: 28px;
-  border-bottom: 1px solid rgba(120, 106, 74, 0.22);
+  border-bottom: 1px solid var(--line-strong);
   margin-bottom: 30px;
 }
 
@@ -4457,7 +4457,7 @@ a {
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
-  border: 1px solid rgba(120, 106, 74, 0.18);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.7);
 }
@@ -4521,7 +4521,7 @@ a {
 .shared-footer {
   margin-top: 48px;
   padding-top: 22px;
-  border-top: 1px solid rgba(120, 106, 74, 0.22);
+  border-top: 1px solid var(--line-strong);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -4546,7 +4546,7 @@ a {
 
 .studio-detail-drawer {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: rgba(255, 255, 255, 0.68);
 }
@@ -4571,7 +4571,7 @@ a {
   height: 24px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(67, 93, 109, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   color: var(--blue);
   content: "+";
@@ -4596,7 +4596,7 @@ a {
 
 .studio-detail-drawer .card {
   border: 0;
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   border-radius: 0;
   box-shadow: none;
 }
@@ -4659,7 +4659,7 @@ a {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
-  border-left: 2px solid rgba(120, 106, 74, 0.22);
+  border-left: 2px solid var(--line-strong);
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 650;
@@ -4843,7 +4843,7 @@ a {
 .director-detail-drawer,
 .director-role-detail-drawer {
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: rgba(255, 255, 255, 0.72);
 }
@@ -4875,7 +4875,7 @@ a {
   height: 24px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(69, 106, 115, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   color: var(--blue);
   content: "+";
@@ -4904,7 +4904,7 @@ a {
 .director-role-detail-grid {
   display: grid;
   gap: 14px;
-  border-top: 1px solid rgba(120, 106, 74, 0.08);
+  border-top: 1px solid var(--line);
   padding: clamp(14px, 2.4vw, 20px);
 }
 
@@ -4969,7 +4969,7 @@ a {
   gap: 6px;
   min-height: 118px;
   align-content: start;
-  border: 1px solid rgba(120, 106, 74, 0.1);
+  border: 1px solid var(--line);
   border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.74);
   color: inherit;
@@ -4985,7 +4985,7 @@ a {
 
 .export-brief-card:hover,
 .export-brief-card:focus-visible {
-  border-color: rgba(63, 98, 112, 0.24);
+  border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.92);
   transform: translateY(-1px);
 }
@@ -5322,7 +5322,7 @@ a {
   .vendor-fit-score {
     justify-items: start;
     border-left: 0;
-    border-top: 1px solid rgba(36, 45, 41, 0.09);
+    border-top: 1px solid var(--line);
     padding-top: 10px;
     padding-left: 0;
   }
@@ -5641,7 +5641,7 @@ a {
 
   .reception-canvas-hud span {
     border-right: 0;
-    border-bottom: 1px solid rgba(36, 45, 41, 0.08);
+    border-bottom: 1px solid var(--line);
   }
 
   .reception-canvas-hud span:last-child {
@@ -5814,7 +5814,7 @@ a {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 9px;
-  border: 1px solid rgba(120, 106, 74, 0.32);
+  border: 1px solid var(--line-strong);
   background: linear-gradient(150deg, #f4ead2, #e7d4aa);
   color: #8a6a2f;
   font-family: var(--font-serif);
@@ -6345,7 +6345,7 @@ a {
 }
 
 .studio-command-control {
-  border-top: 1px solid rgba(120, 106, 74, 0.12);
+  border-top: 1px solid var(--line);
 }
 
 .card {
@@ -6414,7 +6414,7 @@ a {
 .preview-walkthrough-band {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(120, 106, 74, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: 16px;
   background: #101207;
   box-shadow: var(--shadow-float);
@@ -6734,11 +6734,11 @@ a {
 }
 
 .detail-studio-item:hover {
-  border-color: rgba(120, 106, 74, 0.4);
+  border-color: var(--line-strong);
 }
 
 .detail-studio-item[data-selected="true"] {
-  border-color: rgba(159, 121, 59, 0.5);
+  border-color: var(--gilt);
   background: var(--surface-warm);
   box-shadow: inset 2px 0 0 var(--champagne);
 }
