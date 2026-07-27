@@ -379,6 +379,7 @@ export function CeremonyScene({
           // logged a deprecation warning every frame) — PCF is what actually ran.
           shadows={{ type: THREE.PCFShadowMap }}
         >
+          <SceneCaptureHook />
           <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={effectiveVenue} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
@@ -1519,6 +1520,18 @@ function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "wa
         if (next) {
           cloned.color = new THREE.Color(next);
         }
+        // Every material in the figure GLBs ships `metallicFactor: 0.4`, and this
+        // clone only ever changed the colour — so the couple, the officiant and the
+        // singer all rendered as 40% metal. Cloth and skin are dielectrics: at
+        // metalness 0.4 the base colour is partly reinterpreted as tinted specular,
+        // which darkens the diffuse response and lays an environment-coloured sheen
+        // over fabric. That is the "plastic mannequin" read, and it is wrong by
+        // physics rather than by taste.
+        cloned.metalness = 0;
+        // A few of the source materials also ship implausibly smooth for fabric.
+        // Only raise, never lower — a genuinely smooth surface (an eye, a shoe) keeps
+        // whatever the asset author chose.
+        cloned.roughness = Math.max(cloned.roughness, 0.72);
         return cloned;
       };
       mesh.material = Array.isArray(mesh.material) ? mesh.material.map(recolorOne) : recolorOne(mesh.material);
@@ -1741,6 +1754,57 @@ function buildChurchSeatedGuests(
   }
 
   return result;
+}
+
+// Development-only capture hook. The browser throttles requestAnimationFrame when a
+// tab or pane is occluded, which pauses R3F's render loop — and a canvas resize in
+// that state clears the drawing buffer to black. That made visual iteration on this
+// scene impossible from a headless/occluded pane: every screenshot came back a
+// single flat colour, which is easy to misread as "the 3D is broken" (it was, for
+// three sessions). Exposing the renderer lets a still be forced synchronously,
+// independent of the frame loop. Stripped from production builds.
+function SceneCaptureHook() {
+  const { camera, gl, scene } = useThree();
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production" || typeof window === "undefined") {
+      return;
+    }
+
+    const target = window as typeof window & { __wfsScene?: unknown };
+    target.__wfsScene = {
+      camera,
+      gl,
+      scene,
+      // Force one synchronous frame, then hand back the pixels. preserveDrawingBuffer
+      // is already set on the Canvas, so toDataURL is reliable after this.
+      capture(maxWidth = 900, quality = 0.75) {
+        gl.render(scene, camera);
+        const source = gl.domElement;
+        const width = Math.min(maxWidth, source.width);
+        const height = Math.round(source.height * (width / source.width));
+        const off = document.createElement("canvas");
+        off.width = width;
+        off.height = height;
+        const ctx = off.getContext("2d");
+        if (!ctx) return null;
+        ctx.drawImage(source, 0, 0, width, height);
+        // Report colour variety so a caller can tell a real frame from a blank one.
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const seen = new Set<string>();
+        for (let i = 0; i < data.length; i += 4 * 997) {
+          seen.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
+        }
+        return { dataUrl: off.toDataURL("image/jpeg", quality), distinctColours: seen.size, width, height };
+      }
+    };
+
+    return () => {
+      delete target.__wfsScene;
+    };
+  }, [camera, gl, scene]);
+
+  return null;
 }
 
 function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
