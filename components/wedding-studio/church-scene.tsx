@@ -9,7 +9,7 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
@@ -749,8 +749,15 @@ function WeddingStageInterior({
   viewMode: StudioViewMode;
 }) {
   const guestMarkers = useMemo(() => buildGuestMarkers(capacity), [capacity]);
-  const visibleRows = activeStep === "venue" ? 0 : activeStep === "budget" ? Math.min(8, capacity.renderedRows) : capacity.renderedRows;
-  const rowIndexes = useMemo(() => Array.from({ length: visibleRows }, (_, index) => index), [visibleRows]);
+  // Pews are architecture; guests are data. Deriving the pew count from the
+  // guest count left a 27-guest wedding with four lonely benches in a nave built
+  // for fourteen rows, which reads as an unfinished room rather than a small
+  // wedding. The room now always carries its full complement of pews and the
+  // guest list decides how many are OCCUPIED — which is also what a couple
+  // actually sees when they walk into the church.
+  const pewRows = activeStep === "venue" ? 0 : Math.min(NAVE_PEW_ROWS, capacity.maxComfortableRows);
+  const seatedRows = activeStep === "venue" ? 0 : pewRows;
+  const rowIndexes = useMemo(() => Array.from({ length: pewRows }, (_, index) => index), [pewRows]);
   // Church + open-air ceremonies (garden/beach) all seat a real congregation
   // and run the processional; only the venue shell differs.
   const ceremonyVenue = venueType === "church" || venueType === "garden" || venueType === "beach";
@@ -772,8 +779,8 @@ function WeddingStageInterior({
     [aisleShift, pewYaw, rowSpacing]
   );
   const seatedGuests = useMemo(
-    () => (ceremonyVenue ? buildChurchSeatedGuests(visibleRows, capacity.visibleGuestMarkers, seatLayout) : []),
-    [capacity.visibleGuestMarkers, ceremonyVenue, seatLayout, visibleRows]
+    () => (ceremonyVenue ? buildChurchSeatedGuests(seatedRows, capacity.visibleGuestMarkers, seatLayout) : []),
+    [capacity.visibleGuestMarkers, ceremonyVenue, seatLayout, seatedRows]
   );
 
   // Buildings do not move: the old whole-scene sway rotated the architecture
@@ -870,10 +877,10 @@ function WeddingStageInterior({
             objectId="guestSeating"
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
-            outlineCenter={[0, -2.4 + (Math.max(0, visibleRows - 1) * rowSpacing) / 2]}
+            outlineCenter={[0, -2.4 + (Math.max(0, pewRows - 1) * rowSpacing) / 2]}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
-            size={[6.4 + aisleShift * 2, Math.max(2.4, visibleRows * (rowSpacing + 0.08))]}
+            size={[6.4 + aisleShift * 2, Math.max(2.4, pewRows * (rowSpacing + 0.08))]}
           >
             <Suspense fallback={null}>
               {rowIndexes.map((rowIndex) => {
@@ -1325,21 +1332,27 @@ function Crucifix({ position }: { position: [number, number, number] }) {
 function ChurchAltarFloral({ palette, position }: { palette: Palette; position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh castShadow position={[0, 0.46, 0]}>
-        <cylinderGeometry args={[0.08, 0.12, 0.92, 14]} />
+      {/* A footed urn: base, waisted stem, flared bowl. A single tapered tube read
+          as a length of pipe. */}
+      <mesh castShadow position={[0, 0.04, 0]}>
+        <cylinderGeometry args={[0.15, 0.18, 0.08, 16]} />
+        <meshStandardMaterial color="#ded3ba" roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0, 0.42, 0]}>
+        <cylinderGeometry args={[0.09, 0.13, 0.7, 16]} />
         <meshStandardMaterial color="#e6dcc6" roughness={0.55} />
       </mesh>
-      <FlowerCluster palette={palette} position={[0, 1.08, 0]} radius={0.4} />
-      <FlowerCluster palette={palette} position={[0.2, 0.96, 0.05]} radius={0.26} />
-      <FlowerCluster palette={palette} position={[-0.2, 0.94, 0.05]} radius={0.24} />
-      <mesh castShadow position={[0.16, 0.74, 0.06]}>
-        <sphereGeometry args={[0.13, 8, 8]} />
-        <meshStandardMaterial color="#6f7f56" roughness={0.85} />
+      <mesh castShadow position={[0, 0.86, 0]}>
+        <cylinderGeometry args={[0.19, 0.1, 0.24, 16]} />
+        <meshStandardMaterial color="#e9e0ca" roughness={0.52} />
       </mesh>
-      <mesh castShadow position={[-0.17, 0.7, 0.05]}>
-        <sphereGeometry args={[0.11, 8, 8]} />
-        <meshStandardMaterial color="#7a8a5e" roughness={0.85} />
+      <mesh castShadow position={[0, 0.99, 0]}>
+        <torusGeometry args={[0.185, 0.017, 8, 20]} />
+        <meshStandardMaterial color="#b39152" metalness={0.62} roughness={0.38} />
       </mesh>
+      <FlowerCluster palette={palette} position={[0, 1.28, 0]} radius={0.42} />
+      <FlowerCluster palette={palette} position={[0.24, 1.1, 0.07]} radius={0.28} />
+      <FlowerCluster palette={palette} position={[-0.24, 1.07, 0.07]} radius={0.26} />
     </group>
   );
 }
@@ -1671,7 +1684,55 @@ const PRIEST_COLORS: Recolor = {
 };
 const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d78" };
 
-function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; recolor?: Recolor; rotationY?: number; url: string }) {
+// A pose is a set of per-bone rotation offsets layered ON TOP of whatever the
+// animation clip is playing. The source Quaternius idle leaves both arms hanging
+// dead straight and pinned to the ribs, which is the single thing that makes
+// these figures read as shop mannequins: real people carry a few degrees of
+// shoulder abduction and a soft elbow, and a bride or groom at an altar holds
+// their hands in front of them.
+//
+// The offsets are applied by post-multiplying each bone's quaternion after the
+// mixer has written the clip's value for the frame. Post-multiplying (rather
+// than assigning) keeps the clip's motion intact, and doing it once per frame
+// after the mixer means it does not accumulate.
+type FigurePose = Record<string, [number, number, number]>;
+
+// Hands clasped low in front — the standard groom-at-the-altar stance.
+const POSE_HANDS_CLASPED: FigurePose = {
+  "Shoulder.L": [0, 0, -0.1],
+  "Shoulder.R": [0, 0, 0.1],
+  "UpperArm.L": [0.34, 0, -0.16],
+  "UpperArm.R": [0.34, 0, 0.16],
+  "LowerArm.L": [0.72, 0, -0.3],
+  "LowerArm.R": [0.72, 0, 0.3],
+  "Palm.L": [0.2, 0, 0],
+  "Palm.R": [0.2, 0, 0]
+};
+
+// The bride carries her bouquet a little higher and closer to centre.
+const POSE_BOUQUET: FigurePose = {
+  "Shoulder.L": [0, 0, -0.08],
+  "Shoulder.R": [0, 0, 0.08],
+  "UpperArm.L": [0.46, 0, -0.13],
+  "UpperArm.R": [0.46, 0, 0.13],
+  "LowerArm.L": [0.86, 0, -0.26],
+  "LowerArm.R": [0.86, 0, 0.26],
+  "Palm.L": [0.24, 0, 0],
+  "Palm.R": [0.24, 0, 0]
+};
+
+// Just enough to unglue the arms from the torso and soften the elbows: used
+// while walking, and for anyone whose hands are doing something else.
+const POSE_RELAXED: FigurePose = {
+  "Shoulder.L": [0, 0, -0.07],
+  "Shoulder.R": [0, 0, 0.07],
+  "UpperArm.L": [0, 0, -0.17],
+  "UpperArm.R": [0, 0, 0.17],
+  "LowerArm.L": [0.26, 0, -0.1],
+  "LowerArm.R": [0.26, 0, 0.1]
+};
+
+function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; pose?: FigurePose; recolor?: Recolor; rotationY?: number; url: string }) {
   const { animations, scene } = useGLTF(url);
   const object = useMemo(() => {
     const copy = cloneSkinned(scene);
@@ -1753,6 +1814,31 @@ function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "wa
 
   useFrame((_, delta) => mixer.update(delta));
 
+  // Resolve the named bones once, and pre-build each offset as a quaternion so
+  // the per-frame work is a handful of multiplies.
+  const posed = useMemo(() => {
+    if (!pose) {
+      return [];
+    }
+    const entries: { bone: THREE.Object3D; offset: THREE.Quaternion }[] = [];
+    Object.entries(pose).forEach(([name, [x, y, z]]) => {
+      const bone = object.getObjectByName(name);
+      if (bone) {
+        entries.push({ bone, offset: new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)) });
+      }
+    });
+    return entries;
+  }, [object, pose]);
+
+  // Registered after the mixer's own useFrame at the same priority, so React
+  // Three Fiber runs it second and the offsets land on top of the clip. Raising
+  // the priority instead would switch off automatic rendering.
+  useFrame(() => {
+    for (const { bone, offset } of posed) {
+      bone.quaternion.multiply(offset);
+    }
+  });
+
   return <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />;
 }
 
@@ -1760,7 +1846,7 @@ function Celebrant() {
   // The officiant waits at the altar, facing the congregation.
   return (
     <group position={[0, 0, -3.55]}>
-      <AnimatedFigure clip="idle" recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
+      <AnimatedFigure clip="idle" pose={POSE_HANDS_CLASPED} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
     </group>
   );
 }
@@ -1787,7 +1873,7 @@ function MicrophoneStand() {
 function Singer() {
   return (
     <group position={[1.75, 0, -3.05]} rotation={[0, -0.55, 0]}>
-      <AnimatedFigure clip="idle" recolor={SINGER_COLORS} rotationY={0.35} url={FIGURE_WOMAN} />
+      <AnimatedFigure clip="idle" pose={POSE_RELAXED} recolor={SINGER_COLORS} rotationY={0.35} url={FIGURE_WOMAN} />
       <group position={[0.2, 0, 0.16]}>
         <MicrophoneStand />
       </group>
@@ -1922,12 +2008,12 @@ function Processional({
     <>
       {hideFigure !== "groom" ? (
         <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
+          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={moving ? POSE_RELAXED : POSE_HANDS_CLASPED} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
         </group>
       ) : null}
       {hideFigure !== "bride" ? (
         <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure clip={moving ? "walk" : "idle"} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
           <BridalGown />
           <Bouquet />
         </group>
@@ -1943,6 +2029,10 @@ type SeatLayoutParams = {
 };
 
 const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpacing: 0.62 };
+
+// Pew rows the nave physically holds, leaving the rear of the aisle clear for
+// the entrance. Rows run from z = -2.4 backwards at `rowSpacing`.
+const NAVE_PEW_ROWS = 12;
 
 function buildChurchSeatedGuests(
   visibleRows: number,
@@ -2102,6 +2192,75 @@ function ChancelArch({ wallFaceZ }: { wallFaceZ: number }) {
   );
 }
 
+// Window light, done honestly. An earlier pass faked this with additive cones,
+// which rendered as opaque wedges because there was no view-dependent thickness
+// term — they were deleted. The real technique is a gobo: three's SpotLight can
+// carry a projected texture in `light.map`, so feeding it the leaded-glass canvas
+// throws an actual window pattern across the floor and pews. Two constraints,
+// both learned from three's source:
+//   - `map` needs castShadow. three only builds the light's projection matrix
+//     when shadows are on, so a non-shadowing spot projects nothing.
+//   - `distance` must comfortably clear the target. The shader clips the map in
+//     z, and a too-short distance yields full unmodulated light instead.
+// The nave walls do not cast shadows, so the beam passes through the wall plane
+// and the cookie alone shapes it — which is exactly what a window does.
+const GOBO_ZS = [-3.2, -0.7, 1.8];
+
+function WindowGobo({ cookie, intensity, z }: { cookie: THREE.Texture; intensity: number; z: number }) {
+  const lightRef = useRef<THREE.SpotLight>(null);
+  const target = useMemo(() => new THREE.Object3D(), []);
+
+  useEffect(() => {
+    // Raking down and across the nave, so the patch lands on the aisle rather
+    // than on the wall it came through.
+    target.position.set(-2.7, 0.05, z - 2.1);
+    const light = lightRef.current;
+    if (light) {
+      light.target = target;
+      light.map = cookie;
+    }
+  }, [cookie, target, z]);
+
+  return (
+    <>
+      <primitive object={target} />
+      <spotLight
+        angle={0.3}
+        castShadow
+        color="#ffe0ad"
+        decay={0}
+        distance={26}
+        intensity={intensity}
+        penumbra={0.58}
+        position={[6.1, 3.7, z + 0.5]}
+        ref={lightRef}
+        shadow-bias={-0.0009}
+        shadow-camera-far={26}
+        shadow-camera-near={0.5}
+        shadow-mapSize={[1024, 1024]}
+        shadow-normalBias={0.03}
+      />
+    </>
+  );
+}
+
+function WindowGobos({ intensity }: { intensity: number }) {
+  const cookie = useMemo(() => {
+    const texture = createStainedGlassTexture(7);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+  useEffect(() => () => cookie.dispose(), [cookie]);
+
+  return (
+    <>
+      {GOBO_ZS.map((z) => (
+        <WindowGobo cookie={cookie} intensity={intensity} key={z} z={z} />
+      ))}
+    </>
+  );
+}
+
 function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
   // Real naves tower over the congregation — at eye height the ceiling ratio is
   // what separates "church" from "scale model". Everything below derives from
@@ -2201,6 +2360,8 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
       <StainedGlassWindow position={[-2.9, 4.94, -5.7]} rectHeight={0.9} seed={4} width={0.7} />
       <StainedGlassWindow position={[2.9, 4.94, -5.7]} rectHeight={0.9} seed={1} width={0.7} />
       <Crucifix position={[0, 2.14, -5.66]} />
+
+      <WindowGobos intensity={2.6} />
 
       <pointLight color="#ffdca0" decay={2} distance={9} intensity={1.5} position={[0, 3.6, -1]} />
       <pointLight color="#ffe7bc" decay={2} distance={9} intensity={1.4} position={[0, 3.4, 3]} />
@@ -2437,37 +2598,132 @@ function Dais({ palette }: { palette: Palette }) {
   );
 }
 
+// Blooms built from petals, not from spheres. A sphere has no silhouette a florist
+// would recognise, which is why the altar arrangements read as styrofoam balls: a
+// real bloom is a cupped whorl of petals with a visible centre, and real greenery
+// is blades, not green marbles.
+//
+// Everything is merged down to one geometry per bloom and one per leaf, then reused
+// across every arrangement, so the whole church still costs a handful of draw calls.
+function buildBloomGeometry() {
+  const parts: THREE.BufferGeometry[] = [];
+  const matrix = new THREE.Matrix4();
+  const euler = new THREE.Euler();
+
+  const whorl = (count: number, petalSize: number, tilt: number, spread: number, lift: number, phase: number) => {
+    for (let i = 0; i < count; i += 1) {
+      const angle = phase + (i / count) * Math.PI * 2;
+      // A shallow dome flattened on its axis reads as a cupped petal.
+      const petal = new THREE.SphereGeometry(petalSize, 9, 5, 0, Math.PI * 2, 0, Math.PI * 0.58);
+      petal.scale(1.18, 0.46, 1.05);
+      euler.set(tilt, angle, 0, "YXZ");
+      matrix.makeRotationFromEuler(euler);
+      matrix.setPosition(Math.sin(angle) * spread, lift, Math.cos(angle) * spread);
+      petal.applyMatrix4(matrix);
+      parts.push(petal);
+    }
+  };
+
+  // Outer petals splay wide, the inner whorl stands up around the centre.
+  whorl(6, 0.5, 1.02, 0.42, 0.0, 0);
+  whorl(5, 0.38, 0.62, 0.24, 0.16, 0.55);
+  const core = new THREE.SphereGeometry(0.26, 10, 8);
+  core.translate(0, 0.24, 0);
+  parts.push(core);
+
+  const merged = mergeGeometries(parts, false);
+  parts.forEach((part) => part.dispose());
+  merged.computeVertexNormals();
+  return merged;
+}
+
+function buildLeafGeometry() {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.bezierCurveTo(0.3, 0.2, 0.72, 0.15, 1, 0);
+  shape.bezierCurveTo(0.72, -0.15, 0.3, -0.2, 0, 0);
+  const geometry = new THREE.ExtrudeGeometry(shape, { bevelEnabled: false, curveSegments: 7, depth: 0.02 });
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+let bloomGeometry: THREE.BufferGeometry | null = null;
+let leafGeometry: THREE.BufferGeometry | null = null;
+
+function getBloomGeometry() {
+  bloomGeometry = bloomGeometry ?? buildBloomGeometry();
+  return bloomGeometry;
+}
+
+function getLeafGeometry() {
+  leafGeometry = leafGeometry ?? buildLeafGeometry();
+  return leafGeometry;
+}
+
+// x, y, z, scale, tilt, spin, colour key
+type BloomPlacement = [number, number, number, number, number, number, "ivory" | "cream" | "blush"];
+// x, y, z, length, pitch, yaw, roll
+type LeafPlacement = [number, number, number, number, number, number, number];
+
+const BLOOM_LAYOUT: BloomPlacement[] = [
+  [0, 0.04, 0.12, 0.42, -0.16, 0.0, "ivory"],
+  [0.3, 0.09, 0.07, 0.36, -0.1, 1.1, "blush"],
+  [-0.31, 0.05, 0.07, 0.35, -0.12, 2.2, "cream"],
+  [0.14, 0.31, 0.05, 0.33, -0.34, 0.6, "blush"],
+  [-0.17, 0.29, 0.04, 0.31, -0.32, 3.0, "ivory"],
+  [0.02, 0.5, 0.0, 0.28, -0.5, 1.7, "cream"],
+  [0.36, 0.25, 0.0, 0.27, -0.28, 2.6, "cream"],
+  [-0.37, 0.22, 0.02, 0.27, -0.26, 0.3, "blush"],
+  [0.22, -0.12, 0.11, 0.3, 0.24, 1.4, "cream"],
+  [-0.24, -0.11, 0.1, 0.29, 0.26, 2.9, "ivory"],
+  [0, -0.03, 0.22, 0.27, 0.1, 0.9, "blush"],
+  [0.12, -0.25, 0.05, 0.24, 0.7, 2.1, "ivory"],
+  [-0.13, -0.24, 0.14, 0.23, 0.66, 0.45, "cream"],
+  [0.45, 0.04, 0.06, 0.24, -0.05, 1.95, "ivory"],
+  [-0.46, 0.06, 0.05, 0.23, -0.05, 3.4, "blush"]
+];
+
+const LEAF_LAYOUT: LeafPlacement[] = [
+  [0.02, -0.4, -0.02, 0.72, -0.2, 0.2, -1.15],
+  [-0.5, -0.3, -0.03, 0.66, -0.14, 0.75, -0.62],
+  [0.54, -0.26, -0.03, 0.68, -0.14, -0.75, 0.62],
+  [-0.4, 0.48, -0.02, 0.5, 0.06, 2.3, 0.85],
+  [0.46, 0.44, -0.02, 0.48, 0.06, -2.3, -0.85],
+  [0.0, 0.68, -0.04, 0.44, 0.22, 0.35, 0.08],
+  [-0.62, 0.04, -0.04, 0.58, -0.08, 1.5, -0.3],
+  [0.64, 0.0, -0.04, 0.56, -0.08, -1.5, 0.3],
+  [-0.22, -0.44, 0.08, 0.5, 0.34, 0.45, -0.9],
+  [0.26, -0.42, 0.08, 0.52, 0.34, -0.45, 0.9],
+  [-0.3, 0.66, 0.02, 0.4, 0.14, 2.85, 0.5],
+  [0.34, 0.62, 0.02, 0.38, 0.14, -2.85, -0.5]
+];
+
 function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
-  // Many small individual blooms on a loose, asymmetric silhouette with greenery
-  // breaking the edges — reads as a florist's arrangement rather than one solid
-  // white ball. Sizes stay small (<=0.26 r) so no single sphere dominates.
-  const blossoms: Array<[number, number, number, number, string]> = [
-    // greenery base + a few sprigs poking past the blooms
-    [radius * 0.02, -radius * 0.34, -0.04, radius * 0.24, "#6f7f56"],
-    [-radius * 0.46, -radius * 0.28, -0.05, radius * 0.2, "#7a8a5e"],
-    [radius * 0.5, -radius * 0.22, -0.05, radius * 0.18, "#6f7f56"],
-    [-radius * 0.34, radius * 0.5, -0.02, radius * 0.13, "#7a8a5e"],
-    [radius * 0.4, radius * 0.46, -0.02, radius * 0.12, "#6f7f56"],
-    // ivory / blush blooms, varied size + depth for a broken silhouette
-    [0, radius * 0.02, radius * 0.12, radius * 0.24, "#f5efe4"],
-    [radius * 0.34, radius * 0.06, radius * 0.08, radius * 0.2, palette.blush],
-    [-radius * 0.36, radius * 0.04, radius * 0.08, radius * 0.19, "#efe6d6"],
-    [radius * 0.16, radius * 0.34, radius * 0.06, radius * 0.18, palette.blush],
-    [-radius * 0.2, radius * 0.32, radius * 0.06, radius * 0.17, "#f3ece0"],
-    [0, radius * 0.54, radius * 0.02, radius * 0.15, "#f5efe4"],
-    [radius * 0.42, radius * 0.26, 0.02, radius * 0.15, "#e7d8cf"],
-    [-radius * 0.42, radius * 0.24, 0.02, radius * 0.14, palette.blush],
-    [radius * 0.26, -radius * 0.16, radius * 0.1, radius * 0.17, "#efe6d6"],
-    [-radius * 0.28, -radius * 0.14, radius * 0.1, radius * 0.16, "#f3ece0"],
-    [0, -radius * 0.02, radius * 0.22, radius * 0.14, palette.blush]
-  ];
+  const bloom = getBloomGeometry();
+  const leaf = getLeafGeometry();
+  const colors: Record<BloomPlacement[6], string> = {
+    blush: palette.blush,
+    cream: "#efe6d6",
+    ivory: "#f6f0e5"
+  };
 
   return (
-    <group position={position}>
-      {blossoms.map(([x, y, z, size, color], index) => (
-        <mesh castShadow key={index} position={[x, y, z]}>
-          <sphereGeometry args={[size, 16, 16]} />
-          <meshStandardMaterial color={color} roughness={0.82} />
+    <group position={position} scale={radius}>
+      {BLOOM_LAYOUT.map(([x, y, z, size, tilt, spin, key], index) => (
+        <mesh castShadow geometry={bloom} key={`b${index}`} position={[x, y, z]} rotation={[tilt, spin, 0]} scale={size}>
+          <meshStandardMaterial color={colors[key]} roughness={0.86} />
+        </mesh>
+      ))}
+      {LEAF_LAYOUT.map(([x, y, z, length, pitch, yaw, roll], index) => (
+        <mesh
+          castShadow
+          geometry={leaf}
+          key={`l${index}`}
+          position={[x, y, z]}
+          rotation={[pitch, yaw, roll]}
+          scale={[length, length * 0.62, length * 0.9]}
+        >
+          <meshStandardMaterial color={index % 2 === 0 ? "#66774f" : "#75855a"} roughness={0.88} side={THREE.DoubleSide} />
         </mesh>
       ))}
     </group>
@@ -3309,7 +3565,7 @@ function formatVenueLabel(venueType: StudioVenueType) {
 
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
   const labels: Record<StudioPlanningStepId, string> = {
-    ceremony: `${capacity.renderedRows} ceremony rows`,
+    ceremony: `${capacity.renderedRows} of ${NAVE_PEW_ROWS} rows seated`,
     budget: "Budget level visualized",
     guests: `${capacity.visibleGuestMarkers} guest markers shown`,
     preview: "Preview perspective ready",
