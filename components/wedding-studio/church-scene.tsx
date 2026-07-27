@@ -229,7 +229,13 @@ const palettes: Record<StudioStyle, Palette> = {
     floor: "#dcdcd2",
     guest: "#eef0ea",
     pew: "#7d877f",
-    wall: "#eef0ea"
+    // The couple's style choice governs their DECOR — accent, blush, carpet, the
+    // guests' clothing. It should not repaint the building: this preset's #eef0ea
+    // put a mint-white wash on the nave walls and the altar panel, which read as
+    // mint green against the warm floor and was the most off-palette surface left in
+    // the render. Warm pale stone at the same lightness keeps the modern preset cool
+    // and airy where it belongs while the masonry stays masonry.
+    wall: "#efece2"
   },
   romantic: {
     accent: "#d8a79c",
