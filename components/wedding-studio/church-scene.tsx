@@ -1576,10 +1576,31 @@ const FIGURE_SCALE = 0.235;
 
 type Recolor = Record<string, string>;
 // figure_suit materials: Shirt (jacket), Pants, Details (dress shirt), TieTexture.
-const GROOM_COLORS: Recolor = { Details: "#efe9dd", Pants: "#1f2027", Shirt: "#1f2027", TieTexture: "#6a4a54" };
-const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Shoes: "#e9dfcf" };
-const PRIEST_COLORS: Recolor = { Details: "#16161a", Pants: "#16161a", Shirt: "#16161a", TieTexture: "#16161a" };
-const SINGER_COLORS: Recolor = { Dress: "#7d3b46" };
+// The source GLBs ship olive-khaki for both skin and hair — queried from the live
+// scene rather than guessed: `Skin` was #92815e on the bride and #7b6439 on the men,
+// `Hair` #73662d. That is why she read GREEN in the render, which is the kind of
+// defect a viewer notices before anything else about a figure. Naming Skin and Hair
+// in each recolor map replaces them with warm, plausible tones, varied between the
+// three so the hero figures are not colour clones of each other.
+const GROOM_COLORS: Recolor = {
+  Details: "#efe9dd",
+  Hair: "#33261d",
+  Pants: "#1f2027",
+  Shirt: "#1f2027",
+  Skin: "#c68e6a",
+  TieTexture: "#6a4a54"
+};
+const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Hair: "#5b3d28", Shoes: "#e9dfcf", Skin: "#d9a882" };
+const PRIEST_COLORS: Recolor = {
+  Details: "#16161a",
+  // Greying, so the officiant reads as the older figure without needing a new model.
+  Hair: "#8a857e",
+  Pants: "#16161a",
+  Shirt: "#16161a",
+  Skin: "#b9825f",
+  TieTexture: "#16161a"
+};
+const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d78" };
 
 function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; recolor?: Recolor; rotationY?: number; url: string }) {
   const { animations, scene } = useGLTF(url);
