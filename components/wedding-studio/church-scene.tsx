@@ -1024,27 +1024,75 @@ const STAINED_GLASS_COLORS = ["#294367", "#79332d", "#94703a", "#345844", "#3d34
 
 const LEAD_COLOR = "#33301f";
 
-// Draws a leaded stained-glass panel to a canvas: a diamond "quarry" lattice of
-// backlit jewel cells separated by dark lead cames, plus a soft light bloom.
-// Seeded so each window differs. Used as both map and emissiveMap so the glass
+// Draws a leaded window to a canvas, used as both map and emissiveMap so the glass
 // glows like real backlit glass.
+//
+// The previous version filled a uniform diamond grid from a palette of eight bright
+// jewels — including `#9a6bb0`, a lavender the owner had explicitly rejected, plus
+// baby blues and pinks. At cell 26 on a 128x256 canvas the cells were large and
+// perfectly regular, so it read as a harlequin candy wrapper rather than leaded
+// glass: the loudest and most off-palette thing in the whole render.
+//
+// This version is built like an actual lancet: a stone reveal masking an arched
+// head, a border of small quarries, a central roundel, and a field of SMALL
+// diamonds with per-cell jitter so no two cells match. The palette is the product's
+// own — amber, honey, deep forest, and oxblood as the single saturated accent. No
+// blue, no pink, no lavender.
+const GLASS_AMBER = "#c8912f";
+const GLASS_HONEY = "#e0b45c";
+const GLASS_DEEP_GOLD = "#a97420";
+const GLASS_FOREST = "#3c4a33";
+const GLASS_FOREST_DEEP = "#2c3626";
+const GLASS_OXBLOOD = "#7d2f2a";
+const GLASS_PALE = "#e8d9a8";
+// Weighted so warm golds dominate and the accents stay rare — a church window reads
+// warm overall, with colour incidents rather than an even confetti of hues.
+const GLASS_FIELD = [
+  GLASS_HONEY, GLASS_AMBER, GLASS_HONEY, GLASS_PALE, GLASS_AMBER,
+  GLASS_DEEP_GOLD, GLASS_HONEY, GLASS_FOREST, GLASS_AMBER, GLASS_PALE,
+  GLASS_HONEY, GLASS_OXBLOOD, GLASS_AMBER, GLASS_FOREST_DEEP, GLASS_HONEY
+];
+const LEAD = "#1a1409";
+
 function createStainedGlassTexture(seed: number): THREE.CanvasTexture {
-  const w = 128;
-  const h = 256;
+  const w = 256;
+  const h = 512;
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  const jewels = ["#7db0d6", "#c8536a", "#e0b64e", "#5aa06e", "#9a6bb0", "#d98a45", "#3f7fa8", "#b8455a"];
-  const pick = (n: number) => jewels[((seed + n) % jewels.length + jewels.length) % jewels.length];
 
   if (ctx) {
-    ctx.fillStyle = "#15120c";
+    // A tiny deterministic PRNG: the jitter must be stable across renders, or the
+    // glass would shimmer every time React re-created the texture.
+    let state = (seed + 1) * 9301;
+    const rand = () => {
+      state = (state * 9301 + 49297) % 233280;
+      return state / 233280;
+    };
+
+    ctx.fillStyle = LEAD;
     ctx.fillRect(0, 0, w, h);
 
-    const cell = 26;
-    let n = 0;
-    for (let row = -1; row * (cell / 2) < h + cell; row += 1) {
+    // The lancet opening: a vertical rectangle capped by a semicircular head. Drawn
+    // as a clip so everything after it stays inside the glass, and the surrounding
+    // canvas remains dark — that dark margin reads as the stone reveal.
+    const margin = 18;
+    const openW = w - margin * 2;
+    const headR = openW / 2;
+    const headY = margin + headR;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(w / 2, headY, headR, Math.PI, 0);
+    ctx.lineTo(w - margin, h - margin);
+    ctx.lineTo(margin, h - margin);
+    ctx.closePath();
+    ctx.clip();
+
+    // Field of small quarries. Cell 15 on a 256-wide panel gives ~17 across, which
+    // reads as glass rather than as tiles.
+    const cell = 15;
+    for (let row = -2; row * (cell / 2) < h + cell; row += 1) {
       const y = row * (cell / 2);
       const offset = row % 2 === 0 ? 0 : cell / 2;
       for (let x = -cell; x < w + cell; x += cell) {
@@ -1055,23 +1103,59 @@ function createStainedGlassTexture(seed: number): THREE.CanvasTexture {
         ctx.lineTo(cx, y + cell / 2);
         ctx.lineTo(cx - cell / 2, y);
         ctx.closePath();
-        ctx.fillStyle = pick(n + row * 3);
-        ctx.globalAlpha = 0.72 + ((n * 7) % 10) / 34;
+        ctx.fillStyle = GLASS_FIELD[Math.floor(rand() * GLASS_FIELD.length)];
+        // Per-cell opacity jitter stands in for the thickness variation of hand-blown
+        // glass, so light through the panel is uneven the way real glass is.
+        ctx.globalAlpha = 0.74 + rand() * 0.26;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = "#0e0b07";
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = LEAD;
+        ctx.lineWidth = 1.4;
         ctx.stroke();
-        n += 1;
       }
     }
 
-    // soft backlight bloom through the glass
-    const glow = ctx.createRadialGradient(w / 2, h * 0.42, 8, w / 2, h * 0.42, h * 0.58);
-    glow.addColorStop(0, "rgba(255,246,220,0.34)");
-    glow.addColorStop(1, "rgba(255,246,220,0)");
+    // A border band of larger quarries, the way a real window frames its field.
+    ctx.strokeStyle = LEAD;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(margin + 10, headY, openW - 20, h - margin - headY - 10);
+
+    // Central roundel — one deliberate focal incident instead of an even field.
+    const roundelY = h * 0.46;
+    const roundelR = openW * 0.26;
+    ctx.beginPath();
+    ctx.arc(w / 2, roundelY, roundelR, 0, Math.PI * 2);
+    ctx.fillStyle = GLASS_OXBLOOD;
+    ctx.globalAlpha = 0.82;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = LEAD;
+    ctx.stroke();
+    // A simple rosette inside it, in gold, so the roundel has structure at distance.
+    ctx.beginPath();
+    ctx.arc(w / 2, roundelY, roundelR * 0.46, 0, Math.PI * 2);
+    ctx.fillStyle = GLASS_HONEY;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = LEAD;
+    ctx.stroke();
+    for (let i = 0; i < 8; i += 1) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(w / 2 + Math.cos(a) * roundelR * 0.46, roundelY + Math.sin(a) * roundelR * 0.46);
+      ctx.lineTo(w / 2 + Math.cos(a) * roundelR, roundelY + Math.sin(a) * roundelR);
+      ctx.stroke();
+    }
+
+    // Warm backlight, centred a little above middle where a real window's brightest
+    // wash falls.
+    const glow = ctx.createRadialGradient(w / 2, h * 0.38, 10, w / 2, h * 0.38, h * 0.62);
+    glow.addColorStop(0, "rgba(255,240,206,0.32)");
+    glow.addColorStop(1, "rgba(255,240,206,0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
+    ctx.restore();
   }
 
   const texture = new THREE.CanvasTexture(canvas);
