@@ -9,3 +9,6 @@ coverage
 .env.local
 .env.*.local
 next-panic-*.log
+
+# macOS
+.DS_Store

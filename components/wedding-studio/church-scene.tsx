@@ -42,7 +42,11 @@ type SurfaceTextureSet = { map: string; normalMap: string; roughnessMap: string 
 type SurfaceMaps = { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture };
 const CHURCH_TEXTURES: Record<"wall" | "floor" | "pew", SurfaceTextureSet> = {
   wall: {
-    map: assetPath("/textures/wall_diff.jpg"),
+    // A luminance-neutral detail map, not an albedo. The raw plaster scan
+    // averaged #444037, so multiplying it by the palette's wall tone turned
+    // every church into a grey cave no matter what colour was chosen. This
+    // version carries only the grain, so `color` actually sets the stone tone.
+    map: assetPath("/textures/wall_limestone.jpg"),
     normalMap: assetPath("/textures/wall_nor_gl.jpg"),
     roughnessMap: assetPath("/textures/wall_rough.jpg")
   },
@@ -107,13 +111,26 @@ function TexturedGround({ color, position, size }: { color: string; position: [n
 // Plastered-stone church wall. One shared repeat across all wall segments so
 // the tiling stays consistent; polygonOffset preserved so flush-mounted
 // windows/reredos don't z-fight.
+const WALL_NORMAL_SCALE = new THREE.Vector2(0.3, 0.3);
+
 function StoneWall({ args, color, position }: { args: [number, number, number]; color: string; position: [number, number, number] }) {
-  const maps = useSurfaceMaps(CHURCH_TEXTURES.wall, 5, 2.6);
+  const maps = useSurfaceMaps(CHURCH_TEXTURES.wall, 3, 1.5);
 
   return (
     <mesh position={position} receiveShadow>
       <boxGeometry args={args} />
-      <meshStandardMaterial {...maps} color={color} polygonOffset polygonOffsetFactor={2} polygonOffsetUnits={2} roughness={1} />
+      {/* The plaster normal map at full strength turned dressed limestone into
+          popcorn stucco. Dialled back so the surface reads smooth and cool to
+          the touch, with only enough tooth to catch the raking key light. */}
+      <meshStandardMaterial
+        {...maps}
+        color={color}
+        normalScale={WALL_NORMAL_SCALE}
+        polygonOffset
+        polygonOffsetFactor={2}
+        polygonOffsetUnits={2}
+        roughness={0.94}
+      />
     </mesh>
   );
 }
@@ -399,12 +416,12 @@ export function CeremonyScene({
             args={[
               preset.hemisphereSky,
               preset.hemisphereGround,
-              effectiveVenue === "church" ? 0.38 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
+              effectiveVenue === "church" ? 0.22 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
             ]}
           />
           <ambientLight
             color={preset.ambientColor}
-            intensity={effectiveVenue === "church" ? 0.2 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
+            intensity={effectiveVenue === "church" ? 0.11 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
           />
           <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 10, -7]} />
           <directionalLight
@@ -1027,8 +1044,6 @@ function RoomFrame({ palette, venueType, viewMode }: { palette: Palette; venueTy
 
 // ----- Church interior: a warm Catholic nave (reference look) -----
 
-const STAINED_GLASS_COLORS = ["#294367", "#79332d", "#94703a", "#345844", "#3d3459", "#2c565d"];
-
 const LEAD_COLOR = "#33301f";
 
 // Draws a leaded window to a canvas, used as both map and emissiveMap so the glass
@@ -1170,6 +1185,41 @@ function createStainedGlassTexture(seed: number): THREE.CanvasTexture {
   return texture;
 }
 
+// Builds a lancet outline: straight jambs up to the springing line, then a
+// semicircular head. Used for both the glass and the stone reveal so the
+// window has one continuous pointed-arch silhouette instead of a rectangle
+// with a flat coloured cap stuck on top.
+function lancetShape(halfWidth: number, bodyHeight: number) {
+  const shape = new THREE.Shape();
+  const spring = bodyHeight / 2;
+  shape.moveTo(-halfWidth, -spring);
+  shape.lineTo(-halfWidth, spring);
+  // clockwise sweeps PI -> PI/2 -> 0, i.e. over the top.
+  shape.absarc(0, spring, halfWidth, Math.PI, 0, true);
+  shape.lineTo(halfWidth, -spring);
+  shape.closePath();
+  return shape;
+}
+
+// ShapeGeometry writes raw XY into uv, so a shape that spans metres would tile
+// the texture dozens of times. Remap uv to 0..1 across the bounds so the leaded
+// artwork fills the lancet exactly once, arch included.
+function lancetGeometry(halfWidth: number, bodyHeight: number) {
+  const geometry = new THREE.ShapeGeometry(lancetShape(halfWidth, bodyHeight), 28);
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox;
+  if (!box) return geometry;
+  const spanX = box.max.x - box.min.x || 1;
+  const spanY = box.max.y - box.min.y || 1;
+  const uv = geometry.attributes.uv as THREE.BufferAttribute;
+  const position = geometry.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < uv.count; i += 1) {
+    uv.setXY(i, (position.getX(i) - box.min.x) / spanX, (position.getY(i) - box.min.y) / spanY);
+  }
+  uv.needsUpdate = true;
+  return geometry;
+}
+
 function StainedGlassWindow({
   position,
   rotationY = 0,
@@ -1184,41 +1234,45 @@ function StainedGlassWindow({
   seed?: number;
 }) {
   const halfWidth = width / 2;
-  const frameHeight = rectHeight + halfWidth;
-  const glassColor = (offset: number) => STAINED_GLASS_COLORS[((seed + offset) % STAINED_GLASS_COLORS.length + STAINED_GLASS_COLORS.length) % STAINED_GLASS_COLORS.length];
   // Real leaded-glass look: a jewel-toned quarry lattice with dark lead lines
   // and a soft backlight, drawn to a canvas — far richer than a few flat panes.
   const texture = useMemo(() => createStainedGlassTexture(seed), [seed]);
   useEffect(() => () => texture.dispose(), [texture]);
 
+  const glass = useMemo(() => lancetGeometry(halfWidth, rectHeight), [halfWidth, rectHeight]);
+  const reveal = useMemo(() => lancetGeometry(halfWidth + 0.13, rectHeight + 0.26), [halfWidth, rectHeight]);
+  const lead = useMemo(() => lancetGeometry(halfWidth + 0.03, rectHeight + 0.06), [halfWidth, rectHeight]);
+  useEffect(
+    () => () => {
+      glass.dispose();
+      reveal.dispose();
+      lead.dispose();
+    },
+    [glass, reveal, lead]
+  );
+
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      {/* stone reveal */}
-      <mesh position={[0, halfWidth / 2, -0.08]}>
-        <boxGeometry args={[width + 0.24, frameHeight + 0.26, 0.12]} />
-        <meshStandardMaterial color="#cabfa0" roughness={0.9} />
+      {/* Arched stone reveal, following the same curve as the glass. */}
+      <mesh geometry={reveal} position={[0, 0, -0.07]}>
+        <meshStandardMaterial color="#cdc2a4" roughness={0.9} side={THREE.DoubleSide} />
       </mesh>
-      {/* leaded jewel glass — one textured, gently backlit plane */}
-      <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[width, rectHeight]} />
+      {/* Lead came outlining the whole lancet. */}
+      <mesh geometry={lead} position={[0, 0, -0.012]}>
+        <meshStandardMaterial color={LEAD_COLOR} roughness={0.78} side={THREE.DoubleSide} />
+      </mesh>
+      {/* The glass itself: one continuous backlit lancet. */}
+      <mesh geometry={glass}>
         <meshStandardMaterial emissive="#ffffff" emissiveIntensity={0.9} emissiveMap={texture} map={texture} roughness={0.4} side={THREE.DoubleSide} />
       </mesh>
-      {/* arched top: lead backing + jewel + rose medallion */}
-      <mesh position={[0, rectHeight / 2, -0.01]}>
-        <circleGeometry args={[halfWidth + 0.01, 22, 0, Math.PI]} />
-        <meshStandardMaterial color={LEAD_COLOR} roughness={0.82} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0, rectHeight / 2, 0]}>
-        <circleGeometry args={[halfWidth - 0.025, 22, 0, Math.PI]} />
-        <meshStandardMaterial color={glassColor(3)} emissive={glassColor(3)} emissiveIntensity={0.34} roughness={0.45} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.014]}>
-        <circleGeometry args={[halfWidth * 0.3, 18]} />
-        <meshStandardMaterial color={glassColor(5)} emissive={glassColor(5)} emissiveIntensity={0.46} roughness={0.4} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh position={[0, rectHeight / 2 + halfWidth * 0.4, 0.012]}>
-        <ringGeometry args={[halfWidth * 0.3, halfWidth * 0.35, 18]} />
+      {/* Tracery oculus in the head — a lead ring around pale gold. */}
+      <mesh position={[0, rectHeight / 2 + halfWidth * 0.42, 0.012]}>
+        <ringGeometry args={[halfWidth * 0.26, halfWidth * 0.32, 20]} />
         <meshStandardMaterial color={LEAD_COLOR} roughness={0.7} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, rectHeight / 2 + halfWidth * 0.42, 0.008]}>
+        <circleGeometry args={[halfWidth * 0.27, 20]} />
+        <meshStandardMaterial color={GLASS_PALE} emissive={GLASS_HONEY} emissiveIntensity={0.5} roughness={0.4} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
@@ -1432,10 +1486,16 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         const ny = normalAttr.getY(i);
         const contactBand = 1 - THREE.MathUtils.smoothstep(posAttr.getY(i), minY, contactTop);
         const occ = Math.max(0.55, 1 - 0.42 * Math.max(0, -ny) - 0.22 * contactBand);
+        // Saturation must be a FLOOR, not a scale. `hsl.s * 0.3` left the source
+        // greys at s=0, so the hue lerp toward warm had nothing to act on and the
+        // whole assembly stayed cold grey no matter what hue was targeted — the
+        // alabaster regrade was silently a no-op on exactly the vertices that
+        // needed it. Lightness is likewise remapped into a light stone band
+        // instead of merely nudged, so mid-grey clothing lands as pale limestone.
         color.setHSL(
-          THREE.MathUtils.lerp(hsl.h, 0.09, 0.6),
-          hsl.s * 0.3,
-          Math.min(0.86, hsl.l * 0.9 + 0.06) * occ
+          THREE.MathUtils.lerp(hsl.h, 0.09, 0.75),
+          THREE.MathUtils.clamp(Math.max(0.062, hsl.s * 0.3), 0.062, 0.16),
+          Math.min(0.87, 0.52 + hsl.l * 0.32) * occ
         );
         colorAttr.setXYZ(i, color.r, color.g, color.b);
       }
@@ -1599,13 +1659,15 @@ const GROOM_COLORS: Recolor = {
 };
 const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Hair: "#c9a563", Shoes: "#e9dfcf", Skin: "#d9a882" };
 const PRIEST_COLORS: Recolor = {
-  Details: "#16161a",
+  Details: "#24261f",
   // Greying, so the officiant reads as the older figure without needing a new model.
   Hair: "#8a857e",
-  Pants: "#16161a",
-  Shirt: "#16161a",
+  Pants: "#24261f",
+  // Ivory where the shirt shows: the cassock plus a clerical collar reads as an
+  // officiant. Head-to-toe #16161a crushed to a silhouette with no features.
+  Shirt: "#e6dfd0",
   Skin: "#b9825f",
-  TieTexture: "#16161a"
+  TieTexture: "#24261f"
 };
 const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d78" };
 
@@ -1634,8 +1696,19 @@ function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "wa
       //
       // The silhouette stays low-poly — that genuinely needs more triangles — but the
       // shading facets are what read as "jagged", and those are gone.
+      //
+      // One more trap, and it is the reason the previous weld barely helped:
+      // `mergeVertices` only merges vertices whose ENTIRE attribute set matches.
+      // On a flat-shaded mesh, coincident corners carry different per-face
+      // normals by definition, so the comparison rejects almost every candidate
+      // pair and the weld quietly does nothing. The normal attribute has to be
+      // dropped BEFORE welding; then the merge sees matching positions and skin
+      // weights, and `computeVertexNormals()` finally has shared vertices to
+      // average across.
       if (mesh.geometry) {
-        const welded = mergeVertices(mesh.geometry.clone());
+        const raw = mesh.geometry.clone();
+        raw.deleteAttribute("normal");
+        const welded = mergeVertices(raw);
         welded.computeVertexNormals();
         mesh.geometry = welded;
       }
@@ -1961,6 +2034,74 @@ function SceneCaptureHook() {
   return null;
 }
 
+// The chancel focal arch. An earlier attempt drew three flat pale lancets on
+// the wall and they read as gravestones: same tone as the wall, no depth, no
+// occlusion. This version is real geometry — the surround is an extruded arched
+// ring that projects from the wall face, so it self-shadows, catches the key
+// light on its bevel, and gives N8AO an actual corner to darken. One arch, not
+// an arcade: the house rule is one focal surface.
+function lancetRingGeometry(halfWidth: number, bodyHeight: number, thickness: number, depth: number) {
+  const outer = lancetShape(halfWidth + thickness, bodyHeight + thickness * 2);
+  const inner = lancetShape(halfWidth, bodyHeight);
+  // A hole must wind opposite to its outline, hence the reverse().
+  outer.holes.push(new THREE.Path(inner.getPoints(64).reverse()));
+  return new THREE.ExtrudeGeometry(outer, {
+    bevelEnabled: true,
+    bevelSegments: 2,
+    bevelSize: 0.014,
+    bevelThickness: 0.014,
+    curveSegments: 28,
+    depth
+  });
+}
+
+const NICHE_HALF_WIDTH = 0.82;
+const NICHE_BODY = 2.2;
+const NICHE_CENTER_Y = 1.72;
+
+function ChancelArch({ wallFaceZ }: { wallFaceZ: number }) {
+  const field = useMemo(() => lancetGeometry(NICHE_HALF_WIDTH, NICHE_BODY), []);
+  const surround = useMemo(() => lancetRingGeometry(NICHE_HALF_WIDTH, NICHE_BODY, 0.17, 0.24), []);
+  useEffect(
+    () => () => {
+      field.dispose();
+      surround.dispose();
+    },
+    [field, surround]
+  );
+
+  return (
+    <group position={[0, NICHE_CENTER_Y, 0]}>
+      {/* The recessed field, a clear tonal step below the wall so the opening
+          reads as depth rather than a painted shape. */}
+      <mesh geometry={field} position={[0, 0, wallFaceZ + 0.004]} receiveShadow>
+        <meshStandardMaterial color="#b0a284" roughness={0.92} />
+      </mesh>
+      {/* Moulded surround, projecting 24cm into the room. */}
+      <mesh castShadow geometry={surround} position={[0, 0, wallFaceZ]} receiveShadow>
+        <meshStandardMaterial color="#e3d9be" roughness={0.85} />
+      </mesh>
+      {/* Flanking pilasters and their caps, framing the chancel. */}
+      {[-1.62, 1.62].map((x) => (
+        <group key={x}>
+          <mesh castShadow position={[x, 0.28, wallFaceZ + 0.07]} receiveShadow>
+            <boxGeometry args={[0.22, 3.5, 0.14]} />
+            <meshStandardMaterial color="#ded4b8" roughness={0.87} />
+          </mesh>
+          <mesh castShadow position={[x, 2.06, wallFaceZ + 0.09]}>
+            <boxGeometry args={[0.31, 0.15, 0.19]} />
+            <meshStandardMaterial color="#e6dcc1" roughness={0.85} />
+          </mesh>
+          <mesh castShadow position={[x, -1.47, wallFaceZ + 0.09]}>
+            <boxGeometry args={[0.31, 0.17, 0.19]} />
+            <meshStandardMaterial color="#d5caad" roughness={0.88} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
   // Real naves tower over the congregation — at eye height the ceiling ratio is
   // what separates "church" from "scale model". Everything below derives from
@@ -2000,15 +2141,32 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
         <StoneWall args={[10.1, wallHeight + 1.9, 0.22]} color={palette.wall} position={[0, (wallHeight + 1.9) / 2, -5.85]} />
       </Suspense>
 
-      {/* Reredos: a framed backdrop behind the altar so the crucifix reads
-          against depth instead of a blown-out wall. */}
-      <mesh position={[0, 2.2, -5.72]}>
-        <boxGeometry args={[2.95, 4.4, 0.08]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.5} roughness={0.5} />
-      </mesh>
-      <mesh receiveShadow position={[0, 2.2, -5.69]}>
-        <boxGeometry args={[2.6, 4, 0.1]} />
-        <meshStandardMaterial color="#d3bf97" roughness={0.82} />
+      {/* Chancel wall: a carved blind arcade. This used to be a flat 2.6x4
+          panel — it read as a projector screen with a cross taped to it. Three
+          arched bays with raised mouldings and flanking pilasters give the
+          altar real architecture to sit against, and the projecting stone
+          catches the key light instead of flattening out. */}
+      <ChancelArch wallFaceZ={-5.735} />
+
+      {/* Nave cornice and dado string course. Both clear the side windows —
+          the windows occupy y 1.4 to 4.3, so a band anywhere between would
+          slice straight through the glass. */}
+      {[-4.72, 4.72].map((x) => (
+        <group key={x}>
+          <mesh castShadow position={[x, 4.62, 0.1]} receiveShadow>
+            <boxGeometry args={[0.15, 0.19, 12.4]} />
+            <meshStandardMaterial color="#ded3b6" roughness={0.86} />
+          </mesh>
+          <mesh castShadow position={[x, 1.02, 0.1]} receiveShadow>
+            <boxGeometry args={[0.1, 0.1, 12.4]} />
+            <meshStandardMaterial color="#d8ccae" roughness={0.88} />
+          </mesh>
+        </group>
+      ))}
+      {/* Entablature capping the chancel arch. */}
+      <mesh castShadow position={[0, 4.03, -5.66]} receiveShadow>
+        <boxGeometry args={[10.1, 0.2, 0.16]} />
+        <meshStandardMaterial color="#e0d5b8" roughness={0.86} />
       </mesh>
 
       {showCeiling ? <ChurchCeiling color={palette.wall} wallTopY={wallHeight} /> : null}
@@ -2040,9 +2198,9 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
         </group>
       ))}
 
-      <StainedGlassWindow position={[-2.5, 3.4, -5.7]} rectHeight={2.1} seed={4} width={0.95} />
-      <StainedGlassWindow position={[2.5, 3.4, -5.7]} rectHeight={2.1} seed={1} width={0.95} />
-      <Crucifix position={[0, 2.95, -5.6]} />
+      <StainedGlassWindow position={[-2.9, 4.94, -5.7]} rectHeight={0.9} seed={4} width={0.7} />
+      <StainedGlassWindow position={[2.9, 4.94, -5.7]} rectHeight={0.9} seed={1} width={0.7} />
+      <Crucifix position={[0, 2.14, -5.66]} />
 
       <pointLight color="#ffdca0" decay={2} distance={9} intensity={1.5} position={[0, 3.6, -1]} />
       <pointLight color="#ffe7bc" decay={2} distance={9} intensity={1.4} position={[0, 3.4, 3]} />

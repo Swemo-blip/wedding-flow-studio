@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Maximize2, Settings, Sun } from "lucide-react";
+import { Armchair, Camera, Maximize2, Settings, Sun } from "lucide-react";
 import { Donut } from "@/components/ui/donut";
 import { StyleReferences } from "@/components/wedding/style-references";
 import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
@@ -95,6 +95,14 @@ export function CeremonyStudio() {
   const [canvasTab, setCanvasTab] = useState<CanvasTab>("studio");
   const [preset, setPreset] = useState<PresetKey | null>(null);
   const [firstPerson, setFirstPerson] = useState<CeremonyFirstPerson>(null);
+  // The engine has always carried a seated-guest camera (eye height 1.45 m, partway
+  // down the nave, facing the altar) and a walkthrough camera — `StudioViewMode`
+  // defines both and getCameraPosition/Target/Fov have complete entries for them.
+  // Neither had any control, so "see the aisle the way your guests will" was built
+  // and unreachable. This was wired once before and reverted because the render
+  // could not be verified; that turned out to be a measurement error, and the
+  // framing is now checked against a captured still.
+  const [guestEye, setGuestEye] = useState(false);
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [highQuality, setHighQuality] = useState(true);
 
@@ -132,7 +140,7 @@ export function CeremonyStudio() {
   const seatedCount = Math.min(invitedGuests, capacity.totalCapacity);
   const seatsRemaining = Math.max(0, capacity.totalCapacity - invitedGuests);
 
-  const viewMode: StudioViewMode = canvasTab === "plan" ? "top" : "3d";
+  const viewMode: StudioViewMode = canvasTab === "plan" ? "top" : guestEye ? "guest" : "3d";
   const cameraOverride = canvasTab === "plan" ? null : preset ? CAMERA_PRESETS[preset] : null;
   const effectiveFirstPerson = canvasTab === "plan" ? null : firstPerson;
 
@@ -140,6 +148,23 @@ export function CeremonyStudio() {
     setCanvasTab("studio");
     setPreset(null);
     setFirstPerson(null);
+    setGuestEye(false);
+  }
+
+  // A named framing preset and the couple's-eyes mode both override the view-mode
+  // camera, so taking a guest's seat has to release them.
+  function toggleGuestEye() {
+    // The sibling resets must happen OUTSIDE the updater. A state updater has to
+    // be pure; React double-invokes it in development, so calling setState from
+    // inside it re-entered render and locked the main thread hard enough that the
+    // tab stopped answering.
+    const next = !guestEye;
+    setGuestEye(next);
+    if (next) {
+      setCanvasTab("studio");
+      setPreset(null);
+      setFirstPerson(null);
+    }
   }
 
   function captureView() {
@@ -296,6 +321,17 @@ export function CeremonyStudio() {
                   type="button"
                 >
                   <Settings aria-hidden="true" size={16} />
+                </button>
+                <button
+                  aria-label={t("Take a guest's seat")}
+                  aria-pressed={guestEye}
+                  className="stage-icon"
+                  data-active={guestEye}
+                  onClick={toggleGuestEye}
+                  title={t("Take a guest's seat")}
+                  type="button"
+                >
+                  <Armchair aria-hidden="true" size={16} />
                 </button>
                 <button
                   aria-label={t("Save a still")}
