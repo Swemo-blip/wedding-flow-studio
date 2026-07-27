@@ -1,31 +1,53 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RoleProductionBoard } from "@/components/director/role-production-board";
 import { RoleSelector } from "@/components/director/role-selector";
+import { Button } from "@/components/ui/button";
 import { StudioCommand } from "@/components/ui/studio-command";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
 import { useTranslation } from "@/lib/i18n";
-import { buildRoleBriefs } from "@/lib/role-briefs";
+import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { getUnassignedMoments } from "@/lib/role-briefs";
+import { buildRoleProductionBoards } from "@/lib/role-production";
+import { useLocalProject } from "@/lib/use-local-project";
+import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 
 export function DirectorBoard() {
   const { t } = useTranslation();
-  const briefs = useMemo(() => buildRoleBriefs(), []);
-  const [activeRole, setActiveRole] = useState(briefs[0].role);
-  const activeBrief = briefs.find((brief) => brief.role === activeRole) ?? briefs[0];
+  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
+  const { resolvedRiskIds } = useRiskResolutions();
+  const risks = useMemo(
+    () =>
+      filterResolvedRisks(
+        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables, wedding }),
+        resolvedRiskIds
+      ),
+    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
+  );
+  // Which roles exist, and what each of them owns, comes from the couple's live
+  // timeline — so a plan without a toastmaster has no toastmaster board, and a
+  // moment they add lands on the board of whoever they made responsible.
+  const boards = useMemo(
+    () => buildRoleProductionBoards({ timeline: timelineItems, risks, cues: musicCues, speechItems: speeches }),
+    [musicCues, risks, speeches, timelineItems]
+  );
+  const unassignedMoments = useMemo(() => getUnassignedMoments(timelineItems), [timelineItems]);
+  const [selectedRole, setSelectedRole] = useState("");
+  // The role set is derived, so the selected role can vanish when the couple
+  // reassigns or deletes a moment. Fall back to the first board instead of
+  // rendering an empty surface.
+  const activeBoard = boards.find((board) => board.role === selectedRole) ?? boards[0] ?? null;
 
   useEffect(() => {
     const readRoleFromUrl = window.setTimeout(() => {
-      const incomingRole = new URLSearchParams(window.location.search).get("role");
-
-      if (incomingRole && briefs.some((brief) => brief.role === incomingRole)) {
-        setActiveRole(incomingRole);
-      }
+      setSelectedRole(new URLSearchParams(window.location.search).get("role") ?? "");
     }, 0);
 
     return () => window.clearTimeout(readRoleFromUrl);
-  }, [briefs]);
+  }, []);
 
   return (
     <StudioRouteFrame
@@ -34,10 +56,30 @@ export function DirectorBoard() {
       title="Everyone's part in the day."
     >
     <div className="director-mode-page studio-route-content">
-      <RoleProductionBoard
-        brief={activeBrief}
-        roleSelector={<RoleSelector activeRole={activeRole} briefs={briefs} onChange={setActiveRole} />}
-      />
+      {activeBoard ? (
+        <RoleProductionBoard
+          board={activeBoard}
+          hasLocalProject={hasLocalProject}
+          roleSelector={<RoleSelector activeRole={activeBoard.role} onChange={setSelectedRole} roles={boards} />}
+        />
+      ) : (
+        <div className="director-empty-state">
+          <strong>{t("No role owns a moment yet.")}</strong>
+          <p>{t("Give the moments in your day flow a responsible role, and every role gets its own board here.")}</p>
+          <Button href="/day-flow" size="small">
+            {t("Open Day Flow")}
+          </Button>
+        </div>
+      )}
+
+      {unassignedMoments.length > 0 ? (
+        <p className="director-unassigned-note">
+          {unassignedMoments.length === 1
+            ? t("One moment has no responsible role yet, so no board carries it.")
+            : t("{count} moments have no responsible role yet, so no board carries them.", { count: unassignedMoments.length })}{" "}
+          <Link href="/day-flow">{t("Assign roles in Day Flow")}</Link>
+        </p>
+      ) : null}
 
       <details className="director-detail-drawer">
         <summary>
@@ -50,15 +92,7 @@ export function DirectorBoard() {
               { href: "/exports", label: "Prepare Brief" },
               { href: "/preview", label: "Preview Day", variant: "secondary" }
             ]}
-            description="One focused board per role: relevant timing, warnings, handoffs, checklist, contacts, and copy-ready instructions."
             eyebrow="Director Mode"
-            metrics={[
-              { label: "Active role", value: activeBrief.title },
-              { label: "Timeline moments", value: `${activeBrief.relevantTimelineItemIds.length}` },
-              { label: "Checklist", tone: "confirmed", value: `${activeBrief.checklistItems.length} items` },
-              { label: "Coordinate with", value: activeBrief.contactPerson }
-            ]}
-            status={{ label: "Role board live", tone: "confirmed" }}
             title="Give every role exactly what they need."
           />
           <StudioWorkflow activeStep="director" />

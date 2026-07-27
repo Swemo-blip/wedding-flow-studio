@@ -1,6 +1,7 @@
 import { buildProductionActionForMoment, type ProductionAction } from "@/lib/action-engine";
 import { exportTypes } from "@/lib/wedding-data";
 import { getRiskKind, isRiskOfKind } from "@/lib/risk-analysis";
+import { getRoleBoardKey } from "@/lib/role-briefs";
 import type {
   DinnerTable,
   ExportType,
@@ -536,34 +537,11 @@ function getGuestImpactLabel(level: MomentGuestImpact["level"]) {
   return "Light guest impact";
 }
 
+// One shared matcher (lib/role-briefs), so a moment's role resolves to the same
+// board here, in the preview cockpit, and on the Director boards themselves.
+// A role the matcher does not recognise still points at the whole-day planner view.
 function getDirectorRole(role: string) {
-  const normalizedRole = role.toLowerCase();
-
-  if (normalizedRole.includes("toastmaster") || normalizedRole.includes("mc")) {
-    return "toastmaster";
-  }
-
-  if (normalizedRole.includes("photo")) {
-    return "photographer";
-  }
-
-  if (normalizedRole.includes("dj") || normalizedRole.includes("music")) {
-    return "dj";
-  }
-
-  if (normalizedRole.includes("catering")) {
-    return "catering";
-  }
-
-  if (normalizedRole.includes("venue")) {
-    return "venue";
-  }
-
-  if (normalizedRole.includes("officiant")) {
-    return "officiant";
-  }
-
-  return "planner";
+  return getRoleBoardKey(role) ?? "planner";
 }
 
 function getDirectorTitle(role: string) {

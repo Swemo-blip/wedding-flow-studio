@@ -1,3 +1,4 @@
+import { matchRoleKey } from "@/lib/role-briefs";
 import { dinnerTables, guests, musicCues, speeches, timelineItems } from "@/lib/wedding-data";
 import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, Wedding } from "@/lib/wedding-types";
 
@@ -143,6 +144,11 @@ export function composeWeddingProducerPlan(input: WeddingProducerIntake): Weddin
 function composeTimeline(input: WeddingProducerIntake, wedding: Wedding): TimelineItem[] {
   const ceremonyDescriptor = ceremonyFormatLabels[input.ceremonyFormat].replace(" ceremony", "");
   const receptionDescriptor = receptionFormatLabels[input.receptionFormat].toLowerCase();
+  // The roles the couple said are part of their day. Director Mode derives its
+  // boards from the roles the timeline names, so a role they did NOT pick must not
+  // keep owning moments here — that is what used to hand a couple with no
+  // toastmaster a toastmaster board.
+  const includedRoles = new Set(input.vendorRoles.map((role) => matchRoleKey(role)).filter((role): role is string => Boolean(role)));
 
   return timelineItems.map((item) => {
     const isCeremony = item.location.includes("Chapel") || item.phase.includes("Ceremony") || item.phase.includes("Processional") || item.phase.includes("Recessional");
@@ -161,12 +167,23 @@ function composeTimeline(input: WeddingProducerIntake, wedding: Wedding): Timeli
             : item.location,
       notes: `${item.notes} Producer Intake: ${ceremonyDescriptor} ceremony with ${receptionDescriptor}; ${input.complexity === "high-touch" ? "protect detailed role cues" : "keep handoffs calm and clear"}.`,
       // Keep the ROLE the template suggests ("Photographer", "Venue usher team")
-      // — that is useful structure — but never the sample's invented PEOPLE.
-      // A couple's own run of show said "Olivia Hart" owned their welcome toast.
-      // Unassigned is the honest state, and it reads as a real thing to fill in.
+      // when the couple's team includes it — that is useful structure — but never
+      // the sample's invented PEOPLE. A couple's own run of show said "Olivia Hart"
+      // owned their welcome toast. Unassigned is the honest state, and it reads as
+      // a real thing to fill in.
+      responsibleRole: keepResponsibleRole(item.responsibleRole, includedRoles) ? item.responsibleRole : "",
       responsiblePerson: ""
     };
   });
+}
+
+// A role the matcher does not recognise is kept as it stands: the intake asks
+// about a fixed list of roles, so an unrecognised one was never something the
+// couple could deselect.
+function keepResponsibleRole(responsibleRole: string, includedRoles: Set<string>) {
+  const role = matchRoleKey(responsibleRole);
+
+  return role === null || includedRoles.has(role);
 }
 
 function composeMusicCues(input: WeddingProducerIntake, timeline: TimelineItem[]): MusicCue[] {

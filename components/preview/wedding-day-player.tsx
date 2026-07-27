@@ -273,9 +273,12 @@ export function WeddingDayPlayer() {
               <div>
                 <span>{t("Owner")}</span>
                 {/* A generated moment carries its role but no assigned person, so
-                    name the gap rather than showing an empty line. */}
+                    name the gap rather than showing an empty line. The role can be
+                    blank too (a moment the couple added, or a role their team does
+                    not include), and then the line is dropped instead of printing
+                    an empty one. */}
                 <strong>{phase.responsiblePerson || t("Not assigned")}</strong>
-                <small>{phase.responsibleRole}</small>
+                {phase.responsibleRole ? <small>{phase.responsibleRole}</small> : null}
               </div>
               <div>
                 <span>Music</span>
@@ -360,11 +363,17 @@ export function WeddingDayPlayer() {
               <p>
                 {phase.responsiblePerson ? (
                   <>
-                    <strong>{phase.responsiblePerson}</strong> {t("owns this moment as")} {phase.responsibleRole}.
+                    <strong>{phase.responsiblePerson}</strong>{" "}
+                    {phase.responsibleRole ? `${t("owns this moment as")} ${phase.responsibleRole}.` : `${t("owns this moment")}.`}
                   </>
                 ) : (
                   // No invented owner is assigned yet — say what the moment needs.
-                  <>{t("This moment still needs an owner")} ({phase.responsibleRole}).</>
+                  // The role is blank on a moment nobody has been given yet, so the
+                  // parenthetical is dropped rather than printed empty.
+                  <>
+                    {t("This moment still needs an owner")}
+                    {phase.responsibleRole ? ` (${phase.responsibleRole})` : ""}.
+                  </>
                 )}
               </p>
               <p>{cockpit.musicLabel}</p>

@@ -1,39 +1,35 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RiskList } from "@/components/wedding/risk-list";
-import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { useTranslation } from "@/lib/i18n";
-import { buildRoleProductionBoard } from "@/lib/role-production";
-import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
-import { useLocalProject } from "@/lib/use-local-project";
-import type { RoleBrief } from "@/lib/wedding-types";
+import { joinDetails } from "@/lib/utils";
+import type { RoleMomentCue, RoleProductionBoard as RoleProductionBoardData } from "@/lib/wedding-types";
 
 type RoleProductionBoardProps = {
-  brief: RoleBrief;
+  board: RoleProductionBoardData;
+  hasLocalProject: boolean;
   roleSelector?: React.ReactNode;
 };
 
-export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoardProps) {
+export function RoleProductionBoard({ board, hasLocalProject, roleSelector }: RoleProductionBoardProps) {
   const { t } = useTranslation();
   const [copyStatus, setCopyStatus] = useState(t("Ready to brief"));
   const [showManualCopy, setShowManualCopy] = useState(false);
-  const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
-  const { resolvedRiskIds } = useRiskResolutions();
-  const risks = useMemo(
-    () =>
-      filterResolvedRisks(
-        analyzeWeddingFlow({ timeline: timelineItems, cues: musicCues, speechItems: speeches, guestItems: guests, tables: dinnerTables, wedding }),
-        resolvedRiskIds
-      ),
-    [dinnerTables, guests, musicCues, resolvedRiskIds, speeches, timelineItems, wedding]
-  );
-  const board = useMemo(
-    () => buildRoleProductionBoard(brief, timelineItems, risks, musicCues, speeches),
-    [brief, musicCues, risks, speeches, timelineItems]
-  );
+
+  // Only the connector is chrome: the moment title stays in the couple's own
+  // wording, exactly as the queue below prints it — translating it here and not
+  // there is the half-translated data card we keep away from. A moment without a
+  // time keeps its title alone rather than borrowing a time from elsewhere.
+  function momentCueLabel(cue: RoleMomentCue | null, emptyLabel: string) {
+    if (!cue) {
+      return t(emptyLabel);
+    }
+
+    return cue.time ? t("{title} at {time}", { title: cue.title, time: cue.time }) : cue.title;
+  }
 
   async function copyProductionBrief() {
     try {
@@ -78,12 +74,12 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
 
       <div className="director-command-strip">
         <div>
-          <span>{t("Current phase")}</span>
-          <strong>{t(board.currentPhase)}</strong>
+          <span>{t("Starts with")}</span>
+          <strong>{momentCueLabel(board.startsWith, "No moment in this plan yet")}</strong>
         </div>
         <div>
-          <span>{t("Next up")}</span>
-          <strong>{board.nextUp}</strong>
+          <span>{t("Then")}</span>
+          <strong>{momentCueLabel(board.nextUp, "No later moment in this plan")}</strong>
         </div>
         <div>
           <span>{t("Ready to brief")}</span>
@@ -99,7 +95,9 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
                 <p className="eyebrow">{t("Production Queue")}</p>
                 <h3 className="card-title">{t("Role-specific timeline")}</h3>
               </div>
-              <span className="director-count-line">{board.timeline.length} {t("moments")}</span>
+              {/* A derived board often holds a single moment, so the count reads
+                  "1 moment" rather than "1 moments". */}
+              <span className="director-count-line">{board.timeline.length} {t(board.timeline.length === 1 ? "moment" : "moments")}</span>
             </div>
             <ol className="director-production-queue">
               {board.timeline.map((item) => (
@@ -107,7 +105,9 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
                   <span>{item.time}</span>
                   <div>
                     <strong>{item.title}</strong>
-                    <p>{item.location} - {item.owner}</p>
+                    {/* A fresh plan carries the role but no named person, so name the
+                        gap rather than trailing a dangling separator. */}
+                    <p>{joinDetails([item.location, item.owner || t("No owner named yet")], " - ")}</p>
                     <small>{item.cue}</small>
                   </div>
                   <div className="director-queue-status">
@@ -145,10 +145,19 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
           <Card>
             <CardContent>
               <p className="eyebrow">{t("Coordinate with")}</p>
-              <h3 className="card-title">{board.contacts[0]}</h3>
+              <h3 className="card-title">{t("Roles to coordinate")}</h3>
               <div className="contact-list">
-                <span>{board.readyToBrief ? t("Brief can be sent after final review.") : t("Review warnings before sending the brief.")}</span>
+                {/* Roles, not people: the plan holds no contact details, so it must
+                    not print a role name where a person's name belongs. The titles
+                    stay untranslated, like the board heading, the role picker and
+                    the handoff lines that also name them. */}
+                {board.coordinateWith.length > 0 ? (
+                  board.coordinateWith.map((role) => <span key={role}>{role}</span>)
+                ) : (
+                  <span>{t("No other role in this plan owns a moment yet.")}</span>
+                )}
               </div>
+              <p className="card-copy">{board.readyToBrief ? t("Brief can be sent after final review.") : t("Review warnings before sending the brief.")}</p>
             </CardContent>
           </Card>
         </aside>
@@ -157,7 +166,7 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
       <details className="director-role-detail-drawer">
         <summary>
           <span>{t("Brief Details")}</span>
-          <small>{t("Open checklist, contacts, and role-specific warnings when preparing the final handoff.")}</small>
+          <small>{t("Open the day-of checklist and this role's warnings when preparing the final handoff.")}</small>
         </summary>
 
         <div className="director-role-detail-grid">
@@ -165,26 +174,19 @@ export function RoleProductionBoard({ brief, roleSelector }: RoleProductionBoard
             <CardContent>
               <p className="eyebrow">{t("Checklist")}</p>
               <h3 className="card-title">{t("Day-of checks")}</h3>
-              <ul className="check-list">
-                {board.checklistItems.map((item) => (
-                  <li key={item}>
-                    <span aria-hidden="true" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent>
-              <p className="eyebrow">{t("Coordinate with")}</p>
-              <h3 className="card-title">{t("Roles to coordinate")}</h3>
-              <div className="contact-list">
-                {board.contacts.map((contact, index) => (
-                  index === 0 ? <strong key={contact}>{contact}</strong> : <span key={contact}>{contact}</span>
-                ))}
-              </div>
+              {board.checklistItems.length > 0 ? (
+                <ul className="check-list">
+                  {board.checklistItems.map((item) => (
+                    <li key={item}>
+                      <span aria-hidden="true" />
+                      {t(item)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                // A role the couple named themselves gets no invented checklist.
+                <p className="card-copy">{t("This role was named in your own plan, so the studio has no standard checks for it. Their moments are the brief.")}</p>
+              )}
             </CardContent>
           </Card>
 

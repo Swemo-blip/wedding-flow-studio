@@ -1,4 +1,5 @@
 import { createResolutionHref } from "@/lib/risk-resolution";
+import { getRoleBoardKey } from "@/lib/role-briefs";
 import type { MusicCue, PreviewPhase, RiskItem, Speech, TimelineItem } from "@/lib/wedding-types";
 import { isRiskOfKind } from "@/lib/risk-analysis";
 
@@ -345,34 +346,12 @@ function getFeelingLine(scene: PreviewSceneKind, phase: PreviewPhase) {
   return "Elegant, hosted, and operationally calm.";
 }
 
+// One shared matcher (lib/role-briefs), so the role that reads as the DJ on the
+// Director boards cannot read as the planner in the preview — the link into
+// `/director?role=` would then open a board that never mentions this moment.
+// A role the matcher does not recognise still links to the whole-day planner view.
 function getDirectorRole(role: string) {
-  const normalizedRole = role.toLowerCase();
-
-  if (normalizedRole.includes("toastmaster") || normalizedRole.includes("mc")) {
-    return "toastmaster";
-  }
-
-  if (normalizedRole.includes("photo")) {
-    return "photographer";
-  }
-
-  if (normalizedRole.includes("dj") || normalizedRole.includes("music")) {
-    return "dj";
-  }
-
-  if (normalizedRole.includes("catering")) {
-    return "catering";
-  }
-
-  if (normalizedRole.includes("venue")) {
-    return "venue";
-  }
-
-  if (normalizedRole.includes("officiant")) {
-    return "officiant";
-  }
-
-  return "planner";
+  return getRoleBoardKey(role) ?? "planner";
 }
 
 function getDirectorTitle(role: string) {

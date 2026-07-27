@@ -207,10 +207,13 @@ const sv: Record<string, string> = {
   "No speech or secret layer is attached to this phase.": "Inget tal eller hemligt lager är kopplat till denna fas.",
   "Reception Signals": "Mottagningssignaler",
   "Photographer balcony position requires venue approval": "Fotografens balkongposition kräver godkännande av lokalen",
-  "Full reception flow, speeches, secret layers, microphone cues, and timing control.":
-    "Hela mottagningsflödet, tal, hemliga lager, mikrofon-cues och tidsstyrning.",
-  "Ceremony positions, family photo list, chapel exit, golden hour, and key people.":
-    "Ceremonipositioner, familjefotolista, kapelluttåg, gyllene timme och nyckelpersoner.",
+  // Role descriptions (lib/role-briefs.ts). The priority and "next up" lines that
+  // used to live beside them are gone: both are now read off the couple's own
+  // timeline, so there is no fixed sentence left to translate.
+  "Reception flow, speeches, secret layers, microphone cues, and timing control.":
+    "Mottagningsflödet, tal, hemliga lager, mikrofon-cues och tidsstyrning.",
+  "Ceremony positions, family photo list, golden hour, and the people to capture.":
+    "Ceremonipositioner, familjefotolista, gyllene timme och personerna som ska fångas.",
   "Ceremony cues, reception entrance, first dance, party start, and music backup needs.":
     "Ceremoni-cues, intåg till mottagningen, första dansen, feststart och behov av musikbackup.",
   "Dinner timing, allergies, meal preferences, child meals, and speech service pauses.":
@@ -219,23 +222,9 @@ const sv: Record<string, string> = {
     "Rumslayout, gästflöde, barplacering, dansgolv, serveringsväg och tillgänglighet.",
   "Ceremony order, processional sequence, ring exchange timing, music moments, and recessional.":
     "Ceremoniordning, intågsföljd, ringväxlingens timing, musikögonblick och uttåg.",
-  "Full production map, all risks, vendors, secret layers, setup dependencies, and timeline health.":
-    "Hela produktionskartan, alla risker, leverantörer, hemliga lager, beroenden och tidslinjehälsa.",
-  "Protect the dinner rhythm while keeping the surprise performance hidden.":
-    "Skydda middagsrytmen samtidigt som överraskningsnumret hålls dolt.",
-  "Prepare the family photo list and confirm chapel garden timing.":
-    "Förbered familjefotolistan och bekräfta tiderna i kapellträdgården.",
-  "Prepare a recessional backup and confirm first dance timestamp.":
-    "Förbered en uttågsbackup och bekräfta tidpunkten för första dansen.",
-  "Confirm final allergy details and vegan meal markers.":
-    "Bekräfta slutliga allergiuppgifter och veganska måltidsmarkeringar.",
-  "Confirm the accessible route from entrance to immediate family seating.":
-    "Bekräfta den tillgängliga vägen från entrén till närmaste familjens platser.",
-  "Review vows, ring exchange timing, and final recessional cue.":
-    "Gå igenom löften, ringväxlingens timing och sista uttågs-cuen.",
-  "Review all medium and high risks before rehearsal.":
-    "Gå igenom alla medel- och högrisker före repetitionen.",
-  "Review role flow": "Gå igenom rollflödet",
+  "Full production map, vendors, secret layers, setup dependencies, and timeline health.":
+    "Hela produktionskartan, leverantörer, hemliga lager, beroenden och tidslinjehälsa.",
+  "Every moment this plan puts in this role's hands.": "Varje moment som planen lägger i den här rollens händer.",
   "Couple Entrance": "Parets intåg",
   "Wedding Party Entrance": "Bröllopsföljets intåg",
   "Group photos are scheduled for {minutes} minutes. Consider 35 minutes for {guests} guests.":
@@ -778,6 +767,7 @@ const sv: Record<string, string> = {
   "First name": "Förnamn",
   "Not booked yet": "Inte bokad än",
   "Your wedding": "Ert bröllop",
+  "Take a guest's seat": "Ta en gästs plats",
   "Currency": "Valuta",
   "Two moments overlap.": "Två moment krockar.",
   "\"{first}\" runs until {endsAt}, but \"{second}\" starts at {startsAt}.":
@@ -805,6 +795,8 @@ const sv: Record<string, string> = {
   "Nothing to change here yet — open the connected studio to finish this action.":
     "Inget att ändra här än — öppna den kopplade studion för att slutföra åtgärden.",
   "owns this moment as": "ansvarar för det här momentet som",
+  // Used when the moment has an owner but no role name to append.
+  "owns this moment": "ansvarar för det här momentet",
   "This moment still needs an owner": "Det här momentet behöver en ansvarig",
   "Account created. Check your email to confirm, then sign in.": "Kontot skapat. Kolla din e-post för att bekräfta, logga sedan in.",
   "Signed in. Your plan is still saved on this device — cloud backup is coming soon.": "Inloggad. Din plan sparas fortfarande på den här enheten — molnbackup kommer snart.",
@@ -1154,26 +1146,36 @@ const sv: Record<string, string> = {
   "Copy Ready Brief": "Kopiera färdig brief",
   "Copy Working Brief": "Kopiera arbetsbrief",
   "Manual copy brief": "Manuell kopieringsbrief",
-  "Current phase": "Nuvarande fas",
-  "Next up": "Härnäst",
+  // The command strip reads off the couple's own timeline, so it names where the
+  // role's day starts instead of claiming a "current" phase the app cannot know.
+  "Starts with": "Börjar med",
+  "Then": "Sedan",
+  "{title} at {time}": "{title} {time}",
+  "No moment in this plan yet": "Inget moment i planen ännu",
+  "No later moment in this plan": "Inget senare moment i planen",
   "Ready to brief": "Redo att briefa",
   "Yes": "Ja",
   "Review first": "Granska först",
   "Production Queue": "Produktionskö",
   "Role-specific timeline": "Rollspecifik tidslinje",
+  "moment": "moment",
   "moments": "moment",
+  "No owner named yet": "Ingen ansvarig utsedd ännu",
   "Attention": "Åtgärd",
   "Handoffs": "Överlämningar",
   "What this role needs next": "Vad rollen behöver härnäst",
   "to": "till",
   "Coordinate with": "Samordna med",
   "Roles to coordinate": "Roller att samordna med",
+  "No other role in this plan owns a moment yet.": "Ingen annan roll i planen ansvarar för något moment ännu.",
   "Brief can be sent after final review.": "Briefen kan skickas efter slutgranskning.",
   "Review warnings before sending the brief.": "Granska varningar innan briefen skickas.",
   "Brief Details": "Brief-detaljer",
-  "Open checklist, contacts, and role-specific warnings when preparing the final handoff.": "Öppna checklista, kontakter och rollspecifika varningar när du förbereder den slutliga överlämningen.",
+  "Open the day-of checklist and this role's warnings when preparing the final handoff.": "Öppna checklistan för dagen och rollens varningar när du förbereder den slutliga överlämningen.",
   "Checklist": "Checklista",
   "Day-of checks": "Kontroller på dagen",
+  "This role was named in your own plan, so the studio has no standard checks for it. Their moments are the brief.":
+    "Rollen är namngiven i er egen plan, så studion har inga standardkontroller för den. Momenten nedan är briefen.",
   "Needs Attention": "Behöver åtgärdas",
   "Role-specific warnings": "Rollspecifika varningar",
   "This role is clear.": "Den här rollen är klar.",
@@ -1183,6 +1185,44 @@ const sv: Record<string, string> = {
   "Brief text ready below": "Brieftext redo nedan",
   "Director view": "Regissörsvy",
   "Choose Director Mode role": "Välj roll i regissörsläge",
+  // Director — day-of checks per role (lib/role-briefs.ts)
+  "Confirm speech order": "Bekräfta talordningen",
+  "Check microphone before dinner": "Testa mikrofonen före middagen",
+  "Keep surprise performance hidden": "Håll överraskningsnumret dolt",
+  "Signal catering before each serving pause": "Signalera till cateringen före varje serveringspaus",
+  "Prepare the family photo list": "Förbered familjefotolistan",
+  "Confirm the group photo location": "Bekräfta platsen för gruppfotot",
+  "Watch golden hour timing": "Bevaka tiden för gyllene timmen",
+  "Agree shooting positions with the venue": "Kom överens om fotopositioner med lokalen",
+  "Confirm the ceremony cue sheet": "Bekräfta ceremonins cue-lista",
+  "Prepare a backup for every cue": "Förbered en reservplan för varje cue",
+  "Confirm the first dance start signal": "Bekräfta startsignalen för första dansen",
+  "Test the sound system in the room": "Testa ljudanläggningen i rummet",
+  "Confirm the final allergy list": "Bekräfta den slutliga allergilistan",
+  "Mark special meals per seat": "Markera specialkost per plats",
+  "Agree speech pauses with the toastmaster": "Kom överens om talpauser med toastmastern",
+  "Keep the service path clear": "Håll serveringsvägen fri",
+  "Confirm the chair and table layout": "Bekräfta stol- och bordsplaceringen",
+  "Check the accessible route": "Kontrollera den tillgängliga vägen",
+  "Confirm room turnaround timing": "Bekräfta tiden för omställning av rummet",
+  "Confirm the processional order": "Bekräfta intågsordningen",
+  "Confirm vows and ring exchange timing": "Bekräfta löftenas och ringväxlingens timing",
+  "Coordinate the recessional cue": "Samordna uttågets cue",
+  "Review the ceremony readings": "Gå igenom ceremonins läsningar",
+  "Review every open warning": "Gå igenom varje öppen varning",
+  "Confirm vendor arrivals": "Bekräfta leverantörernas ankomster",
+  "Confirm the secret items": "Bekräfta de hemliga punkterna",
+  "Send the role briefs": "Skicka rollbrieferna",
+  // Director — no role owns a moment yet
+  "No role owns a moment yet.": "Ingen roll ansvarar för något moment ännu.",
+  "Give the moments in your day flow a responsible role, and every role gets its own board here.":
+    "Ge momenten i ert dagsflöde en ansvarig roll, så får varje roll sin egen tavla här.",
+  "Open Day Flow": "Öppna dagsflödet",
+  "One moment has no responsible role yet, so no board carries it.":
+    "Ett moment har ingen ansvarig roll ännu, så ingen tavla bär det.",
+  "{count} moments have no responsible role yet, so no board carries them.":
+    "{count} moment har ingen ansvarig roll ännu, så ingen tavla bär dem.",
+  "Assign roles in Day Flow": "Tilldela roller i dagsflödet",
   // Intake — questions
   "Start with 5 questions": "Börja med 5 frågor",
   "Get a first visual wedding plan before you start editing.": "Få en första visuell bröllopsplan innan du börjar redigera.",

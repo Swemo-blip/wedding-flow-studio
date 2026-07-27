@@ -150,13 +150,17 @@ export type RoleBrief = {
   role: string;
   title: string;
   description: string;
-  relevantTimelineItemIds: string[];
-  relevantWarningIds: string[];
+  // Ids of the moments this role owns, in the couple's own day order. Derived by
+  // matching the timeline's `responsibleRole`, never curated — a curated list
+  // froze the boards to the sample plan and hid every moment a couple added.
+  momentIds: string[];
+  // Risk KINDS, not ids: a risk id is `kind` or `kind:entityId`, so the board
+  // picks up every occurrence of a kind rather than one frozen id.
+  warningKinds: string[];
   checklistItems: string[];
-  contactPerson: string;
-  currentPriority?: string;
-  nextUp?: string;
-  keyContacts?: string[];
+  // Titles of other roles in THIS plan. Role names, never presented as a contact
+  // person — the plan holds no phone book.
+  coordinateWith: string[];
 };
 
 export type RoleReadiness = "ready" | "attention" | "critical";
@@ -184,20 +188,28 @@ export type RoleHandoff = {
   severity: RiskSeverity | "clear";
 };
 
+// A role's first and next moment. Kept as title + the moment's own time rather
+// than a prebuilt sentence, so the display surface can translate the connector
+// without translating the couple's wording — and so no time is ever invented.
+export type RoleMomentCue = {
+  title: string;
+  time: string;
+};
+
 export type RoleProductionBoard = {
   role: string;
   title: string;
   description: string;
   readiness: RoleReadiness;
   readinessLabel: string;
-  currentPhase: string;
-  nextUp: string;
+  startsWith: RoleMomentCue | null;
+  nextUp: RoleMomentCue | null;
   readyToBrief: boolean;
   timeline: RoleProductionItem[];
   handoffs: RoleHandoff[];
   warnings: RiskItem[];
   checklistItems: string[];
-  contacts: string[];
+  coordinateWith: string[];
   copyText: string;
 };
 

@@ -1,11 +1,12 @@
 import { buildRoleBriefs } from "@/lib/role-briefs";
-import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
-import { musicCues, speeches, timelineItems } from "@/lib/wedding-data";
+import { getRisksByIds } from "@/lib/risk-analysis";
+import { sortTimelineByTime } from "@/lib/utils";
 import type {
   MusicCue,
   RiskItem,
   RoleBrief,
   RoleHandoff,
+  RoleMomentCue,
   RoleProductionBoard,
   RoleProductionItem,
   RoleReadiness,
@@ -13,33 +14,31 @@ import type {
   TimelineItem
 } from "@/lib/wedding-types";
 
+// Every field is required on purpose. These used to default to the sample
+// project, so a board could silently brief a stranger's wedding.
 type RoleProductionSource = {
-  cues?: MusicCue[];
-  speechItems?: Speech[];
-  timeline?: TimelineItem[];
-  risks?: RiskItem[];
+  timeline: TimelineItem[];
+  risks: RiskItem[];
+  cues: MusicCue[];
+  speechItems: Speech[];
 };
 
-export function buildRoleProductionBoards(source: RoleProductionSource = {}) {
-  const cues = source.cues ?? musicCues;
-  const speechItems = source.speechItems ?? speeches;
-  const timeline = source.timeline ?? timelineItems;
-  const risks = source.risks ?? analyzeWeddingFlow({ timeline, cues, speechItems });
-
-  return buildRoleBriefs().map((brief) => buildRoleProductionBoard(brief, timeline, risks, cues, speechItems));
+export function buildRoleProductionBoards({ cues, risks, speechItems, timeline }: RoleProductionSource): RoleProductionBoard[] {
+  return buildRoleBriefs({ timeline, risks }).map((brief) => buildRoleProductionBoard(brief, timeline, risks, cues, speechItems));
 }
 
-export function buildRoleProductionBoard(
+function buildRoleProductionBoard(
   brief: RoleBrief,
   timeline: TimelineItem[],
   risks: RiskItem[],
-  cues: MusicCue[] = musicCues,
-  speechItems: Speech[] = speeches
+  cues: MusicCue[],
+  speechItems: Speech[]
 ): RoleProductionBoard {
-  const roleWarnings = getRisksByIds(brief.relevantWarningIds, risks);
-  const roleTimeline = brief.relevantTimelineItemIds
-    .map((id) => timeline.find((item) => item.id === id))
-    .filter((item): item is TimelineItem => Boolean(item));
+  // The queue must read chronologically whatever order the ids arrive in.
+  const roleTimeline = sortTimelineByTime(
+    brief.momentIds.map((id) => timeline.find((item) => item.id === id)).filter((item): item is TimelineItem => Boolean(item))
+  );
+  const roleWarnings = getRoleWarnings(brief, roleTimeline, risks);
   const productionItems = roleTimeline.map((item) => buildProductionItem(item, roleWarnings, cues, speechItems));
   const readiness = getReadiness(roleWarnings);
   const readyToBrief = roleWarnings.length === 0;
@@ -51,14 +50,17 @@ export function buildRoleProductionBoard(
     description: brief.description,
     readiness,
     readinessLabel: getReadinessLabel(readiness, roleWarnings.length),
-    currentPhase: brief.currentPriority ?? productionItems[0]?.title ?? "Review role flow",
-    nextUp: brief.nextUp ?? productionItems[0]?.title ?? "No role-specific item",
+    // Where this role's day starts and what follows it, read off the couple's own
+    // moments. Frozen strings used to win here ("Ceremony begins at 3:00 PM"), so
+    // moving the ceremony changed the timeline and nothing else.
+    startsWith: toMomentCue(productionItems[0]),
+    nextUp: toMomentCue(productionItems[1]),
     readyToBrief,
     timeline: productionItems,
     handoffs,
     warnings: roleWarnings,
     checklistItems: brief.checklistItems,
-    contacts: [brief.contactPerson, ...(brief.keyContacts ?? [])],
+    coordinateWith: brief.coordinateWith,
     copyText: ""
   };
 
@@ -66,6 +68,28 @@ export function buildRoleProductionBoard(
     ...board,
     copyText: buildRoleProductionCopy(board)
   };
+}
+
+// The curated kinds for the role, plus every risk that lands on a moment this
+// role actually owns. Without the second half, a warning kind no curated list
+// names — a timeline overlap, a long gap — reached no board at all, and a role the
+// couple named themselves would always claim to be clear.
+function getRoleWarnings(brief: RoleBrief, roleTimeline: TimelineItem[], risks: RiskItem[]) {
+  const roleWarnings = new Map<string, RiskItem>();
+
+  for (const risk of getRisksByIds(brief.warningKinds, risks)) {
+    roleWarnings.set(risk.id, risk);
+  }
+
+  for (const candidate of risks.filter((risk) => roleTimeline.some((item) => isRiskLinkedToTimelineItem(risk, item)))) {
+    roleWarnings.set(candidate.id, candidate);
+  }
+
+  return Array.from(roleWarnings.values());
+}
+
+function toMomentCue(item: RoleProductionItem | undefined): RoleMomentCue | null {
+  return item ? { title: item.title, time: item.time } : null;
 }
 
 function buildProductionItem(item: TimelineItem, roleWarnings: RiskItem[], cues: MusicCue[], speechItems: Speech[]): RoleProductionItem {
@@ -106,7 +130,9 @@ function buildHandoffs(brief: RoleBrief, items: RoleProductionItem[], warnings: 
         from: "Wedding Flow Studio",
         to: brief.title,
         timing: nextItem.time,
-        detail: `${nextItem.title} at ${nextItem.location}. Owner: ${nextItem.owner}.`,
+        // An owner is often unassigned in a fresh plan, so name the gap instead of
+        // trailing "Owner: ." after the location.
+        detail: nextItem.owner ? `${nextItem.title} at ${nextItem.location}. Owner: ${nextItem.owner}.` : `${nextItem.title} at ${nextItem.location}. No owner named yet.`,
         severity: "clear"
       }
     : null;
@@ -168,7 +194,7 @@ function findTimingForRisk(risk: RiskItem, items: RoleProductionItem[]) {
 
 function buildRoleProductionCopy(board: RoleProductionBoard) {
   const timelineText = board.timeline
-    .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.owner}\n  Cue: ${item.cue}\n  Note: ${item.note}`)
+    .map((item) => `- ${item.time}: ${item.title} | ${item.location} | ${item.owner || "No owner named yet"}\n  Cue: ${item.cue}\n  Note: ${item.note}`)
     .join("\n");
   const warningText = board.warnings
     .map((warning) => `- ${warning.title} ${warning.description} Suggested fix: ${warning.suggestedFix}`)
@@ -182,11 +208,11 @@ function buildRoleProductionCopy(board: RoleProductionBoard) {
     board.description,
     "",
     `Readiness: ${board.readinessLabel}`,
-    `Current phase: ${board.currentPhase}`,
-    `Next up: ${board.nextUp}`,
+    `Starts with: ${formatMomentCue(board.startsWith) ?? "No moment in this plan yet."}`,
+    `Then: ${formatMomentCue(board.nextUp) ?? "No later moment in this plan."}`,
     "",
     "Production Queue",
-    timelineText || "No role-specific timeline items.",
+    timelineText || "No moment in this plan is assigned to this role.",
     "",
     "Handoffs",
     handoffText || "No handoffs assigned.",
@@ -195,9 +221,19 @@ function buildRoleProductionCopy(board: RoleProductionBoard) {
     warningText || "No active warnings for this role.",
     "",
     "Checklist",
-    board.checklistItems.map((item) => `- ${item}`).join("\n"),
+    board.checklistItems.map((item) => `- ${item}`).join("\n") || "No standard day-of checks for this role.",
     "",
     "Coordinate with",
-    board.contacts.join(", ")
+    board.coordinateWith.join(", ") || "No other role in this plan owns a moment yet."
   ].join("\n");
+}
+
+// A moment whose time the couple has not filled in keeps its title alone rather
+// than borrowing a time from somewhere else.
+function formatMomentCue(cue: RoleMomentCue | null) {
+  if (!cue) {
+    return null;
+  }
+
+  return cue.time ? `${cue.title} at ${cue.time}` : cue.title;
 }
