@@ -1727,13 +1727,42 @@ const PROCESSION_END_Z = -2.55;
 const PROCESSION_DURATION = 13;
 const FIRST_PERSON_EYE_Y = 1.5;
 
+// An A-line gown profile, revolved. It was a truncated cone (a 20-segment cylinder
+// tapering 0.1 to 0.27), which is the single most lay-visible defect on the bride:
+// a wedding dress has a waist, a hip, and a flare that curves outward, and a cone
+// has none of those. These points are radius/height pairs from hem to waist,
+// concave through the middle so the skirt sweeps rather than slopes, and 40 radial
+// segments so the hem reads round instead of polygonal at close camera distances.
+const GOWN_PROFILE: [number, number][] = [
+  [0.0, 0.0],
+  [0.335, 0.0],
+  [0.33, 0.035],
+  [0.315, 0.095],
+  [0.29, 0.17],
+  [0.255, 0.25],
+  [0.215, 0.33],
+  [0.175, 0.4],
+  [0.142, 0.46],
+  [0.116, 0.51],
+  [0.1, 0.547],
+  [0.094, 0.565]
+];
+
 function BridalGown() {
-  // A long ivory skirt from the waist to the floor — reads as a gown and hides
-  // the walk-cycle leg movement underneath.
+  const geometry = useMemo(() => {
+    const points = GOWN_PROFILE.map(([radius, height]) => new THREE.Vector2(radius, height));
+    const lathe = new THREE.LatheGeometry(points, 40);
+    // Revolved geometry is already indexed, so this genuinely smooths the skirt —
+    // the same reason the welded figures now shade smoothly.
+    lathe.computeVertexNormals();
+    return lathe;
+  }, []);
+
   return (
-    <mesh castShadow position={[0, 0.27, 0]}>
-      <cylinderGeometry args={[0.1, 0.27, 0.56, 20]} />
-      <meshStandardMaterial color="#f6efe2" roughness={0.78} />
+    <mesh castShadow geometry={geometry}>
+      {/* Silk reads as a soft sheen rather than a matte wall: lower roughness than the
+          figure fabrics, and a faint warm tint so the white does not clip flat. */}
+      <meshStandardMaterial color="#f7f1e6" envMapIntensity={1.15} roughness={0.52} />
     </mesh>
   );
 }
