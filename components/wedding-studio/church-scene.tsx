@@ -9,6 +9,7 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
@@ -1596,7 +1597,7 @@ const GROOM_COLORS: Recolor = {
   Skin: "#c68e6a",
   TieTexture: "#6a4a54"
 };
-const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Hair: "#5b3d28", Shoes: "#e9dfcf", Skin: "#d9a882" };
+const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Hair: "#c9a563", Shoes: "#e9dfcf", Skin: "#d9a882" };
 const PRIEST_COLORS: Recolor = {
   Details: "#16161a",
   // Greying, so the officiant reads as the older figure without needing a new model.
@@ -1618,12 +1619,25 @@ function AnimatedFigure({ clip, recolor, rotationY = Math.PI, url }: { clip: "wa
         return;
       }
       mesh.castShadow = true;
-      // Smooth the couple/officiant the same way as the congregation so the
-      // close-up hero figures aren't faceted. Clone the geometry first (skinned
-      // clones share it) so we never touch the shared GLTF cache.
+      // The hero figures read FACETED, and the reason is subtle: these meshes are
+      // NON-INDEXED, so every triangle owns its three vertices outright and
+      // `computeVertexNormals()` had nothing to average across — it was a silent
+      // no-op that has been in this file through several 3D passes.
+      //
+      // The cure is not subdivision. Subdivision adds vertices the skin weights do
+      // not cover and corrupts a rigged mesh, which is why the couple were written
+      // off as permanently blocky. `mergeVertices` is a different operation: it
+      // WELDS coincident vertices into an indexed geometry, carrying every attribute
+      // (including skinIndex/skinWeight) along, and leaves the bone hierarchy and
+      // the triangle count untouched. Once the geometry is indexed, computing normals
+      // averages them across shared vertices and the shading goes smooth.
+      //
+      // The silhouette stays low-poly — that genuinely needs more triangles — but the
+      // shading facets are what read as "jagged", and those are gone.
       if (mesh.geometry) {
-        mesh.geometry = mesh.geometry.clone();
-        mesh.geometry.computeVertexNormals();
+        const welded = mergeVertices(mesh.geometry.clone());
+        welded.computeVertexNormals();
+        mesh.geometry = welded;
       }
       const recolorOne = (material: THREE.Material) => {
         const cloned = (material as THREE.MeshStandardMaterial).clone();
