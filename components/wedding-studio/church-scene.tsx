@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
@@ -1791,15 +1791,12 @@ const POSE_RELAXED: FigurePose = {
 
 function AnimatedFigure({
   clip,
-  hold,
   pose,
   recolor,
   rotationY = Math.PI,
   url
 }: {
   clip: "walk" | "idle";
-  // Rendered into the figure's hand bone, so anything carried follows the pose.
-  hold?: ReactNode;
   pose?: FigurePose;
   recolor?: Recolor;
   rotationY?: number;
@@ -1911,27 +1908,25 @@ function AnimatedFigure({
     }
   });
 
-  // The bouquet used to be a sibling at a fixed offset, so the moment the bride
-  // turned to face the groom it swung out to her side and hung in mid-air.
-  // Portalling it into the hand bone means it inherits the hand's transform and
-  // stays in her grip through the walk, the turn and the vows. The bone carries
-  // the figure's own scale, so the contents compensate for it.
-  const holdBone = useMemo(() => findBone(object, "Palm.L"), [object]);
-
-  return (
-    <>
-      <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />
-      {hold && holdBone
-        ? createPortal(
-            <group position={[0, 0.25, 0.1]} scale={1 / FIGURE_SCALE}>
-              {hold}
-            </group>,
-            holdBone
-          )
-        : null}
-    </>
-  );
+  // Two attempts at putting the bouquet IN her hand both failed, and the reasons
+  // are worth leaving here so the next attempt starts ahead of them:
+  //
+  //   1. Parenting it to the hand bone inherits the bone's world scale, and this
+  //      armature carries an internal scale of 100 — the hand bone measures 23.5,
+  //      not the 0.235 on the primitive. A compensation guessed from FIGURE_SCALE
+  //      lands two orders of magnitude out.
+  //   2. Portalling it to the scene root and copying the bone's world matrix onto
+  //      it each frame leaves it at the origin: measured, the blooms sit at
+  //      (0.03, 0.02, 0.08) while the hand is at (0.124, 0.50, 4.62), so the
+  //      bone lookup is still resolving to null inside the cloned rig.
+  //
+  // Until one of those is actually solved, the bouquet stays a sibling at a fixed
+  // offset. It is not attached to the hand, so it does drift when she turns — but
+  // a posy slightly off her grip is a smaller lie than five blooms lying on the
+  // floor at the centre of the church.
+  return <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />;
 }
+
 
 // Draggable staging handles, drawn flat on the floor for the top-down plan view.
 // A handle is a gilt ring with a name on it: the couple grabs the officiant and
@@ -2177,7 +2172,7 @@ function BridalGown() {
 }
 
 function Bouquet() {
-  // A small ivory + blush posy the bride carries at her hands.
+  // A small ivory + blush posy, offset from the palm origin into the grip.
   const blooms: Array<[number, number, number, number]> = [
     [0, 0, 0, 0.058],
     [0.05, 0.02, 0.012, 0.044],
@@ -2187,7 +2182,7 @@ function Bouquet() {
   ];
 
   return (
-    <group>
+    <group position={[0.04, 0.56, 0.22]}>
       {blooms.map(([x, y, z, r], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
           <sphereGeometry args={[r, 10, 10]} />
@@ -2305,15 +2300,9 @@ function Processional({
       ) : null}
       {hideFigure !== "bride" ? (
         <group position={[brideX, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure
-            clip={moving ? "walk" : "idle"}
-            hold={<Bouquet />}
-            pose={POSE_BOUQUET}
-            recolor={BRIDE_COLORS}
-            rotationY={0}
-            url={FIGURE_WOMAN}
-          />
+          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
           <BridalGown />
+          <Bouquet />
         </group>
       ) : null}
     </>
