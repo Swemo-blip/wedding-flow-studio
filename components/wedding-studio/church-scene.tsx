@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, useGLTF, useTexture } from "@react-three/drei";
+import { ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
@@ -15,6 +15,15 @@ import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boo
 import { DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
+import {
+  ceremonyStagingMarkIds,
+  ceremonyStagingMarks,
+  defaultCeremonyStaging,
+  type CeremonyGroomStart,
+  type CeremonyStaging,
+  type CeremonyStagingMarkId,
+  type StudioSceneOffset
+} from "@/lib/wedding-studio-plan";
 import type { DinnerTable } from "@/lib/wedding-types";
 import {
   type StudioBudgetLevel,
@@ -155,6 +164,10 @@ type CeremonySceneProps = {
   dinnerTables?: DinnerTable[];
   autoProcessional?: boolean;
   budgetLevel: StudioBudgetLevel;
+  // Who stands where. Optional so surfaces that only preview the day (exports,
+  // the shared link) keep working without owning a staging editor.
+  staging?: CeremonyStaging;
+  onMoveStagingMark?: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
   cameraOverride?: SceneCameraOverride | null;
   firstPerson?: CeremonyFirstPerson;
   capacity: WeddingStudioCapacity;
@@ -333,6 +346,8 @@ export function CeremonyScene({
   firstPerson = null,
   highQuality = true,
   lighting = "dusk",
+  onMoveStagingMark,
+  staging,
   zoom = 1
 }: CeremonySceneProps) {
   const palette = useMemo(() => createPalette(style, colorDirection), [colorDirection, style]);
@@ -347,9 +362,9 @@ export function CeremonyScene({
   const { t } = useTranslation();
   const [processionalPlaying, setProcessionalPlaying] = useState(false);
   const [processionalKey, setProcessionalKey] = useState(0);
-  // The singer is off in the clean preview; its toggle no longer clutters the
-  // 3D canvas overlay (kept in the model for the full studio editor).
-  const [showSinger] = useState(false);
+  // The singer was `useState(false)` with no setter: fully modelled, rendered,
+  // and reachable by nothing. It now comes from the couple's saved staging.
+  const activeStaging = staging ?? defaultCeremonyStaging;
   // Classic wedding processional music (public-domain Pachelbel Canon in D),
   // started by the couple's own gesture of pressing Play — never autoplayed.
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -522,7 +537,8 @@ export function CeremonyScene({
             processionalPlaying={autoProcessional ?? processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
-            showSinger={showSinger}
+            onMoveStagingMark={onMoveStagingMark}
+            staging={activeStaging}
             venueType={effectiveVenue}
             viewMode={viewMode}
           />
@@ -724,7 +740,8 @@ function WeddingStageInterior({
   sceneEdits,
   seatingLayout = "Traditional",
   selectedObjectId,
-  showSinger,
+  onMoveStagingMark,
+  staging,
   venueType,
   viewMode
 }: {
@@ -744,7 +761,8 @@ function WeddingStageInterior({
   sceneEdits: StudioSceneEdits;
   seatingLayout?: string;
   selectedObjectId: StudioSceneObjectId;
-  showSinger: boolean;
+  onMoveStagingMark?: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
+  staging: CeremonyStaging;
   venueType: StudioVenueType;
   viewMode: StudioViewMode;
 }) {
@@ -755,7 +773,7 @@ function WeddingStageInterior({
   // wedding. The room now always carries its full complement of pews and the
   // guest list decides how many are OCCUPIED — which is also what a couple
   // actually sees when they walk into the church.
-  const pewRows = activeStep === "venue" ? 0 : Math.min(NAVE_PEW_ROWS, capacity.maxComfortableRows);
+  const pewRows = activeStep === "venue" ? 0 : Math.min(navePewRows(capacity.visibleGuestMarkers), capacity.maxComfortableRows);
   const seatedRows = activeStep === "venue" ? 0 : pewRows;
   const rowIndexes = useMemo(() => Array.from({ length: pewRows }, (_, index) => index), [pewRows]);
   // Church + open-air ceremonies (garden/beach) all seat a real congregation
@@ -855,7 +873,7 @@ function WeddingStageInterior({
               selectedObjectId={selectedObjectId}
               size={[2.65, 1.4]}
             >
-              <CeremonyFocalPoint decorScale={decorScale} palette={palette} venueType={venueType} />
+              <CeremonyFocalPoint decorScale={decorScale} floralMark={staging.marks.florals} palette={palette} venueType={venueType} />
             </EditableSceneObject>
           ) : null}
 
@@ -888,10 +906,10 @@ function WeddingStageInterior({
 
                 return (
                   <group key={rowIndex}>
-                    <group position={[-(1.82 + aisleShift), 0.18, z]} rotation={[0, -pewYaw, 0]}>
+                    <group position={[-(PEW_BLOCK_X + aisleShift), 0.18, z]} rotation={[0, -pewYaw, 0]}>
                       <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
                     </group>
-                    <group position={[1.82 + aisleShift, 0.18, z]} rotation={[0, pewYaw, 0]}>
+                    <group position={[PEW_BLOCK_X + aisleShift, 0.18, z]} rotation={[0, pewYaw, 0]}>
                       <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
                     </group>
                   </group>
@@ -946,10 +964,24 @@ function WeddingStageInterior({
 
           {ceremonyVenue && activeStep !== "venue" ? (
             <Suspense fallback={null}>
-              <Celebrant />
-              <Processional headsRef={coupleHeadsRef} hideFigure={firstPerson} key={processionalKey} playing={processionalPlaying} />
-              {showSinger ? <Singer /> : null}
+              <Celebrant mark={staging.marks.celebrant} />
+              <Processional
+                coupleMark={staging.marks.couple}
+                groomStart={staging.groomStart}
+                headsRef={coupleHeadsRef}
+                hideFigure={firstPerson}
+                key={processionalKey}
+                playing={processionalPlaying}
+              />
+              {staging.showSinger ? <Singer mark={staging.marks.singer} /> : null}
             </Suspense>
+          ) : null}
+
+          {/* Staging handles, plan view only: the top-down camera is where moving
+              people around actually makes sense, and they must never sit in front
+              of the 3D view the couple is trying to look at. */}
+          {ceremonyVenue && viewMode === "top" && onMoveStagingMark ? (
+            <StagingHandles onMove={onMoveStagingMark} staging={staging} />
           ) : null}
 
           {activeStep === "budget" || activeStep === "preview" ? <DetailLayer decorScale={decorScale} palette={palette} /> : null}
@@ -1357,7 +1389,7 @@ function ChurchAltarFloral({ palette, position }: { palette: Palette; position: 
   );
 }
 
-function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Palette }) {
+function ChurchAltar({ decorScale, floralMark, palette }: { decorScale: number; floralMark: StudioSceneOffset; palette: Palette }) {
   return (
     <group position={[0, 0, -4.55]}>
       <Dais palette={palette} />
@@ -1369,8 +1401,8 @@ function ChurchAltar({ decorScale, palette }: { decorScale: number; palette: Pal
         <boxGeometry args={[2.24, 0.05, 0.88]} />
         <meshStandardMaterial color={palette.accent} metalness={0.7} roughness={0.32} />
       </mesh>
-      <ChurchAltarFloral palette={palette} position={[-1.28, 0, 0.16]} />
-      <ChurchAltarFloral palette={palette} position={[1.28, 0, 0.16]} />
+      <ChurchAltarFloral palette={palette} position={[-1.28 - floralMark.x, 0, 0.16 + floralMark.z]} />
+      <ChurchAltarFloral palette={palette} position={[1.28 + floralMark.x, 0, 0.16 + floralMark.z]} />
       <Suspense fallback={null}>
         <AltarArrangement palette={palette} position={[-0.86, 0.655, 0.24]} />
         <AltarArrangement palette={palette} position={[0.86, 0.655, 0.24]} />
@@ -1842,10 +1874,168 @@ function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { cli
   return <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />;
 }
 
-function Celebrant() {
-  // The officiant waits at the altar, facing the congregation.
+// Draggable staging handles, drawn flat on the floor for the top-down plan view.
+// A handle is a gilt ring with a name on it: the couple grabs the officiant and
+// slides him to the other side of the altar, and the 3D updates as they let go.
+// The invisible ground plane only exists while a drag is live, so it never eats
+// pointer events from the rest of the scene.
+const STAGING_HANDLE_COLOR = "#b39152";
+
+function StagingHandle({
+  active,
+  label,
+  onGrab,
+  position
+}: {
+  active: boolean;
+  label: string;
+  onGrab: () => void;
+  position: [number, number];
+}) {
+  const [hovered, setHovered] = useState(false);
+  const lifted = hovered || active;
+
   return (
-    <group position={[0, 0, -3.55]}>
+    <group position={[position[0], 0.05, position[1]]}>
+      <mesh
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          onGrab();
+        }}
+        onPointerOut={() => setHovered(false)}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          setHovered(true);
+        }}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry args={[0.34, 28]} />
+        <meshBasicMaterial color="#f7f2e6" opacity={lifted ? 0.92 : 0.7} transparent />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.32, lifted ? 0.42 : 0.38, 28]} />
+        <meshBasicMaterial color={STAGING_HANDLE_COLOR} opacity={lifted ? 1 : 0.85} transparent />
+      </mesh>
+      <Html center distanceFactor={11} pointerEvents="none" position={[0, 0.2, 0]} zIndexRange={[24, 0]}>
+        <div className="staging-handle-label" data-active={lifted}>
+          {label}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+function StagingHandles({
+  onMove,
+  staging
+}: {
+  onMove: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
+  staging: CeremonyStaging;
+}) {
+  const { t } = useTranslation();
+  const groupRef = useRef<THREE.Group>(null);
+  // The live gate is a REF, not state. Gating on state meant the first
+  // pointermove of a quick drag arrived before React had committed `dragging`,
+  // so the move was dropped and the whole gesture silently did nothing. Refs
+  // update synchronously, so the gesture is correct no matter how the frames
+  // fall; the state below exists only to re-render the visual.
+  const draggingRef = useRef<CeremonyStagingMarkId | null>(null);
+  const dragPointRef = useRef<[number, number] | null>(null);
+  const [dragging, setDragging] = useState<CeremonyStagingMarkId | null>(null);
+  // The live drag position is LOCAL state. Reporting every pointermove upward
+  // wrote the whole layout record to localStorage and reconciled the entire
+  // church tree sixty times a second. The parent hears about it once, on
+  // release — the same discipline the reception's drag-to-reseat already uses.
+  const [dragPoint, setDragPoint] = useState<[number, number] | null>(null);
+
+  // The singer only has a mark when the singer is actually in the room.
+  const visibleMarks = ceremonyStagingMarkIds.filter((markId) => markId !== "singer" || staging.showSinger);
+
+  function release() {
+    const markId = draggingRef.current;
+    const point = dragPointRef.current;
+    if (markId && point) {
+      const home = ceremonyStagingMarks[markId].home;
+      onMove(markId, point[0] - home.x, point[1] - home.z);
+    }
+    draggingRef.current = null;
+    dragPointRef.current = null;
+    setDragging(null);
+    setDragPoint(null);
+  }
+
+  return (
+    <group ref={groupRef}>
+      {/* The catch plane is mounted for as long as the handles are, not created
+          on grab. Mounting it in response to pointerdown meant the first
+          pointermove of a quick drag arrived before React had committed it, and
+          the drag silently did nothing. It carries no onPointerDown and never
+          stops propagation unless a drag is live, so ordinary clicks still reach
+          the scene objects underneath it. */}
+      <mesh
+        onPointerMove={(event) => {
+          if (!draggingRef.current || !groupRef.current) {
+            return;
+          }
+          event.stopPropagation();
+          // `event.point` is world space; the marks are in this group's local
+          // space, and the stage root sits at z +0.25. Without this conversion
+          // every drop landed a quarter metre off.
+          const local = groupRef.current.worldToLocal(event.point.clone());
+          dragPointRef.current = [local.x, local.z];
+          setDragPoint([local.x, local.z]);
+        }}
+        onPointerUp={(event) => {
+          if (!draggingRef.current) {
+            return;
+          }
+          event.stopPropagation();
+          release();
+        }}
+        position={[0, 0.02, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <planeGeometry args={[60, 60]} />
+        <meshBasicMaterial depthWrite={false} opacity={0} transparent />
+      </mesh>
+      {visibleMarks.map((markId) => {
+        const home = ceremonyStagingMarks[markId].home;
+        const offset = staging.marks[markId];
+        const reach = ceremonyStagingMarks[markId].reach;
+        // While dragging, follow the cursor but stay inside the mark's reach, so
+        // the handle shows exactly where it will land rather than promising a
+        // position the clamp will refuse.
+        const live =
+          dragging === markId && dragPoint
+            ? ([
+                home.x + THREE.MathUtils.clamp(dragPoint[0] - home.x, -reach, reach),
+                home.z + THREE.MathUtils.clamp(dragPoint[1] - home.z, -reach, reach)
+              ] as [number, number])
+            : ([home.x + offset.x, home.z + offset.z] as [number, number]);
+        return (
+          <StagingHandle
+            active={dragging === markId}
+            key={markId}
+            label={t(ceremonyStagingMarks[markId].label)}
+            onGrab={() => {
+              draggingRef.current = markId;
+              dragPointRef.current = [home.x + offset.x, home.z + offset.z];
+              setDragging(markId);
+              setDragPoint([home.x + offset.x, home.z + offset.z]);
+            }}
+            position={live}
+          />
+        );
+      })}
+    </group>
+  );
+}
+
+function Celebrant({ mark }: { mark: StudioSceneOffset }) {
+  // The officiant waits at the altar, facing the congregation.
+  const home = ceremonyStagingMarks.celebrant.home;
+  return (
+    <group position={[home.x + mark.x, 0, home.z + mark.z]}>
       <AnimatedFigure clip="idle" pose={POSE_HANDS_CLASPED} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
     </group>
   );
@@ -1870,9 +2060,10 @@ function MicrophoneStand() {
   );
 }
 
-function Singer() {
+function Singer({ mark }: { mark: StudioSceneOffset }) {
+  const home = ceremonyStagingMarks.singer.home;
   return (
-    <group position={[1.75, 0, -3.05]} rotation={[0, -0.55, 0]}>
+    <group position={[home.x + mark.x, 0, home.z + mark.z]} rotation={[0, -0.55, 0]}>
       <AnimatedFigure clip="idle" pose={POSE_RELAXED} recolor={SINGER_COLORS} rotationY={0.35} url={FIGURE_WOMAN} />
       <group position={[0.2, 0, 0.16]}>
         <MicrophoneStand />
@@ -1894,9 +2085,9 @@ const FIRST_PERSON_EYE_Y = 1.5;
 // segments so the hem reads round instead of polygonal at close camera distances.
 const GOWN_PROFILE: [number, number][] = [
   [0.0, 0.0],
-  [0.335, 0.0],
-  [0.33, 0.035],
-  [0.315, 0.095],
+  [0.3, 0.0],
+  [0.296, 0.035],
+  [0.284, 0.095],
   [0.29, 0.17],
   [0.255, 0.25],
   [0.215, 0.33],
@@ -1954,21 +2145,43 @@ function Bouquet() {
 
 // Re-mounted (via React key) to restart, so progress + pose reset cleanly.
 function Processional({
+  coupleMark,
+  groomStart,
   headsRef,
   hideFigure = null,
   playing
 }: {
+  coupleMark: StudioSceneOffset;
+  groomStart: CeremonyGroomStart;
   headsRef?: { current: CoupleHeads };
   hideFigure?: CeremonyFirstPerson;
   playing: boolean;
 }) {
-  const progress = useRef(0);
-  const arrivedRef = useRef(false);
+  // At rest the studio shows the ceremony, not the moment before the doors open:
+  // the couple stand at the altar and Play walks them in from the back. Starting
+  // at progress 0 left them idling in the empty rear of the nave, which read as a
+  // bug rather than as a cue.
+  const progress = useRef(1);
+  const arrivedRef = useRef(true);
   const groomRef = useRef<THREE.Group>(null);
   const brideRef = useRef<THREE.Group>(null);
-  const [arrived, setArrived] = useState(false);
+  const [arrived, setArrived] = useState(true);
+  const wasPlaying = useRef(false);
+  const waitsAtAltar = groomStart === "altar";
+  // Both figures keep their half of the aisle, shifted with the couple's mark.
+  // Arm in arm down the centre of the runner rather than a lane apart.
+  const groomX = -0.26 + coupleMark.x;
+  const brideX = 0.26 + coupleMark.x;
 
   useFrame((_, delta) => {
+    // Pressing Play rewinds them to the doors; releasing it leaves them wherever
+    // they got to.
+    if (playing && !wasPlaying.current && progress.current >= 1) {
+      progress.current = 0;
+      arrivedRef.current = false;
+      setArrived(false);
+    }
+    wasPlaying.current = playing;
     if (playing && progress.current < 1) {
       progress.current = Math.min(1, progress.current + delta / PROCESSION_DURATION);
     }
@@ -1979,40 +2192,60 @@ function Processional({
 
     const p = progress.current;
     const eased = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
-    const z = PROCESSION_START_Z + (PROCESSION_END_Z - PROCESSION_START_Z) * eased;
+    const endZ = PROCESSION_END_Z + coupleMark.z;
+    const z = PROCESSION_START_Z + (endZ - PROCESSION_START_Z) * eased;
+    // A groom who waits at the altar is already standing on his mark, facing
+    // back down the aisle to watch the bride arrive — he turns to her only when
+    // she gets there.
+    const groomZ = waitsAtAltar ? endZ : z;
+    const groomIdleTarget = waitsAtAltar ? Math.PI : Math.PI / 2;
     // Face down the aisle while walking; turn to face each other on arrival
     // (groom looks right toward the bride, bride looks left toward the groom).
-    const groomTarget = arrivedRef.current ? Math.PI / 2 : Math.PI;
+    const groomTarget = arrivedRef.current ? Math.PI / 2 : groomIdleTarget;
     const brideTarget = arrivedRef.current ? (3 * Math.PI) / 2 : Math.PI;
     const turn = Math.min(1, delta * 3);
     if (groomRef.current) {
-      groomRef.current.position.z = z;
+      groomRef.current.position.set(groomX, 0, groomZ);
       groomRef.current.rotation.y += (groomTarget - groomRef.current.rotation.y) * turn;
     }
     if (brideRef.current) {
-      brideRef.current.position.z = z;
+      brideRef.current.position.set(brideX, 0, z);
       brideRef.current.rotation.y += (brideTarget - brideRef.current.rotation.y) * turn;
     }
     // Publish the couple's eye positions so the first-person camera can ride along,
     // even for a hidden figure (whose group ref is null).
     if (headsRef) {
-      headsRef.current.groom.set(-0.34, FIRST_PERSON_EYE_Y, z);
-      headsRef.current.bride.set(0.34, FIRST_PERSON_EYE_Y, z);
+      headsRef.current.groom.set(groomX, FIRST_PERSON_EYE_Y, groomZ);
+      headsRef.current.bride.set(brideX, FIRST_PERSON_EYE_Y, z);
       headsRef.current.arrived = arrivedRef.current;
     }
   });
 
+  // Only the bride is walking when the groom waits, so his clip must not be the
+  // walk cycle — a groom marching on the spot at the altar is worse than no
+  // animation at all.
   const moving = playing && !arrived;
+  const groomMoving = moving && !waitsAtAltar;
 
   return (
     <>
       {hideFigure !== "groom" ? (
-        <group position={[-0.34, 0, PROCESSION_START_Z]} ref={groomRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={moving ? POSE_RELAXED : POSE_HANDS_CLASPED} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
+        <group
+          position={[groomX, 0, waitsAtAltar ? PROCESSION_END_Z + coupleMark.z : PROCESSION_START_Z]}
+          ref={groomRef}
+          rotation={[0, Math.PI, 0]}
+        >
+          <AnimatedFigure
+            clip={groomMoving ? "walk" : "idle"}
+            pose={groomMoving ? POSE_RELAXED : POSE_HANDS_CLASPED}
+            recolor={GROOM_COLORS}
+            rotationY={0}
+            url={FIGURE_SUIT}
+          />
         </group>
       ) : null}
       {hideFigure !== "bride" ? (
-        <group position={[0.34, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
+        <group position={[brideX, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
           <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
           <BridalGown />
           <Bouquet />
@@ -2030,9 +2263,23 @@ type SeatLayoutParams = {
 
 const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpacing: 0.62 };
 
-// Pew rows the nave physically holds, leaving the rear of the aisle clear for
-// the entrance. Rows run from z = -2.4 backwards at `rowSpacing`.
-const NAVE_PEW_ROWS = 12;
+// Distance from the nave centreline to each pew block's centre. The blocks are
+// 2.55 wide, so this also sets the aisle: 2.2 leaves 1.85m between the pew ends,
+// which a gown and a groom can share. At the old 1.82 the gap was 1.09m and the
+// bride's skirt intersected the bench.
+const PEW_BLOCK_X = 2.2;
+
+// The nave's pews follow the wedding it is actually holding: enough rows to seat
+// everyone with a couple spare, never so many that a small wedding is framed
+// against half a hall of empty benches. Eight seats per row is what the 3D lays
+// out, four each side of the aisle.
+const NAVE_SEATS_PER_ROW = 8;
+const MIN_PEW_ROWS = 5;
+const MAX_PEW_ROWS = 14;
+
+function navePewRows(guestCount: number) {
+  return Math.max(MIN_PEW_ROWS, Math.min(MAX_PEW_ROWS, Math.ceil(guestCount / NAVE_SEATS_PER_ROW) + 2));
+}
 
 function buildChurchSeatedGuests(
   visibleRows: number,
@@ -2049,7 +2296,7 @@ function buildChurchSeatedGuests(
     for (const side of [-1, 1]) {
       // The figures sit ON the pew block, so they inherit its aisle shift and
       // rotate around the same block centre when the layout curves the rows.
-      const sideCenter = side * (1.82 + layout.aisleShift);
+      const sideCenter = side * (PEW_BLOCK_X + layout.aisleShift);
       const yaw = side * layout.pewYaw;
 
       for (let seat = 0; seat < seatOffsets.length; seat += 1) {
@@ -2061,7 +2308,7 @@ function buildChurchSeatedGuests(
         const dx = seatOffsets[seat];
         result.push({
           id: `church-guest-${row}-${sideCenter}-${seat}`,
-          position: [sideCenter + dx * Math.cos(yaw), 0, z + 0.04 - dx * Math.sin(yaw)],
+          position: [sideCenter + dx * Math.cos(yaw), 0, z + 0.07 - dx * Math.sin(yaw)],
           variant: (seed * 7 + row * 3) % CONGREGATION_MODELS.length,
           rotationY: Math.PI + yaw + ((seed % 7) - 3) * 0.03
         });
@@ -2511,7 +2758,17 @@ function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string
   );
 }
 
-function CeremonyFocalPoint({ decorScale, palette, venueType }: { decorScale: number; palette: Palette; venueType: StudioVenueType }) {
+function CeremonyFocalPoint({
+  decorScale,
+  floralMark,
+  palette,
+  venueType
+}: {
+  decorScale: number;
+  floralMark: StudioSceneOffset;
+  palette: Palette;
+  venueType: StudioVenueType;
+}) {
   if (venueType === "garden" || venueType === "beach") {
     return <CeremonyArch decorScale={decorScale} palette={palette} venueType={venueType} />;
   }
@@ -2521,7 +2778,7 @@ function CeremonyFocalPoint({ decorScale, palette, venueType }: { decorScale: nu
   }
 
   if (venueType === "church") {
-    return <ChurchAltar decorScale={decorScale} palette={palette} />;
+    return <ChurchAltar decorScale={decorScale} floralMark={floralMark} palette={palette} />;
   }
 
   return <Altar decorScale={decorScale} palette={palette} />;
@@ -2853,7 +3110,10 @@ function PewBody({ palette, position, wood }: { palette: Palette; position: [num
         <boxGeometry args={[2.55, 0.16, 0.34]} />
         <meshStandardMaterial {...wood} color={palette.pew} roughness={0.72} />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.2, -0.14]}>
+      {/* The backrest belongs BEHIND the sitter, on the entrance side. It sat at
+          z -0.14, on the altar side, so every pew in the church faced backwards
+          and the congregation appeared to be sitting in front of its own bench. */}
+      <mesh castShadow receiveShadow position={[0, 0.2, 0.14]}>
         <boxGeometry args={[2.55, 0.3, 0.07]} />
         <meshStandardMaterial {...wood} color={palette.pew} roughness={0.74} />
       </mesh>
@@ -3565,7 +3825,7 @@ function formatVenueLabel(venueType: StudioVenueType) {
 
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
   const labels: Record<StudioPlanningStepId, string> = {
-    ceremony: `${capacity.renderedRows} of ${NAVE_PEW_ROWS} rows seated`,
+    ceremony: `${navePewRows(capacity.visibleGuestMarkers)} pew rows set`,
     budget: "Budget level visualized",
     guests: `${capacity.visibleGuestMarkers} guest markers shown`,
     preview: "Preview perspective ready",

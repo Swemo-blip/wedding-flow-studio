@@ -5,6 +5,13 @@ import { Armchair, Camera, Maximize2, Settings, Sun } from "lucide-react";
 import { Donut } from "@/components/ui/donut";
 import { StyleReferences } from "@/components/wedding/style-references";
 import { CeremonyScene, type CeremonyFirstPerson, type SceneCameraOverride, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import {
+  clampStagingOffset,
+  defaultCeremonyStaging,
+  isCeremonyStagingDefault,
+  type CeremonyStaging,
+  type CeremonyStagingMarkId
+} from "@/lib/wedding-studio-plan";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
@@ -80,6 +87,11 @@ function formatWeddingDate(value: string) {
   return date.toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" });
 }
 
+const GROOM_START_OPTIONS: { label: string; value: CeremonyStaging["groomStart"] }[] = [
+  { label: "Walks the aisle", value: "aisle" },
+  { label: "Waits at the altar", value: "altar" }
+];
+
 export function CeremonyStudio() {
   const { t } = useTranslation();
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
@@ -103,6 +115,8 @@ export function CeremonyStudio() {
   // could not be verified; that turned out to be a measurement error, and the
   // framing is now checked against a captured still.
   const [guestEye, setGuestEye] = useState(false);
+  // Who stands where, and whether the groom walks in or waits at the altar.
+  const [staging, setStaging] = useState(defaultCeremonyStaging);
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [highQuality, setHighQuality] = useState(true);
 
@@ -117,6 +131,7 @@ export function CeremonyStudio() {
       queueMicrotask(() => {
         setPlan(stored.plan);
         setSceneEdits(stored.sceneEdits);
+        setStaging(stored.staging);
       });
     }
   }, []);
@@ -125,7 +140,24 @@ export function CeremonyStudio() {
     setPlan(nextPlan);
     // Persist alongside the couple's current scene-object nudges (hydrated on
     // mount) so a ceremony-control change never clobbers them in the shared blob.
-    writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+    writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision", staging);
+  }
+
+  function applyStaging(nextStaging: CeremonyStaging) {
+    setStaging(nextStaging);
+    writeStoredWeddingStudioLayout(plan, sceneEdits, "vision", nextStaging);
+  }
+
+  // The handle reports an absolute offset from its home mark; clamping keeps it
+  // inside the reach the church actually allows for that role.
+  function moveStagingMark(markId: CeremonyStagingMarkId, x: number, z: number) {
+    applyStaging({
+      ...staging,
+      marks: {
+        ...staging.marks,
+        [markId]: { x: clampStagingOffset(markId, x), z: clampStagingOffset(markId, z) }
+      }
+    });
   }
 
   const { guests, wedding } = useLocalProject();
@@ -140,7 +172,8 @@ export function CeremonyStudio() {
   const seatedCount = Math.min(invitedGuests, capacity.totalCapacity);
   const seatsRemaining = Math.max(0, capacity.totalCapacity - invitedGuests);
 
-  const viewMode: StudioViewMode = canvasTab === "plan" ? "top" : guestEye ? "guest" : "3d";
+  const planning = canvasTab === "plan";
+  const viewMode: StudioViewMode = planning ? "top" : guestEye ? "guest" : "3d";
   const cameraOverride = canvasTab === "plan" ? null : preset ? CAMERA_PRESETS[preset] : null;
   const effectiveFirstPerson = canvasTab === "plan" ? null : firstPerson;
 
@@ -194,11 +227,56 @@ export function CeremonyStudio() {
   return (
     <>
       <div className="studio-workspace">
-        <aside aria-label={t("Ceremony setup")} className="studio-pane studio-pane-controls">
+        <aside aria-label={planning ? t("Staging") : t("Ceremony setup")} className="studio-pane studio-pane-controls">
           <div className="studio-pane-head">
-            <p className="eyebrow">{t("Ceremony setup")}</p>
+            <p className="eyebrow">{planning ? t("Staging") : t("Ceremony setup")}</p>
           </div>
 
+          {planning ? (
+            <>
+              <div className="setup-field">
+                <span className="setup-label">{t("The groom")}</span>
+                <div aria-label={t("The groom")} className="setup-choice-row" role="group">
+                  {GROOM_START_OPTIONS.map((option) => (
+                    <button
+                      aria-pressed={staging.groomStart === option.value}
+                      data-active={staging.groomStart === option.value}
+                      key={option.value}
+                      onClick={() => applyStaging({ ...staging, groomStart: option.value })}
+                      type="button"
+                    >
+                      {t(option.label)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="setup-field">
+                <div className="setup-field-head">
+                  <span className="setup-label">{t("Singer")}</span>
+                  <button
+                    aria-pressed={staging.showSinger}
+                    className="setup-toggle"
+                    data-active={staging.showSinger}
+                    onClick={() => applyStaging({ ...staging, showSinger: !staging.showSinger })}
+                    type="button"
+                  >
+                    {staging.showSinger ? t("In the room") : t("Not booked")}
+                  </button>
+                </div>
+                <p className="setup-hint">{t("Drag the markers in the plan to move anyone.")}</p>
+              </div>
+
+              {isCeremonyStagingDefault(staging) ? null : (
+                <div className="setup-field">
+                  <button className="button-secondary" onClick={() => applyStaging(defaultCeremonyStaging)} type="button">
+                    {t("Reset staging")}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
           <div className="setup-field">
             <div className="setup-field-head">
               <span className="setup-label">{t("Guest Count")}</span>
@@ -279,6 +357,8 @@ export function CeremonyStudio() {
               <span>8 {t("ft")}</span>
             </div>
           </div>
+            </>
+          )}
         </aside>
 
         <section aria-label={t("Ceremony preview")} className="studio-pane studio-pane-stage">
@@ -372,10 +452,12 @@ export function CeremonyStudio() {
                 highQuality={highQuality}
                 lighting={lighting}
                 onMoveObject={() => undefined}
+                onMoveStagingMark={moveStagingMark}
                 onSelectObject={setSelectedObjectId}
                 sceneEdits={sceneEdits}
                 seatingLayout={plan.seatingLayout}
                 selectedObjectId={selectedObjectId}
+                staging={staging}
                 style={plan.style}
                 venueType="church"
                 viewMode={viewMode}

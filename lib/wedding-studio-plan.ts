@@ -306,6 +306,70 @@ export function getEditableObjectsForStep(activeStep: StudioPlanningStepId): Stu
   return objects[activeStep];
 }
 
+// --- Ceremony staging ---------------------------------------------------------
+//
+// Who stands where, and whether the groom walks in or waits. These are real
+// decisions couples make with their officiant, and until now the 3D held the
+// answers hard-coded: the singer in particular was fully modelled, rendered, and
+// reachable by nothing at all.
+//
+// Marks are stored as an offset from a home position rather than an absolute
+// coordinate, so the church can be re-proportioned later without stranding a
+// saved plan in a wall.
+export type CeremonyStagingMarkId = "celebrant" | "couple" | "florals" | "singer";
+
+export type CeremonyGroomStart = "aisle" | "altar";
+
+export type CeremonyStaging = {
+  groomStart: CeremonyGroomStart;
+  marks: Record<CeremonyStagingMarkId, StudioSceneOffset>;
+  showSinger: boolean;
+};
+
+export const ceremonyStagingMarks: Record<
+  CeremonyStagingMarkId,
+  {
+    home: { x: number; z: number };
+    label: string;
+    reach: number;
+  }
+> = {
+  celebrant: { home: { x: 0, z: -3.55 }, label: "Officiant", reach: 1.5 },
+  couple: { home: { x: 0, z: -2.55 }, label: "Couple", reach: 1.2 },
+  florals: { home: { x: 1.28, z: -4.39 }, label: "Altar flowers", reach: 0.9 },
+  singer: { home: { x: 1.75, z: -3.05 }, label: "Singer", reach: 1.8 }
+};
+
+export const ceremonyStagingMarkIds = Object.keys(ceremonyStagingMarks) as CeremonyStagingMarkId[];
+
+export const defaultCeremonyStaging: CeremonyStaging = {
+  groomStart: "aisle",
+  marks: {
+    celebrant: { x: 0, z: 0 },
+    couple: { x: 0, z: 0 },
+    florals: { x: 0, z: 0 },
+    singer: { x: 0, z: 0 }
+  },
+  showSinger: false
+};
+
+// Each mark has its own reach, so nothing can be dragged into a wall or across
+// the altar rail. Kept to two decimals for a stable, diffable persisted value.
+export function clampStagingOffset(markId: CeremonyStagingMarkId, value: number) {
+  const reach = ceremonyStagingMarks[markId].reach;
+  if (Number.isNaN(value)) {
+    return 0;
+  }
+  return Math.max(-reach, Math.min(reach, Number(value.toFixed(2))));
+}
+
+export function isCeremonyStagingDefault(staging: CeremonyStaging) {
+  if (staging.groomStart !== defaultCeremonyStaging.groomStart || staging.showSinger !== defaultCeremonyStaging.showSinger) {
+    return false;
+  }
+  return ceremonyStagingMarkIds.every((markId) => staging.marks[markId].x === 0 && staging.marks[markId].z === 0);
+}
+
 export function clampSceneOffset(value: number) {
   return Math.max(-1.8, Math.min(1.8, Number(value.toFixed(2))));
 }

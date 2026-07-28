@@ -1,9 +1,12 @@
 import {
   clampGuestCount,
   clampAccessibilitySeats,
+  ceremonyStagingMarkIds,
   clampSceneOffset,
+  clampStagingOffset,
   colorDirectionOptions,
   decorLevelOptions,
+  defaultCeremonyStaging,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
   MAX_AISLE_WIDTH_FEET,
@@ -11,6 +14,7 @@ import {
   planningSteps,
   styleOptions,
   venueOptions,
+  type CeremonyStaging,
   type StudioPlanningStepId,
   type StudioSceneEdits,
   type StudioSceneObjectId,
@@ -24,6 +28,7 @@ export type StoredWeddingStudioLayout = {
   activeStep: StudioPlanningStepId;
   plan: WeddingStudioPlan;
   sceneEdits: StudioSceneEdits;
+  staging: CeremonyStaging;
   updatedAt: string;
 };
 
@@ -46,15 +51,29 @@ export function readStoredWeddingStudioLayout() {
   }
 }
 
-export function writeStoredWeddingStudioLayout(plan: WeddingStudioPlan, sceneEdits: StudioSceneEdits, activeStep: StudioPlanningStepId) {
+export function writeStoredWeddingStudioLayout(
+  plan: WeddingStudioPlan,
+  sceneEdits: StudioSceneEdits,
+  activeStep: StudioPlanningStepId,
+  staging?: CeremonyStaging
+) {
   if (typeof window === "undefined") {
     return null;
   }
+
+  // This record is shared by the home studio and the ceremony studio, and each
+  // owns a different slice of it. A caller that does not own the staging slice
+  // must not erase it: omitting the argument reads the stored value back rather
+  // than falling through to defaults. Passing `defaultCeremonyStaging` explicitly
+  // is how a genuine reset clears it. Silently wiping a sibling's slice on save
+  // is a bug this file has already shipped once.
+  const preserved = staging ?? readStoredWeddingStudioLayout()?.staging;
 
   const nextLayout = createStoredWeddingStudioLayoutDraft({
     activeStep,
     plan,
     sceneEdits,
+    staging: preserved,
     updatedAt: new Date().toISOString()
   });
 
@@ -78,6 +97,7 @@ export function createStoredWeddingStudioLayoutDraft(source: Partial<StoredWeddi
     activeStep: isStudioPlanningStepId(source.activeStep) ? source.activeStep : "vision",
     plan: createWeddingStudioPlanDraft(source.plan),
     sceneEdits: createStudioSceneEditsDraft(source.sceneEdits),
+    staging: createCeremonyStagingDraft(source.staging),
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : new Date().toISOString()
   };
 }
@@ -126,6 +146,21 @@ function createStudioSceneEditsDraft(source: Partial<StudioSceneEdits> | undefin
 
     return draft;
   }, { ...defaultStudioSceneEdits });
+}
+
+function createCeremonyStagingDraft(source: Partial<CeremonyStaging> | undefined): CeremonyStaging {
+  return {
+    groomStart: source?.groomStart === "altar" ? "altar" : "aisle",
+    marks: ceremonyStagingMarkIds.reduce<CeremonyStaging["marks"]>((draft, markId) => {
+      const offset = source?.marks?.[markId];
+      draft[markId] = {
+        x: clampStagingOffset(markId, typeof offset?.x === "number" ? offset.x : 0),
+        z: clampStagingOffset(markId, typeof offset?.z === "number" ? offset.z : 0)
+      };
+      return draft;
+    }, { ...defaultCeremonyStaging.marks }),
+    showSinger: source?.showSinger === true
+  };
 }
 
 function isStudioPlanningStepId(value: unknown): value is StudioPlanningStepId {

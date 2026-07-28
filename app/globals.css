@@ -7432,6 +7432,82 @@ a {
   font-weight: 540;
 }
 
+/* Staging: a two-way choice and a state toggle, both in the setup column's
+   quiet-outline idiom so the plan tab adds no new visual language. */
+.setup-choice-row {
+  display: flex;
+  gap: 8px;
+}
+
+.setup-choice-row button {
+  flex: 1;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.setup-choice-row button:hover {
+  border-color: var(--line-strong);
+}
+
+.setup-choice-row button[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+.setup-toggle {
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.setup-toggle[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+/* Floor-mounted staging handle names in the plan view. */
+.staging-handle-label {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(16, 18, 7, 0.8);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.26);
+}
+
+.staging-handle-label[data-active="true"] {
+  background: var(--accent);
+}
+
 .setup-color-row {
   display: flex;
   gap: 8px;
