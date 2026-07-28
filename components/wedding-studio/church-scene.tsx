@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
@@ -1397,9 +1397,17 @@ function ChurchAltar({ decorScale, floralMark, palette }: { decorScale: number; 
         <boxGeometry args={[2.1, 0.52, 0.78]} />
         <meshStandardMaterial color="#f3ead7" roughness={0.7} />
       </mesh>
+      {/* The mensa cloth. This carried the couple's accent colour at metalness 0.7,
+          which is cloth rendered as sheet metal — it read as billiard-table felt.
+          Linen is a dielectric; the gilt stays as a separate edge band, which is
+          where a church actually puts its metal. */}
       <mesh castShadow position={[0, 0.63, 0]}>
         <boxGeometry args={[2.24, 0.05, 0.88]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.7} roughness={0.32} />
+        <meshStandardMaterial color={palette.accent} metalness={0} roughness={0.72} />
+      </mesh>
+      <mesh castShadow position={[0, 0.607, 0.442]}>
+        <boxGeometry args={[2.24, 0.012, 0.008]} />
+        <meshStandardMaterial color="#b39152" metalness={0.68} roughness={0.34} />
       </mesh>
       <ChurchAltarFloral palette={palette} position={[-1.28 - floralMark.x, 0, 0.16 + floralMark.z]} />
       <ChurchAltarFloral palette={palette} position={[1.28 + floralMark.x, 0, 0.16 + floralMark.z]} />
@@ -1722,6 +1730,17 @@ const PRIEST_COLORS: Recolor = {
 };
 const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d78" };
 
+// three's GLTFLoader pushes every node name through
+// PropertyBinding.sanitizeNodeName, which strips dots — so a rig authored with
+// `UpperArm.L` arrives in the scene as `UpperArmL`. Looking bones up by their
+// authoring name therefore found nothing at all, and the entire pose layer was a
+// silent no-op: the offsets were computed, the per-frame multiply ran over an
+// empty list, and the figures kept the clip's own dead-straight arms. Both
+// spellings are tried so a re-export cannot switch this off again unnoticed.
+function findBone(root: THREE.Object3D, name: string) {
+  return root.getObjectByName(name) ?? root.getObjectByName(name.replace(/\./g, "")) ?? null;
+}
+
 // A pose is a set of per-bone rotation offsets layered ON TOP of whatever the
 // animation clip is playing. The source Quaternius idle leaves both arms hanging
 // dead straight and pinned to the ribs, which is the single thing that makes
@@ -1737,40 +1756,55 @@ type FigurePose = Record<string, [number, number, number]>;
 
 // Hands clasped low in front — the standard groom-at-the-altar stance.
 const POSE_HANDS_CLASPED: FigurePose = {
-  "Shoulder.L": [0, 0, -0.16],
-  "Shoulder.R": [0, 0, 0.16],
-  "UpperArm.L": [0.3, 0.1, -0.46],
-  "UpperArm.R": [0.3, -0.1, 0.46],
-  "LowerArm.L": [1.28, 0, -0.5],
-  "LowerArm.R": [1.28, 0, 0.5],
-  "Palm.L": [0.34, 0, -0.2],
-  "Palm.R": [0.34, 0, 0.2]
+  "Shoulder.L": [0, 0, -0.06],
+  "Shoulder.R": [0, 0, 0.06],
+  "UpperArm.L": [0.04, 0.06, -0.2],
+  "UpperArm.R": [0.04, -0.06, 0.2],
+  "LowerArm.L": [0.5, 0, -0.22],
+  "LowerArm.R": [0.5, 0, 0.22],
+  "Palm.L": [0.12, 0, -0.08],
+  "Palm.R": [0.12, 0, 0.08]
 };
 
 // The bride carries her bouquet a little higher and closer to centre.
 const POSE_BOUQUET: FigurePose = {
-  "Shoulder.L": [0, 0, -0.14],
-  "Shoulder.R": [0, 0, 0.14],
-  "UpperArm.L": [0.4, 0.09, -0.42],
-  "UpperArm.R": [0.4, -0.09, 0.42],
-  "LowerArm.L": [1.42, 0, -0.46],
-  "LowerArm.R": [1.42, 0, 0.46],
-  "Palm.L": [0.3, 0, -0.18],
-  "Palm.R": [0.3, 0, 0.18]
+  "Shoulder.L": [0, 0, -0.05],
+  "Shoulder.R": [0, 0, 0.05],
+  "UpperArm.L": [0.08, 0.05, -0.18],
+  "UpperArm.R": [0.08, -0.05, 0.18],
+  "LowerArm.L": [0.62, 0, -0.2],
+  "LowerArm.R": [0.62, 0, 0.2],
+  "Palm.L": [0.14, 0, -0.06],
+  "Palm.R": [0.14, 0, 0.06]
 };
 
 // Just enough to unglue the arms from the torso and soften the elbows: used
 // while walking, and for anyone whose hands are doing something else.
 const POSE_RELAXED: FigurePose = {
-  "Shoulder.L": [0, 0, -0.09],
-  "Shoulder.R": [0, 0, 0.09],
-  "UpperArm.L": [0.04, 0, -0.22],
-  "UpperArm.R": [0.04, 0, 0.22],
-  "LowerArm.L": [0.42, 0, -0.16],
-  "LowerArm.R": [0.42, 0, 0.16]
+  "Shoulder.L": [0, 0, -0.04],
+  "Shoulder.R": [0, 0, 0.04],
+  "UpperArm.L": [0, 0, -0.12],
+  "UpperArm.R": [0, 0, 0.12],
+  "LowerArm.L": [0.22, 0, -0.08],
+  "LowerArm.R": [0.22, 0, 0.08]
 };
 
-function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; pose?: FigurePose; recolor?: Recolor; rotationY?: number; url: string }) {
+function AnimatedFigure({
+  clip,
+  hold,
+  pose,
+  recolor,
+  rotationY = Math.PI,
+  url
+}: {
+  clip: "walk" | "idle";
+  // Rendered into the figure's hand bone, so anything carried follows the pose.
+  hold?: ReactNode;
+  pose?: FigurePose;
+  recolor?: Recolor;
+  rotationY?: number;
+  url: string;
+}) {
   const { animations, scene } = useGLTF(url);
   const object = useMemo(() => {
     const copy = cloneSkinned(scene);
@@ -1860,7 +1894,7 @@ function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { cli
     }
     const entries: { bone: THREE.Object3D; offset: THREE.Quaternion }[] = [];
     Object.entries(pose).forEach(([name, [x, y, z]]) => {
-      const bone = object.getObjectByName(name);
+      const bone = findBone(object, name);
       if (bone) {
         entries.push({ bone, offset: new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)) });
       }
@@ -1877,7 +1911,26 @@ function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { cli
     }
   });
 
-  return <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />;
+  // The bouquet used to be a sibling at a fixed offset, so the moment the bride
+  // turned to face the groom it swung out to her side and hung in mid-air.
+  // Portalling it into the hand bone means it inherits the hand's transform and
+  // stays in her grip through the walk, the turn and the vows. The bone carries
+  // the figure's own scale, so the contents compensate for it.
+  const holdBone = useMemo(() => findBone(object, "Palm.L"), [object]);
+
+  return (
+    <>
+      <primitive object={object} rotation={[0, rotationY, 0]} scale={FIGURE_SCALE} />
+      {hold && holdBone
+        ? createPortal(
+            <group position={[0, 0.25, 0.1]} scale={1 / FIGURE_SCALE}>
+              {hold}
+            </group>,
+            holdBone
+          )
+        : null}
+    </>
+  );
 }
 
 // Draggable staging handles, drawn flat on the floor for the top-down plan view.
@@ -2134,7 +2187,7 @@ function Bouquet() {
   ];
 
   return (
-    <group position={[0.02, 0.62, 0.2]}>
+    <group>
       {blooms.map(([x, y, z, r], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
           <sphereGeometry args={[r, 10, 10]} />
@@ -2252,9 +2305,15 @@ function Processional({
       ) : null}
       {hideFigure !== "bride" ? (
         <group position={[brideX, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+          <AnimatedFigure
+            clip={moving ? "walk" : "idle"}
+            hold={<Bouquet />}
+            pose={POSE_BOUQUET}
+            recolor={BRIDE_COLORS}
+            rotationY={0}
+            url={FIGURE_WOMAN}
+          />
           <BridalGown />
-          <Bouquet />
         </group>
       ) : null}
     </>
