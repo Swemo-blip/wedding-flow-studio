@@ -1382,9 +1382,9 @@ function ChurchAltarFloral({ palette, position }: { palette: Palette; position: 
         <torusGeometry args={[0.185, 0.017, 8, 20]} />
         <meshStandardMaterial color="#b39152" metalness={0.62} roughness={0.38} />
       </mesh>
-      <FlowerCluster palette={palette} position={[0, 1.28, 0]} radius={0.42} />
-      <FlowerCluster palette={palette} position={[0.24, 1.1, 0.07]} radius={0.28} />
-      <FlowerCluster palette={palette} position={[-0.24, 1.07, 0.07]} radius={0.26} />
+      <FlowerCluster palette={palette} position={[0, 1.22, 0]} radius={0.33} />
+      <FlowerCluster palette={palette} position={[0.2, 1.06, 0.07]} radius={0.22} />
+      <FlowerCluster palette={palette} position={[-0.2, 1.04, 0.07]} radius={0.21} />
     </group>
   );
 }
@@ -1537,10 +1537,14 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         // alabaster regrade was silently a no-op on exactly the vertices that
         // needed it. Lightness is likewise remapped into a light stone band
         // instead of merely nudged, so mid-grey clothing lands as pale limestone.
+        // The band has to be wide enough to tell two guests apart. Crushing every
+        // vertex into a 0.52-0.87 lightness sliver fixed the cold grey but made
+        // the assembly read as one repeated figure; the source model's own light
+        // and dark areas now survive as contrast within the alabaster family.
         color.setHSL(
           THREE.MathUtils.lerp(hsl.h, 0.09, 0.75),
-          THREE.MathUtils.clamp(Math.max(0.062, hsl.s * 0.3), 0.062, 0.16),
-          Math.min(0.87, 0.52 + hsl.l * 0.32) * occ
+          THREE.MathUtils.clamp(Math.max(0.055, hsl.s * 0.34), 0.055, 0.2),
+          Math.min(0.9, 0.36 + hsl.l * 0.62) * occ
         );
         colorAttr.setXYZ(i, color.r, color.g, color.b);
       }
@@ -1578,17 +1582,19 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         hashAcc = (hashAcc * 31 + seat.id.charCodeAt(c)) % 100000;
       }
       const h = (hashAcc % 1000) / 1000;
-      // Micro scale + a whisper of forward/back lean so a pew row stops reading
-      // as identical stamps — organic, never posed.
-      euler.set(0.02 * (h - 0.5), seat.rotationY, 0);
+      // Lean and a slight roll, both wider than before. A congregation is never
+      // a grid of upright clones: people sit forward, sink back, tilt toward the
+      // person beside them.
+      euler.set(0.075 * (h - 0.5), seat.rotationY, 0.03 * (h - 0.5));
       quaternion.setFromEuler(euler);
       position.set(seat.position[0], seat.position[1], seat.position[2]);
-      scale.setScalar(CONGREGATION_SCALE * (0.97 + 0.06 * h));
+      scale.setScalar(CONGREGATION_SCALE * (0.945 + 0.115 * h));
       matrix.compose(position, quaternion, scale);
       mesh.setMatrixAt(index, matrix);
-      // Whisper-tint in a narrow warm ivory<->stone band (near-white multiplier,
-      // never saturated) so identity reads without any game-crowd colour.
-      tint.setHSL(0.085 + 0.02 * (h - 0.5), 0.09, 0.94 + 0.08 * (h - 0.5));
+      // Per-guest tone, wide enough to read as different people from the aisle
+      // but still all one material family — ivory through warm stone, never a
+      // saturated costume colour.
+      tint.setHSL(0.075 + 0.05 * (h - 0.5), 0.13, 0.86 + 0.2 * (h - 0.5));
       mesh.setColorAt(index, tint);
     });
     mesh.instanceMatrix.needsUpdate = true;
@@ -1731,37 +1737,37 @@ type FigurePose = Record<string, [number, number, number]>;
 
 // Hands clasped low in front — the standard groom-at-the-altar stance.
 const POSE_HANDS_CLASPED: FigurePose = {
-  "Shoulder.L": [0, 0, -0.1],
-  "Shoulder.R": [0, 0, 0.1],
-  "UpperArm.L": [0.34, 0, -0.16],
-  "UpperArm.R": [0.34, 0, 0.16],
-  "LowerArm.L": [0.72, 0, -0.3],
-  "LowerArm.R": [0.72, 0, 0.3],
-  "Palm.L": [0.2, 0, 0],
-  "Palm.R": [0.2, 0, 0]
+  "Shoulder.L": [0, 0, -0.16],
+  "Shoulder.R": [0, 0, 0.16],
+  "UpperArm.L": [0.3, 0.1, -0.46],
+  "UpperArm.R": [0.3, -0.1, 0.46],
+  "LowerArm.L": [1.28, 0, -0.5],
+  "LowerArm.R": [1.28, 0, 0.5],
+  "Palm.L": [0.34, 0, -0.2],
+  "Palm.R": [0.34, 0, 0.2]
 };
 
 // The bride carries her bouquet a little higher and closer to centre.
 const POSE_BOUQUET: FigurePose = {
-  "Shoulder.L": [0, 0, -0.08],
-  "Shoulder.R": [0, 0, 0.08],
-  "UpperArm.L": [0.46, 0, -0.13],
-  "UpperArm.R": [0.46, 0, 0.13],
-  "LowerArm.L": [0.86, 0, -0.26],
-  "LowerArm.R": [0.86, 0, 0.26],
-  "Palm.L": [0.24, 0, 0],
-  "Palm.R": [0.24, 0, 0]
+  "Shoulder.L": [0, 0, -0.14],
+  "Shoulder.R": [0, 0, 0.14],
+  "UpperArm.L": [0.4, 0.09, -0.42],
+  "UpperArm.R": [0.4, -0.09, 0.42],
+  "LowerArm.L": [1.42, 0, -0.46],
+  "LowerArm.R": [1.42, 0, 0.46],
+  "Palm.L": [0.3, 0, -0.18],
+  "Palm.R": [0.3, 0, 0.18]
 };
 
 // Just enough to unglue the arms from the torso and soften the elbows: used
 // while walking, and for anyone whose hands are doing something else.
 const POSE_RELAXED: FigurePose = {
-  "Shoulder.L": [0, 0, -0.07],
-  "Shoulder.R": [0, 0, 0.07],
-  "UpperArm.L": [0, 0, -0.17],
-  "UpperArm.R": [0, 0, 0.17],
-  "LowerArm.L": [0.26, 0, -0.1],
-  "LowerArm.R": [0.26, 0, 0.1]
+  "Shoulder.L": [0, 0, -0.09],
+  "Shoulder.R": [0, 0, 0.09],
+  "UpperArm.L": [0.04, 0, -0.22],
+  "UpperArm.R": [0.04, 0, 0.22],
+  "LowerArm.L": [0.42, 0, -0.16],
+  "LowerArm.R": [0.42, 0, 0.16]
 };
 
 function AnimatedFigure({ clip, pose, recolor, rotationY = Math.PI, url }: { clip: "walk" | "idle"; pose?: FigurePose; recolor?: Recolor; rotationY?: number; url: string }) {
@@ -2128,7 +2134,7 @@ function Bouquet() {
   ];
 
   return (
-    <group position={[0.05, 0.5, 0.17]}>
+    <group position={[0.02, 0.62, 0.2]}>
       {blooms.map(([x, y, z, r], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
           <sphereGeometry args={[r, 10, 10]} />
@@ -2310,7 +2316,13 @@ function buildChurchSeatedGuests(
           id: `church-guest-${row}-${sideCenter}-${seat}`,
           position: [sideCenter + dx * Math.cos(yaw), 0, z + 0.07 - dx * Math.sin(yaw)],
           variant: (seed * 7 + row * 3) % CONGREGATION_MODELS.length,
-          rotationY: Math.PI + yaw + ((seed % 7) - 3) * 0.03
+          // Most face the altar; roughly one in six is turned toward whoever is
+          // next to them, which is what a church looks like before the doors open.
+          rotationY:
+            Math.PI +
+            yaw +
+            ((seed % 7) - 3) * 0.075 +
+            (seed % 6 === 0 ? (seat % 2 === 0 ? 0.42 : -0.42) : 0)
         });
         count += 1;
       }
@@ -2978,7 +2990,7 @@ function FlowerCluster({ palette, position, radius }: { palette: Palette; positi
           key={`l${index}`}
           position={[x, y, z]}
           rotation={[pitch, yaw, roll]}
-          scale={[length, length * 0.62, length * 0.9]}
+          scale={[length * 0.78, length * 0.5, length * 0.7]}
         >
           <meshStandardMaterial color={index % 2 === 0 ? "#66774f" : "#75855a"} roughness={0.88} side={THREE.DoubleSide} />
         </mesh>
