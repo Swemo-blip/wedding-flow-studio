@@ -38,6 +38,7 @@ import {
   calculateWeddingStudioCapacity,
   clampSceneOffset,
   createWeddingStudioPlanFromWedding,
+  defaultCeremonyStaging,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
   getEditableObjectsForStep,
@@ -91,6 +92,10 @@ export function OverviewDashboard() {
   const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
   // The live guest list is the single source of truth for headcount, so the 3D
   // capacity fills to the real invited count — not a separate slider value.
+  // Staging is owned by the ceremony studio; this surface reads it so the front
+  // page shows the ceremony the couple actually staged — a groom waiting at the
+  // altar, a singer in the room — instead of silently reverting to defaults.
+  const [staging, setStaging] = useState(defaultCeremonyStaging);
   const capacity = useMemo(
     () => calculateWeddingStudioCapacity({ ...plan, guestCount: localProject.guests.length }),
     [plan, localProject.guests.length]
@@ -275,6 +280,7 @@ export function OverviewDashboard() {
       if (storedLayout) {
         setPlan(storedLayout.plan);
         setSceneEdits(storedLayout.sceneEdits);
+        setStaging(storedLayout.staging);
       } else {
         const nextPlan = createWeddingStudioPlanFromWedding(localProject.wedding, defaultWeddingStudioPlan);
         setPlan(nextPlan);
@@ -552,6 +558,7 @@ export function OverviewDashboard() {
                 onSelectObject={selectObjectFromScene}
                 sceneEdits={sceneEdits}
                 selectedObjectId={activeSelectedObjectId}
+                staging={staging}
                 style={plan.style}
                 venueType={sceneVenueType}
                 viewMode={dimension === "2d" ? "top" : "3d"}
