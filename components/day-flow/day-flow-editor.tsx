@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
+import { momentLibraryByPhase, type MomentPreset } from "@/lib/wedding-moment-library";
 import {
   applyProductionActionToTimeline,
   getGuestActionUpdates,
@@ -245,21 +246,24 @@ export function DayFlowEditor() {
     });
   }
 
-  function addMoment() {
+  // A preset fills in the title, phase and a conventional duration; everything
+  // still lands in an ordinary editable row, so nothing is locked. Passing no
+  // preset is the blank "make your own" case the editor always had.
+  function addMoment(preset?: MomentPreset) {
     setActionStatus(null);
     setProject((currentProject) => {
       const lastItem = currentProject.items[currentProject.items.length - 1];
       const newItem: TimelineItem = {
         id: `moment-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e5).toString(36)}`,
         time: lastItem?.time ?? "3:00 PM",
-        title: "New moment",
-        phase: lastItem?.phase ?? currentProject.items[0]?.phase ?? "Ceremony",
+        title: preset?.title ?? "New moment",
+        phase: preset?.phase ?? lastItem?.phase ?? currentProject.items[0]?.phase ?? "Ceremony",
         location: lastItem?.location ?? "",
-        responsibleRole: "",
+        responsibleRole: preset?.responsibleRole ?? "",
         responsiblePerson: "",
         notes: "",
         visibility: "everyone",
-        durationMinutes: 15
+        durationMinutes: preset?.durationMinutes ?? 15
       };
 
       return {
@@ -486,10 +490,33 @@ export function DayFlowEditor() {
             );
           })}
 
-          <button className="editable-timeline-add" onClick={addMoment} type="button">
-            <Plus aria-hidden="true" size={16} strokeWidth={1.9} />
-            {t("Add moment")}
-          </button>
+          {/* The library first, then the blank row. Typing "New moment" twenty
+              times and inventing your own durations was the only way to build a
+              day; these are the pieces almost every wedding actually has. */}
+          <details className="moment-library">
+            <summary>
+              <Plus aria-hidden="true" size={16} strokeWidth={1.9} />
+              {t("Add a moment")}
+            </summary>
+            <div className="moment-library-body">
+              {momentLibraryByPhase().map((group) => (
+                <div className="moment-library-group" key={group.phase}>
+                  <p className="eyebrow">{t(group.phase)}</p>
+                  <div className="moment-library-row">
+                    {group.presets.map((preset) => (
+                      <button key={preset.id} onClick={() => addMoment(preset)} type="button">
+                        {t(preset.title)}
+                        <span>{preset.durationMinutes} {t("min")}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button className="moment-library-custom" onClick={() => addMoment()} type="button">
+                {t("Something only we have")}
+              </button>
+            </div>
+          </details>
         </div>
 
         <details className="day-flow-detail-drawer">

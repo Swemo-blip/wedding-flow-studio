@@ -5738,6 +5738,99 @@ a {
   margin: 18mm;
 }
 
+/* --- Moment library --------------------------------------------------------
+   Collapsed by default so the timeline stays the focus; opening it reveals the
+   day's standard pieces grouped in the order they happen, with the couple's own
+   blank row last. */
+.moment-library {
+  margin-top: 10px;
+}
+
+.moment-library > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.moment-library > summary::-webkit-details-marker {
+  display: none;
+}
+
+.moment-library[open] > summary {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.moment-library-body {
+  margin-top: 14px;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.moment-library-group + .moment-library-group {
+  margin-top: 15px;
+}
+
+.moment-library-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.moment-library-row button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.81rem;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.moment-library-row button:hover {
+  border-color: var(--accent);
+  background: var(--canvas);
+}
+
+.moment-library-row button span {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.moment-library-custom {
+  margin-top: 18px;
+  padding: 8px 15px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink-on-accent);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* --- Menu -------------------------------------------------------------------
    The card is the deliverable, so it is built as paper on screen and printed as
    the same markup: one source of truth, no separate template to drift from the
