@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
       { href: "/guests", icon: Users, label: "Guests" },
       { href: "/budget", icon: Wallet, label: "Budget" },
       { href: "/checklist", icon: ListChecks, label: "Checklist" },
+      { href: "/menu", icon: UtensilsCrossed, label: "Menu" },
       { href: "/music", icon: Music2, label: "Music" },
       { href: "/speeches", icon: Mic2, label: "Speeches" },
       { href: "/vendors", icon: Store, label: "Vendors" }

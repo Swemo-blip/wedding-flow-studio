@@ -5738,6 +5738,149 @@ a {
   margin: 18mm;
 }
 
+/* --- Menu -------------------------------------------------------------------
+   The card is the deliverable, so it is built as paper on screen and printed as
+   the same markup: one source of truth, no separate template to drift from the
+   data. Screen chrome is dropped under @media print further down this file. */
+.menu-wide-field {
+  grid-column: 1 / -1;
+}
+
+.menu-allergy-block {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.menu-allergy-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 10px 0 8px;
+}
+
+.menu-allergy-row button {
+  padding: 4px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.menu-allergy-row button[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+.menu-allergy-warning {
+  color: var(--gilt);
+}
+
+/* The reused guests-remove and button-secondary classes assume containers this
+   surface does not have, so both landed unstyled and out of the panel. Anchored
+   here rather than by touching shared classes other pages rely on. */
+.menu-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.menu-detail-head .guests-remove {
+  position: static;
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.menu-card-sheet {
+  margin-top: 26px;
+}
+
+.menu-card-actions .button-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.menu-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.menu-card {
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 40px 34px 44px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.menu-card-couple {
+  font-family: var(--font-serif);
+  font-size: 1.32rem;
+  color: var(--ink);
+}
+
+.menu-card-eyebrow {
+  margin: 4px 0 26px;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gilt);
+}
+
+.menu-card-course + .menu-card-course {
+  margin-top: 20px;
+}
+
+.menu-card-kind {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted, #7d7767);
+}
+
+.menu-card-dish {
+  margin-top: 3px;
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  color: var(--ink);
+}
+
+.menu-card-note,
+.menu-card-pairing {
+  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.menu-card-pairing {
+  font-style: italic;
+}
+
 @media print {
   .sidebar,
   .topbar,

@@ -13,6 +13,7 @@ import {
   projectStorageKey,
   readStoredProject,
   subscribeStoredProjectChange,
+  writeStoredMenuCourses,
   writeStoredMusicCues,
   writeStoredProject,
   writeStoredReception,
@@ -24,12 +25,13 @@ import {
 import { clearStoredBudget } from "@/lib/use-budget";
 import { clearStoredChecklist } from "@/lib/use-checklist";
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
-import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
+import type { DinnerTable, Guest, MenuCourse, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 type LocalProjectState = {
   hasLocalProject: boolean;
   wedding: Wedding;
   timelineItems: TimelineItem[];
+  menuCourses: MenuCourse[];
   musicCues: MusicCue[];
   speeches: Speech[];
   guests: Guest[];
@@ -43,6 +45,7 @@ function createInitialState(): LocalProjectState {
     hasLocalProject: false,
     wedding: sampleWedding,
     timelineItems: createTimelineDraft(timelineItems),
+    menuCourses: [],
     musicCues: createMusicCueDraft(musicCues),
     speeches: createSpeechDraft(speeches),
     guests: createGuestDraft(guests),
@@ -98,6 +101,7 @@ function hydrateFromStorage() {
       hasLocalProject: true,
       wedding: stored.wedding,
       timelineItems: stored.timelineItems,
+      menuCourses: stored.menuCourses,
       musicCues: stored.musicCues,
       speeches: stored.speeches,
       guests: stored.guests,
@@ -175,6 +179,62 @@ function updateWedding(updates: Partial<Wedding>) {
       ...currentState,
       hasLocalProject: true,
       wedding: storedProject?.wedding ?? nextWedding,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+// The menu is new data with a full lifecycle from the start: a couple writes their
+// own courses, so add/update/remove all have to exist or the surface is a
+// read-only decoration.
+function addMenuCourse(partial: Partial<MenuCourse> = {}) {
+  setStoreState((currentState) => {
+    const newCourse: MenuCourse = {
+      alternative: "",
+      conflictsWith: [],
+      description: "",
+      id: `course-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      kind: "main",
+      name: "",
+      notes: "",
+      pairing: "",
+      ...partial
+    };
+    const nextCourses = [...currentState.menuCourses, newCourse];
+    const storedProject = writeStoredMenuCourses(nextCourses);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      menuCourses: storedProject?.menuCourses ?? nextCourses,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function updateMenuCourse(courseId: string, updates: Partial<MenuCourse>) {
+  setStoreState((currentState) => {
+    const nextCourses = currentState.menuCourses.map((course) => (course.id === courseId ? { ...course, ...updates } : course));
+    const storedProject = writeStoredMenuCourses(nextCourses);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      menuCourses: storedProject?.menuCourses ?? nextCourses,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function removeMenuCourse(courseId: string) {
+  setStoreState((currentState) => {
+    const nextCourses = currentState.menuCourses.filter((course) => course.id !== courseId);
+    const storedProject = writeStoredMenuCourses(nextCourses);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      menuCourses: storedProject?.menuCourses ?? nextCourses,
       updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
@@ -599,8 +659,11 @@ export function useLocalProject() {
     updateTimelineItems,
     updateWedding,
     updateMusicCue,
+    addMenuCourse,
     addMusicCue,
+    removeMenuCourse,
     removeMusicCue,
+    updateMenuCourse,
     resetMusicCues,
     updateSpeech,
     addSpeech,

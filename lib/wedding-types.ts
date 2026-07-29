@@ -117,6 +117,26 @@ export type SeatAssignment = {
   seatIndex: number;
 };
 
+// The wedding dinner, course by course. This is the single biggest thing guests
+// remember and talk about, and the app had no model for it at all — so the menu
+// card, the place card's dietary line and the kitchen's own count had nothing to
+// read from.
+export type MenuCourseKind = "canape" | "starter" | "main" | "dessert" | "late" | "drink";
+
+export type MenuCourse = {
+  id: string;
+  kind: MenuCourseKind;
+  name: string;
+  description: string;
+  // Which recorded guest allergies this course is a problem for. Chosen by the
+  // couple from their own guest list, never guessed.
+  conflictsWith: string[];
+  // The alternative served to those guests instead, if there is one.
+  alternative: string;
+  pairing: string;
+  notes: string;
+};
+
 export type MusicCue = {
   id: string;
   moment: string;

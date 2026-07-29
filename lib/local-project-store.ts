@@ -1,7 +1,8 @@
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
 import { safeSetItem } from "@/lib/persistence-status";
 import { sortTimelineByTime } from "@/lib/utils";
-import type { DinnerTable, Guest, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
+import { MENU_COURSE_KINDS } from "@/lib/wedding-menu";
+import type { DinnerTable, Guest, MenuCourse, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 export const projectStorageKey = "wedding-flow-studio.project.v1";
 export const timelineStorageKey = "wedding-flow-studio.timeline.v1";
@@ -48,6 +49,7 @@ export type StoredWeddingProject = {
   updatedAt: string;
   wedding: Wedding;
   timelineItems: TimelineItem[];
+  menuCourses: MenuCourse[];
   musicCues: MusicCue[];
   speeches: Speech[];
   guests: Guest[];
@@ -68,6 +70,24 @@ export type StoredRiskResolution = {
 // begins", and Preview, the exports and the .ics all inherited that order.
 export function createTimelineDraft(items: TimelineItem[]) {
   return sortTimelineByTime(items.map((item) => ({ ...item })));
+}
+
+export function createMenuCourseDraft(items: MenuCourse[]) {
+  // Menus arrive empty for every existing project, so this must never fall back
+  // to sample dishes — a menu the couple did not write is the worst possible
+  // thing to print on a card and hand to a guest.
+  return items
+    .filter((item): item is MenuCourse => Boolean(item) && typeof item === "object")
+    .map((item) => ({
+      alternative: typeof item.alternative === "string" ? item.alternative : "",
+      conflictsWith: Array.isArray(item.conflictsWith) ? item.conflictsWith.filter((entry) => typeof entry === "string") : [],
+      description: typeof item.description === "string" ? item.description : "",
+      id: typeof item.id === "string" && item.id ? item.id : `course-${Math.random().toString(36).slice(2, 9)}`,
+      kind: MENU_COURSE_KINDS.includes(item.kind) ? item.kind : "main",
+      name: typeof item.name === "string" ? item.name : "",
+      notes: typeof item.notes === "string" ? item.notes : "",
+      pairing: typeof item.pairing === "string" ? item.pairing : ""
+    }));
 }
 
 export function createMusicCueDraft(items: MusicCue[]) {
@@ -112,6 +132,7 @@ export function createStoredProjectDraft(source: Partial<StoredWeddingProject> =
     updatedAt: source.updatedAt ?? new Date().toISOString(),
     wedding: source.wedding ?? sampleWedding,
     timelineItems: createTimelineDraft(source.timelineItems ?? timelineItems),
+    menuCourses: createMenuCourseDraft(source.menuCourses ?? []),
     musicCues: createMusicCueDraft(source.musicCues ?? musicCues),
     speeches: createSpeechDraft(source.speeches ?? speeches),
     guests: createGuestDraft(source.guests ?? guests),
@@ -302,6 +323,19 @@ export function readStoredMusicCues() {
         musicCues: project.musicCues
       }
     : null;
+}
+
+export function writeStoredMenuCourses(items: MenuCourse[]) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const currentProject = readStoredProject() ?? createStoredProjectDraft();
+
+  return writeStoredProject({
+    ...currentProject,
+    menuCourses: createMenuCourseDraft(items)
+  });
 }
 
 export function writeStoredMusicCues(items: MusicCue[]) {
