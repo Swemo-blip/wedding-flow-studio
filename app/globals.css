@@ -4265,12 +4265,18 @@ a {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
+.seat3d-table-label[data-target="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink-on-accent);
+}
+
 .seat3d-table-label {
-  padding: 3px 9px;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--line-strong);
-  color: var(--ink);
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
   font-family: var(--font-sans);
   font-size: 0.66rem;
   font-weight: 600;

@@ -450,8 +450,15 @@ function SeatingScene({
             </mesh>
           ) : null}
           <DinnerTablescape colors={EDITOR_TABLESCAPE_COLORS} radius={TABLE_RADIUS} seed={center[0] * 2.3 + center[2] * 1.7} />
-          <Html center distanceFactor={11} position={[0, 1.2, 0]} zIndexRange={[10, 0]}>
-            <div className="seat3d-table-label">{table.name}</div>
+          {/* At distanceFactor 11 a name pill was wider than the table it named, and
+              seven of them filled the frame. Lower is smaller here: the factor is the
+              distance at which the element draws at natural size, so raising it
+              enlarges the label rather than shrinking it. The names are already listed
+              in the panel beside the canvas; here they only need to be findable. */}
+          <Html center distanceFactor={6} position={[0, 1.15, 0]} zIndexRange={[10, 0]}>
+            <div className="seat3d-table-label" data-target={table.id === dropTargetId}>
+              {table.name}
+            </div>
           </Html>
         </group>
       ))}
@@ -519,12 +526,16 @@ export function ReceptionSeating3D({
         onPointerMissed={() => setDraggedId(null)}
         shadows
       >
-        <color args={["#f4ecdb"]} attach="background" />
-        {/* IBL now carries the fill, so the raw ambient/hemisphere are dialled
-            back to let the HDRI do the work and the directional stay the key. */}
-        <ambientLight intensity={0.32} />
-        <hemisphereLight args={["#fff3d8", "#cdbf9d", 0.35]} />
-        <directionalLight castShadow intensity={1.25} position={[4, 7, 4]} shadow-mapSize={[1024, 1024]} />
+        <color args={["#efe2cb"]} attach="background" />
+        {/* The product promises a candlelit dinner and this rig was lighting a
+            daylit exhibition hall: a bright cream background, a 1.25 sun and a
+            broad cool-ish fill, with the tapers on every table reduced to
+            decoration. The fill is pulled down and warmed so the candles read as
+            the light source they are, and the key is dropped to a soft warm wash
+            from above rather than a sun through a window that does not exist. */}
+        <ambientLight color="#ffe6bc" intensity={0.2} />
+        <hemisphereLight args={["#ffeccb", "#b9a582", 0.24]} />
+        <directionalLight castShadow color="#ffd9a2" intensity={0.78} position={[3, 8, 3]} shadow-mapSize={[1024, 1024]} />
         <HdrEnvironment url={INTERIOR_HDR_URL} />
         <Suspense fallback={null}>
           <SeatingScene
