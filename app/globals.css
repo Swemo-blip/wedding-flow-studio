@@ -5738,6 +5738,188 @@ a {
   margin: 18mm;
 }
 
+/* --- Print sheets ----------------------------------------------------------
+   Paper the couple hands to a guest. Built as paper on screen and printed from
+   the same markup, so there is no separate template to drift from the data. */
+.print-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.print-sheet-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.print-sheet-tabs button {
+  padding: 6px 15px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.print-sheet-tabs button[data-active="true"] {
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+.print-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.print-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 14px;
+}
+
+.print-place-card {
+  padding: 24px 16px 26px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.print-place-name {
+  font-family: var(--font-serif);
+  font-size: 1.06rem;
+  color: var(--ink);
+}
+
+.print-place-table {
+  margin-top: 5px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gilt);
+}
+
+.print-place-diet {
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.print-poster,
+.print-programme {
+  padding: 44px 40px 48px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.print-programme {
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.print-poster-couple {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--ink);
+}
+
+.print-poster-eyebrow {
+  margin: 5px 0 30px;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--gilt);
+}
+
+.print-poster-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 26px 22px;
+}
+
+.print-poster-table-name {
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.print-poster-guest {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.print-poster-empty {
+  font-style: italic;
+}
+
+.print-programme-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.print-programme-line span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--gilt);
+}
+
+.print-programme-line strong {
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.print-programme-block {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.print-programme-heading {
+  margin-bottom: 7px;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gilt);
+}
+
+.print-programme-note {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
 /* --- Moment library --------------------------------------------------------
    Collapsed by default so the timeline stays the focus; opening it reveals the
    day's standard pieces grouped in the order they happen, with the couple's own

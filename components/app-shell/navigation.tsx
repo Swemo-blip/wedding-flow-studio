@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FileCheck,
   FileText,
+  Printer,
   LayoutGrid,
   ListChecks,
   Mic2,
@@ -63,6 +64,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/preview", icon: Play, label: "Preview Day" },
       { href: "/summary", icon: FileCheck, label: "Summary" },
+      { href: "/print", icon: Printer, label: "Print" },
       { href: "/exports", icon: FileText, label: "Exports" },
       { href: "/director", icon: ClipboardList, label: "Roles" },
       { href: "/account", icon: CircleUser, label: "Account" }
