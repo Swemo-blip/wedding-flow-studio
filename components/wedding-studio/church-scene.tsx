@@ -1644,37 +1644,13 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
   return <instancedMesh args={[geometry, material, seats.length]} castShadow frustumCulled={false} ref={meshRef} />;
 }
 
-// A dining chair: tapered legs, a seat pad and an upholstered back. Placed behind
-// each diner so nobody is sitting on air, and instanced-cheap at four boxes.
-function DinnerChair({ position, rotationY }: { position: [number, number, number]; rotationY: number }) {
-  return (
-    <group position={position} rotation={[0, rotationY, 0]}>
-      {[
-        [-0.16, -0.16],
-        [0.16, -0.16],
-        [-0.16, 0.16],
-        [0.16, 0.16]
-      ].map(([lx, lz]) => (
-        <mesh castShadow key={`${lx}-${lz}`} position={[lx, 0.22, lz]}>
-          <boxGeometry args={[0.032, 0.44, 0.032]} />
-          <meshStandardMaterial color="#6f5a3c" roughness={0.62} />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, 0.45, 0]} receiveShadow>
-        <boxGeometry args={[0.4, 0.05, 0.4]} />
-        <meshStandardMaterial color="#e6dcc4" roughness={0.8} />
-      </mesh>
-      <mesh castShadow position={[0, 0.76, -0.19]}>
-        <boxGeometry args={[0.38, 0.56, 0.045]} />
-        <meshStandardMaterial color="#7b6644" roughness={0.6} />
-      </mesh>
-      <mesh castShadow position={[0, 0.78, -0.16]}>
-        <boxGeometry args={[0.31, 0.44, 0.02]} />
-        <meshStandardMaterial color="#e6dcc4" roughness={0.82} />
-      </mesh>
-    </group>
-  );
-}
+// The dinner guests genuinely have no chairs, and the chair I added was worse
+// than none: a 0.4m seat and 0.56m back written in world metres while the diners
+// around it are scaled far smaller, so the room filled with brown slabs taller
+// than the tables. Removed.
+//
+// Same lesson as the vestments: derive the size from the seated figure's actual
+// height at CONGREGATION_SCALE, not from what a chair measures in real life.
 
 function ChurchCongregation({ highQuality = true, seats }: { highQuality?: boolean; seats: CongregationSeat[] }) {
   return (
@@ -1879,6 +1855,19 @@ const POSE_BOUQUET: FigurePose = {
 
 // Just enough to unglue the arms from the torso and soften the elbows: used
 // while walking, and for anyone whose hands are doing something else.
+// Hands folded low and close, which is how someone stands while leading a service
+// rather than the groom's slightly wider clasp.
+const POSE_OFFICIANT: FigurePose = {
+  "Shoulder.L": [0, 0, -0.05],
+  "Shoulder.R": [0, 0, 0.05],
+  "UpperArm.L": [0.06, 0.04, -0.16],
+  "UpperArm.R": [0.06, -0.04, 0.16],
+  "LowerArm.L": [0.72, 0, -0.26],
+  "LowerArm.R": [0.72, 0, 0.26],
+  "Palm.L": [0.16, 0, -0.1],
+  "Palm.R": [0.16, 0, 0.1]
+};
+
 const POSE_RELAXED: FigurePose = {
   "Shoulder.L": [0, 0, -0.04],
   "Shoulder.R": [0, 0, 0.04],
@@ -2194,63 +2183,15 @@ function StagingHandles({
   );
 }
 
-// A dark suit with an ivory shirt is a man in a dark suit, not an officiant. The
-// thing that actually reads as clergy at a glance is the vestment: a pale alb over
-// the cassock and a stole hanging from the shoulders. Two flat panels and a lathe
-// do it, and they sit on top of the figure rather than replacing it.
-function Vestments() {
-  const albGeometry = useMemo(() => {
-    const profile: [number, number][] = [
-      [0.0, 0.0],
-      [0.235, 0.0],
-      [0.225, 0.06],
-      [0.205, 0.2],
-      [0.185, 0.36],
-      [0.168, 0.5],
-      [0.156, 0.62],
-      [0.15, 0.7]
-    ];
-    const lathe = new THREE.LatheGeometry(
-      profile.map(([radius, height]) => new THREE.Vector2(radius, height)),
-      32
-    );
-    lathe.computeVertexNormals();
-    return lathe;
-  }, []);
-
-  return (
-    <group>
-      <mesh castShadow geometry={albGeometry} position={[0, 0.02, 0]}>
-        <meshStandardMaterial color="#f3ede0" roughness={0.74} side={THREE.DoubleSide} />
-      </mesh>
-      {/* Stole: one panel each side of the chest, falling from the shoulders. */}
-      {[-0.078, 0.078].map((x) => (
-        <mesh castShadow key={x} position={[x, 0.94, 0.088]} rotation={[0.05, 0, x < 0 ? 0.035 : -0.035]}>
-          <boxGeometry args={[0.072, 0.58, 0.012]} />
-          <meshStandardMaterial color="#3c4a33" roughness={0.7} />
-        </mesh>
-      ))}
-      {/* The band across the back of the neck that joins them. */}
-      <mesh castShadow position={[0, 1.22, 0.01]}>
-        <boxGeometry args={[0.2, 0.055, 0.15]} />
-        <meshStandardMaterial color="#3c4a33" roughness={0.7} />
-      </mesh>
-    </group>
-  );
-}
-
-// Hands folded low and close, which is how someone stands while leading a service
-// — not the groom's slightly wider clasp.
-const POSE_OFFICIANT: FigurePose = {
-  "Shoulder.L": [0, 0, -0.05],
-  "Shoulder.R": [0, 0, 0.05],
-  "UpperArm.L": [0.06, 0.04, -0.16],
-  "UpperArm.R": [0.06, -0.04, 0.16],
-  "LowerArm.L": [0.72, 0, -0.26],
-  "LowerArm.R": [0.72, 0, 0.26],
-  "Palm.L": [0.16, 0, -0.1],
-  "Palm.R": [0.16, 0, 0.1]
-};
+// The officiant needs vestments to read as clergy, and my first attempt at them
+// was a white lathe bell with the stole panels at head height — a cone with a
+// green rectangle across his face. Removed rather than left in.
+//
+// Whoever builds the next version: MEASURE the figure first. The rig is scaled by
+// FIGURE_SCALE on the primitive but the armature carries an internal scale of 100,
+// so nothing about vertical placement can be reasoned about from the numbers in
+// this file. Read the real bounding box and the real shoulder/neck heights from
+// the loaded object before writing a single coordinate.
 
 function Celebrant({ mark }: { mark: StudioSceneOffset }) {
   // The officiant waits at the altar, facing the congregation.
@@ -2258,7 +2199,6 @@ function Celebrant({ mark }: { mark: StudioSceneOffset }) {
   return (
     <group position={[home.x + mark.x, 0, home.z + mark.z]}>
       <AnimatedFigure clip="idle" pose={POSE_OFFICIANT} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
-      <Vestments />
     </group>
   );
 }
@@ -3519,9 +3459,6 @@ function ReceptionInterior({
     return tablePositions.map(() => perTable);
   }, [capacity.seatsPerRow, dinnerTables, hasRealTables, tablePositions]);
   const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatCounts), [seatCounts, tablePositions]);
-  // Guests were sitting on nothing. The comment above about "a chair" only ever
-  // governed seat COUNTS — no chair was ever modelled, so every diner floated.
-  const dinnerChairs = useMemo(() => buildReceptionSeats(tablePositions, seatCounts), [seatCounts, tablePositions]);
   // The couple, seated at the head table (z=-4.3), just behind it and facing the
   // room (+z). Appended to the guest seats so one instanced congregation draws
   // everyone — the couple always appear, even before any guests are seated.
@@ -3601,9 +3538,6 @@ function ReceptionInterior({
           {/* One congregation instance covers the guest tables AND the couple at
               the head table, so the couple ride the same instanced meshes rather
               than spawning a second full 9-variant congregation. */}
-          {dinnerChairs.map((seat) => (
-            <DinnerChair key={`chair-${seat.id}`} position={seat.position} rotationY={seat.rotationY} />
-          ))}
           <ChurchCongregation highQuality={highQuality} seats={receptionSeatsWithCouple} />
         </Suspense>
       </EditableSceneObject>
