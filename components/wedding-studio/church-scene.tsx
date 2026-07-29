@@ -780,7 +780,10 @@ function WeddingStageInterior({
   // and run the processional; only the venue shell differs.
   const ceremonyVenue = venueType === "church" || venueType === "garden" || venueType === "beach";
   const decorScale = budgetLevel === "signature" ? 1.2 : budgetLevel === "elevated" ? 1 : 0.72;
-  const showGuests = ["ceremony", "guests", "share", "timeline"].includes(activeStep);
+  // A church with pews and no congregation is a worse lie than any framing choice.
+  // This was an allow-list that omitted "vision" — the home studio's own default
+  // step — so the front page rendered a fully furnished nave with nobody in it.
+  const showGuests = activeStep !== "venue";
   const surface = getVenueSurface(venueType, palette);
 
   // The persisted ceremony choices reshape the real geometry: the runner widens
@@ -1889,11 +1892,18 @@ function AnimatedFigure({
     if (!pose) {
       return [];
     }
-    const entries: { bone: THREE.Object3D; offset: THREE.Quaternion }[] = [];
+    const entries: { bone: THREE.Object3D; posed: THREE.Quaternion }[] = [];
     Object.entries(pose).forEach(([name, [x, y, z]]) => {
       const bone = findBone(object, name);
       if (bone) {
-        entries.push({ bone, offset: new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)) });
+        // Rest pose composed with the offset ONCE, here. Composing per frame was
+        // the bug: the mixer only writes the bones a clip actually animates, so
+        // for every bone the idle clip leaves alone — the shoulders and palms —
+        // `quaternion.multiply(offset)` compounded on itself every frame and the
+        // arms rotated without end. A still frame cannot show that; only watching
+        // it can.
+        const posedQuat = bone.quaternion.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)));
+        entries.push({ bone, posed: posedQuat });
       }
     });
     return entries;
@@ -1902,9 +1912,12 @@ function AnimatedFigure({
   // Registered after the mixer's own useFrame at the same priority, so React
   // Three Fiber runs it second and the offsets land on top of the clip. Raising
   // the priority instead would switch off automatic rendering.
+  // Assignment, never accumulation. These bones are fully owned by the pose, so
+  // the clip's own arm motion is overridden on them — which is what a figure
+  // standing still at an altar wants anyway.
   useFrame(() => {
-    for (const { bone, offset } of posed) {
-      bone.quaternion.multiply(offset);
+    for (const entry of posed) {
+      entry.bone.quaternion.copy(entry.posed);
     }
   });
 
@@ -2328,7 +2341,9 @@ const PEW_BLOCK_X = 2.2;
 // against half a hall of empty benches. Eight seats per row is what the 3D lays
 // out, four each side of the aisle.
 const NAVE_SEATS_PER_ROW = 8;
-const MIN_PEW_ROWS = 5;
+// A nave reads as a church at eight rows; below that it reads as a chapel set
+// built for the render. Small weddings still fill only the front rows.
+const MIN_PEW_ROWS = 8;
 const MAX_PEW_ROWS = 14;
 
 function navePewRows(guestCount: number) {
