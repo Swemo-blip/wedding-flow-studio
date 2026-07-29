@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
+import { Billboard, ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
@@ -167,6 +167,10 @@ type CeremonySceneProps = {
   // Who stands where. Optional so surfaces that only preview the day (exports,
   // the shared link) keep working without owning a staging editor.
   staging?: CeremonyStaging;
+  // Uploaded faces. The congregation array is positional: entry N belongs to the
+  // Nth seat the church fills, which is the same order the guest list is in.
+  congregationPhotos?: (string | null)[];
+  couplePhotos?: { bride: string | null; groom: string | null };
   onMoveStagingMark?: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
   cameraOverride?: SceneCameraOverride | null;
   firstPerson?: CeremonyFirstPerson;
@@ -345,6 +349,8 @@ export function CeremonyScene({
   cameraOverride = null,
   firstPerson = null,
   highQuality = true,
+  congregationPhotos,
+  couplePhotos,
   lighting = "dusk",
   onMoveStagingMark,
   staging,
@@ -537,6 +543,8 @@ export function CeremonyScene({
             processionalPlaying={autoProcessional ?? processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
+            congregationPhotos={congregationPhotos}
+            couplePhotos={couplePhotos}
             onMoveStagingMark={onMoveStagingMark}
             staging={activeStaging}
             venueType={effectiveVenue}
@@ -740,6 +748,8 @@ function WeddingStageInterior({
   sceneEdits,
   seatingLayout = "Traditional",
   selectedObjectId,
+  congregationPhotos,
+  couplePhotos,
   onMoveStagingMark,
   staging,
   venueType,
@@ -761,6 +771,8 @@ function WeddingStageInterior({
   sceneEdits: StudioSceneEdits;
   seatingLayout?: string;
   selectedObjectId: StudioSceneObjectId;
+  congregationPhotos?: (string | null)[];
+  couplePhotos?: { bride: string | null; groom: string | null };
   onMoveStagingMark?: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
   staging: CeremonyStaging;
   venueType: StudioVenueType;
@@ -965,10 +977,15 @@ function WeddingStageInterior({
             ) : null}
           </EditableSceneObject>
 
+          {ceremonyVenue && congregationPhotos && showGuests ? (
+            <CongregationFaces photos={congregationPhotos} seats={seatedGuests} />
+          ) : null}
+
           {ceremonyVenue && activeStep !== "venue" ? (
             <Suspense fallback={null}>
               <Celebrant mark={staging.marks.celebrant} />
               <Processional
+                couplePhotos={couplePhotos}
                 coupleMark={staging.marks.couple}
                 groomStart={staging.groomStart}
                 headsRef={coupleHeadsRef}
@@ -1740,6 +1757,48 @@ const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d
 // silent no-op: the offsets were computed, the per-frame multiply ran over an
 // empty list, and the figures kept the clip's own dead-straight arms. Both
 // spellings are tried so a re-export cannot switch this off again unnoticed.
+// A guest's own photo, standing in for a face. The congregation is an
+// InstancedMesh, and instances cannot carry individual textures — so the faces
+// are separate camera-facing discs placed at each occupied seat's head height,
+// drawn only for the guests who actually uploaded a picture. Everyone else keeps
+// the sculpted alabaster head, which is honest: no invented likeness.
+const CONGREGATION_FACE_Y = 0.79;
+const COUPLE_FACE_Y = 1.27;
+
+function FaceDisc({ photoUrl, radius }: { photoUrl: string; radius: number }) {
+  const texture = useMemo(() => {
+    const loaded = new THREE.TextureLoader().load(photoUrl);
+    loaded.colorSpace = THREE.SRGBColorSpace;
+    return loaded;
+  }, [photoUrl]);
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return (
+    <mesh>
+      <circleGeometry args={[radius, 40]} />
+      <meshBasicMaterial map={texture} toneMapped={false} transparent />
+    </mesh>
+  );
+}
+
+function CongregationFaces({ photos, seats }: { photos: (string | null)[]; seats: CongregationSeat[] }) {
+  return (
+    <>
+      {seats.map((seat, index) => {
+        const photoUrl = photos[index];
+        if (!photoUrl) {
+          return null;
+        }
+        return (
+          <Billboard key={seat.id} position={[seat.position[0], CONGREGATION_FACE_Y, seat.position[2]]}>
+            <FaceDisc photoUrl={photoUrl} radius={0.1} />
+          </Billboard>
+        );
+      })}
+    </>
+  );
+}
+
 function findBone(root: THREE.Object3D, name: string) {
   return root.getObjectByName(name) ?? root.getObjectByName(name.replace(/\./g, "")) ?? null;
 }
@@ -2213,12 +2272,14 @@ function Bouquet() {
 // Re-mounted (via React key) to restart, so progress + pose reset cleanly.
 function Processional({
   coupleMark,
+  couplePhotos,
   groomStart,
   headsRef,
   hideFigure = null,
   playing
 }: {
   coupleMark: StudioSceneOffset;
+  couplePhotos?: { bride: string | null; groom: string | null };
   groomStart: CeremonyGroomStart;
   headsRef?: { current: CoupleHeads };
   hideFigure?: CeremonyFirstPerson;
@@ -2309,6 +2370,11 @@ function Processional({
             rotationY={0}
             url={FIGURE_SUIT}
           />
+          {couplePhotos?.groom ? (
+            <Billboard position={[0, COUPLE_FACE_Y, 0]}>
+              <FaceDisc photoUrl={couplePhotos.groom} radius={0.115} />
+            </Billboard>
+          ) : null}
         </group>
       ) : null}
       {hideFigure !== "bride" ? (
@@ -2316,6 +2382,11 @@ function Processional({
           <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
           <BridalGown />
           <Bouquet />
+          {couplePhotos?.bride ? (
+            <Billboard position={[0, COUPLE_FACE_Y, 0]}>
+              <FaceDisc photoUrl={couplePhotos.bride} radius={0.115} />
+            </Billboard>
+          ) : null}
         </group>
       ) : null}
     </>

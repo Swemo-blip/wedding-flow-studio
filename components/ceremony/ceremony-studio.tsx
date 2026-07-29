@@ -13,6 +13,7 @@ import {
   type CeremonyStagingMarkId
 } from "@/lib/wedding-studio-plan";
 import { useTranslation } from "@/lib/i18n";
+import { useCouplePhotos } from "@/lib/use-couple-photos";
 import { useLocalProject } from "@/lib/use-local-project";
 import { readStoredWeddingStudioLayout, writeStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import {
@@ -171,6 +172,13 @@ export function CeremonyStudio() {
   const comfort = comfortFromCapacity(capacity.capacityStatus);
   const seatedCount = Math.min(invitedGuests, capacity.totalCapacity);
   const seatsRemaining = Math.max(0, capacity.totalCapacity - invitedGuests);
+
+  // Faces for the 3D. The array is positional: entry N belongs to the Nth seat the
+  // church fills, which is the order the guest list is already in. Guests with no
+  // photo get a null and keep the sculpted head — no invented likeness.
+  const congregationPhotos = useMemo(() => guests.map((guest) => guest.photoUrl ?? null), [guests]);
+  const { bride: bridePhoto, groom: groomPhoto } = useCouplePhotos();
+  const couplePhotos = useMemo(() => ({ bride: bridePhoto, groom: groomPhoto }), [bridePhoto, groomPhoto]);
 
   const planning = canvasTab === "plan";
   const viewMode: StudioViewMode = planning ? "top" : guestEye ? "guest" : "3d";
@@ -448,6 +456,8 @@ export function CeremonyStudio() {
                 cameraOverride={cameraOverride}
                 capacity={capacity}
                 colorDirection={plan.colorDirection}
+                congregationPhotos={congregationPhotos}
+                couplePhotos={couplePhotos}
                 firstPerson={effectiveFirstPerson}
                 highQuality={highQuality}
                 lighting={lighting}

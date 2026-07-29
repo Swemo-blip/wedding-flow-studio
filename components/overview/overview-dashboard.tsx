@@ -30,6 +30,7 @@ import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
 import { clearStoredCurrency } from "@/lib/use-currency";
+import { useCouplePhotos } from "@/lib/use-couple-photos";
 import { useLocalProject } from "@/lib/use-local-project";
 import { formatWeddingDate } from "@/lib/utils";
 import { previewPhases, sampleWedding } from "@/lib/wedding-data";
@@ -96,6 +97,10 @@ export function OverviewDashboard() {
   // page shows the ceremony the couple actually staged — a groom waiting at the
   // altar, a singer in the room — instead of silently reverting to defaults.
   const [staging, setStaging] = useState(defaultCeremonyStaging);
+  const congregationPhotos = useMemo(() => localProject.guests.map((guest) => guest.photoUrl ?? null), [localProject.guests]);
+  const { bride: bridePhoto, groom: groomPhoto } = useCouplePhotos();
+  const couplePhotos = useMemo(() => ({ bride: bridePhoto, groom: groomPhoto }), [bridePhoto, groomPhoto]);
+
   const capacity = useMemo(
     () => calculateWeddingStudioCapacity({ ...plan, guestCount: localProject.guests.length }),
     [plan, localProject.guests.length]
@@ -550,6 +555,8 @@ export function OverviewDashboard() {
                 aisleWidthFeet={plan.aisleWidthFeet}
                 budgetLevel={plan.budgetLevel}
                 capacity={capacity}
+                congregationPhotos={congregationPhotos}
+                couplePhotos={couplePhotos}
                 dinnerTables={localProject.dinnerTables}
                 seatingLayout={plan.seatingLayout}
                 colorDirection={plan.colorDirection}
