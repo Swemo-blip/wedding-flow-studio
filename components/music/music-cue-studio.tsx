@@ -17,7 +17,7 @@ const musicRiskKinds = ["risk-music-backup", "risk-music-start-cue", "risk-cue-c
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
-  const { addMusicCue, musicCues, removeMusicCue, resetMusicCues, timelineItems, updateMusicCue, wedding } = useLocalProject();
+  const { addMusicCue, musicCues, removeMusicCue, resetMusicCues, timelineItems, updateMusicCue, updateWedding, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedCueId, setSelectedCueId] = useState(musicCues[0]?.id ?? "");
   const selectedCue = musicCues.find((cue) => cue.id === selectedCueId) ?? musicCues[0];
@@ -74,6 +74,22 @@ export function MusicCueStudio() {
       primaryAction={{ href: "/preview", label: "Preview cues" }}
       title="The soundtrack of the day."
     >
+      {/* The couple's own playlist, as a link they paste. No streaming integration
+          and no API — the app opens what they already built where they built it. */}
+      <label className="field music-playlist-field">
+        <span>{t("Your playlist")}</span>
+        <input
+          onChange={(event) => updateWedding({ playlistUrl: event.target.value })}
+          placeholder={t("Paste a Spotify or Apple Music link")}
+          value={wedding.playlistUrl ?? ""}
+        />
+      </label>
+      {(wedding.playlistUrl ?? "").trim() ? (
+        <a className="button-secondary music-playlist-open" href={wedding.playlistUrl} rel="noreferrer" target="_blank">
+          {t("Open the playlist")}
+        </a>
+      ) : null}
+
       <div className="detail-studio">
         <div aria-label={t("Music cues")} className="detail-studio-list" role="tablist">
           {musicCues.map((cue, index) => {

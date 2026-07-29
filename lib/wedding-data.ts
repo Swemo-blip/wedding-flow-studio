@@ -22,6 +22,7 @@ export const sampleWedding: Wedding = {
   guestCount: 112,
   style: "Classic church elegance, warm ivory, soft champagne, candlelit, black tie optional",
   plannerName: "Olivia Hart",
+  playlistUrl: "",
   status: "Production map in progress"
 };
 

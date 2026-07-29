@@ -24,6 +24,10 @@ export type Wedding = {
   style: string;
   plannerName: string;
   status: string;
+  // A link to the couple's own playlist, pasted by them. Deliberately just a URL:
+  // no streaming integration, no API key, nothing paid — the app opens what they
+  // already built wherever they built it.
+  playlistUrl: string;
 };
 
 export type Guest = {

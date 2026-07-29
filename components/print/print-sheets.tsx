@@ -7,13 +7,15 @@ import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
 import { sortTimelineByTime } from "@/lib/utils";
 import { menuCourseLabels, sortMenuCourses } from "@/lib/wedding-menu";
+import { buildSupplyList, supplyGroups } from "@/lib/wedding-supplies";
 
-type SheetId = "placeCards" | "tablePlan" | "orderOfService";
+type SheetId = "placeCards" | "tablePlan" | "orderOfService" | "supplies";
 
 const SHEETS: { id: SheetId; label: string }[] = [
   { id: "placeCards", label: "Place cards" },
   { id: "tablePlan", label: "Table plan" },
-  { id: "orderOfService", label: "Order of service" }
+  { id: "orderOfService", label: "Order of service" },
+  { id: "supplies", label: "Shopping list" }
 ];
 
 export function PrintSheets() {
@@ -70,6 +72,11 @@ export function PrintSheets() {
     () => speeches.filter((speech) => speech.speakerName.trim() && !speech.isSecret && speech.visibility === "everyone"),
     [speeches]
   );
+
+  // Quantities derive from the couple's own counts, and each line shows what it
+  // was derived from — a number with no visible basis is the kind of invented
+  // figure this product does not ship.
+  const supplies = useMemo(() => buildSupplyList(guests, dinnerTables), [dinnerTables, guests]);
 
   return (
     <StudioRouteFrame
@@ -189,6 +196,37 @@ export function PrintSheets() {
               ))}
             </div>
           ) : null}
+        </article>
+      ) : null}
+      {sheet === "supplies" ? (
+        <article className="print-poster">
+          <p className="print-poster-couple">{wedding.coupleNames}</p>
+          <p className="print-poster-eyebrow">{t("What to buy")}</p>
+          {supplies.length === 0 ? (
+            <p className="studio-inspector-note">{t("Add guests and tables and the counts appear here.")}</p>
+          ) : (
+            supplyGroups.map((group) => {
+              const lines = supplies.filter((line) => line.group === group);
+              if (lines.length === 0) {
+                return null;
+              }
+              return (
+                <div className="supply-group" key={group}>
+                  <p className="print-programme-heading">{t(group)}</p>
+                  {lines.map((line) => (
+                    <div className="supply-line" key={line.id}>
+                      <span className="supply-count">{line.quantity > 0 ? line.quantity : "—"}</span>
+                      <span className="supply-item">
+                        <strong>{t(line.item)}</strong>
+                        <em>{t(line.basis)}</em>
+                        {line.note ? <span>{t(line.note)}</span> : null}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })
+          )}
         </article>
       ) : null}
     </StudioRouteFrame>

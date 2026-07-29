@@ -117,6 +117,7 @@ export function composeWeddingProducerPlan(input: WeddingProducerIntake): Weddin
     id: slugify(`${coupleNames}-${input.date || "wedding"}`),
     partnerOneName,
     partnerTwoName,
+    playlistUrl: "",
     plannerName: input.vendorRoles.includes("Wedding Planner") ? "Wedding Planner" : "Planning Lead",
     receptionLocation,
     status: "Digital twin generated from Wedding Producer Intake",

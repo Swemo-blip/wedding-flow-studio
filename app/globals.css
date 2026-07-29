@@ -5920,6 +5920,62 @@ a {
   color: var(--ink-soft);
 }
 
+.music-playlist-field {
+  max-width: 520px;
+  margin-bottom: 12px;
+}
+
+.music-playlist-open {
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.supply-group + .supply-group {
+  margin-top: 22px;
+}
+
+.supply-line {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.supply-count {
+  flex: 0 0 44px;
+  font-family: var(--font-serif);
+  font-size: 1.06rem;
+  text-align: right;
+  color: var(--accent);
+}
+
+.supply-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.supply-item strong {
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.supply-item em {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-style: normal;
+  color: var(--gilt);
+}
+
+.supply-item span {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+}
+
 /* --- Moment library --------------------------------------------------------
    Collapsed by default so the timeline stays the focus; opening it reveals the
    day's standard pieces grouped in the order they happen, with the couple's own

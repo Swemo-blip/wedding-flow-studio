@@ -158,6 +158,7 @@ function blankWedding(): Wedding {
     guestCount: 0,
     style: "",
     plannerName: "",
+    playlistUrl: "",
     status: ""
   };
 }
@@ -545,6 +546,7 @@ function isWedding(value: unknown): value is Wedding {
     typeof wedding.guestCount === "number" &&
     typeof wedding.style === "string" &&
     typeof wedding.plannerName === "string" &&
+    (typeof wedding.playlistUrl === "string" || typeof wedding.playlistUrl === "undefined") &&
     typeof wedding.status === "string"
   );
 }
