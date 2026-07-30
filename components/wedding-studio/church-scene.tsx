@@ -1487,6 +1487,28 @@ const CONGREGATION_MODELS = [
 
 // The baked meshes stand ~4 source units tall; scale to a seated guest that
 // reads correctly at church scale.
+// MEASURED, not assumed. Read off the live scene on 2026-07-29 via the dev-only
+// window.__wfsScene hook, because nothing about scale in this file can be reasoned
+// about from its own numbers:
+//
+//   Seated congregation geometry .... 4.001 units tall, minY exactly 0
+//   Instance scale ................. CONGREGATION_SCALE, so ~0.82 m in world
+//   Standing hero rig node scale ... 23.5 (the armature carries an internal 100,
+//                                    NOT the 0.235 on the primitive)
+//   Dinner table height ............ 0.66 (TABLE_HEIGHT in dinner-props.tsx)
+//
+// A seated figure is therefore 0.82 m from base to crown. Anything placed against
+// it must be derived from that, in these proportions — the chair I wrote in real
+// world metres (0.45 m seat, 0.56 m back) came out nearly as tall as the person
+// and filled the dinner with brown slabs. Real-life dimensions are the wrong unit
+// here.
+//   => A seated guest occupies 4.001 * 0.205 = 0.82 m from base to crown.
+//
+// Derive anything placed against a diner from that 0.82, in its proportions. A
+// chair seat belongs near 0.30 and its back near 0.62 — NOT the 0.45 and 0.56 a
+// real chair measures, which came out nearly as tall as the person. The one number
+// still missing before that chair can be built is the dinner seat's own y in the
+// instance matrix; read it in the DINNER view, not the church.
 const CONGREGATION_SCALE = 0.205;
 
 if (typeof window !== "undefined") {
