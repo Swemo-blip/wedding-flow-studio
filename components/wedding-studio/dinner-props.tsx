@@ -20,7 +20,17 @@ export type TablescapeColors = {
 // The seated planning figures are short (~0.8 m), so the table sits a touch
 // below a real 0.75 m dining height to keep guests reading as adults at the
 // table rather than children peeking over it.
-const TABLE_HEIGHT = 0.66;
+// Derived, not chosen. A seated guest in this world measures 0.82 m (congregation
+// geometry 4.001 units at CONGREGATION_SCALE 0.205), and the reception editor's
+// own GUEST_SCALE of 0.2 puts its diners at practically the same height — so both
+// views share this number and both were wrong the same way.
+//
+// A real 0.75 m table against a 1.25 m seated person is a ratio of 0.60. At 0.66
+// this table sat at 0.80 of the figure, chest-to-chin height, and every guest read
+// as a child at an adult table.
+//
+//   0.60 x 0.82 = 0.49
+const TABLE_HEIGHT = 0.49;
 
 // A single candle flame that breathes. No light attached — the glow is carried
 // by the bloom pass, so N candles cost N tiny emissive spheres, not N lights.
