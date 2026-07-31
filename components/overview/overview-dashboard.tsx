@@ -101,6 +101,17 @@ export function OverviewDashboard() {
   const { bride: bridePhoto, groom: groomPhoto } = useCouplePhotos();
   const couplePhotos = useMemo(() => ({ bride: bridePhoto, groom: groomPhoto }), [bridePhoto, groomPhoto]);
 
+  // The couple already told the intake how many people they expect. Turning that
+  // number into real seats is one click from the empty church rather than a trip to
+  // another page — and they are numbered placeholders, so nothing invented ever
+  // reaches a place card.
+  function blockOutSeats() {
+    const wanted = Math.max(0, plan.guestCount - localProject.guests.length);
+    for (let index = 0; index < wanted; index += 1) {
+      localProject.addGuest({ name: `${t("Seat")} ${localProject.guests.length + index + 1}`, rsvpStatus: "pending" });
+    }
+  }
+
   const capacity = useMemo(
     () => calculateWeddingStudioCapacity({ ...plan, guestCount: localProject.guests.length }),
     [plan, localProject.guests.length]
@@ -653,6 +664,11 @@ export function OverviewDashboard() {
                 : invitedGuests === 0
                   ? t("No guests on your list yet — add them and they fill the pews")
                   : `${invitedGuests} ${t("guests")} · ${capacity.totalCapacity} ${t("seats")}`}
+              {invitedGuests === 0 && plan.guestCount > 0 ? (
+                <button className="vstudio-status-action" onClick={blockOutSeats} type="button">
+                  {t("Block out")} {plan.guestCount} {t("seats")}
+                </button>
+              ) : null}
             </span>
             <span className="vstudio-status-selected">
               {t("Selected")}: {selectedObjectLabel}

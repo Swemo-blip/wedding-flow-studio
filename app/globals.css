@@ -5930,6 +5930,19 @@ a {
   margin-bottom: 20px;
 }
 
+.vstudio-status-action {
+  margin-left: 10px;
+  padding: 4px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink-on-accent);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .guests-rejected-note {
   padding: 9px 13px;
   margin-bottom: 10px;
