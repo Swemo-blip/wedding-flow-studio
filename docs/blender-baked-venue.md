@@ -156,3 +156,30 @@ This is the **XL** step. The cheaper ~60–70% of the visual jump — better ana
 key/fill, camera, and PBR textures on the current shells — comes first and is
 lower-risk; the baked shell is the finisher. Do church first (highest-value, most
 seen), prove the pipeline end-to-end on the live deploy, then repeat for the hall.
+
+## West portal and doors — measured spec for the next attempt
+
+Attempted 2026-07-31 and reverted: the doors rendered at 2.4x the right size
+because they were written with real-world dimensions (3.1 m leaf) against figures
+that measure ~1.1 m in this world. Fourth instance of the same mistake in one day.
+
+The numbers, all derived from measured heights (see the MEASURED block in
+church-scene.tsx):
+
+- Standing figure: **1.1 m** (bone heights read from figure_suit.glb: neck 0.951,
+  head 0.997 at FIGURE_SCALE 0.235).
+- A real 2.05 m door against a 1.75 m person is a ratio of **1.17**.
+- So a door leaf here is **1.29 m tall**, and a double door **1.1 m wide total**
+  (0.55 m per leaf).
+- Portal opening: **1.2 x 1.4 m**, not the 2.2 x 3.2 that was tried.
+- West wall belongs at **z = +6.3** (the side walls run z -6.1 to +6.3 — they are
+  12.4 long, centred at 0.1). Same form as the altar wall: 10.1 wide,
+  wallHeight + 1.9 tall, 0.22 thick.
+- Piers either side of a 1.2 opening: 4.45 wide each, centred at x = ∓2.825.
+- Lintel above: 1.2 wide, from y 1.4 to 7.5.
+- Hinge each leaf in a group at the pier edge with the panel offset half its width,
+  so it swings about its edge. Verified working — only the scale was wrong.
+
+Verify by pointing the camera from inside the nave back at the west end
+(position [0, 1.9, 1.5], lookAt [0, 1.8, 8]) and checking the door height against
+the couple standing in frame.
