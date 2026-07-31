@@ -421,6 +421,7 @@ const sv: Record<string, string> = {
   "Warm lighting lifts the altar and softens the room for photos.": "Varmt ljus lyfter altaret och mjukar upp rummet för foton.",
   "Play processional": "Spela upp processionen",
   "Menu": "Meny",
+  "No guests on your list yet — add them and they fill the pews": "Inga gäster på din lista än — lägg till dem och de fyller bänkarna",
   "Photos": "Foton",
   "The pictures you would regret not taking.": "Bilderna du skulle ångra att du inte tog.",
   "Print the list": "Skriv ut listan",

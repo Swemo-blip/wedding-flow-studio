@@ -4096,11 +4096,20 @@ function formatVenueLabel(venueType: StudioVenueType) {
 }
 
 function getSceneSignal(activeStep: StudioPlanningStepId, capacity: WeddingStudioCapacity, venueType: StudioVenueType) {
+  // An empty nave has to say why it is empty. The pews are architecture and always
+  // render, so with nobody on the guest list the church came out fully furnished
+  // and completely deserted, with no line anywhere explaining that the couple
+  // simply had not added anyone yet. Silence there reads as a broken render.
+  const emptyGuestList = capacity.visibleGuestMarkers === 0;
+  const seatedSignal = emptyGuestList
+    ? "No guests on your list yet — add them and they fill the pews"
+    : `${navePewRows(capacity.visibleGuestMarkers)} pew rows set`;
+
   const labels: Record<StudioPlanningStepId, string> = {
-    ceremony: `${navePewRows(capacity.visibleGuestMarkers)} pew rows set`,
+    ceremony: seatedSignal,
     budget: "Budget level visualized",
-    guests: `${capacity.visibleGuestMarkers} guest markers shown`,
-    preview: "Preview perspective ready",
+    guests: emptyGuestList ? seatedSignal : `${capacity.visibleGuestMarkers} guest markers shown`,
+    preview: seatedSignal,
     reception: "Dinner room shown",
     share: "Summary layer ready",
     timeline: "Day flow connected",
