@@ -70,6 +70,48 @@ function TaperCandle({ candleColor, height, position, seed }: { candleColor: str
 // a trio of tapers at its centre. `radius` matches the caller's table size so
 // the cloth lines up with the seat ring. Memoized because the seating editor
 // re-renders its whole scene on every drag frame — the static tables must not.
+// A dining chair, DERIVED. Every number below is a proportion of the seated
+// guest's measured 0.82 m, never a real chair's dimensions — that mistake put
+// brown slabs taller than the diners into this room once already.
+//
+//   seat surface  0.36 x 0.82 = 0.295   (real: 0.45 m of a 1.25 m seated height)
+//   back top      0.72 x 0.82 = 0.59
+//   seat width    0.36 x 0.82 = 0.295
+//   leg section   0.028 x 0.82 = 0.023
+//
+// buildReceptionSeats puts the figure's base at y = 0 and yaws it so its local +z
+// points at the table, so the back belongs at local -z, behind the sitter.
+const CHAIR_SEAT_Y = 0.295;
+const CHAIR_WIDTH = 0.295;
+
+export function DinnerChair({ position, rotationY }: { position: [number, number, number]; rotationY: number }) {
+  const half = CHAIR_WIDTH / 2 - 0.03;
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      {[
+        [-half, -half],
+        [half, -half],
+        [-half, half],
+        [half, half]
+      ].map(([lx, lz]) => (
+        <mesh castShadow key={`${lx}-${lz}`} position={[lx, CHAIR_SEAT_Y / 2, lz]}>
+          <boxGeometry args={[0.023, CHAIR_SEAT_Y, 0.023]} />
+          <meshStandardMaterial color="#6f5a3c" roughness={0.62} />
+        </mesh>
+      ))}
+      <mesh castShadow position={[0, CHAIR_SEAT_Y, 0]} receiveShadow>
+        <boxGeometry args={[CHAIR_WIDTH, 0.026, CHAIR_WIDTH]} />
+        <meshStandardMaterial color="#e6dcc4" roughness={0.8} />
+      </mesh>
+      <mesh castShadow position={[0, 0.445, -CHAIR_WIDTH / 2 + 0.014]}>
+        <boxGeometry args={[CHAIR_WIDTH - 0.02, 0.29, 0.02]} />
+        <meshStandardMaterial color="#7b6644" roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
 function DinnerTablescapeImpl({
   colors,
   height = TABLE_HEIGHT,

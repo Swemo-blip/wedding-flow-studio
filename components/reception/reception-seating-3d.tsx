@@ -8,7 +8,7 @@ import { type ComponentRef, memo, Suspense, useEffect, useMemo, useRef, useState
 import * as THREE from "three";
 import { LoopSubdivision } from "three-subdivide";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
-import { DinnerTablescape } from "@/components/wedding-studio/dinner-props";
+import { DinnerChair, DinnerTablescape } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import type { DinnerTable, Guest } from "@/lib/wedding-types";
@@ -461,6 +461,13 @@ function SeatingScene({
             </div>
           </Html>
         </group>
+      ))}
+
+      {/* The editor's diners were floating too. Same shared chair, same derivation
+          from the seated figure: GUEST_SCALE 0.2 here against CONGREGATION_SCALE
+          0.205 in the immersive dinner is the same person to within a centimetre. */}
+      {seats.map((seat) => (
+        <DinnerChair key={`chair-${seat.guest.id}`} position={seat.position} rotationY={seat.rotationY} />
       ))}
 
       {seats.map((seat) => (
