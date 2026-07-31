@@ -2247,15 +2247,66 @@ function StagingHandles({
   );
 }
 
-// The officiant needs vestments to read as clergy, and my first attempt at them
-// was a white lathe bell with the stole panels at head height — a cone with a
-// green rectangle across his face. Removed rather than left in.
+// Vestments, built on MEASURED bone heights. Read straight out of figure_suit.glb
+// by accumulating node translations through the parent chain (the HumanArmature
+// carries scale 100, which is why nothing here can be eyeballed):
 //
-// Whoever builds the next version: MEASURE the figure first. The rig is scaled by
-// FIGURE_SCALE on the primitive but the armature carries an internal scale of 100,
-// so nothing about vertical placement can be reasoned about from the numbers in
-// this file. Read the real bounding box and the real shoulder/neck heights from
-// the loaded object before writing a single coordinate.
+//   foot   0.060 rest -> 0.014 world      torso  3.095 -> 0.727
+//   hips   1.931 rest -> 0.454 world      neck   4.047 -> 0.951
+//                                         head   4.242 -> 0.997
+//
+// So the standing figure is about 1.1 m tall, not the 1.74 I assumed on the first
+// attempt. That single wrong assumption produced both failures: a neck band placed
+// at y 1.22 sat ABOVE the crown, which is why a green rectangle covered his face,
+// and a hem radius of 0.235 was 43% of his height, which is why the alb read as a
+// bell. These numbers are proportions of 1.1, and the stole hangs from the real
+// neck at 0.951.
+const ALB_HEM_Y = 0.02;
+const ALB_TOP_Y = 0.9;
+const NECK_Y = 0.951;
+
+function Vestments() {
+  const albGeometry = useMemo(() => {
+    // Hem radius 0.13 of height, tapering to the shoulders — a robe, not a bell.
+    const profile: [number, number][] = [
+      [0.0, ALB_HEM_Y],
+      [0.145, ALB_HEM_Y],
+      [0.14, 0.16],
+      [0.128, 0.34],
+      [0.116, 0.52],
+      [0.104, 0.68],
+      [0.096, 0.8],
+      [0.094, ALB_TOP_Y]
+    ];
+    const lathe = new THREE.LatheGeometry(
+      profile.map(([radius, height]) => new THREE.Vector2(radius, height)),
+      32
+    );
+    lathe.computeVertexNormals();
+    return lathe;
+  }, []);
+  useEffect(() => () => albGeometry.dispose(), [albGeometry]);
+
+  return (
+    <group>
+      <mesh castShadow geometry={albGeometry} receiveShadow>
+        <meshStandardMaterial color="#f3ede0" roughness={0.74} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Stole: two panels from the neck down the chest, stopping above the hem. */}
+      {[-0.042, 0.042].map((x) => (
+        <mesh castShadow key={x} position={[x, (NECK_Y + 0.56) / 2, 0.062]}>
+          <boxGeometry args={[0.044, NECK_Y - 0.56, 0.008]} />
+          <meshStandardMaterial color="#3c4a33" roughness={0.7} />
+        </mesh>
+      ))}
+      {/* The band joining them, AT the measured neck rather than above the head. */}
+      <mesh castShadow position={[0, NECK_Y - 0.01, 0.005]}>
+        <boxGeometry args={[0.125, 0.032, 0.1]} />
+        <meshStandardMaterial color="#3c4a33" roughness={0.7} />
+      </mesh>
+    </group>
+  );
+}
 
 function Celebrant({ mark }: { mark: StudioSceneOffset }) {
   // The officiant waits at the altar, facing the congregation.
@@ -2263,6 +2314,7 @@ function Celebrant({ mark }: { mark: StudioSceneOffset }) {
   return (
     <group position={[home.x + mark.x, 0, home.z + mark.z]}>
       <AnimatedFigure clip="idle" pose={POSE_OFFICIANT} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
+      <Vestments />
     </group>
   );
 }
