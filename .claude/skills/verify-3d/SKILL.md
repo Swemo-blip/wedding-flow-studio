@@ -93,6 +93,14 @@ window.__wfsScene.capture(1400, 0.94);   // { dataUrl, distinctColours, width, h
 `distinctColours` below ~50 means a blank or single-colour frame — not a result.
 The tab must be foregrounded; R3F pauses its render loop when the tab is hidden.
 
+**`gl.render()` does NOT run `useFrame` callbacks.** R3F's frame loop is separate, so
+calling render in a loop advances nothing that is animated per frame — an eased door
+swing, a walking figure, a pose offset. A capture taken that way shows the scene's
+initial state and looks like the animation is broken.
+
+To check anything that moves: foreground the tab, wait real seconds, then capture.
+There is no way to fast-forward R3F's loop from the console.
+
 ## 5. If a constant appears to have no effect, reload
 
 HMR does not reliably apply changed module constants. Three "no effect" readings in
