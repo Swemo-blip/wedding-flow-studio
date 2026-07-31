@@ -213,7 +213,7 @@ export function readStoredProject() {
           timelineItems: parsed.timelineItems,
           musicCues: parsed.musicCues,
           speeches: isSpeechArray(parsed.speeches) ? parsed.speeches : [],
-          guests: isGuestArray(parsed.guests) ? parsed.guests : [],
+          guests: partitionGuests(parsed.guests).guests,
           dinnerTables: isDinnerTableArray(parsed.dinnerTables) ? parsed.dinnerTables : [],
           vendorCandidates: isVendorCandidateArray(parsed.vendorCandidates) ? parsed.vendorCandidates : [],
           riskResolutions: isRiskResolutionArray(parsed.riskResolutions) ? parsed.riskResolutions : []
@@ -618,30 +618,37 @@ function isSpeechArray(value: unknown): value is Speech[] {
   );
 }
 
-function isGuestArray(value: unknown): value is Guest[] {
-  return Array.isArray(value) && value.every(
-    (item) =>
-      Boolean(item) &&
-      typeof item === "object" &&
-      typeof item.id === "string" &&
-      typeof item.name === "string" &&
-      typeof item.household === "string" &&
-      typeof item.rsvpStatus === "string" &&
-      typeof item.mealChoice === "string" &&
-      Array.isArray(item.allergies) &&
-      item.allergies.every((allergy: unknown) => typeof allergy === "string") &&
-      Array.isArray(item.tags) &&
-      item.tags.every((tag: unknown) => typeof tag === "string") &&
-      typeof item.relationship === "string" &&
-      typeof item.accessibilityNotes === "string" &&
-      Array.isArray(item.conflictGuestIds) &&
-      item.conflictGuestIds.every((guestId: unknown) => typeof guestId === "string") &&
-      Array.isArray(item.preferredGuestIds) &&
-      item.preferredGuestIds.every((guestId: unknown) => typeof guestId === "string") &&
-      typeof item.language === "string" &&
-      typeof item.tableId === "string" &&
-      typeof item.seatIndex === "number"
+// One guest at a time. This used to be an all-or-nothing array check, and the read
+// site turned a false into an empty list — so a SINGLE malformed record from an
+// import, an older backup, or a future field change silently erased the ENTIRE
+// guest list, and the couple got a fully furnished, completely empty church with no
+// explanation anywhere. That is the most damaging kind of quiet failure this file
+// can have: the data is gone and nothing says so. Proven on 2026-07-31 by writing
+// fifty hand-made guests and watching all fifty vanish while the wedding name in
+// the same record was accepted.
+function isGuest(value: unknown): value is Guest {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const item = value as Record<string, unknown>;
+  const strings = ["id", "name", "household", "rsvpStatus", "mealChoice", "relationship", "accessibilityNotes", "language", "tableId"];
+  const stringArrays = ["allergies", "tags", "conflictGuestIds", "preferredGuestIds"];
+
+  return (
+    strings.every((key) => typeof item[key] === "string") &&
+    stringArrays.every((key) => Array.isArray(item[key]) && (item[key] as unknown[]).every((entry) => typeof entry === "string")) &&
+    typeof item.seatIndex === "number"
   );
+}
+
+// Keeps every guest that survives validation and reports how many did not, so a
+// partial loss is visible instead of total and silent.
+export function partitionGuests(value: unknown): { guests: Guest[]; rejected: number } {
+  if (!Array.isArray(value)) {
+    return { guests: [], rejected: 0 };
+  }
+  const guests = value.filter(isGuest);
+  return { guests, rejected: value.length - guests.length };
 }
 
 function isDinnerTableArray(value: unknown): value is DinnerTable[] {
