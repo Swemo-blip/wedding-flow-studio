@@ -664,10 +664,16 @@ export function OverviewDashboard() {
                 : invitedGuests === 0
                   ? t("No guests on your list yet — add them and they fill the pews")
                   : `${invitedGuests} ${t("guests")} · ${capacity.totalCapacity} ${t("seats")}`}
-              {invitedGuests === 0 && plan.guestCount > 0 ? (
-                <button className="vstudio-status-action" onClick={blockOutSeats} type="button">
-                  {t("Block out")} {plan.guestCount} {t("seats")}
-                </button>
+              {invitedGuests === 0 ? (
+                plan.guestCount > 0 ? (
+                  <button className="vstudio-status-action" onClick={blockOutSeats} type="button">
+                    {t("Block out")} {plan.guestCount} {t("seats")}
+                  </button>
+                ) : (
+                  <Link className="vstudio-status-action" href="/guests">
+                    {t("Add guests")}
+                  </Link>
+                )
               ) : null}
             </span>
             <span className="vstudio-status-selected">

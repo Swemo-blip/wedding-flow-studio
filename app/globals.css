@@ -5931,6 +5931,8 @@ a {
 }
 
 .vstudio-status-action {
+  display: inline-block;
+  text-decoration: none;
   margin-left: 10px;
   padding: 4px 12px;
   border: 1px solid var(--accent);
