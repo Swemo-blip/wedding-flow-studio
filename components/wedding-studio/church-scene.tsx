@@ -1678,6 +1678,54 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
 // Same lesson as the vestments: derive the size from the seated figure's actual
 // height at CONGREGATION_SCALE, not from what a chair measures in real life.
 
+// The west portal and its doors. Every figure here is a proportion of the MEASURED
+// standing figure (1.10 m — bone heights read out of figure_suit.glb), never a real
+// door's dimensions. A first attempt used real metres and produced leaves 2.4x too
+// tall, with the couple's heads reaching the bottom rail.
+//
+//   real 2.05 m door / 1.75 m person = 1.17
+//   1.17 x 1.10 = 1.29  ->  leaf height
+//   a 1.1 m double door -> 0.55 m per leaf
+//
+// The wall is 10.1 wide, so each pier spans (10.1 - 1.2) / 2 = 4.45.
+const WEST_WALL_Z = 6.3;
+const PORTAL_WIDTH = 1.2;
+const PORTAL_HEIGHT = 1.4;
+const PORTAL_PIER_WIDTH = (10.1 - PORTAL_WIDTH) / 2;
+const PORTAL_PIER_X = PORTAL_WIDTH / 2 + PORTAL_PIER_WIDTH / 2;
+const DOOR_LEAF_WIDTH = 0.55;
+const DOOR_LEAF_HEIGHT = 1.29;
+
+function ChurchDoors({ open }: { open: number }) {
+  // Each leaf hangs in a group placed AT its hinge with the panel offset half its
+  // width, so the group's rotation swings the door about its edge, not its middle.
+  const swing = THREE.MathUtils.clamp(open, 0, 1) * 1.6;
+
+  return (
+    <group position={[0, 0, WEST_WALL_Z - 0.02]}>
+      {[-1, 1].map((side) => (
+        <group key={side} position={[side * (PORTAL_WIDTH / 2), 0, 0]} rotation={[0, side * -swing, 0]}>
+          <mesh castShadow position={[(-side * DOOR_LEAF_WIDTH) / 2, DOOR_LEAF_HEIGHT / 2, 0]} receiveShadow>
+            <boxGeometry args={[DOOR_LEAF_WIDTH, DOOR_LEAF_HEIGHT, 0.045]} />
+            <meshStandardMaterial color="#5c4526" roughness={0.66} />
+          </mesh>
+          {/* Two raised panels, so a leaf reads as joinery rather than a slab. */}
+          {[0.33, 0.88].map((y) => (
+            <mesh castShadow key={y} position={[(-side * DOOR_LEAF_WIDTH) / 2, y, 0.028]}>
+              <boxGeometry args={[DOOR_LEAF_WIDTH - 0.14, 0.42, 0.008]} />
+              <meshStandardMaterial color="#6b5230" roughness={0.62} />
+            </mesh>
+          ))}
+          <mesh castShadow position={[-side * 0.1, 0.62, 0.04]}>
+            <torusGeometry args={[0.038, 0.008, 8, 16]} />
+            <meshStandardMaterial color="#b39152" metalness={0.66} roughness={0.36} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function ChurchCongregation({ highQuality = true, seats }: { highQuality?: boolean; seats: CongregationSeat[] }) {
   return (
     <group>
@@ -2812,6 +2860,25 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
           <StoneWall args={[0.2, wallHeight, 12.4]} color={palette.wall} key={x} position={[x, wallHeight / 2, 0.1]} />
         ))}
         <StoneWall args={[10.1, wallHeight + 1.9, 0.22]} color={palette.wall} position={[0, (wallHeight + 1.9) / 2, -5.85]} />
+
+        {/* West end. The side walls run z -6.1 to +6.3 and this end was simply
+            open — the "From entrance" preset sits at z 9.2 and was looking at a
+            void through a wall that did not exist.
+            A box cannot have a hole cut in it without CSG, so the wall IS the
+            opening: two piers and a lintel around a 1.2 x 1.4 portal. Those
+            figures are derived, not chosen — see PORTAL_* below. */}
+        {[-PORTAL_PIER_X, PORTAL_PIER_X].map((x) => (
+          <StoneWall args={[PORTAL_PIER_WIDTH, wallHeight + 1.9, 0.22]} color={palette.wall} key={x} position={[x, (wallHeight + 1.9) / 2, WEST_WALL_Z]} />
+        ))}
+        <StoneWall
+          args={[PORTAL_WIDTH, wallHeight + 1.9 - PORTAL_HEIGHT, 0.22]}
+          color={palette.wall}
+          position={[0, PORTAL_HEIGHT + (wallHeight + 1.9 - PORTAL_HEIGHT) / 2, WEST_WALL_Z]}
+        />
+        {/* Closed. The doors take an `open` 0-1 so the entrance fly-through can
+            swing them on cue, but nothing drives that yet and a door that opens for
+            no reason is worse than one that stays shut. */}
+        <ChurchDoors open={0} />
       </Suspense>
 
       {/* Chancel wall: a carved blind arcade. This used to be a flat 2.6x4
