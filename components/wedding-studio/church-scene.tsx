@@ -540,6 +540,7 @@ export function CeremonyScene({
             onSelectObject={onSelectObject}
             palette={palette}
             processionalKey={processionalKey}
+            processionalDriven={autoProcessional !== undefined}
             processionalPlaying={autoProcessional ?? processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
@@ -743,6 +744,7 @@ function WeddingStageInterior({
   onMoveObject,
   onSelectObject,
   palette,
+  processionalDriven,
   processionalKey,
   processionalPlaying,
   sceneEdits,
@@ -766,6 +768,7 @@ function WeddingStageInterior({
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
+  processionalDriven: boolean;
   processionalKey: number;
   processionalPlaying: boolean;
   sceneEdits: StudioSceneEdits;
@@ -987,6 +990,7 @@ function WeddingStageInterior({
               <Processional
                 couplePhotos={couplePhotos}
                 coupleMark={staging.marks.couple}
+                driven={processionalDriven}
                 groomStart={staging.groomStart}
                 headsRef={coupleHeadsRef}
                 hideFigure={firstPerson}
@@ -2425,6 +2429,7 @@ function Bouquet() {
 function Processional({
   coupleMark,
   couplePhotos,
+  driven,
   groomStart,
   headsRef,
   hideFigure = null,
@@ -2432,20 +2437,26 @@ function Processional({
 }: {
   coupleMark: StudioSceneOffset;
   couplePhotos?: { bride: string | null; groom: string | null };
+  // True when a caller drives the processional itself — the Preview walkthrough
+  // does, moment by moment. Then "not playing" means NOT YET, so the couple wait
+  // at the doors. When nobody drives it, the studio should open on the ceremony
+  // and rest them at the altar instead.
+  driven: boolean;
   groomStart: CeremonyGroomStart;
   headsRef?: { current: CoupleHeads };
   hideFigure?: CeremonyFirstPerson;
   playing: boolean;
 }) {
-  // At rest the studio shows the ceremony, not the moment before the doors open:
-  // the couple stand at the altar and Play walks them in from the back. Starting
-  // at progress 0 left them idling in the empty rear of the nave, which read as a
-  // bug rather than as a cue.
-  const progress = useRef(1);
-  const arrivedRef = useRef(true);
+  // Undriven, the studio opens on the ceremony: the couple stand at the altar and
+  // Play walks them in. Driven, the caller is telling the story moment by moment,
+  // so they must start at the doors — otherwise the Preview showed them already at
+  // the altar during Guest Arrival and then teleporting backwards to walk in, and
+  // the processional was never seen.
+  const progress = useRef(driven ? 0 : 1);
+  const arrivedRef = useRef(!driven);
   const groomRef = useRef<THREE.Group>(null);
   const brideRef = useRef<THREE.Group>(null);
-  const [arrived, setArrived] = useState(true);
+  const [arrived, setArrived] = useState(!driven);
   const wasPlaying = useRef(false);
   const waitsAtAltar = groomStart === "altar";
   // Both figures keep their half of the aisle, shifted with the couple's mark.
