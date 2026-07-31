@@ -14,6 +14,7 @@ import {
   readStoredProject,
   subscribeStoredProjectChange,
   writeStoredMenuCourses,
+  writeStoredPhotoShots,
   writeStoredMusicCues,
   writeStoredProject,
   writeStoredReception,
@@ -25,13 +26,14 @@ import {
 import { clearStoredBudget } from "@/lib/use-budget";
 import { clearStoredChecklist } from "@/lib/use-checklist";
 import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems } from "@/lib/wedding-data";
-import type { DinnerTable, Guest, MenuCourse, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
+import type { DinnerTable, Guest, MenuCourse, MusicCue, PhotoShot, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 type LocalProjectState = {
   hasLocalProject: boolean;
   wedding: Wedding;
   timelineItems: TimelineItem[];
   menuCourses: MenuCourse[];
+  photoShots: PhotoShot[];
   musicCues: MusicCue[];
   speeches: Speech[];
   guests: Guest[];
@@ -46,6 +48,7 @@ function createInitialState(): LocalProjectState {
     wedding: sampleWedding,
     timelineItems: createTimelineDraft(timelineItems),
     menuCourses: [],
+    photoShots: [],
     musicCues: createMusicCueDraft(musicCues),
     speeches: createSpeechDraft(speeches),
     guests: createGuestDraft(guests),
@@ -102,6 +105,7 @@ function hydrateFromStorage() {
       wedding: stored.wedding,
       timelineItems: stored.timelineItems,
       menuCourses: stored.menuCourses,
+      photoShots: stored.photoShots,
       musicCues: stored.musicCues,
       speeches: stored.speeches,
       guests: stored.guests,
@@ -207,6 +211,57 @@ function addMenuCourse(partial: Partial<MenuCourse> = {}) {
       ...currentState,
       hasLocalProject: true,
       menuCourses: storedProject?.menuCourses ?? nextCourses,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function addPhotoShot(partial: Partial<PhotoShot> = {}) {
+  setStoreState((currentState) => {
+    const newShot: PhotoShot = {
+      captured: false,
+      guestIds: [],
+      id: `shot-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      moment: "",
+      notes: "",
+      title: "",
+      ...partial
+    };
+    const next = [...currentState.photoShots, newShot];
+    const storedProject = writeStoredPhotoShots(next);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      photoShots: storedProject?.photoShots ?? next,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function updatePhotoShot(shotId: string, updates: Partial<PhotoShot>) {
+  setStoreState((currentState) => {
+    const next = currentState.photoShots.map((shot) => (shot.id === shotId ? { ...shot, ...updates } : shot));
+    const storedProject = writeStoredPhotoShots(next);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      photoShots: storedProject?.photoShots ?? next,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
+function removePhotoShot(shotId: string) {
+  setStoreState((currentState) => {
+    const next = currentState.photoShots.filter((shot) => shot.id !== shotId);
+    const storedProject = writeStoredPhotoShots(next);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      photoShots: storedProject?.photoShots ?? next,
       updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
     };
   });
@@ -660,8 +715,11 @@ export function useLocalProject() {
     updateWedding,
     updateMusicCue,
     addMenuCourse,
+    addPhotoShot,
     addMusicCue,
     removeMenuCourse,
+    removePhotoShot,
+    updatePhotoShot,
     removeMusicCue,
     updateMenuCourse,
     resetMusicCues,

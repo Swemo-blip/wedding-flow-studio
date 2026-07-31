@@ -125,6 +125,19 @@ export type SeatAssignment = {
 // remember and talk about, and the app had no model for it at all — so the menu
 // card, the place card's dietary line and the kitchen's own count had nothing to
 // read from.
+// The shot list a photographer asks for and almost no couple has written. Each
+// entry names the picture and exactly who has to be standing in it, pulled from
+// the couple's own guest list — so on the day someone can call the names out loud
+// instead of guessing who "immediate family" meant.
+export type PhotoShot = {
+  id: string;
+  title: string;
+  moment: string;
+  guestIds: string[];
+  notes: string;
+  captured: boolean;
+};
+
 export type MenuCourseKind = "canape" | "starter" | "main" | "dessert" | "late" | "drink";
 
 export type MenuCourse = {

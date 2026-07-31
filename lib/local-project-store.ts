@@ -2,7 +2,7 @@ import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems
 import { safeSetItem } from "@/lib/persistence-status";
 import { sortTimelineByTime } from "@/lib/utils";
 import { MENU_COURSE_KINDS } from "@/lib/wedding-menu";
-import type { DinnerTable, Guest, MenuCourse, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
+import type { DinnerTable, Guest, MenuCourse, PhotoShot, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 export const projectStorageKey = "wedding-flow-studio.project.v1";
 export const timelineStorageKey = "wedding-flow-studio.timeline.v1";
@@ -50,6 +50,7 @@ export type StoredWeddingProject = {
   wedding: Wedding;
   timelineItems: TimelineItem[];
   menuCourses: MenuCourse[];
+  photoShots: PhotoShot[];
   musicCues: MusicCue[];
   speeches: Speech[];
   guests: Guest[];
@@ -70,6 +71,31 @@ export type StoredRiskResolution = {
 // begins", and Preview, the exports and the .ics all inherited that order.
 export function createTimelineDraft(items: TimelineItem[]) {
   return sortTimelineByTime(items.map((item) => ({ ...item })));
+}
+
+export function createPhotoShotDraft(items: PhotoShot[]) {
+  // No sample fallback: a shot list the couple did not write is worse than none,
+  // because someone would try to shoot it.
+  return items
+    .filter((item): item is PhotoShot => Boolean(item) && typeof item === "object")
+    .map((item) => ({
+      captured: item.captured === true,
+      guestIds: Array.isArray(item.guestIds) ? item.guestIds.filter((entry) => typeof entry === "string") : [],
+      id: typeof item.id === "string" && item.id ? item.id : `shot-${Math.random().toString(36).slice(2, 9)}`,
+      moment: typeof item.moment === "string" ? item.moment : "",
+      notes: typeof item.notes === "string" ? item.notes : "",
+      title: typeof item.title === "string" ? item.title : ""
+    }));
+}
+
+export function writeStoredPhotoShots(items: PhotoShot[]) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const currentProject = readStoredProject() ?? createStoredProjectDraft();
+
+  return writeStoredProject({ ...currentProject, photoShots: createPhotoShotDraft(items) });
 }
 
 export function createMenuCourseDraft(items: MenuCourse[]) {
@@ -133,6 +159,7 @@ export function createStoredProjectDraft(source: Partial<StoredWeddingProject> =
     wedding: source.wedding ?? sampleWedding,
     timelineItems: createTimelineDraft(source.timelineItems ?? timelineItems),
     menuCourses: createMenuCourseDraft(source.menuCourses ?? []),
+    photoShots: createPhotoShotDraft(source.photoShots ?? []),
     musicCues: createMusicCueDraft(source.musicCues ?? musicCues),
     speeches: createSpeechDraft(source.speeches ?? speeches),
     guests: createGuestDraft(source.guests ?? guests),
