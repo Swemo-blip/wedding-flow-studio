@@ -650,7 +650,9 @@ export function OverviewDashboard() {
             <span>
               {sceneKind === "reception"
                 ? t("{seated} of {invited} guests have a seat", { invited: invitedGuests, seated: seatedGuests })
-                : `${invitedGuests} ${t("guests")} · ${capacity.totalCapacity} ${t("seats")}`}
+                : invitedGuests === 0
+                  ? t("No guests on your list yet — add them and they fill the pews")
+                  : `${invitedGuests} ${t("guests")} · ${capacity.totalCapacity} ${t("seats")}`}
             </span>
             <span className="vstudio-status-selected">
               {t("Selected")}: {selectedObjectLabel}
