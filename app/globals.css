@@ -6376,6 +6376,12 @@ a {
   margin-top: 6px;
 }
 
+.side-nav-group + .side-nav-group {
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
 .side-nav-group {
   display: grid;
   gap: 2px;

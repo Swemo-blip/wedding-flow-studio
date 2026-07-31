@@ -92,7 +92,6 @@ export function Navigation() {
     <nav aria-label="Primary navigation" className="side-nav">
       {navGroups.map((group) => (
         <div className="side-nav-group" key={group.label}>
-          <p className="side-nav-group-label">{t(group.label)}</p>
           {group.items.map((item) => {
             const isActive = isItemActive(item, pathname);
             const Icon = item.icon;
