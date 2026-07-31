@@ -421,6 +421,7 @@ const sv: Record<string, string> = {
   "Warm lighting lifts the altar and softens the room for photos.": "Varmt ljus lyfter altaret och mjukar upp rummet för foton.",
   "Play processional": "Spela upp processionen",
   "Menu": "Meny",
+  "stored guests could not be read and are not shown. Restore a backup if this is unexpected.": "sparade gäster kunde inte läsas och visas inte. Återställ en backup om det här är oväntat.",
   "Block out": "Blocka",
   "Headcount": "Antal",
   "No guests on your list yet — add them and they fill the pews": "Inga gäster på din lista än — lägg till dem och de fyller bänkarna",

@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { buildGuestProfile } from "@/lib/guest-identity";
 import { useTranslation } from "@/lib/i18n";
 import { fileToDownscaledDataUrl } from "@/lib/image-upload";
 import { type CoupleRole, useCouplePhotos } from "@/lib/use-couple-photos";
+import { getRejectedGuestCount } from "@/lib/local-project-store";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Guest } from "@/lib/wedding-types";
 
@@ -19,6 +20,13 @@ export function GuestsView() {
   const { t } = useTranslation();
   const { addGuest, dinnerTables, guests, removeGuest, speeches, updateGuest } = useLocalProject();
   const [placeholderCount, setPlaceholderCount] = useState(50);
+  // If the store had to reject stored guests, say so here rather than presenting a
+  // shorter list as if it were complete. Read once after mount, since the count is
+  // set during the store's own read.
+  const [rejectedGuests, setRejectedGuests] = useState(0);
+  useEffect(() => {
+    queueMicrotask(() => setRejectedGuests(getRejectedGuestCount()));
+  }, []);
   const [filter, setFilter] = useState<RsvpFilter>("all");
   const [query, setQuery] = useState("");
   const { bride, groom, setPhoto } = useCouplePhotos();
@@ -152,6 +160,12 @@ export function GuestsView() {
             type="search"
             value={query}
           />
+          {rejectedGuests > 0 ? (
+            <p className="guests-rejected-note">
+              {rejectedGuests} {t("stored guests could not be read and are not shown. Restore a backup if this is unexpected.")}
+            </p>
+          ) : null}
+
           {/* Blocking out a headcount before the names exist is how couples actually
               plan, so this fills real seats — not invented people. The placeholders
               are numbered rather than given plausible names on purpose: a guest list

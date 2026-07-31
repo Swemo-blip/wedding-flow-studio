@@ -213,7 +213,7 @@ export function readStoredProject() {
           timelineItems: parsed.timelineItems,
           musicCues: parsed.musicCues,
           speeches: isSpeechArray(parsed.speeches) ? parsed.speeches : [],
-          guests: partitionGuests(parsed.guests).guests,
+          guests: readGuests(parsed.guests),
           dinnerTables: isDinnerTableArray(parsed.dinnerTables) ? parsed.dinnerTables : [],
           vendorCandidates: isVendorCandidateArray(parsed.vendorCandidates) ? parsed.vendorCandidates : [],
           riskResolutions: isRiskResolutionArray(parsed.riskResolutions) ? parsed.riskResolutions : []
@@ -639,6 +639,22 @@ function isGuest(value: unknown): value is Guest {
     stringArrays.every((key) => Array.isArray(item[key]) && (item[key] as unknown[]).every((entry) => typeof entry === "string")) &&
     typeof item.seatIndex === "number"
   );
+}
+
+// A count the UI can show. Returning the number from partitionGuests was not
+// enough on its own: the read happens deep in the store, far from any component,
+// so without somewhere to put it the number was computed and thrown away — a
+// quieter version of the same bug.
+let lastRejectedGuestCount = 0;
+
+function readGuests(value: unknown) {
+  const { guests, rejected } = partitionGuests(value);
+  lastRejectedGuestCount = rejected;
+  return guests;
+}
+
+export function getRejectedGuestCount() {
+  return lastRejectedGuestCount;
 }
 
 // Keeps every guest that survives validation and reports how many did not, so a

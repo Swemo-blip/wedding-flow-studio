@@ -5930,6 +5930,18 @@ a {
   margin-bottom: 20px;
 }
 
+.guests-rejected-note {
+  padding: 9px 13px;
+  margin-bottom: 10px;
+  border: 1px solid var(--gilt);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .guests-placeholder-count {
   max-width: 120px;
 }
