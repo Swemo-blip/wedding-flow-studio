@@ -199,7 +199,12 @@ export function readStoredProject() {
   if (rawValue) {
     try {
       const parsed = JSON.parse(rawValue) as Partial<StoredWeddingProject>;
-      if (isTimelineArray(parsed.timelineItems) && isMusicCueArray(parsed.musicCues)) {
+      // This gate used to demand that EVERY timeline item and EVERY music cue
+      // validate before the project could be read at all. One malformed moment
+      // therefore discarded the whole record — wedding, guests, tables, budget —
+      // and sent it down the unreadable-value path. It only needs them to be
+      // arrays; the individual records are filtered below like everything else.
+      if (Array.isArray(parsed.timelineItems) && Array.isArray(parsed.musicCues)) {
         return createStoredProjectDraft({
           updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined,
           // A slice that fails validation falls back to EMPTY, never to the sample.
@@ -210,13 +215,13 @@ export function readStoredProject() {
           // meal choices, presented as their own on the summary, the exports and in
           // the 3D room. An empty list says "nothing here yet", which is true.
           wedding: isWedding(parsed.wedding) ? parsed.wedding : blankWedding(),
-          timelineItems: parsed.timelineItems,
-          musicCues: parsed.musicCues,
-          speeches: isSpeechArray(parsed.speeches) ? parsed.speeches : [],
+          timelineItems: keepValid<TimelineItem>(parsed.timelineItems, isTimelineArray).items,
+          musicCues: keepValid<MusicCue>(parsed.musicCues, isMusicCueArray).items,
+          speeches: keepValid<Speech>(parsed.speeches, isSpeechArray).items,
           guests: readGuests(parsed.guests),
-          dinnerTables: isDinnerTableArray(parsed.dinnerTables) ? parsed.dinnerTables : [],
-          vendorCandidates: isVendorCandidateArray(parsed.vendorCandidates) ? parsed.vendorCandidates : [],
-          riskResolutions: isRiskResolutionArray(parsed.riskResolutions) ? parsed.riskResolutions : []
+          dinnerTables: keepValid<DinnerTable>(parsed.dinnerTables, isDinnerTableArray).items,
+          vendorCandidates: keepValid<VendorCandidate>(parsed.vendorCandidates, isVendorCandidateArray).items,
+          riskResolutions: keepValid<StoredRiskResolution>(parsed.riskResolutions, isRiskResolutionArray).items
         });
       }
     } catch {
@@ -646,6 +651,22 @@ function isGuest(value: unknown): value is Guest {
 // so without somewhere to put it the number was computed and thrown away — a
 // quieter version of the same bug.
 let lastRejectedGuestCount = 0;
+
+// The same all-or-nothing trap the guest list fell into is written three more
+// times in this file: tables, vendors, risk resolutions and the timeline pair all
+// validate the whole array and the read sites turn a false into an empty list. One
+// bad record from an import or an older backup takes the lot.
+//
+// Rather than rewrite four validators, each existing array predicate is applied to
+// a one-element array — same rules, one record at a time — so a single malformed
+// entry costs that entry and nothing else.
+function keepValid<T>(value: unknown, isArrayOf: (candidate: unknown) => boolean) {
+  if (!Array.isArray(value)) {
+    return { items: [] as T[], rejected: 0 };
+  }
+  const items = value.filter((item) => isArrayOf([item])) as T[];
+  return { items, rejected: value.length - items.length };
+}
 
 function readGuests(value: unknown) {
   const { guests, rejected } = partitionGuests(value);
