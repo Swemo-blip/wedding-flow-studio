@@ -5930,6 +5930,10 @@ a {
   margin-bottom: 20px;
 }
 
+.guests-placeholder-count {
+  max-width: 120px;
+}
+
 .supply-group + .supply-group {
   margin-top: 22px;
 }

@@ -18,6 +18,7 @@ const RSVP_CYCLE: Guest["rsvpStatus"][] = ["attending", "pending", "declined"];
 export function GuestsView() {
   const { t } = useTranslation();
   const { addGuest, dinnerTables, guests, removeGuest, speeches, updateGuest } = useLocalProject();
+  const [placeholderCount, setPlaceholderCount] = useState(50);
   const [filter, setFilter] = useState<RsvpFilter>("all");
   const [query, setQuery] = useState("");
   const { bride, groom, setPhoto } = useCouplePhotos();
@@ -151,6 +152,35 @@ export function GuestsView() {
             type="search"
             value={query}
           />
+          {/* Blocking out a headcount before the names exist is how couples actually
+              plan, so this fills real seats — not invented people. The placeholders
+              are numbered rather than given plausible names on purpose: a guest list
+              reading "Anna Andersson" that nobody invited would print straight onto
+              a place card, and the couple would have no way to tell it apart from a
+              real guest. A numbered seat is impossible to mistake. */}
+          <button
+            className="guests-add"
+            onClick={() => {
+              const start = guests.length;
+              const wanted = Math.max(0, placeholderCount - start);
+              for (let index = 0; index < wanted; index += 1) {
+                addGuest({ name: `${t("Seat")} ${start + index + 1}`, rsvpStatus: "pending" });
+              }
+            }}
+            type="button"
+          >
+            {t("Block out")} {placeholderCount} {t("seats")}
+          </button>
+          <label className="field guests-placeholder-count">
+            <span>{t("Headcount")}</span>
+            <input
+              max={140}
+              min={1}
+              onChange={(event) => setPlaceholderCount(Math.max(1, Math.min(140, Number(event.target.value) || 1)))}
+              type="number"
+              value={placeholderCount}
+            />
+          </label>
           <button className="guests-add" onClick={() => addGuest()} type="button">
             <Plus aria-hidden="true" size={15} />
             {t("Add guest")}
