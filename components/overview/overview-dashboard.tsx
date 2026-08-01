@@ -477,15 +477,13 @@ export function OverviewDashboard() {
 
         <div className="vstudio-header-end">
           <SavedChip />
-          {mode === "edit" ? (
-            <button className="vstudio-primary" onClick={enterPreview} type="button">
-              {t("Preview the day")}
-            </button>
-          ) : (
-            <button className="vstudio-primary" onClick={exitPreview} type="button">
-              {t("Exit preview")}
-            </button>
-          )}
+          {/* No "Preview the day" button here. It called the same enterPreview as
+              the Preview half of the Edit/Preview switch two controls to its left,
+              so the header offered one action twice — and in preview mode there
+              were THREE ways out: the Edit half, an Exit preview here, and the one
+              in the playback bar. The switch shows which mode you are in and goes
+              both ways, so it is the control; a green slab duplicating half of it
+              was the redundancy Johan kept pointing at. */}
 
           <details className="vstudio-menu" ref={menuRef}>
             <summary aria-label={t("More options")} title={t("More options")}>
