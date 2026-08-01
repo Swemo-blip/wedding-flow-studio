@@ -75,7 +75,35 @@ opening the dinner.
 Take a **full-frame** screenshot first. A tight crop once hid arms sticking
 straight out sideways; the wide shot showed it instantly.
 
-## 4. Judge against a figure in frame
+## 4. Probe the render before judging the frame
+
+**Mandatory.** Whether a view is rendering is decided by the probe — never by
+eyeballing a screenshot or reading a counter. Read `scripts/scene-probe.js`, then
+pass its contents to `javascript_tool` (the in-app Browser pane) or paste them into
+devtools, with the view you changed already open. It returns one verdict:
+`RENDERING`, `BLANK_BUT_LOOPING`, `BLANK_AND_STALLED`, or `NOT_MOUNTED`.
+`NOT_MOUNTED` means the scene never mounted — go check the console for a compile
+error; it is **not** a blank render.
+
+Both counter reads below were hand-rolled on 2026-08-01 and each produced a wrong
+conclusion reported to the owner. The probe does them correctly; never redo them by
+hand:
+
+- **NEVER conclude anything from a single read of `gl.info.render.frame`.** It sat
+  at 23 mid-load and was declared a frozen loop; it later climbed to 50,338. Poll
+  until it settles.
+- **NEVER read `gl.info.render.calls` or `.triangles` without first setting
+  `gl.info.autoReset = false` and calling `gl.info.reset()`.** `info` is reset at
+  the start of every `renderer.render()`, so a casual read returns only the last
+  pass: `calls: 1, triangles: 12` was declared "every mesh is frustum-culled" when
+  the truth was 777 calls and 311,819 triangles. Always restore `autoReset`
+  afterwards.
+
+**Pixels outrank counters:** a settled static scene legitimately reports
+`loopLive: false` while rendering perfectly, so the verdict must come from colour
+variance, not from whether the loop is advancing.
+
+## 5. Judge against a figure in frame
 
 New geometry is only correct relative to the people. Frame the change **with a
 guest or the couple visible** and compare heights directly. A chair whose back
@@ -101,13 +129,13 @@ initial state and looks like the animation is broken.
 To check anything that moves: foreground the tab, wait real seconds, then capture.
 There is no way to fast-forward R3F's loop from the console.
 
-## 5. If a constant appears to have no effect, reload
+## 6. If a constant appears to have no effect, reload
 
 HMR does not reliably apply changed module constants. Three "no effect" readings in
 a row were a stale build, and re-tuning against them produced values that were
 wrong in the opposite direction. Reload the page before adjusting a number twice.
 
-## 6. Watch it move, do not judge a still
+## 7. Watch it move, do not judge a still
 
 A pose layer that compounded every frame made the arms rotate without end, and no
 frozen frame could show it. For anything animated or per-frame, sample the same
@@ -120,7 +148,7 @@ for (let i = 0; i < 60; i++) s.gl.render(s.scene, s.camera);
 const b = read();   // a and b must match
 ```
 
-## 7. Do not commit what you could not see
+## 8. Do not commit what you could not see
 
 If the render cannot be checked properly right now, **say so and leave the
 geometry uncommitted**. An oversized portal in the scene is worse than no portal.
