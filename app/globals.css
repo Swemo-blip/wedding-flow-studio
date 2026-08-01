@@ -10073,7 +10073,12 @@ a {
 
   .vstudio-rail {
     flex-direction: row;
+    /* The rail is a grid item here, so the inline axis needs justify-self —
+       align-self only shrank it vertically and it kept spanning the full column,
+       reading as a wide empty band above the 3D. */
+    justify-self: start;
     align-self: start;
+    width: fit-content;
     justify-content: flex-start;
     padding: 5px;
     background: var(--surface-soft);
