@@ -220,7 +220,8 @@ export function OverviewDashboard() {
   // every switch — the whole Canvas, the HDRI, every GLB and ~900 meshes — so
   // Preview showed a beige void for tens of seconds and read as broken. There is
   // now one scene, and mode only changes these props.
-  const previewWaypoint = mode === "preview" ? walkthroughWaypoint(waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "")) : null;
+  const previewWaypointIndex = waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "");
+  const previewWaypoint = mode === "preview" ? walkthroughWaypoint(previewWaypointIndex) : null;
   const isPreview = previewWaypoint !== null;
 
   useEffect(() => {
@@ -589,7 +590,7 @@ export function OverviewDashboard() {
               <CeremonyScene
                 activeStep={previewWaypoint ? previewWaypoint.step : sceneStep}
                 aisleWidthFeet={plan.aisleWidthFeet}
-                autoProcessional={previewWaypoint ? isAutoProcessional(safePhaseIndex, previewWaypoint) : undefined}
+                autoProcessional={previewWaypoint ? isAutoProcessional(previewWaypointIndex, previewWaypoint) : undefined}
                 budgetLevel={plan.budgetLevel}
                 cameraOverride={previewWaypoint ? previewWaypoint.camera : null}
                 capacity={capacity}

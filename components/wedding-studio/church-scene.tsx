@@ -371,6 +371,18 @@ export function CeremonyScene({
   // The singer was `useState(false)` with no setter: fully modelled, rendered,
   // and reachable by nothing. It now comes from the couple's saved staging.
   const activeStaging = staging ?? defaultCeremonyStaging;
+  // Driven means a caller is telling the day moment by moment (Preview); undriven
+  // is the editor, where the couple rest at the altar until Play.
+  const processionalDriven = autoProcessional !== undefined;
+  // The scene is now ONE long-lived mount shared by Edit and Preview, so the
+  // Processional's progress refs survive the switch — they initialise from
+  // `driven` once and never again. Entering Preview therefore inherited
+  // progress = 1 from the editor and the couple stood at the altar through their
+  // own processional. Folding `driven` into the key remounts just those two
+  // figures on that flip, re-running the initialisers — the same reset the Replay
+  // button already uses, and far cheaper than the 900-mesh rebuild that merging
+  // the two mounts removed.
+  const processionalResetKey = `${processionalKey}-${processionalDriven ? "driven" : "free"}`;
   // Classic wedding processional music (public-domain Pachelbel Canon in D),
   // started by the couple's own gesture of pressing Play — never autoplayed.
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -539,8 +551,8 @@ export function CeremonyScene({
             onMoveObject={onMoveObject}
             onSelectObject={onSelectObject}
             palette={palette}
-            processionalKey={processionalKey}
-            processionalDriven={autoProcessional !== undefined}
+            processionalKey={processionalResetKey}
+            processionalDriven={processionalDriven}
             processionalPlaying={autoProcessional ?? processionalPlaying}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
@@ -769,7 +781,7 @@ function WeddingStageInterior({
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
   processionalDriven: boolean;
-  processionalKey: number;
+  processionalKey: string;
   processionalPlaying: boolean;
   sceneEdits: StudioSceneEdits;
   seatingLayout?: string;
