@@ -1,3 +1,4 @@
+import { formatMinutesAsTime, parseTimeToMinutes } from "@/lib/utils";
 import type { TimelineItem } from "@/lib/wedding-types";
 
 // The moments almost every wedding actually has, so a couple can assemble a day
@@ -63,4 +64,48 @@ export function momentLibraryByPhase() {
     phase,
     presets: momentLibrary.filter((preset) => preset.phase === phase)
   })).filter((group) => group.presets.length > 0);
+}
+
+// The library in running order, timed as one continuous day. Adding presets one
+// at a time gave every moment the same clock time, so a couple had to retype
+// twenty times — which is why real timelines stayed at three entries and the
+// Preview collapsed to three movements instead of walking the whole day.
+//
+// `ceremonyStart` anchors the day: everything before the processional is timed
+// BACKWARD from it so getting ready and guest arrival land before the vows, and
+// everything after runs forward. Times are conventions the couple then edits;
+// nothing here claims to be a decision they made.
+export function buildClassicDayTimeline(ceremonyStart: string): TimelineItem[] {
+  const anchorIndex = momentLibrary.findIndex((preset) => preset.id === "processional");
+  const anchorMinutes = parseTimeToMinutes(ceremonyStart) ?? 13 * 60 + 45;
+
+  // Walk backward from the processional to place the run-up.
+  const startMinutes: number[] = new Array(momentLibrary.length);
+  let cursor = anchorMinutes;
+  for (let index = anchorIndex; index >= 0; index -= 1) {
+    if (index < anchorIndex) {
+      cursor -= momentLibrary[index].durationMinutes;
+    }
+    startMinutes[index] = cursor;
+  }
+
+  // Then forward from the processional through the rest of the day.
+  cursor = anchorMinutes;
+  for (let index = anchorIndex + 1; index < momentLibrary.length; index += 1) {
+    cursor += momentLibrary[index - 1].durationMinutes;
+    startMinutes[index] = cursor;
+  }
+
+  return momentLibrary.map((preset, index) => ({
+    durationMinutes: preset.durationMinutes,
+    id: `moment-classic-${preset.id}`,
+    location: "",
+    notes: "",
+    phase: preset.phase,
+    responsiblePerson: "",
+    responsibleRole: preset.responsibleRole,
+    time: formatMinutesAsTime(startMinutes[index]),
+    title: preset.title,
+    visibility: "everyone"
+  }));
 }

@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { FlowAnalysis } from "@/components/wedding/flow-analysis";
 import { StudioWorkflow } from "@/components/wedding/studio-workflow";
-import { momentLibraryByPhase, type MomentPreset } from "@/lib/wedding-moment-library";
+import { buildClassicDayTimeline, momentLibraryByPhase, type MomentPreset } from "@/lib/wedding-moment-library";
 import {
   applyProductionActionToTimeline,
   getGuestActionUpdates,
@@ -279,6 +279,42 @@ export function DayFlowEditor() {
     });
   }
 
+  // Assembling the day one preset at a time gave every moment the same clock
+  // time, so nobody did it — timelines stayed at a handful of entries and the
+  // Preview had almost no movements to walk. This lays out the whole running
+  // order, timed, in one action. The times are conventions; every row stays
+  // editable, and an existing timeline is never replaced without a confirmation.
+  function buildClassicDay() {
+    setActionStatus(null);
+    setProject((currentProject) => {
+      const existing = currentProject.items;
+      if (existing.length) {
+        const message = t(
+          "This replaces the {count} moments already in your timeline with the classic running order. Your other work is untouched. Continue?"
+        ).replace("{count}", String(existing.length));
+        if (!window.confirm(message)) {
+          return currentProject;
+        }
+      }
+
+      // Anchor on the couple's own ceremony time when they already have one, so
+      // rebuilding does not silently move their vows.
+      const anchor =
+        existing.find((item) => item.phase === "Processional")?.time ??
+        existing.find((item) => item.phase === "Ceremony")?.time ??
+        existing[0]?.time ??
+        "1:45 PM";
+
+      const items = sortTimelineByTime(buildClassicDayTimeline(anchor));
+      return {
+        ...currentProject,
+        items,
+        selectedId: items.find((item) => item.phase === "Processional")?.id ?? items[0]?.id ?? "",
+        updatedAt: new Date().toISOString()
+      };
+    });
+  }
+
   function removeMoment(id: string) {
     setActionStatus(null);
     setProject((currentProject) => {
@@ -512,6 +548,10 @@ export function DayFlowEditor() {
                   </div>
                 </div>
               ))}
+              <button className="moment-library-classic" onClick={buildClassicDay} type="button">
+                {t("Lay out the whole day")}
+                <span>{t("The classic running order, timed around your ceremony")}</span>
+              </button>
               <button className="moment-library-custom" onClick={() => addMoment()} type="button">
                 {t("Something only we have")}
               </button>

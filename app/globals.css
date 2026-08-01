@@ -6088,6 +6088,38 @@ a {
   font-size: 0.72rem;
 }
 
+/* The primary way into a full day, so it reads as the offer and the one-at-a-time
+   presets above read as refinement. Quiet outline, not a second green fill —
+   there is already one primary action on this surface. */
+.moment-library-classic {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  margin-top: 18px;
+  margin-right: 10px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.moment-library-classic span {
+  font-weight: 400;
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+}
+
+.moment-library-classic:hover {
+  border-color: var(--accent);
+}
+
 .moment-library-custom {
   margin-top: 18px;
   padding: 8px 15px;

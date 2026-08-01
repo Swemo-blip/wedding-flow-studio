@@ -511,6 +511,10 @@ const sv: Record<string, string> = {
   "No one seated yet": "Ingen placerad än",
   "Alternative to be confirmed": "Alternativ bekräftas senare",
   "Add a moment": "Lägg till ett moment",
+  "Lay out the whole day": "Lägg ut hela dagen",
+  "The classic running order, timed around your ceremony": "Den klassiska ordningen, tidsatt kring er vigsel",
+  "This replaces the {count} moments already in your timeline with the classic running order. Your other work is untouched. Continue?":
+    "Det här ersätter de {count} moment som redan finns i din tidslinje med den klassiska ordningen. Ditt övriga arbete påverkas inte. Fortsätta?",
   "Something only we have": "Något bara vi har",
   "Getting ready": "Förberedelser",
   "First look": "First look",
