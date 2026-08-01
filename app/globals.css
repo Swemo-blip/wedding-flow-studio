@@ -10072,8 +10072,11 @@ a {
 
   .vstudio-rail {
     flex-direction: row;
-    align-self: stretch;
-    justify-content: center;
+    align-self: start;
+    justify-content: flex-start;
+    padding: 5px;
+    background: var(--surface-soft);
+    border-radius: 999px;
   }
 
   .vstudio-canvas {
