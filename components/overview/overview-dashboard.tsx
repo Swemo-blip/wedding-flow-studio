@@ -697,7 +697,14 @@ export function OverviewDashboard() {
       ) : (
         <div className="vstudio-body vstudio-body-preview" data-fullscreen={isFullscreen ? "true" : undefined} ref={canvasRef}>
           <section aria-label={t("Ceremony preview")} className="vstudio-canvas vstudio-canvas-preview">
-            <PreviewWalkthrough phaseIndex={waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "")} />
+            <PreviewWalkthrough
+              congregationPhotos={congregationPhotos}
+              couplePhotos={couplePhotos}
+              phaseIndex={waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "")}
+              plan={plan}
+              sceneEdits={sceneEdits}
+              staging={staging}
+            />
             <div className="vstudio-preview-overlay">
               <span>{phases[safePhaseIndex]?.timeRange}</span>
               <strong>{t(phases[safePhaseIndex]?.title ?? "")}</strong>

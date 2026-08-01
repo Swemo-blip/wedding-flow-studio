@@ -10,6 +10,7 @@ import {
   createWeddingStudioPlanFromWedding,
   defaultStudioSceneEdits,
   defaultWeddingStudioPlan,
+  type CeremonyStaging,
   type StudioSceneEdits,
   type StudioPlanningStepId,
   type WeddingStudioPlan
@@ -45,9 +46,26 @@ const walkthrough: Waypoint[] = [
 
 type PreviewWalkthroughProps = {
   phaseIndex: number;
+  // The home studio hands over its LIVE state so Edit → Preview shows the same
+  // scene. Without these the preview re-read localStorage and silently dropped
+  // staging and the uploaded faces, so pressing Preview lost the groom waiting at
+  // the altar, the singer, and every guest's face. Omitted on /preview, which has
+  // no editor above it and falls back to the stored layout.
+  congregationPhotos?: (string | null)[];
+  couplePhotos?: { bride: string | null; groom: string | null };
+  plan?: WeddingStudioPlan;
+  sceneEdits?: StudioSceneEdits;
+  staging?: CeremonyStaging;
 };
 
-export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
+export function PreviewWalkthrough({
+  phaseIndex,
+  congregationPhotos,
+  couplePhotos,
+  plan: livePlan,
+  sceneEdits: liveSceneEdits,
+  staging
+}: PreviewWalkthroughProps) {
   const { dinnerTables, hasLocalProject, wedding } = useLocalProject();
   const activeWedding = hasLocalProject ? wedding : sampleWedding;
 
@@ -58,18 +76,19 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
   // Edit → Preview on the home studio visibly reverted the look. Read post-mount
   // to stay hydration-safe.
   const [storedPlan, setStoredPlan] = useState<WeddingStudioPlan | null>(null);
-  const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
+  const [storedSceneEdits, setStoredSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   useEffect(() => {
     queueMicrotask(() => {
       const stored = readStoredWeddingStudioLayout();
       if (stored) {
         setStoredPlan(stored.plan);
-        setSceneEdits(stored.sceneEdits);
+        setStoredSceneEdits(stored.sceneEdits);
       }
     });
   }, []);
 
-  const plan = storedPlan ?? derivedPlan;
+  const plan = livePlan ?? storedPlan ?? derivedPlan;
+  const sceneEdits = liveSceneEdits ?? storedSceneEdits;
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
 
   const waypoint = walkthrough[Math.min(phaseIndex, walkthrough.length - 1)] ?? walkthrough[0];
@@ -90,11 +109,14 @@ export function PreviewWalkthrough({ phaseIndex }: PreviewWalkthroughProps) {
       cameraOverride={waypoint.camera}
       capacity={capacity}
       colorDirection={plan.colorDirection}
+      congregationPhotos={congregationPhotos}
+      couplePhotos={couplePhotos}
       lighting={waypoint.lighting}
       onMoveObject={() => {}}
       onSelectObject={() => {}}
       sceneEdits={sceneEdits}
       selectedObjectId="focalPoint"
+      staging={staging}
       style={plan.style}
       venueType={plan.venueType}
       viewMode="3d"
