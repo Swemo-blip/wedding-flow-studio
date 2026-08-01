@@ -44,6 +44,21 @@ const walkthrough: Waypoint[] = [
   { camera: { position: [0, 2.5, 5.9], target: [0, 0.6, 0.5] }, lighting: "dusk", step: "reception" } // Party — pulled back inside the room
 ];
 
+// Exposed so a surface that already renders CeremonyScene (the home studio) can
+// drive THAT scene through the walkthrough instead of mounting a second one.
+// Mounting a second one tore the first down on every Edit⇄Preview switch and
+// rebuilt ~900 meshes, which is what made Preview look broken for tens of
+// seconds. Routes with no editor above them keep using the component below.
+export function walkthroughWaypoint(phaseIndex: number): Waypoint {
+  return walkthrough[Math.min(Math.max(phaseIndex, 0), walkthrough.length - 1)] ?? walkthrough[0];
+}
+
+// The couple actually walks in during the processional (phase 2) and stays at
+// the altar through the ceremony.
+export function isAutoProcessional(phaseIndex: number, waypoint: Waypoint): boolean {
+  return waypoint.step !== "reception" && phaseIndex >= 2;
+}
+
 type PreviewWalkthroughProps = {
   phaseIndex: number;
   // The home studio hands over its LIVE state so Edit → Preview shows the same
@@ -91,12 +106,8 @@ export function PreviewWalkthrough({
   const sceneEdits = liveSceneEdits ?? storedSceneEdits;
   const capacity = useMemo(() => calculateWeddingStudioCapacity(plan), [plan]);
 
-  const waypoint = walkthrough[Math.min(phaseIndex, walkthrough.length - 1)] ?? walkthrough[0];
-
-  // The couple actually walks in during the processional (phase 2) and stays at
-  // the altar through the ceremony — previously they stood frozen at the back
-  // of the aisle the whole time, absent from their own vows.
-  const autoProcessional = waypoint.step !== "reception" && phaseIndex >= 2;
+  const waypoint = walkthroughWaypoint(phaseIndex);
+  const autoProcessional = isAutoProcessional(phaseIndex, waypoint);
 
   return (
     <CeremonyScene

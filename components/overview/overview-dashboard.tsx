@@ -21,7 +21,7 @@ import { MobileNavigation } from "@/components/app-shell/navigation";
 import { SavedChip } from "@/components/app-shell/saved-chip";
 import { StudioInspector, type SceneWarning, type StudioTool } from "@/components/overview/studio-inspector";
 import { StudioPlayback } from "@/components/overview/studio-playback";
-import { PreviewWalkthrough } from "@/components/preview/preview-walkthrough";
+import { isAutoProcessional, walkthroughWaypoint } from "@/components/preview/preview-walkthrough";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
@@ -58,6 +58,11 @@ type HeroScene = "ceremony" | "reception";
 // The workspace has exactly two modes: build the scene, or watch the day.
 // The full edit interface and the full playback interface never show together.
 type StudioMode = "edit" | "preview";
+
+// Module-level so their identity is stable across renders — the scene is now a
+// single long-lived mount, and a fresh closure every render would churn its props.
+const noopMoveObject = () => {};
+const noopSelectObject = () => {};
 
 const RAIL_TOOLS: Array<{ icon: typeof Compass; id: StudioTool; label: string }> = [
   { icon: Compass, id: "overview", label: "Scene overview" },
@@ -209,6 +214,14 @@ export function OverviewDashboard() {
     return derived.length ? derived : previewPhases;
   }, [localProject.timelineItems]);
   const safePhaseIndex = Math.min(phaseIndex, phases.length - 1);
+
+  // Edit and Preview used to render two SEPARATE CeremonyScene mounts, one in
+  // each branch of the mode ternary. React tore one down and built the other on
+  // every switch — the whole Canvas, the HDRI, every GLB and ~900 meshes — so
+  // Preview showed a beige void for tens of seconds and read as broken. There is
+  // now one scene, and mode only changes these props.
+  const previewWaypoint = mode === "preview" ? walkthroughWaypoint(waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "")) : null;
+  const isPreview = previewWaypoint !== null;
 
   useEffect(() => {
     if (mode !== "preview" || !isPlaying) {
@@ -535,9 +548,17 @@ export function OverviewDashboard() {
         <MobileNavigation />
       </header>
 
-      {mode === "edit" ? (
-        <>
-          <div className="vstudio-body" data-inspector={inspectorOpen ? "open" : "closed"}>
+      {/* ONE body, ONE canvas section, ONE CeremonyScene. The conditionals below
+          render null in place rather than removing slots, so the scene keeps its
+          position in the children array and React never remounts it. */}
+      <>
+          <div
+            className={isPreview ? "vstudio-body vstudio-body-preview" : "vstudio-body"}
+            data-fullscreen={isPreview && isFullscreen ? "true" : undefined}
+            data-inspector={isPreview ? undefined : inspectorOpen ? "open" : "closed"}
+            ref={canvasRef}
+          >
+            {isPreview ? null : (
             <nav aria-label={t("Scene tools")} className="vstudio-rail">
               {RAIL_TOOLS.map((tool) => {
                 const Icon = tool.icon;
@@ -559,31 +580,50 @@ export function OverviewDashboard() {
                 );
               })}
             </nav>
+            )}
 
-            <section aria-label={t("3D venue workspace")} className="vstudio-canvas" ref={canvasRef}>
+            <section
+              aria-label={isPreview ? t("Ceremony preview") : t("3D venue workspace")}
+              className={isPreview ? "vstudio-canvas vstudio-canvas-preview" : "vstudio-canvas"}
+            >
               <CeremonyScene
-                activeStep={sceneStep}
+                activeStep={previewWaypoint ? previewWaypoint.step : sceneStep}
                 aisleWidthFeet={plan.aisleWidthFeet}
+                autoProcessional={previewWaypoint ? isAutoProcessional(safePhaseIndex, previewWaypoint) : undefined}
                 budgetLevel={plan.budgetLevel}
+                cameraOverride={previewWaypoint ? previewWaypoint.camera : null}
                 capacity={capacity}
                 congregationPhotos={congregationPhotos}
                 couplePhotos={couplePhotos}
                 dinnerTables={localProject.dinnerTables}
                 seatingLayout={plan.seatingLayout}
                 colorDirection={plan.colorDirection}
-                lighting={lighting}
-                onMoveObject={moveSceneObject}
-                onSelectObject={selectObjectFromScene}
+                lighting={previewWaypoint ? previewWaypoint.lighting : lighting}
+                onMoveObject={isPreview ? noopMoveObject : moveSceneObject}
+                onSelectObject={isPreview ? noopSelectObject : selectObjectFromScene}
                 sceneEdits={sceneEdits}
-                selectedObjectId={activeSelectedObjectId}
+                selectedObjectId={isPreview ? "focalPoint" : activeSelectedObjectId}
                 staging={staging}
                 style={plan.style}
                 venueType={sceneVenueType}
-                viewMode={dimension === "2d" ? "top" : "3d"}
-                zoom={zoom}
+                viewMode={isPreview ? "3d" : dimension === "2d" ? "top" : "3d"}
+                zoom={isPreview ? 1 : zoom}
               />
 
+              {isPreview ? (
+                <div className="vstudio-preview-overlay">
+                  <span>{phases[safePhaseIndex]?.timeRange}</span>
+                  <strong>{t(phases[safePhaseIndex]?.title ?? "")}</strong>
+                </div>
+              ) : null}
+
               <div className="vstudio-camera" role="group" aria-label={t("Camera controls")}>
+                {isPreview ? (
+                  <button aria-label={t("Toggle fullscreen preview")} onClick={toggleFullscreen} title={t("Toggle fullscreen preview")} type="button">
+                    <Expand aria-hidden="true" size={14} strokeWidth={1.9} />
+                  </button>
+                ) : (
+                  <>
                 <button aria-pressed={dimension === "2d"} data-active={dimension === "2d"} onClick={() => setDimension("2d")} type="button">
                   2D
                 </button>
@@ -627,10 +667,12 @@ export function OverviewDashboard() {
                     )}
                   </button>
                 )}
+                  </>
+                )}
               </div>
             </section>
 
-            {inspectorOpen ? (
+            {isPreview ? null : inspectorOpen ? (
               <aside aria-label={t("Scene inspector")} className="vstudio-inspector">
                 <StudioInspector
                   activeTool={activeTool}
@@ -657,6 +699,7 @@ export function OverviewDashboard() {
             ) : null}
           </div>
 
+          {isPreview ? null : (
           <footer className="vstudio-status">
             <span>
               {sceneKind === "reception"
@@ -693,29 +736,9 @@ export function OverviewDashboard() {
                 : t("All clear")}
             </button>
           </footer>
-        </>
-      ) : (
-        <div className="vstudio-body vstudio-body-preview" data-fullscreen={isFullscreen ? "true" : undefined} ref={canvasRef}>
-          <section aria-label={t("Ceremony preview")} className="vstudio-canvas vstudio-canvas-preview">
-            <PreviewWalkthrough
-              congregationPhotos={congregationPhotos}
-              couplePhotos={couplePhotos}
-              phaseIndex={waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "")}
-              plan={plan}
-              sceneEdits={sceneEdits}
-              staging={staging}
-            />
-            <div className="vstudio-preview-overlay">
-              <span>{phases[safePhaseIndex]?.timeRange}</span>
-              <strong>{t(phases[safePhaseIndex]?.title ?? "")}</strong>
-            </div>
-            <div className="vstudio-camera" role="group" aria-label={t("Camera controls")}>
-              <button aria-label={t("Toggle fullscreen preview")} onClick={toggleFullscreen} title={t("Toggle fullscreen preview")} type="button">
-                <Expand aria-hidden="true" size={14} strokeWidth={1.9} />
-              </button>
-            </div>
-          </section>
+          )}
 
+          {isPreview ? (
           <StudioPlayback
             index={safePhaseIndex}
             isPlaying={isPlaying}
@@ -739,8 +762,8 @@ export function OverviewDashboard() {
             onTogglePlay={() => setIsPlaying((value) => !value)}
             phases={phases}
           />
-        </div>
-      )}
+          ) : null}
+      </>
     </div>
   );
 }
