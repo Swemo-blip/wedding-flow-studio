@@ -1943,6 +1943,19 @@ const POSE_BOUQUET: FigurePose = {
 // while walking, and for anyone whose hands are doing something else.
 // Hands folded low and close, which is how someone stands while leading a service
 // rather than the groom's slightly wider clasp.
+// MEASURED 2026-08-01 via scripts/scene-probe.js plus a palm-bone read: this pose
+// puts his palms at x +0.267 and -0.290 — a gap of 0.558 m on a figure 1.10 m
+// tall, proportionally an adult holding their hands 87 cm apart. THAT is what
+// reads as "strange arms", and no psalter fits between them.
+//
+// Do not tune the `z` component to close it. Rolling z inward on UpperArm and
+// LowerArm (tried -0.62/+0.18 per side) moved the gap from 0.530 to 0.558 — the
+// wrong direction. z is not the left-right spread axis for these bones, and the
+// axis mapping must be established empirically before any value here is changed:
+// perturb ONE axis on ONE bone and read the resulting palm world position. Note
+// the pose layer re-applies `rest × offset` every frame, so a live perturbation is
+// overwritten on the next frame — measure within the same frame or disable the
+// layer first. Hand-bone world scale is 23.5, not FIGURE_SCALE.
 const POSE_OFFICIANT: FigurePose = {
   "Shoulder.L": [0, 0, -0.05],
   "Shoulder.R": [0, 0, 0.05],
