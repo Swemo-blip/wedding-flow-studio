@@ -234,10 +234,11 @@ a {
 .mobile-nav {
   display: none;
   width: 100%;
+  max-width: 280px;
   margin-top: 12px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  background: var(--surface-soft);
   color: var(--ink);
   font-weight: 600;
   padding: 11px 12px;

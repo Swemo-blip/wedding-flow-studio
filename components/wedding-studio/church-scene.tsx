@@ -3984,7 +3984,11 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
   // wedding-photography grammar, not the old drone altitude.
   if (venueType === "church" && activeStep !== "reception") {
     const churchPositions: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 1.7, 8.7],
+      // Measured, not guessed: the back pew row ends at z 4.42 and WEST_WALL_Z is
+      // 6.3, so the hero eye stands in the aisle between them. The old 8.7 pre-dated
+      // the west wall and left the camera outside the building, framing a blank
+      // limestone wall with the nave glimpsed through the portal.
+      "3d": [0, 1.7, 5.7],
       guest: [0, 1.45, 4.2],
       top: [0, 11, 0.4],
       walkthrough: [0, 1.85, 4.8]
