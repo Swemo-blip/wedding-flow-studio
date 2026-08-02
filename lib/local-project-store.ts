@@ -208,6 +208,43 @@ function renameKlaraToSanne(wedding: Wedding): Wedding {
   return { ...wedding, coupleNames, partnerOneName, partnerTwoName };
 }
 
+// The guest list the owner ordered alongside the rename: "Johan och Sanne med
+// 50 gäster, auto-fyll med random-namn". Seeded ONLY while the Klara migration
+// is firing (i.e. exactly once per browser), and only into an EMPTY list — so a
+// list he later empties on purpose stays empty. Plain names without diacritics
+// keep the language scan clean; every field matches what addGuest writes.
+const SEEDED_GUEST_NAMES = [
+  "Anna Lindberg", "Erik Nilsson", "Maria Holm", "Johan Berg", "Elin Sandell",
+  "Oskar Lund", "Karin Ekstrom", "Anders Vik", "Sofia Dahl", "Henrik Strand",
+  "Emma Rosen", "Magnus Falk", "Lisa Norberg", "Fredrik Palm", "Ida Bergstrom",
+  "Per Sundin", "Hanna Ek", "Mikael Torn", "Julia Ros", "Daniel Hedin",
+  "Amanda Sjo", "Niklas Ohman", "Sara Wall", "Jonas Alm", "Vera Vinter",
+  "Viktor Rehn", "Linnea Falkman", "Gustav Norr", "Alice Brandt", "Filip Sten",
+  "Ebba Lundqvist", "Axel Hammar", "Wilma Ceder", "Leo Bjork", "Alma Kvist",
+  "Hugo Malm", "Elsa Rydell", "Adam Skog", "Astrid Voss", "Isak Berggren",
+  "Maja Ekman", "Anton Frisk", "Nora Hellman", "Emil Stark", "Signe Aberg",
+  "Ludvig Sand", "Freja Holmgren", "Casper Nyman", "Tuva Lindell", "Arvid Storm"
+];
+
+function seedGuestsForMigratedPlan(): Guest[] {
+  return SEEDED_GUEST_NAMES.map((name, index) => ({
+    accessibilityNotes: "",
+    allergies: [],
+    conflictGuestIds: [],
+    household: "",
+    id: `guest-seeded-${index + 1}`,
+    language: "",
+    mealChoice: "",
+    name,
+    preferredGuestIds: [],
+    seatIndex: index,
+    relationship: "",
+    rsvpStatus: "pending",
+    tableId: "",
+    tags: []
+  }));
+}
+
 export function readStoredProject() {
   if (typeof window === "undefined") {
     return null;
@@ -223,6 +260,12 @@ export function readStoredProject() {
       // and sent it down the unreadable-value path. It only needs them to be
       // arrays; the individual records are filtered below like everything else.
       if (Array.isArray(parsed.timelineItems) && Array.isArray(parsed.musicCues)) {
+        const parsedWedding = isWedding(parsed.wedding) ? parsed.wedding : blankWedding();
+        const migratedWedding = renameKlaraToSanne(parsedWedding);
+        // The rename firing marks this as the owner's pre-migration plan — the
+        // only case where an empty guest list gets his ordered 50 seeded names.
+        const renameFired = migratedWedding !== parsedWedding;
+        const storedGuests = readGuests(parsed.guests);
         return createStoredProjectDraft({
           updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : undefined,
           // A slice that fails validation falls back to EMPTY, never to the sample.
@@ -232,11 +275,11 @@ export function readStoredProject() {
           // was even slightly malformed saw the sample's 27 guests, complete with
           // meal choices, presented as their own on the summary, the exports and in
           // the 3D room. An empty list says "nothing here yet", which is true.
-          wedding: renameKlaraToSanne(isWedding(parsed.wedding) ? parsed.wedding : blankWedding()),
+          wedding: migratedWedding,
           timelineItems: keepValid<TimelineItem>(parsed.timelineItems, isTimelineArray).items,
           musicCues: keepValid<MusicCue>(parsed.musicCues, isMusicCueArray).items,
           speeches: keepValid<Speech>(parsed.speeches, isSpeechArray).items,
-          guests: readGuests(parsed.guests),
+          guests: storedGuests.length === 0 && renameFired ? seedGuestsForMigratedPlan() : storedGuests,
           dinnerTables: keepValid<DinnerTable>(parsed.dinnerTables, isDinnerTableArray).items,
           vendorCandidates: keepValid<VendorCandidate>(parsed.vendorCandidates, isVendorCandidateArray).items,
           riskResolutions: keepValid<StoredRiskResolution>(parsed.riskResolutions, isRiskResolutionArray).items
