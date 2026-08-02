@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { LanguageProvider } from "@/lib/i18n";
 import { sampleWedding } from "@/lib/wedding-data";
 import "./globals.css";
 
-const displaySerif = Fraunces({
+// Fraunces ships a literal "wonk" axis — it is drawn to be characterful, and on
+// a product where couples commit six figures it read, in the owner's words, like
+// a comic. Cormorant Garamond is the opposite register: high stroke contrast,
+// restrained, the face luxury stationery actually uses. It carries only couple
+// names and one headline per surface, which is exactly what a delicate display
+// serif is for; Inter still does all the work.
+const displaySerif = Cormorant_Garamond({
   display: "swap",
   style: ["normal", "italic"],
   subsets: ["latin"],

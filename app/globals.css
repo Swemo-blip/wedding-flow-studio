@@ -208,14 +208,14 @@ a {
   background: linear-gradient(150deg, #cfae72, #9c7b45);
   color: #241e11;
   font-family: var(--font-serif);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
 .brand-kicker,
 .eyebrow {
   color: var(--subtle);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -266,7 +266,7 @@ a {
   border-radius: 999px;
   background: var(--gold-tint, rgba(176, 143, 79, 0.14));
   border: 1px solid var(--line-strong);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: var(--ink);
 }
 
@@ -366,7 +366,7 @@ a {
 
 .studio-route-copy span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -434,7 +434,7 @@ a {
 
 .studio-scene-heading span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -586,7 +586,7 @@ a {
 .sourcing-search-card span,
 .sourcing-detail-grid span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -597,7 +597,7 @@ a {
 .vendor-candidate-card span,
 .vendor-fit-score span {
   color: var(--blue);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -607,7 +607,7 @@ a {
 .vendor-panel-header strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.22rem;
+  font-size: 1.25rem;
   font-weight: 650;
   line-height: 1.2;
 }
@@ -635,7 +635,7 @@ a {
 .sourcing-queue strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
@@ -675,7 +675,7 @@ a {
 .sourcing-category-list button strong {
   color: inherit;
   font-family: var(--font-serif);
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 650;
 }
 
@@ -721,7 +721,7 @@ a {
 .sourcing-role-card strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.12rem;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
@@ -738,7 +738,7 @@ a {
 .sourcing-search-card strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.22rem;
+  font-size: 1.25rem;
   font-weight: 650;
   line-height: 1.2;
 }
@@ -755,7 +755,7 @@ a {
   min-height: 42px;
   align-items: center;
   color: var(--blue);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -832,14 +832,14 @@ a {
 }
 
 .vendor-quote-figure strong {
-  font-size: 1.08rem;
+  font-size: 1.125rem;
   letter-spacing: -0.01em;
 }
 
 .vendor-candidate-card strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.08rem;
+  font-size: 1.125rem;
   font-weight: 650;
   line-height: 1.22;
 }
@@ -861,7 +861,7 @@ a {
 }
 
 .vendor-fit-score strong {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
@@ -876,7 +876,7 @@ a {
   display: grid;
   gap: 5px;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -890,7 +890,7 @@ a {
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 750;
   padding: 10px 11px;
 }
@@ -909,7 +909,7 @@ a {
 .director-empty-state strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-size: 1.125rem;
 }
 
 /* The empty board says what to do next, so the action sits with the sentence
@@ -981,7 +981,7 @@ a {
 .sourcing-full-list > summary span {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.12rem;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
@@ -1044,7 +1044,7 @@ a {
   max-width: 820px;
   margin: 0;
   color: var(--muted);
-  font-size: 1.04rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 
@@ -1069,7 +1069,7 @@ a {
 .intake-flow-preview > span,
 .intake-notes-grid span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1191,7 +1191,7 @@ a {
 
 .intake-preview-metrics strong {
   font-family: var(--font-serif);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
@@ -1218,7 +1218,7 @@ a {
 
 .intake-flow-preview strong {
   font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .intake-next-actions {
@@ -1321,7 +1321,7 @@ a {
 .guided-role-presets span,
 .guided-advanced-grid label > span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1355,7 +1355,7 @@ a {
 
 .guided-intake-save-state strong {
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.32;
 }
 
@@ -1471,11 +1471,11 @@ a {
 
 .guided-capacity-note strong {
   color: var(--ink);
-  font-size: 1.1rem;
+  font-size: 1.125rem;
 }
 
 .guided-capacity-note span {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.4;
   text-transform: none;
@@ -1509,7 +1509,7 @@ a {
 
 .guided-role-presets strong {
   color: inherit;
-  font-size: 0.94rem;
+  font-size: 0.88rem;
 }
 
 .guided-role-fieldset label {
@@ -1602,7 +1602,7 @@ a {
   background: rgba(255, 255, 255, 0.86);
   color: var(--ink);
   padding: 8px 10px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 650;
   transform: translateX(-50%);
 }
@@ -1736,7 +1736,7 @@ a {
 .digital-twin-detail-grid span,
 .digital-twin-stats-row span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1745,7 +1745,7 @@ a {
 .digital-twin-score strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 2.6rem;
+  font-size: 2.5rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -1840,7 +1840,7 @@ a {
 
 .digital-twin-node span {
   color: var(--champagne-dark);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
 }
 
@@ -1896,7 +1896,7 @@ a {
 .digital-twin-detail-grid strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -1927,7 +1927,7 @@ a {
 
 .digital-twin-stats-row strong {
   font-family: var(--font-serif);
-  font-size: 1.55rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
@@ -1942,7 +1942,7 @@ a {
 .studio-control-group label,
 .planning-stepper button span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2029,7 +2029,7 @@ a {
   background: transparent;
   color: rgba(255, 255, 255, 0.86);
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   transition:
@@ -2204,7 +2204,7 @@ a {
 .studio-command-metrics span,
 .studio-command-control span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2241,7 +2241,7 @@ a {
 
 .module-decision-strip span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2263,7 +2263,7 @@ a {
   overflow: hidden;
   margin: 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   line-height: 1.36;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -2309,7 +2309,7 @@ a {
   border-radius: 999px;
   padding: 10px 20px;
   font-weight: 520;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   letter-spacing: 0.005em;
   cursor: pointer;
   transition:
@@ -2394,7 +2394,7 @@ a {
   padding: 4px 7px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   line-height: 1;
   box-shadow: none;
@@ -2459,13 +2459,13 @@ a {
 .analysis-title {
   margin: 0;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 .analysis-copy {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.45;
 }
 
@@ -2517,7 +2517,7 @@ a {
 
 .timeline-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 .timeline-meta {
@@ -2530,7 +2530,7 @@ a {
 .timeline-notes {
   margin: 10px 0 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
@@ -2659,7 +2659,7 @@ a {
 }
 
 .editable-timeline-card strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
 }
 
 .timeline-editor-card {
@@ -2772,7 +2772,7 @@ a {
 
 .action-dock-meta span {
   color: var(--muted);
-  font-size: 0.73rem;
+  font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2871,7 +2871,7 @@ a {
 
 .field label {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -2956,7 +2956,7 @@ a {
   width: 100%;
   margin-top: 16px;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 .budget-table th {
@@ -3000,7 +3000,7 @@ a {
   }
 
   .budget-table {
-    font-size: 0.84rem;
+    font-size: 0.82rem;
   }
 
   .budget-table th,
@@ -3044,7 +3044,7 @@ a {
 .cue-grid dt,
 .export-contact span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -3069,7 +3069,7 @@ a {
 .summary-alert span,
 .contact-list span {
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .studio-workflow {
@@ -3131,7 +3131,7 @@ a {
 }
 
 .studio-workflow-step strong {
-  font-size: 0.98rem;
+  font-size: 1rem;
   line-height: 1.2;
 }
 
@@ -3194,7 +3194,7 @@ a {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.78);
   color: var(--champagne-dark);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
 }
 
@@ -3239,7 +3239,7 @@ a {
   max-width: 46ch;
   margin: 0;
   color: var(--ink);
-  font-size: 1.06rem;
+  font-size: 1rem;
   line-height: 1.55;
 }
 
@@ -3260,13 +3260,13 @@ a {
 .preview-location-card span,
 .preview-brief-grid span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
 
 .preview-location-card strong {
-  font-size: 1.04rem;
+  font-size: 1rem;
 }
 
 .preview-flow-line {
@@ -3309,7 +3309,7 @@ a {
   background: rgba(255, 255, 255, 0.9);
   padding: 8px 12px;
   color: var(--champagne-dark);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -3341,7 +3341,7 @@ a {
   max-width: 112px;
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.15;
   text-align: center;
@@ -3381,7 +3381,7 @@ a {
 
 .preview-linked-moments > span {
   color: var(--champagne-dark);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -3389,7 +3389,7 @@ a {
 .preview-linked-moments p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.42;
 }
 
@@ -3406,7 +3406,7 @@ a {
   min-height: 22px;
   border-left: 2px solid rgba(255, 255, 255, 0.28);
   color: rgba(255, 255, 255, 0.72);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   line-height: 1.1;
   padding-left: 8px;
@@ -3639,7 +3639,7 @@ a {
 .preview-command-facts span,
 .preview-intelligence-strip span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -3740,7 +3740,7 @@ a {
 
 .preview-watch-card > span {
   color: var(--champagne-dark);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 650;
 }
 
@@ -3920,7 +3920,7 @@ a {
 .preview-support-details > summary span {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
@@ -3992,7 +3992,7 @@ a {
 .moment-handoff-card span,
 .moment-primary-action .eyebrow {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -4059,7 +4059,7 @@ a {
 .moment-intel-card strong {
   display: block;
   color: var(--ink);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   line-height: 1.25;
 }
 
@@ -4127,7 +4127,7 @@ a {
 .altar span,
 .altar em {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-style: normal;
 }
 
@@ -4259,7 +4259,7 @@ a {
   background: rgba(16, 18, 7, 0.86);
   color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
@@ -4279,7 +4279,7 @@ a {
   border: 1px solid var(--line);
   color: var(--ink-soft);
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -4295,7 +4295,7 @@ a {
   border-radius: 999px;
   background: rgba(16, 18, 7, 0.5);
   color: rgba(255, 255, 255, 0.86);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 500;
   pointer-events: none;
   backdrop-filter: blur(6px);
@@ -4310,7 +4310,7 @@ a {
 .selected-guest-journey span,
 .reception-guest-details > summary small {
   color: rgba(255, 255, 255, 0.66);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -4386,7 +4386,7 @@ a {
 .reception-guest-details > summary span {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.04rem;
+  font-size: 1rem;
   font-weight: 650;
 }
 
@@ -4416,7 +4416,7 @@ a {
 
 .setup-hint {
   margin: 6px 0 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1.4;
   color: var(--muted);
 }
@@ -4458,7 +4458,7 @@ a {
 
 .shared-meta {
   color: rgba(33, 29, 20, 0.6);
-  font-size: 0.98rem;
+  font-size: 1rem;
   letter-spacing: 0.01em;
 }
 
@@ -4480,20 +4480,20 @@ a {
 }
 
 .shared-facts span {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: rgba(33, 29, 20, 0.5);
 }
 
 .shared-facts strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .shared-timeline h2 {
   font-family: var(--font-serif);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 500;
   margin-bottom: 16px;
 }
@@ -4520,7 +4520,7 @@ a {
   font-variant-numeric: tabular-nums;
   color: #9a7d49;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   padding-top: 2px;
 }
 
@@ -4543,7 +4543,7 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: rgba(33, 29, 20, 0.5);
 }
 
@@ -4601,14 +4601,14 @@ a {
 
 .studio-detail-drawer > summary span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
 
 .studio-detail-drawer > summary strong {
   color: var(--ink);
-  font-size: 0.94rem;
+  font-size: 0.88rem;
 }
 
 .studio-detail-drawer .card {
@@ -4678,7 +4678,7 @@ a {
   min-height: 22px;
   border-left: 2px solid var(--line-strong);
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   line-height: 1.1;
   padding-left: 8px;
@@ -4749,7 +4749,7 @@ a {
 
 .director-command-strip span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -4807,7 +4807,7 @@ a {
 .director-production-queue small {
   margin: 3px 0 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
@@ -5030,19 +5030,19 @@ a {
 
 .export-brief-card span {
   color: var(--blue);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 650;
 }
 
 .export-brief-card strong {
   color: var(--ink);
-  font-size: 0.96rem;
+  font-size: 1rem;
   line-height: 1.15;
 }
 
 .export-brief-card small {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 760;
   line-height: 1.25;
 }
@@ -5063,7 +5063,7 @@ a {
 .copy-status {
   align-self: center;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
 }
 
@@ -5075,7 +5075,7 @@ a {
 
 .export-section h4 {
   margin: 0 0 12px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   text-transform: uppercase;
   color: var(--champagne-dark);
 }
@@ -5455,7 +5455,7 @@ a {
   }
 
   .studio-command-main h2 {
-    font-size: 1.08rem;
+    font-size: 1.125rem;
     line-height: 1.12;
   }
 
@@ -5488,7 +5488,7 @@ a {
   }
 
   .timeline-time {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
   }
 
   .timeline-editor-card {
@@ -5569,7 +5569,7 @@ a {
 
   .preview-person-token small {
     max-width: 82px;
-    font-size: 0.64rem;
+    font-size: 0.68rem;
   }
 
   .preview-command-facts,
@@ -5596,7 +5596,7 @@ a {
   }
 
   .preview-stage-zone {
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     padding: 6px 8px;
   }
 
@@ -5767,7 +5767,7 @@ a {
   background: transparent;
   color: var(--ink-soft);
   font-family: var(--font-sans);
-  font-size: 0.83rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -5799,7 +5799,7 @@ a {
 
 .print-place-name {
   font-family: var(--font-serif);
-  font-size: 1.06rem;
+  font-size: 1rem;
   color: var(--ink);
 }
 
@@ -5815,7 +5815,7 @@ a {
 .print-place-diet {
   margin-top: 8px;
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-style: italic;
   color: var(--ink-soft);
 }
@@ -5844,7 +5844,7 @@ a {
 .print-poster-eyebrow {
   margin: 5px 0 30px;
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   letter-spacing: 0.22em;
   text-align: center;
   text-transform: uppercase;
@@ -5862,13 +5862,13 @@ a {
   margin-bottom: 8px;
   border-bottom: 1px solid var(--line);
   font-family: var(--font-serif);
-  font-size: 0.98rem;
+  font-size: 1rem;
   color: var(--ink);
 }
 
 .print-poster-guest {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.7;
   color: var(--ink-soft);
 }
@@ -5887,14 +5887,14 @@ a {
 
 .print-programme-line span {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   letter-spacing: 0.06em;
   color: var(--gilt);
 }
 
 .print-programme-line strong {
   font-family: var(--font-serif);
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 400;
   color: var(--ink);
 }
@@ -5908,7 +5908,7 @@ a {
 .print-programme-heading {
   margin-bottom: 7px;
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gilt);
@@ -5916,7 +5916,7 @@ a {
 
 .print-programme-note {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.65;
   color: var(--ink-soft);
 }
@@ -5977,7 +5977,7 @@ a {
 .supply-count {
   flex: 0 0 44px;
   font-family: var(--font-serif);
-  font-size: 1.06rem;
+  font-size: 1rem;
   text-align: right;
   color: var(--accent);
 }
@@ -5990,14 +5990,14 @@ a {
 
 .supply-item strong {
   font-family: var(--font-sans);
-  font-size: 0.87rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--ink);
 }
 
 .supply-item em {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-style: normal;
   color: var(--gilt);
 }
@@ -6026,7 +6026,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink-soft);
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -6071,7 +6071,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.81rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition:
     border-color 140ms ease,
@@ -6085,7 +6085,7 @@ a {
 
 .moment-library-row button span {
   color: var(--ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 
 /* The primary way into a full day, so it reads as the offer and the one-at-a-time
@@ -6112,7 +6112,7 @@ a {
 
 .moment-library-classic span {
   font-weight: 400;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   color: var(--ink-muted);
 }
 
@@ -6161,7 +6161,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink-soft);
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   cursor: pointer;
   transition:
     background 140ms ease,
@@ -6231,14 +6231,14 @@ a {
 
 .menu-card-couple {
   font-family: var(--font-serif);
-  font-size: 1.32rem;
+  font-size: 1.25rem;
   color: var(--ink);
 }
 
 .menu-card-eyebrow {
   margin: 4px 0 26px;
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gilt);
@@ -6259,7 +6259,7 @@ a {
 .menu-card-dish {
   margin-top: 3px;
   font-family: var(--font-serif);
-  font-size: 1.02rem;
+  font-size: 1rem;
   color: var(--ink);
 }
 
@@ -6387,7 +6387,7 @@ a {
   background: linear-gradient(150deg, #f4ead2, #e7d4aa);
   color: #8a6a2f;
   font-family: var(--font-serif);
-  font-size: 1.04rem;
+  font-size: 1rem;
   font-weight: 650;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -6396,7 +6396,7 @@ a {
 .brand-mark .brand-kicker {
   margin: 0;
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-align: left;
@@ -6424,7 +6424,7 @@ a {
   margin: 0 0 4px;
   padding-left: 11px;
   color: var(--subtle);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -6436,7 +6436,7 @@ a {
   align-items: center;
   border-radius: 9px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 540;
   padding: 8px 11px;
   transition:
@@ -6483,28 +6483,28 @@ a {
   border-radius: 50%;
   background: var(--accent);
   color: var(--ink-on-accent);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
 }
 
 .sidebar-user strong {
   display: block;
   color: var(--ink);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.15;
 }
 
 .sidebar-user span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
 }
 
 /* The avatar is also a span inside .sidebar-user, so the rule above outranked
    .sidebar-avatar on specificity and painted the initials muted-on-green. */
 .sidebar-user .sidebar-avatar {
   color: var(--ink-on-accent);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 
 .studio-header {
@@ -6537,7 +6537,7 @@ a {
 .studio-header-identity p {
   margin: 5px 0 0;
   color: var(--subtle);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -6556,7 +6556,7 @@ a {
   gap: 7px;
   align-items: center;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 540;
   padding-right: 3px;
 }
@@ -6615,7 +6615,7 @@ a {
 .scene-boot-monogram {
   color: #d8b877;
   font-family: var(--font-serif);
-  font-size: 1.7rem;
+  font-size: 1.75rem;
   font-weight: 650;
   letter-spacing: 0.08em;
 }
@@ -6662,7 +6662,7 @@ a {
   }
 
   .studio-header-identity h1 {
-    font-size: 1.45rem;
+    font-size: 1.5rem;
   }
 
   .studio-saved-chip {
@@ -6706,14 +6706,14 @@ a {
 }
 
 .studio-donut-center strong {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   font-weight: 650;
   line-height: 1;
 }
 
 .studio-donut-center span {
   color: var(--subtle);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 620;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -6752,20 +6752,20 @@ a {
 
 .studio-capacity-stats strong {
   color: var(--ink);
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 640;
 }
 
 .studio-capacity-stats span {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .studio-capacity-spacing {
   width: fit-content;
   padding: 2px 9px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 620;
 }
 
@@ -6793,7 +6793,7 @@ a {
   margin: 3px 0 0;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.1;
 }
@@ -6826,7 +6826,7 @@ a {
   border: 1px solid rgba(251, 246, 236, 0.18);
   background: rgba(33, 29, 20, 0.62);
   color: #fbf6ec;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   backdrop-filter: blur(4px);
 }
@@ -6871,7 +6871,7 @@ a {
 
 .style-reference-tile figcaption {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 560;
 }
 
@@ -6909,7 +6909,7 @@ a {
 
 .studio-command-main .eyebrow {
   color: var(--subtle);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 640;
   letter-spacing: 0.15em;
 }
@@ -6964,7 +6964,7 @@ a {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 640;
   letter-spacing: 0.04em;
   padding: 5px 10px;
@@ -7027,7 +7027,7 @@ a {
 
 .preview-walkthrough-overlay span {
   color: rgba(240, 234, 216, 0.72);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 640;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -7065,7 +7065,7 @@ a {
   background: rgba(16, 18, 7, 0.62);
   color: #f0ead8;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 640;
   padding: 0 12px;
   backdrop-filter: blur(8px);
@@ -7087,7 +7087,7 @@ a {
 
 .preview-walkthrough-play {
   font-family: var(--font-sans);
-  font-size: 0.86rem !important;
+  font-size: 0.88rem !important;
   font-weight: 640;
   letter-spacing: 0.01em;
 }
@@ -7241,7 +7241,7 @@ a {
 .studio-inspector-note p {
   margin: 0;
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.45;
 }
 
@@ -7264,7 +7264,7 @@ a {
   display: block;
   margin-bottom: 4px;
   color: var(--ink);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 640;
 }
 
@@ -7320,7 +7320,7 @@ a {
 
 .detail-studio-item-index {
   color: var(--subtle);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -7334,7 +7334,7 @@ a {
 .detail-studio-item-main strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -7343,7 +7343,7 @@ a {
 .detail-studio-item-main small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -7408,7 +7408,7 @@ a {
 .detail-studio-sub {
   margin: 5px 0 0;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
 }
 
 .detail-studio-detail .reception-guest-details {
@@ -7443,7 +7443,7 @@ a {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
 }
 
 .guests-search::placeholder {
@@ -7477,7 +7477,7 @@ a {
 
 .guests-row-head span {
   color: var(--subtle);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7534,7 +7534,7 @@ a {
 .couple-faces-copy p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.4;
 }
 
@@ -7551,7 +7551,7 @@ a {
 
 .couple-face-slot small {
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 640;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -7576,7 +7576,7 @@ a {
   height: 100%;
   cursor: pointer;
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   transition: background 150ms ease, color 150ms ease;
@@ -7600,7 +7600,7 @@ a {
   border-radius: 999px;
   background: var(--ink);
   color: #ffffff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   line-height: 1;
   cursor: pointer;
   opacity: 0;
@@ -7614,24 +7614,24 @@ a {
 
 .guests-cell-name strong {
   color: var(--ink);
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   font-weight: 620;
 }
 
 .guests-cell-name small {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .guests-cell-muted {
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   min-width: 0;
 }
 
 .guests-cell-diet {
   color: var(--ink);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   min-width: 0;
 }
 
@@ -7647,7 +7647,7 @@ a {
   border-radius: 999px;
   background: rgba(33, 29, 20, 0.06);
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 640;
   white-space: nowrap;
 }
@@ -7707,7 +7707,7 @@ a {
 
 .guests-tally-label {
   color: var(--subtle);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7719,7 +7719,7 @@ a {
   border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .guests-tally-chip strong {
@@ -7737,7 +7737,7 @@ a {
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .guests-cell-input:hover {
@@ -7755,12 +7755,12 @@ a {
 }
 
 .guests-cell-input-name {
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   font-weight: 620;
 }
 
 .guests-cell-input-sub {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--muted);
 }
 
@@ -7811,7 +7811,7 @@ a {
   border-radius: 12px;
   background: rgba(177, 134, 60, 0.1);
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 540;
 }
 
@@ -7821,7 +7821,7 @@ a {
   border-radius: 999px;
   background: transparent;
   color: var(--warning);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 620;
   cursor: pointer;
 }
@@ -7909,7 +7909,7 @@ a {
   }
   .stage-tabs button {
     padding: 6px 10px;
-    font-size: 0.73rem;
+    font-size: 0.76rem;
   }
 }
 
@@ -7933,7 +7933,7 @@ a {
 
 .setup-label {
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7959,7 +7959,7 @@ a {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 560;
   cursor: pointer;
 }
@@ -7978,7 +7978,7 @@ a {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 540;
 }
 
@@ -8046,7 +8046,7 @@ a {
   background: rgba(16, 18, 7, 0.8);
   color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -8129,7 +8129,7 @@ a {
   background: transparent;
   color: var(--muted);
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 580;
   white-space: nowrap;
   cursor: pointer;
@@ -8231,7 +8231,7 @@ a {
   background: transparent;
   color: var(--muted);
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 580;
   cursor: pointer;
   transition:
@@ -8261,7 +8261,7 @@ a {
   box-shadow: var(--shadow-float);
   backdrop-filter: blur(8px);
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -8290,7 +8290,7 @@ a {
   gap: 3px;
   margin-top: 12px;
   color: #9c7a36;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 620;
   text-decoration: none;
 }
@@ -8362,7 +8362,7 @@ a {
 
 .budget-summary-stats span {
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -8371,7 +8371,7 @@ a {
 .budget-summary-stats strong {
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -8394,7 +8394,7 @@ a {
 
 .budget-count {
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 540;
 }
 
@@ -8425,7 +8425,7 @@ a {
 
 .budget-row-head span {
   color: var(--subtle);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -8554,13 +8554,13 @@ a {
   margin: 0;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .checklist-phase-count {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 640;
   font-variant-numeric: tabular-nums;
 }
@@ -8576,7 +8576,7 @@ a {
   border-radius: 999px;
   background: rgba(33, 29, 20, 0.06);
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 620;
   white-space: nowrap;
 }
@@ -8662,7 +8662,7 @@ a {
   margin: 4px 0 6px;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 600;
   line-height: 1.05;
 }
@@ -8670,7 +8670,7 @@ a {
 .summary-meta {
   margin: 0;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.88rem;
 }
 
 .summary-grid {
@@ -8687,7 +8687,7 @@ a {
   margin: 0 0 10px;
   color: var(--subtle);
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -8713,7 +8713,7 @@ a {
 
 .summary-stats span {
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .summary-stats strong {
@@ -8822,7 +8822,7 @@ a {
   background: transparent;
   color: var(--muted);
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 580;
   cursor: pointer;
 }
@@ -8884,7 +8884,7 @@ a {
 .account-hint {
   margin: 0;
   color: var(--subtle);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .account-mode {
@@ -8903,7 +8903,7 @@ a {
 
 .account-field span {
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -8916,7 +8916,7 @@ a {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .account-field input:focus {
@@ -8927,13 +8927,13 @@ a {
 .account-error {
   margin: 0;
   color: var(--danger);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .account-notice {
   margin: 0;
   color: var(--success);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .account-button {
@@ -9003,7 +9003,7 @@ a {
 
 .budget-target-field > span:first-child {
   color: var(--subtle);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -9050,7 +9050,7 @@ a {
   margin: 0 0 12px;
   color: var(--subtle);
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -9070,7 +9070,7 @@ a {
 
 .budget-breakdown-label {
   color: var(--ink);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 560;
 }
 
@@ -9109,7 +9109,7 @@ a {
 
 .budget-breakdown-booked {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -9149,7 +9149,7 @@ a {
 .budget-vendor-name {
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -9163,7 +9163,7 @@ a {
 .budget-vendor-quote {
   flex-shrink: 0;
   color: var(--ink);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -9235,7 +9235,7 @@ a {
 .vstudio-identity h1 {
   margin: 0;
   font-family: var(--font-display), Georgia, serif;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
   color: var(--ink);
@@ -9256,13 +9256,13 @@ a {
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 .vstudio-scene-static {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--muted);
 }
@@ -9280,7 +9280,7 @@ a {
   background: var(--surface);
   color: var(--muted);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 620;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -9366,7 +9366,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   color: var(--muted);
 }
 
@@ -9383,7 +9383,7 @@ a {
   background: var(--surface);
   color: var(--muted);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 650;
   cursor: pointer;
 }
@@ -9403,7 +9403,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
@@ -9545,7 +9545,7 @@ a {
   background: transparent;
   color: rgba(244, 239, 227, 0.82);
   font: inherit;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 650;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -9588,7 +9588,7 @@ a {
 
 .vstudio-preview-overlay strong {
   font-family: var(--font-display), Georgia, serif;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
 }
@@ -9612,21 +9612,21 @@ a {
 
 .vstudio-panel h2 {
   margin: 0;
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 650;
   color: var(--ink);
 }
 
 .vstudio-panel h3 {
   margin: 6px 0 0;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 650;
   color: var(--ink);
 }
 
 .vstudio-panel-hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.45;
   color: var(--muted);
 }
@@ -9647,13 +9647,13 @@ a {
 }
 
 .vstudio-facts dt {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--muted);
 }
 
 .vstudio-facts dd {
   margin: 0;
-  font-size: 0.83rem;
+  font-size: 0.82rem;
   font-weight: 620;
   color: var(--ink);
   text-align: right;
@@ -9666,7 +9666,7 @@ a {
   border-radius: 9px;
   background: var(--accent-soft);
   color: var(--accent-deep);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
@@ -9695,7 +9695,7 @@ a {
 }
 
 .vstudio-warnings span {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   line-height: 1.35;
   color: var(--ink);
 }
@@ -9704,7 +9704,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-style: normal;
   font-weight: 650;
   color: #7f5518;
@@ -9746,7 +9746,7 @@ a {
 
 .vstudio-field > span,
 .vstudio-field legend {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 630;
   color: var(--muted);
   padding: 0;
@@ -9770,7 +9770,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .vstudio-field input[type="range"] {
@@ -9800,7 +9800,7 @@ a {
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -9911,7 +9911,7 @@ a {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--muted);
 }
 
@@ -10006,14 +10006,14 @@ a {
 }
 
 .vstudio-playbar-now strong {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 650;
   color: var(--ink);
   line-height: 1.2;
 }
 
 .vstudio-playbar-now span {
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   color: var(--muted);
 }
 

@@ -59,8 +59,13 @@ reintroduce them. The tokens in `app/globals.css` `:root` are the source of trut
   green fill with cream text (`.button-primary`), plus active nav and focus rings.
   Secondary buttons are quiet outlines on near-white. Gold `--gilt` `#b39152` is a
   restrained metallic detail (monogram, small accents) — **not** a button fill.
-- Typography: **Fraunces** (`--font-display` → `--font-serif`, via `next/font`)
-  only for couple names and one display headline per surface; **Inter**
+- Typography: **Cormorant Garamond** (`--font-display` → `--font-serif`, via
+  `next/font`) only for couple names and one display headline per surface.
+  Fraunces was used until 2026-08-02 and rejected: it ships a literal "wonk"
+  axis and read as playful on a product where couples commit six figures. Font
+  sizes follow a 12-step scale (0.68 → 3rem); before that sweep `globals.css`
+  held 50 distinct sizes, a dozen used exactly once (0.95 and 0.96rem side by
+  side). Snap to the nearest step rather than adding a size; **Inter**
   (`--font-body` → `--font-sans`) for everything else. Eyebrow labels are rare,
   small, tracked, muted — no decorative rules or gold dashes on labels.
 - Shell: sidebar with the gold WF serif monogram and a grouped lucide icon nav
