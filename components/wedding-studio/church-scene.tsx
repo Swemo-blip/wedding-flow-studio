@@ -1601,11 +1601,11 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         const ny = normalAttr.getY(i);
         const contactBand = 1 - THREE.MathUtils.smoothstep(posAttr.getY(i), minY, contactTop);
         const occ = Math.max(0.55, 1 - 0.42 * Math.max(0, -ny) - 0.22 * contactBand);
-        // The "warm alabaster assembly" is retired. Clamping saturation at 0.3 and
-        // lerping 62% of the way to one warm hue made every guest the same pale
-        // stone — the owner's words were "alla gäster saknar färg", and the frame
-        // he photographed (the pre-regrade flash) shows the source models' real
-        // sage and olive clothing, which is what he wants back.
+        // Third position on this surface, and the right one: not alabaster (every
+        // guest the same pale stone), not the source models' own colours either —
+        // those are casual t-shirt tones, and these people are at a WEDDING. The
+        // regrade now dresses them: dark suiting for most, muted jewel tones for
+        // a minority, skin and hair left alone.
         //
         // Saturation is still a FLOOR, never a scale: `hsl.s * 0.3` left source
         // greys at s=0 with nothing for the hue lerp to act on, which is why an
@@ -1615,11 +1615,25 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         // and mid-grey still reads as cloth, and `occ` keeps the baked contact
         // shading. Measure the congregation region before/after — full-frame
         // means are dominated by the pale wall and will lie about this.
-        color.setHSL(
-          THREE.MathUtils.lerp(hsl.h, 0.085, 0.12),
-          THREE.MathUtils.clamp(Math.max(0.075, hsl.s * 0.95), 0.075, 0.62),
-          Math.min(0.78, 0.18 + hsl.l * 0.7) * occ
-        );
+        // Skin and hair sit in a narrow warm hue band; everything else on these
+        // models is clothing. Splitting on that is what lets the guests be dressed
+        // rather than tinted.
+        const isSkinOrHair = hsl.h > 0.02 && hsl.h < 0.13 && hsl.s > 0.12;
+        if (isSkinOrHair) {
+          color.setHSL(hsl.h, Math.min(0.42, hsl.s), Math.min(0.72, 0.2 + hsl.l * 0.68) * occ);
+        } else {
+          // Formalwear: dark suiting dominates, with a minority in muted jewel
+          // tones for dresses. The source hue is kept so two neighbours still
+          // differ, but it is pulled toward the cool/deep half of the wheel and
+          // the lightness is crushed into a suit band.
+          const dressy = hsl.h > 0.55 || hsl.h < 0.02;
+          const formalHue = dressy ? hsl.h : THREE.MathUtils.lerp(hsl.h, 0.62, 0.55);
+          color.setHSL(
+            formalHue,
+            THREE.MathUtils.clamp(0.1 + hsl.s * 0.45, 0.08, 0.38),
+            THREE.MathUtils.clamp(0.08 + hsl.l * 0.3, 0.07, 0.34) * occ
+          );
+        }
         colorAttr.setXYZ(i, color.r, color.g, color.b);
       }
       colorAttr.needsUpdate = true;
