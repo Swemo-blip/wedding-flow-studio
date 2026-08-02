@@ -389,8 +389,14 @@ export function CeremonyScene({
   // button already uses, and far cheaper than the 900-mesh rebuild that merging
   // the two mounts removed.
   const processionalResetKey = `${processionalKey}-${processionalDriven ? "driven" : "free"}`;
-  // Classic wedding processional music (public-domain Pachelbel Canon in D),
-  // started by the couple's own gesture of pressing Play — never autoplayed.
+  // Whether the couple are walking, however that was decided: the editor's own
+  // Play button, or a caller driving the day moment by moment in Preview.
+  const processionalActive = autoProcessional ?? processionalPlaying;
+  // Classic wedding processional music (public-domain Pachelbel Canon in D).
+  // This used to key off `processionalPlaying` alone — the editor's local state —
+  // so Preview, which drives the walk through `autoProcessional` instead, mounted
+  // this element and played nothing. The couple watched their own processional in
+  // silence. It now follows the walk itself.
   const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted] = useState(false);
 
@@ -400,15 +406,18 @@ export function CeremonyScene({
       return;
     }
     audio.volume = 0.55;
-    if (processionalPlaying) {
+    if (processionalActive) {
       audio.currentTime = 0;
+      // Still never a cold autoplay: in the editor this follows a Play press, and
+      // in Preview the couple have already clicked into Preview, so the document
+      // is activated by the time the processional moment arrives.
       void audio.play().catch(() => {
-        // Autoplay can still be blocked in edge cases; the scene just plays silently.
+        // A browser can still refuse; the scene then simply plays silently.
       });
     } else {
       audio.pause();
     }
-  }, [processionalPlaying, processionalKey]);
+  }, [processionalActive, processionalKey]);
   // Live head positions of the couple, written by the Processional each frame and
   // read by CameraSetup for the first-person bride/groom view.
   const coupleHeadsRef = useRef<CoupleHeads>({
@@ -557,7 +566,7 @@ export function CeremonyScene({
             palette={palette}
             processionalKey={processionalResetKey}
             processionalDriven={processionalDriven}
-            processionalPlaying={autoProcessional ?? processionalPlaying}
+            processionalPlaying={processionalActive}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
             congregationPhotos={congregationPhotos}
@@ -570,8 +579,13 @@ export function CeremonyScene({
         </Canvas>
         </SceneBootGate>
 
-        {showCeremonyControls ? (
+        {/* The transport is a rehearsal tool and stays on the interactive view.
+            The mute is not: once Preview plays music, silencing it has to be
+            reachable there too, so it appears wherever the music can. */}
+        {showCeremonyControls || processionalActive ? (
           <div className="ceremony-processional-controls">
+            {showCeremonyControls ? (
+              <>
             <button onClick={() => setProcessionalPlaying((playing) => !playing)} type="button">
               {processionalPlaying ? t("Pause") : t("Play processional")}
             </button>
@@ -584,6 +598,8 @@ export function CeremonyScene({
             >
               {t("Restart")}
             </button>
+              </>
+            ) : null}
             <button
               aria-label={muted ? t("Unmute music") : t("Mute music")}
               className="ceremony-mute-button"
