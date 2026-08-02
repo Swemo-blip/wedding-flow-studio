@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Typographic detail, applied once rather than per component.
+   - Large display type needs NEGATIVE tracking; type designers space fonts for
+     body sizes, so a headline at default tracking always looks loose.
+   - text-wrap: balance stops a headline dropping one orphan word onto line two.
+   - Tabular, lining figures keep times and money in vertical columns; the
+     default proportional figures make a budget table wobble.
+   - Kerning and ligatures are off by default in some engines at these sizes. */
+h1,
+h2,
+.vstudio-identity h1 {
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+}
+
+h3,
+h4 {
+  letter-spacing: -0.008em;
+  text-wrap: balance;
+}
+
+time,
+[class*="amount"],
+[class*="budget"] td,
+[class*="total"],
+.export-timeline span {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+
 :root {
   /* Warm-cream + forest-green + gold — matching Johan's reference dashboard.
      Flat calm cream canvas, deep olive-green as the single primary accent
@@ -10,7 +42,9 @@
   --studio-ink: #2b2d24;
   --studio-charcoal: #23261e;
   --studio-paper: #f4efe3;
-  --studio-porcelain: #ffffff;
+  /* Not pure white. #fff against a cream canvas reads as a browser default;
+     a breath of warmth reads as paper, which is what these surfaces are. */
+  --studio-porcelain: #fdfbf6;
   --studio-mist: #efe8d9;
   --studio-linen: #e7dfcc;
   --studio-clay: #9c6f45;
@@ -27,7 +61,7 @@
   --peach-soft: #f1e6de;
   --lav-soft: #f1ebdd;
   --background: #f4efe3;
-  --surface: #ffffff;
+  --surface: #fdfbf6;
   --surface-soft: #fbf8f1;
   --surface-warm: #f1ebdd;
   --surface-glass: rgba(255, 255, 255, 0.82);
@@ -36,6 +70,14 @@
      but naming it after its job keeps `color:` declarations readable. */
   --ink-on-accent: var(--background);
   --ink: #2b2d24;
+  /* One shadow family. There were 28 distinct box-shadow values, which is why
+     surfaces never looked like they came from the same product. Two layers each
+     (a tight contact shadow plus a wide soft one) and tinted warm brown rather
+     than black — black shadows on a cream canvas read as cheap. */
+  --shadow-sm: 0 1px 2px rgba(74, 62, 40, 0.05), 0 2px 6px rgba(74, 62, 40, 0.04);
+  --shadow-md: 0 2px 4px rgba(74, 62, 40, 0.05), 0 8px 20px rgba(74, 62, 40, 0.06);
+  --shadow-lg: 0 4px 8px rgba(74, 62, 40, 0.06), 0 18px 44px rgba(74, 62, 40, 0.09);
+
   /* Used 13 times and defined nowhere until 2026-08-02. An unresolvable var()
      invalidates the whole `color` declaration, so every one of those rules fell
      back to inherited full-strength ink — the two-level hierarchy on the print
@@ -201,7 +243,7 @@ a {
     rgba(255, 255, 255, 0.055);
   border-radius: 10px;
   padding: 10px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-lg);
 }
 
 .brand-symbol {
@@ -210,7 +252,7 @@ a {
   height: 38px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   background: linear-gradient(150deg, #cfae72, #9c7b45);
   color: #241e11;
   font-family: var(--font-serif);
@@ -491,7 +533,7 @@ a {
   min-height: min(680px, calc(100vh - 150px));
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 232, 0.92) 62%, rgba(67, 93, 109, 0.08)),
     var(--surface);
@@ -580,7 +622,7 @@ a {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 14px 38px rgba(25, 34, 30, 0.06);
+  box-shadow: var(--shadow-lg);
 }
 
 .sourcing-summary-card span,
@@ -657,7 +699,7 @@ a {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(247, 243, 232, 0.72);
   padding: 11px;
   color: var(--muted);
@@ -671,7 +713,7 @@ a {
   border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
-  box-shadow: 0 10px 24px rgba(25, 34, 30, 0.07);
+  box-shadow: var(--shadow-md);
 }
 
 .sourcing-category-list button span {
@@ -719,7 +761,7 @@ a {
   display: grid;
   gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(247, 243, 232, 0.76);
   padding: 12px;
 }
@@ -814,7 +856,7 @@ a {
   display: grid;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 14px;
   background: rgba(247, 243, 232, 0.72);
   padding: 12px;
 }
@@ -906,7 +948,7 @@ a {
   display: grid;
   gap: 6px;
   border: 1px dashed var(--line-strong);
-  border-radius: 13px;
+  border-radius: 14px;
   background: rgba(247, 243, 232, 0.62);
   padding: 14px;
 }
@@ -935,7 +977,7 @@ a {
   display: grid;
   gap: 9px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.72);
   padding: 13px;
 }
@@ -1007,7 +1049,7 @@ a {
   display: grid;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(247, 243, 232, 0.7);
   padding: 12px;
 }
@@ -1059,7 +1101,7 @@ a {
   align-content: center;
   gap: 8px;
   border: 1px solid var(--line-strong);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.74);
   padding: 18px;
 }
@@ -1110,7 +1152,7 @@ a {
 .intake-segment button {
   min-height: 52px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.68);
   padding: 9px;
   color: var(--muted);
@@ -1212,7 +1254,7 @@ a {
   gap: 10px;
   align-items: center;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.58);
   padding: 9px 10px;
 }
@@ -1290,7 +1332,7 @@ a {
   align-items: center;
   min-height: 54px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -1377,7 +1419,7 @@ a {
   min-height: 560px;
   align-content: start;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 232, 0.72)),
     rgba(255, 255, 255, 0.8);
@@ -1427,7 +1469,7 @@ a {
   min-height: 46px;
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--ink);
   padding: 11px 12px;
@@ -1445,14 +1487,14 @@ a {
 
 .guided-intake-segment button {
   min-height: 62px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .guided-guest-control {
   display: grid;
   gap: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(135deg, rgba(249, 245, 234, 0.94), rgba(255, 255, 255, 0.78)),
     rgba(102, 120, 109, 0.06);
@@ -1497,7 +1539,7 @@ a {
   display: grid;
   gap: 5px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--muted);
   cursor: pointer;
@@ -1519,7 +1561,7 @@ a {
 }
 
 .guided-role-fieldset label {
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .guided-question-actions {
@@ -1583,7 +1625,7 @@ a {
   overflow: hidden;
   min-height: 250px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(90deg, rgba(23, 23, 19, 0.045) 1px, transparent 1px) 0 0 / 34px 34px,
     linear-gradient(180deg, rgba(102, 120, 109, 0.1), rgba(255, 255, 255, 0.78)),
@@ -1595,7 +1637,7 @@ a {
   inset: 22px 46% 22px;
   width: 8%;
   border: 1px solid rgba(182, 154, 91, 0.22);
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(249, 245, 234, 0.72);
 }
 
@@ -1604,7 +1646,7 @@ a {
   position: absolute;
   left: 50%;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--ink);
   padding: 8px 10px;
@@ -1625,7 +1667,7 @@ a {
   position: absolute;
   width: 31%;
   height: 10px;
-  border-radius: 3px;
+  border-radius: 6px;
   background: rgba(102, 120, 109, 0.22);
 }
 
@@ -1696,7 +1738,7 @@ a {
   gap: 18px;
   overflow: hidden;
   border: 1px solid rgba(71, 55, 39, 0.13);
-  border-radius: 22px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(251, 247, 238, 0.96), rgba(245, 240, 226, 0.82)),
     var(--surface);
@@ -1731,7 +1773,7 @@ a {
   display: grid;
   gap: 6px;
   border: 1px solid rgba(143, 110, 55, 0.22);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(249, 245, 234, 0.72);
   padding: 14px;
 }
@@ -1768,7 +1810,7 @@ a {
   min-height: 520px;
   overflow: hidden;
   border: 1px solid rgba(216, 185, 119, 0.23);
-  border-radius: 18px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(38, 35, 31, 0.05), rgba(249, 245, 234, 0.76)),
     repeating-linear-gradient(
@@ -1820,7 +1862,7 @@ a {
   color: var(--ink);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 16px 38px rgba(50, 39, 28, 0.09);
+  box-shadow: var(--shadow-lg);
   transform: translate(-50%, -50%);
   transition:
     border-color 160ms ease,
@@ -1832,7 +1874,7 @@ a {
 .digital-twin-node:focus-visible,
 .digital-twin-node[data-active="true"] {
   border-color: rgba(143, 110, 55, 0.42);
-  box-shadow: 0 20px 52px rgba(50, 39, 28, 0.16);
+  box-shadow: var(--shadow-lg);
   transform: translate(-50%, -52%);
 }
 
@@ -1860,7 +1902,7 @@ a {
   align-content: start;
   gap: 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 18px;
+  border-radius: 20px;
   background: rgba(249, 245, 234, 0.78);
   padding: 16px;
 }
@@ -1894,7 +1936,7 @@ a {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 14px;
   background: rgba(241, 232, 220, 0.34);
   padding: 11px;
 }
@@ -1917,7 +1959,7 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 14px;
 }
 
 .digital-twin-stats-row > div {
@@ -2022,7 +2064,7 @@ a {
   border: 1px solid rgba(240, 228, 196, 0.18);
   border-radius: 999px;
   background: rgba(16, 18, 7, 0.62);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(8px);
 }
 
@@ -2099,7 +2141,7 @@ a {
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 8px 20px rgba(25, 34, 30, 0.045);
+  box-shadow: var(--shadow-md);
 }
 
 .card-pad {
@@ -2359,14 +2401,14 @@ a {
 .button-primary:hover,
 .button-primary:focus-visible {
   background: #4c583f;
-  box-shadow: 0 16px 34px -16px rgba(49, 58, 41, 0.5);
+  box-shadow: var(--shadow-lg);
 }
 
 .button-secondary {
   color: var(--ink);
   border-color: var(--line-strong);
   background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 8px 20px -14px rgba(74, 64, 40, 0.25);
+  box-shadow: var(--shadow-md);
 }
 
 .button-secondary:hover,
@@ -2396,7 +2438,7 @@ a {
   width: fit-content;
   min-height: 23px;
   border: 1px solid var(--line-strong);
-  border-radius: 3px;
+  border-radius: 6px;
   padding: 4px 7px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--muted);
@@ -2579,7 +2621,7 @@ a {
   justify-content: center;
   width: 38px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
@@ -2602,7 +2644,7 @@ a {
   gap: 8px;
   padding: 12px;
   border: 1px dashed var(--line-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   color: var(--accent);
   font: inherit;
@@ -2661,7 +2703,7 @@ a {
 .editable-timeline-card[data-selected="true"] .editable-timeline-body {
   border-color: var(--gilt);
   background: linear-gradient(135deg, rgba(216, 185, 119, 0.18), rgba(255, 255, 255, 0.9));
-  box-shadow: 0 14px 36px rgba(143, 108, 54, 0.16);
+  box-shadow: var(--shadow-lg);
 }
 
 .editable-timeline-card strong {
@@ -2676,11 +2718,11 @@ a {
 .day-flow-detail-drawer {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(249, 245, 234, 0.72)),
     rgba(255, 255, 255, 0.86);
-  box-shadow: 0 14px 34px rgba(25, 34, 30, 0.06);
+  box-shadow: var(--shadow-lg);
 }
 
 .day-flow-detail-drawer > summary {
@@ -2759,7 +2801,7 @@ a {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
     rgba(255, 255, 255, 0.88);
-  box-shadow: 0 18px 44px rgba(123, 92, 45, 0.14);
+  box-shadow: var(--shadow-lg);
 }
 
 .action-dock-card .button {
@@ -2856,7 +2898,7 @@ a {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.76), rgba(251, 247, 238, 0.76)),
     repeating-linear-gradient(0deg, rgba(80, 63, 45, 0.035), rgba(80, 63, 45, 0.035) 1px, transparent 1px, transparent 28px),
@@ -2921,7 +2963,7 @@ a {
 /* The export sheet stays paper-like on the dark desk, so its text must stay ink. */
 .export-sheet {
   border: 1px solid rgba(80, 63, 45, 0.3);
-  border-radius: 4px;
+  border-radius: 6px;
   background: linear-gradient(180deg, #fbf7ec, #f3ecdb);
   padding: 26px;
   color: #2a261c;
@@ -3304,7 +3346,7 @@ a {
   display: grid;
   place-items: center;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.56);
   transform: translate(-50%, -50%);
 }
@@ -3356,7 +3398,7 @@ a {
 
 .preview-current-moment {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow-card);
   padding: 22px;
@@ -3887,9 +3929,9 @@ a {
 .preview-support-details {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.64);
-  box-shadow: 0 14px 34px rgba(25, 34, 30, 0.05);
+  box-shadow: var(--shadow-lg);
 }
 
 .preview-support-details > summary {
@@ -3980,7 +4022,7 @@ a {
 .moment-guest-card,
 .moment-handoff-card {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-card);
   padding: 16px;
@@ -4246,7 +4288,7 @@ a {
   height: 60vh;
   max-height: 760px;
   border: 1px solid rgba(120, 106, 74, 0.28);
-  border-radius: 16px;
+  border-radius: 14px;
   background: radial-gradient(120% 90% at 50% 12%, #f7f0df, #ece2cb 80%);
 }
 
@@ -4254,7 +4296,7 @@ a {
   display: block;
   width: 100% !important;
   height: 100% !important;
-  border-radius: 16px;
+  border-radius: 14px;
   touch-action: none;
 }
 
@@ -4269,7 +4311,7 @@ a {
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-md);
 }
 
 .seat3d-table-label[data-target="true"] {
@@ -4332,7 +4374,7 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-card);
 }
@@ -5807,7 +5849,7 @@ a {
 .print-place-card {
   padding: 24px 16px 26px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 6px;
   background: #ffffff;
   text-align: center;
 }
@@ -5839,7 +5881,7 @@ a {
 .print-programme {
   padding: 44px 40px 48px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 6px;
   background: #ffffff;
 }
 
@@ -6061,7 +6103,7 @@ a {
   margin-top: 14px;
   padding: 16px 18px 18px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -6251,7 +6293,7 @@ a {
   margin: 0 auto;
   padding: 40px 34px 44px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 6px;
   background: #ffffff;
   text-align: center;
 }
@@ -6409,7 +6451,7 @@ a {
   height: 38px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 10px;
   border: 1px solid var(--line-strong);
   background: linear-gradient(150deg, #f4ead2, #e7d4aa);
   color: #8a6a2f;
@@ -6461,7 +6503,7 @@ a {
   display: flex;
   gap: 11px;
   align-items: center;
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 540;
@@ -6811,7 +6853,7 @@ a {
 .style-references {
   margin-top: 16px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface);
   padding: 18px 20px;
 }
@@ -6889,7 +6931,7 @@ a {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(120, 106, 74, 0.2);
   object-fit: cover;
   background-size: cover;
@@ -6952,7 +6994,7 @@ a {
 
 .card {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface-glass);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-card);
@@ -6961,7 +7003,7 @@ a {
 .studio-route-ribbon,
 .module-decision-strip {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface-glass);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-card);
@@ -7017,7 +7059,7 @@ a {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 16px;
+  border-radius: 14px;
   background: #101207;
   box-shadow: var(--shadow-float);
   margin-bottom: 16px;
@@ -7260,7 +7302,7 @@ a {
 .studio-inspector-note {
   margin-top: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-warm);
   padding: 12px 14px;
 }
@@ -7325,7 +7367,7 @@ a {
   gap: 12px;
   padding: 11px 13px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
   cursor: pointer;
   text-align: left;
@@ -7410,7 +7452,7 @@ a {
 
 .detail-studio-detail {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface);
   padding: 20px 22px;
 }
@@ -7760,7 +7802,7 @@ a {
   min-width: 0;
   padding: 3px 6px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
@@ -7835,7 +7877,7 @@ a {
   margin-top: 12px;
   padding: 10px 14px;
   border: 1px solid rgba(177, 134, 60, 0.3);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(177, 134, 60, 0.1);
   color: var(--ink);
   font-size: 0.88rem;
@@ -8078,7 +8120,7 @@ a {
   letter-spacing: 0.02em;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.26);
+  box-shadow: var(--shadow-md);
 }
 
 .staging-handle-label[data-active="true"] {
@@ -8103,9 +8145,7 @@ a {
 }
 
 .setup-color[data-active="true"] {
-  box-shadow:
-    0 0 0 2px var(--surface),
-    0 0 0 4px #c19a52;
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
@@ -8331,7 +8371,7 @@ a {
   width: 100%;
   aspect-ratio: 3 / 4;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background-position: center;
   background-size: cover;
   object-fit: cover;
@@ -8367,7 +8407,7 @@ a {
   gap: 24px;
   padding: 20px 22px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface);
 }
 
@@ -8466,7 +8506,7 @@ a {
   width: 100%;
   padding: 5px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -8655,7 +8695,7 @@ a {
 .summary-sheet {
   padding: 32px 34px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow-float);
 }
@@ -8678,7 +8718,7 @@ a {
   border-radius: 999px;
   object-fit: cover;
   border: 2px solid var(--surface);
-  box-shadow: 0 1px 4px rgba(40, 33, 20, 0.14);
+  box-shadow: var(--shadow-sm);
 }
 
 .summary-portrait:not(:first-child) {
@@ -8871,7 +8911,7 @@ a {
   gap: 16px;
   padding: 22px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface);
 }
 
@@ -9250,7 +9290,7 @@ a {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 1px 2px rgba(74, 64, 40, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .vstudio-identity {
@@ -9279,7 +9319,7 @@ a {
 .vstudio-scene-select select {
   padding: 7px 30px 7px 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9297,7 +9337,7 @@ a {
 .vstudio-mode {
   display: inline-flex;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -9332,7 +9372,7 @@ a {
 .vstudio-primary {
   padding: 8px 18px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--accent);
   color: var(--ink-on-accent);
   font: inherit;
@@ -9359,7 +9399,7 @@ a {
   width: 34px;
   height: 34px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--muted);
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
@@ -9391,8 +9431,8 @@ a {
   padding: 12px;
   background: var(--surface);
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  box-shadow: 0 14px 34px -16px rgba(74, 64, 40, 0.35);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
 }
 
 .vstudio-menu-row {
@@ -9406,7 +9446,7 @@ a {
 .vstudio-menu-lang {
   display: inline-flex;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -9432,7 +9472,7 @@ a {
   gap: 8px;
   padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9459,7 +9499,7 @@ a {
   width: 100%;
   padding: 7px 9px;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface-warm);
   color: var(--ink);
   font-size: 0.76rem;
@@ -9496,7 +9536,7 @@ a {
   padding: 8px 6px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .vstudio-rail button {
@@ -9505,7 +9545,7 @@ a {
   width: 38px;
   height: 38px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -9574,7 +9614,7 @@ a {
   height: 30px;
   padding: 0 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: rgba(244, 239, 227, 0.82);
   font: inherit;
@@ -9696,7 +9736,7 @@ a {
   margin: 0;
   padding: 9px 11px;
   border: 1px solid rgba(65, 76, 55, 0.28);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--accent-soft);
   color: var(--accent-deep);
   font-size: 0.82rem;
@@ -9717,7 +9757,7 @@ a {
   gap: 3px;
   padding: 9px 11px;
   border: 1px solid rgba(176, 116, 42, 0.34);
-  border-radius: 9px;
+  border-radius: 10px;
   background: rgba(176, 116, 42, 0.09);
   text-decoration: none;
   transition: border-color 0.15s ease;
@@ -9752,7 +9792,7 @@ a {
 .vstudio-quick-link {
   padding: 8px 11px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9799,7 +9839,7 @@ a {
 .vstudio-field select {
   padding: 8px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9829,7 +9869,7 @@ a {
   gap: 7px;
   padding: 8px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9847,7 +9887,7 @@ a {
 .vstudio-choice-grid button i {
   width: 12px;
   height: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   flex: none;
 }
 
@@ -9866,7 +9906,7 @@ a {
 .vstudio-object-list button {
   padding: 8px 11px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   font: inherit;
@@ -9895,7 +9935,7 @@ a {
   place-items: center;
   height: 36px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   cursor: pointer;
@@ -9943,7 +9983,7 @@ a {
   padding: 8px 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 0.82rem;
   color: var(--muted);
 }
@@ -10003,7 +10043,7 @@ a {
   width: 32px;
   height: 32px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-soft);
   color: var(--ink);
   cursor: pointer;
@@ -10094,7 +10134,7 @@ a {
 .vstudio-playbar-exit {
   padding: 7px 14px;
   border: 1px solid var(--line-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
   font: inherit;
