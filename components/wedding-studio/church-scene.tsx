@@ -1951,11 +1951,18 @@ const POSE_BOUQUET: FigurePose = {
 // the pose layer re-applies `rest × offset` every frame, so a live perturbation is
 // overwritten on the next frame — measure within the same frame or disable the
 // layer first. Hand-bone world scale is 23.5, not FIGURE_SCALE.
+// Axis mapping MEASURED 2026-08-02 by perturbing one bone/axis at a time and
+// reading the palm's world position in the same frame (the pose layer re-applies
+// rest x offset every frame, so live tweaks vanish a frame later):
+//   UpperArm x: palm moves IN/OUT sideways, ~0.26 m/rad (negative = inward, both sides)
+//   UpperArm y: small inward assist; z: moves palm ALONG THE AISLE, not sideways.
+// The old pose left the palms 0.558 m apart; these values close them to a book
+// grip. Iterate against the measured palm gap, never by eye.
 const POSE_OFFICIANT: FigurePose = {
   "Shoulder.L": [0, 0, -0.05],
   "Shoulder.R": [0, 0, 0.05],
-  "UpperArm.L": [0.06, 0.04, -0.16],
-  "UpperArm.R": [0.06, -0.04, 0.16],
+  "UpperArm.L": [-0.39, 0.54, -0.16],
+  "UpperArm.R": [-0.49, -0.54, 0.16],
   "LowerArm.L": [0.72, 0, -0.26],
   "LowerArm.R": [0.72, 0, 0.26],
   "Palm.L": [0.16, 0, -0.1],
@@ -2338,6 +2345,29 @@ function Vestments() {
   );
 }
 
+// The psalter the officiant reads from. Position is NOT guessed: the posed palms
+// were measured at world mid (0.003, 0.591, -3.147) with a 0.108 m grip, and the
+// Celebrant group sits at z -3.55, so the book rests on the hands at local
+// (0, 0.605, 0.40). Sized for a 1.10 m figure (~0.63 world scale).
+function Psalter() {
+  return (
+    <group position={[0, 0.605, 0.4]} rotation={[-0.3, 0, 0]}>
+      <mesh castShadow>
+        <boxGeometry args={[0.16, 0.008, 0.105]} />
+        <meshStandardMaterial color="#2b2d24" roughness={0.55} />
+      </mesh>
+      <mesh castShadow position={[-0.039, 0.008, 0]} rotation={[0, 0, 0.14]}>
+        <boxGeometry args={[0.076, 0.006, 0.098]} />
+        <meshStandardMaterial color="#f5efdd" roughness={0.9} />
+      </mesh>
+      <mesh castShadow position={[0.039, 0.008, 0]} rotation={[0, 0, -0.14]}>
+        <boxGeometry args={[0.076, 0.006, 0.098]} />
+        <meshStandardMaterial color="#f5efdd" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
 function Celebrant({ mark }: { mark: StudioSceneOffset }) {
   // The officiant waits at the altar, facing the congregation.
   const home = ceremonyStagingMarks.celebrant.home;
@@ -2345,6 +2375,7 @@ function Celebrant({ mark }: { mark: StudioSceneOffset }) {
     <group position={[home.x + mark.x, 0, home.z + mark.z]}>
       <AnimatedFigure clip="idle" pose={POSE_OFFICIANT} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
       <Vestments />
+      <Psalter />
     </group>
   );
 }
@@ -2382,7 +2413,9 @@ function Singer({ mark }: { mark: StudioSceneOffset }) {
 
 const PROCESSION_START_Z = 4.4;
 const PROCESSION_END_Z = -2.55;
-const PROCESSION_DURATION = 13;
+// 6.95 m of aisle. 13 s peaked at 1.07 m/s — a hurry, not a processional.
+// 20 s averages ~0.35 m/s at this world's 0.63 scale, a ceremonial pace.
+const PROCESSION_DURATION = 20;
 const FIRST_PERSON_EYE_Y = 1.5;
 
 // An A-line gown profile, revolved. It was a truncated cone (a 20-segment cylinder
@@ -2436,7 +2469,10 @@ function Bouquet() {
   ];
 
   return (
-    <group position={[0.04, 0.56, 0.22]}>
+    // Front-of-body, centred: rotates WITH her, so walking it sits at her hands
+    // and arrived it stays on her side of the couple instead of drifting to the
+    // centreline in front of the groom (which read as him carrying it in).
+    <group position={[0, 0.56, 0.13]}>
       {blooms.map(([x, y, z, r], index) => (
         <mesh castShadow key={index} position={[x, y, z]}>
           <sphereGeometry args={[r, 10, 10]} />
@@ -2515,7 +2551,10 @@ function Processional({
     // back down the aisle to watch the bride arrive — he turns to her only when
     // she gets there.
     const groomZ = waitsAtAltar ? endZ : z;
-    const groomIdleTarget = waitsAtAltar ? Math.PI : Math.PI / 2;
+    // Waiting at the altar he faces the doors (0) to watch her arrive; walking
+    // he faces the altar (PI), parallel to the aisle. The old values had him
+    // crab-walking in at 90 degrees and waiting with his back to her.
+    const groomIdleTarget = waitsAtAltar ? 0 : Math.PI;
     // Face down the aisle while walking; turn to face each other on arrival
     // (groom looks right toward the bride, bride looks left toward the groom).
     const groomTarget = arrivedRef.current ? Math.PI / 2 : groomIdleTarget;
