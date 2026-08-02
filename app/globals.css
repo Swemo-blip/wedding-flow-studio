@@ -5201,6 +5201,15 @@ a {
   }
 
   .digital-twin-canvas {
+    /* The min-width inflated the single 1fr track, so the prose sibling stretched
+       to 900px too — three screen-widths of sideways dragging to read a paragraph
+       on the route that sells the whole promise. The canvas may scroll inside
+       itself; the column must not. */
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .digital-twin-canvas > * {
     min-width: 900px;
   }
 
@@ -9356,11 +9365,17 @@ a {
 .vstudio-menu-panel {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  /* Anchored right to a 34px summary that sits near the LEFT edge on a phone, so
+     185 of its 250px hung off-canvas and Language, Copy link, Edit details,
+     Account and Start over were all unreachable. Clamping the width to the
+     viewport and letting it start at the trigger keeps every item on screen at
+     390px without moving it on desktop. */
+  right: auto;
+  left: 0;
   z-index: 40;
   display: grid;
   gap: 8px;
-  width: 250px;
+  width: min(250px, calc(100vw - 32px));
   padding: 12px;
   background: var(--surface);
   border: 1px solid var(--line-strong);

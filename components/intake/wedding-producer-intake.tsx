@@ -94,7 +94,6 @@ export function WeddingProducerIntake() {
   const plan = useMemo(() => composeWeddingProducerPlan(intake), [intake]);
   const activeQuestion = intakeQuestions[activeQuestionIndex];
   const coreRoleCount = intake.vendorRoles.length;
-  const readiness = getGeneratedReadiness(plan.generatedRisks.length, coreRoleCount);
   const isFinalQuestion = activeQuestionIndex === intakeQuestions.length - 1;
 
   function updateIntake(updates: Partial<WeddingProducerIntakeState>) {
@@ -200,10 +199,15 @@ export function WeddingProducerIntake() {
             {t("Answer a few calm questions and watch your day take shape.")}
           </p>
         </div>
-        <div className="intake-hero-card" aria-label={t("Generated readiness")}>
-          <span>{t("Generated readiness")}</span>
-          <strong>{readiness}%</strong>
-          <small>{plan.generatedRisks.length === 0 ? t("Ready to preview") : `${plan.generatedRisks.length} ${t("watch notes")}`}</small>
+        {/* There was a "Generated readiness" percentage here: 84 + roles - 6*risks,
+            clamped to 58-96. No denominator, nothing measured, and it went UP when
+            you ticked a vendor checkbox. The first screen a couple sees was
+            asserting a confidence figure about their own wedding as fact. The
+            counts below it are real and stay; the invented number is gone. */}
+        <div className="intake-hero-card" aria-label={t("Watch notes")}>
+          <span>{t("Watch notes")}</span>
+          <strong>{plan.generatedRisks.length}</strong>
+          <small>{plan.generatedRisks.length === 0 ? t("Ready to preview") : t("to review before the day")}</small>
         </div>
       </section>
 
@@ -519,10 +523,6 @@ function IntakeSegment({ label, onChange, options, value }: IntakeSegmentProps) 
       </div>
     </div>
   );
-}
-
-function getGeneratedReadiness(watchCount: number, roleCount: number) {
-  return Math.max(58, Math.min(96, 84 + roleCount - watchCount * 6));
 }
 
 function getGuestCapacityLabel(guestCount: number) {

@@ -107,7 +107,11 @@ export function StudioInspector({
           ))}
         </div>
 
-        <p className="vstudio-panel-hint">{t("Nudge the selected object, or drag it directly in the scene.")}</p>
+        {/* The "or drag it directly in the scene" half was a lie: EditableSceneObject
+            accepts onMoveObject/onSelectObject/selectedObjectId and uses none of
+            them, so dragging in the scene does nothing on this surface. Instruct
+            only what actually works until the drag is implemented. */}
+        <p className="vstudio-panel-hint">{t("Nudge the selected object")}</p>
 
         <div className="vstudio-nudge" role="group" aria-label={t("Nudge {object}", { object: t(studioEditableObjects[selectedObjectId].label) })}>
           <span />
