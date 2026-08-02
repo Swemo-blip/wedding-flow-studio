@@ -245,6 +245,12 @@ type Palette = {
   wall: string;
 };
 
+// Pew tones recalibrated 2026-08-02 against the owner's photographed reference
+// (the pre-texture flash he kept glimpsing and asked for): deep mahogany rather
+// than light tan. The values are texture MULTIPLIERS — the settled render under
+// the old classic #a07f57 measured RGB [138,114,88] where the photo shows
+// ~[95,60,32], giving per-channel ratios (0.69, 0.53, 0.36) applied per style.
+// Modern keeps its cool grey-green hue and only darkens.
 const palettes: Record<StudioStyle, Palette> = {
   classic: {
     accent: "#c9a767",
@@ -253,8 +259,8 @@ const palettes: Record<StudioStyle, Palette> = {
     carpet: "#ede0c6",
     floor: "#d8cab0",
     guest: "#f1e7d2",
-    pew: "#a07f57",
-    wall: "#efe7d6"
+    pew: "#6e431f",
+    wall: "#ecdfc8"
   },
   modern: {
     accent: "#9fb0a3",
@@ -263,7 +269,7 @@ const palettes: Record<StudioStyle, Palette> = {
     carpet: "#e4e5da",
     floor: "#dcdcd2",
     guest: "#eef0ea",
-    pew: "#7d877f",
+    pew: "#454a46",
     // The couple's style choice governs their DECOR — accent, blush, carpet, the
     // guests' clothing. It should not repaint the building: this preset's #eef0ea
     // put a mint-white wash on the nave walls and the altar panel, which read as
@@ -279,7 +285,7 @@ const palettes: Record<StudioStyle, Palette> = {
     carpet: "#f1e2d8",
     floor: "#e3d3cf",
     guest: "#f6e7df",
-    pew: "#9c7a72",
+    pew: "#6c4129",
     wall: "#f3e8e4"
   },
   rustic: {
@@ -289,7 +295,7 @@ const palettes: Record<StudioStyle, Palette> = {
     carpet: "#e9dabc",
     floor: "#d6c2a0",
     guest: "#efe2c8",
-    pew: "#8a6a45",
+    pew: "#5f3819",
     wall: "#e7dcc6"
   }
 };
@@ -510,15 +516,18 @@ export function CeremonyScene({
           {interiorVenue ? null : (
             <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
           )}
-          {/* Deliberately minimal: contact occlusion, candle bloom, ONE ACES tone
-              map — the same curve the renderer applies before the composer mounts,
-              so the settled frame matches the load-in frame instead of visibly
-              draining when the chain kicks in. The old AgX + vignette + noise +
-              brightness/contrast + saturation stack was measured 2026-08-02: it
-              cost the pews a third of their saturation, and the HueSaturation pass
-              existed only to compensate for what AgX removed. Do not re-add grade
-              passes here without measuring the pew region before and after
-              (scripts/scene-probe.js is the harness for that). */}
+          {/* Deliberately minimal: contact occlusion and ONE ACES tone map — the
+              same curve the renderer applies before the composer mounts, so the
+              settled frame matches the load-in frame instead of visibly draining
+              when the chain kicks in. Two rounds of measurement (2026-08-02) got
+              here: the AgX + vignette + noise + BC + saturation stack cost the
+              pews a third of their saturation, and Bloom — sitting BEFORE the
+              tone map, i.e. on HDR values where the whole sunlit wall passes the
+              1.15 threshold — veiled the entire frame: pew saturation 0.775 -> 
+              0.453 and the darkest pixel lifted 5 -> 46 the moment it kicked in.
+              Johan photographed the pre-composer frame and asked for THAT. Do not
+              re-add grade or glow passes without measuring the pew region and the
+              darkest pixel before/after (scripts/scene-probe.js). */}
           {highQuality ? (
             <EffectComposer multisampling={4}>
               <N8AO aoRadius={0.8} distanceFalloff={0.75} halfRes intensity={3} quality="medium" />
