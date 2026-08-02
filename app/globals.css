@@ -36,6 +36,12 @@
      but naming it after its job keeps `color:` declarations readable. */
   --ink-on-accent: var(--background);
   --ink: #2b2d24;
+  /* Used 13 times and defined nowhere until 2026-08-02. An unresolvable var()
+     invalidates the whole `color` declaration, so every one of those rules fell
+     back to inherited full-strength ink — the two-level hierarchy on the print
+     sheets, place cards, programme notes and menu pairings collapsed to one flat
+     tone. Sits between --ink and --muted, which is what those rules wanted. */
+  --ink-soft: #55584a;
   --muted: #857f6f;
   --subtle: #a9a28e;
   --line: rgba(120, 106, 74, 0.16);

@@ -277,6 +277,15 @@ export function readStoredProject() {
           // the 3D room. An empty list says "nothing here yet", which is true.
           wedding: migratedWedding,
           timelineItems: keepValid<TimelineItem>(parsed.timelineItems, isTimelineArray).items,
+          // These two were MISSING from this object. Omitted keys fall back to []
+          // in createStoredProjectDraft, so every read returned an empty menu and
+          // an empty shot list — and because each writer spreads the read result,
+          // the next unrelated edit on any other screen persisted those empties
+          // over the couple's real courses and shots. Silent, total loss of two
+          // features with no error. Both are sanitised by their own draft
+          // creators, exactly like every sibling slice here.
+          menuCourses: createMenuCourseDraft(Array.isArray(parsed.menuCourses) ? parsed.menuCourses : []),
+          photoShots: createPhotoShotDraft(Array.isArray(parsed.photoShots) ? parsed.photoShots : []),
           musicCues: keepValid<MusicCue>(parsed.musicCues, isMusicCueArray).items,
           speeches: keepValid<Speech>(parsed.speeches, isSpeechArray).items,
           guests: storedGuests.length === 0 && renameFired ? seedGuestsForMigratedPlan() : storedGuests,
