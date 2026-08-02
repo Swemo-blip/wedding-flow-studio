@@ -188,17 +188,27 @@ function keepResponsibleRole(responsibleRole: string, includedRoles: Set<string>
 }
 
 function composeMusicCues(input: WeddingProducerIntake, timeline: TimelineItem[]): MusicCue[] {
-  return musicCues.map((cue) => {
-    const needsMorePrecision = input.complexity !== "calm" && (cue.id === "music-first-dance" || cue.id === "music-recessional");
-
-    return {
-      ...cue,
-      backupPlan: cue.backupPlan === "Missing" && input.vendorRoles.includes("DJ / Musician") ? "DJ local file and offline playlist" : cue.backupPlan,
-      notes: `${cue.notes} Producer Intake: ${input.vendorRoles.includes("DJ / Musician") ? "Music owner included in generated brief." : "Assign a music owner before final cue sheet."}`,
-      status: needsMorePrecision ? cue.status : cue.status === "needs-backup" ? "needs-confirmation" : cue.status,
-      timelineItemId: timeline.find((item) => item.id === cue.timelineItemId)?.id ?? cue.timelineItemId
-    };
-  });
+  // This used to spread the SAMPLE cue wholesale, so after a five-question intake
+  // the app told the couple their recessional was Christina Perri, their organist
+  // was assigned and the cue was CONFIRMED — none of which they had said. The same
+  // rule composeSpeeches already follows applies here: keep the skeleton (which
+  // moments customarily carry music), never invent the content.
+  return musicCues.map((cue) => ({
+    ...cue,
+    // The moment label is structure. Everything below it is the couple's choice.
+    songTitle: "",
+    artist: "",
+    responsiblePerson: "",
+    link: "",
+    startCue: "",
+    backupPlan: "",
+    notes: input.vendorRoles.includes("DJ / Musician")
+      ? "Music owner included in the generated brief."
+      : "Assign a music owner before the final cue sheet.",
+    // Nothing can be confirmed before a song exists.
+    status: "needs-confirmation" as const,
+    timelineItemId: timeline.find((item) => item.id === cue.timelineItemId)?.id ?? cue.timelineItemId
+  }));
 }
 
 function composeSpeeches(
