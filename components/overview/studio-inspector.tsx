@@ -13,6 +13,8 @@ import {
   seatingLayoutOptions,
   studioEditableObjects,
   styleOptions,
+  type CeremonyGroomStart,
+  type CeremonyStaging,
   type StudioColorDirection,
   type StudioDecorLevel,
   type StudioSceneEdits,
@@ -22,7 +24,15 @@ import {
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
 
-export type StudioTool = "overview" | "objects" | "style" | "seating" | "lighting";
+export type StudioTool = "overview" | "objects" | "style" | "seating" | "staging" | "lighting";
+
+// Who walks in, and who is already standing there. The scene has honoured both
+// answers for a while, but the only control lived on /ceremony — so the couple
+// watching the ceremony on the home studio never found it.
+const GROOM_START_OPTIONS: Array<{ hint: string; label: string; value: CeremonyGroomStart }> = [
+  { hint: "Enters with the procession.", label: "Walks the aisle", value: "aisle" },
+  { hint: "Already on the mark when the bride walks in.", label: "Waits at the altar", value: "altar" }
+];
 
 export type SceneWarning = {
   actionLabel: string;
@@ -60,7 +70,9 @@ type StudioInspectorProps = {
   sceneKind: "ceremony" | "reception";
   seatedGuests: number;
   selectedObjectId: StudioSceneObjectId;
+  staging: CeremonyStaging;
   updatePlan: (plan: WeddingStudioPlan) => void;
+  updateStaging: (staging: CeremonyStaging) => void;
   warnings: SceneWarning[];
 };
 
@@ -82,7 +94,9 @@ export function StudioInspector({
   sceneKind,
   seatedGuests,
   selectedObjectId,
+  staging,
   updatePlan,
+  updateStaging,
   warnings
 }: StudioInspectorProps) {
   const { t } = useTranslation();
@@ -252,6 +266,60 @@ export function StudioInspector({
 
         <Link className="vstudio-link" href="/reception">
           {t("Open Seating Plan")} <ChevronRight aria-hidden="true" size={14} />
+        </Link>
+      </div>
+    );
+  }
+
+  if (activeTool === "staging") {
+    return (
+      <div className="vstudio-panel">
+        <h2>{t("Staging")}</h2>
+
+        <fieldset className="vstudio-field">
+          <legend>{t("The groom")}</legend>
+          <div className="vstudio-choice-stack" role="group" aria-label={t("The groom")}>
+            {GROOM_START_OPTIONS.map((option) => (
+              <button
+                aria-pressed={staging.groomStart === option.value}
+                data-active={staging.groomStart === option.value}
+                key={option.value}
+                onClick={() => updateStaging({ ...staging, groomStart: option.value })}
+                type="button"
+              >
+                <strong>{t(option.label)}</strong>
+                <small>{t(option.hint)}</small>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="vstudio-field">
+          <legend>{t("Singer")}</legend>
+          <div className="vstudio-choice-row" role="group" aria-label={t("Singer")}>
+            <button
+              aria-pressed={!staging.showSinger}
+              data-active={!staging.showSinger}
+              onClick={() => updateStaging({ ...staging, showSinger: false })}
+              type="button"
+            >
+              {t("Not booked")}
+            </button>
+            <button
+              aria-pressed={staging.showSinger}
+              data-active={staging.showSinger}
+              onClick={() => updateStaging({ ...staging, showSinger: true })}
+              type="button"
+            >
+              {t("In the room")}
+            </button>
+          </div>
+        </fieldset>
+
+        {/* Moving the marks themselves needs the plan view's drag handles, which
+            live on the ceremony studio. Point there rather than reimplementing it. */}
+        <Link className="vstudio-quick-link" href="/ceremony">
+          {t("Move where everyone stands")}
         </Link>
       </div>
     );

@@ -15,7 +15,8 @@ import {
   PanelRightOpen,
   Plus,
   Share2,
-  SunMedium
+  SunMedium,
+  Users
 } from "lucide-react";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { SavedChip } from "@/components/app-shell/saved-chip";
@@ -44,6 +45,7 @@ import {
   defaultWeddingStudioPlan,
   getEditableObjectsForStep,
   studioEditableObjects,
+  type CeremonyStaging,
   type StudioPlanningStepId,
   type StudioSceneEdits,
   type StudioSceneObjectId,
@@ -64,11 +66,15 @@ type StudioMode = "edit" | "preview";
 const noopMoveObject = () => {};
 const noopSelectObject = () => {};
 
-const RAIL_TOOLS: Array<{ icon: typeof Compass; id: StudioTool; label: string }> = [
+// Staging is ceremony-only — there is no processional to stage at the dinner —
+// so the rail drops that tool in the reception scene rather than offering a
+// control the hall cannot answer.
+const RAIL_TOOLS: Array<{ ceremonyOnly?: boolean; icon: typeof Compass; id: StudioTool; label: string }> = [
   { icon: Compass, id: "overview", label: "Scene overview" },
   { icon: Move, id: "objects", label: "Objects" },
   { icon: Palette, id: "style", label: "Style" },
   { icon: Armchair, id: "seating", label: "Seating" },
+  { ceremonyOnly: true, icon: Users, id: "staging", label: "Staging" },
   { icon: SunMedium, id: "lighting", label: "Lighting" }
 ];
 
@@ -129,6 +135,10 @@ export function OverviewDashboard() {
   // engine clamps the reception step to the hall room, so "church" here only
   // shapes the ceremony scene.
   const sceneVenueType: StudioVenueType = heroScene === "reception" ? "hall" : "church";
+  // Staging leaves the rail with the reception scene, so a tool left selected
+  // there falls back to the overview rather than stranding a ceremony panel
+  // open over the dinner hall.
+  const activeSceneTool: StudioTool = activeTool === "staging" && sceneKind !== "ceremony" ? "overview" : activeTool;
 
   const invitedGuests = localProject.guests.length;
   const seatedGuests = useMemo(
@@ -336,6 +346,14 @@ export function OverviewDashboard() {
   function updatePlan(nextPlan: WeddingStudioPlan) {
     setPlan(nextPlan);
     writeStoredWeddingStudioLayout(nextPlan, sceneEdits, "vision");
+  }
+
+  // Staging is shared with the ceremony studio through the same layout record.
+  // Pass the live hydrated plan and sceneEdits, never re-derived values, or this
+  // save wipes the sibling slices — the mistake this store has already shipped.
+  function updateStaging(nextStaging: CeremonyStaging) {
+    setStaging(nextStaging);
+    writeStoredWeddingStudioLayout(plan, sceneEdits, "vision", nextStaging);
   }
 
   function moveSceneObject(objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) {
@@ -559,13 +577,13 @@ export function OverviewDashboard() {
           >
             {isPreview ? null : (
             <nav aria-label={t("Scene tools")} className="vstudio-rail">
-              {RAIL_TOOLS.map((tool) => {
+              {RAIL_TOOLS.filter((tool) => !tool.ceremonyOnly || sceneKind === "ceremony").map((tool) => {
                 const Icon = tool.icon;
                 return (
                   <button
                     aria-label={t(tool.label)}
-                    aria-pressed={activeTool === tool.id}
-                    data-active={activeTool === tool.id}
+                    aria-pressed={activeSceneTool === tool.id}
+                    data-active={activeSceneTool === tool.id}
                     key={tool.id}
                     onClick={() => {
                       setActiveTool(tool.id);
@@ -674,7 +692,7 @@ export function OverviewDashboard() {
             {isPreview ? null : inspectorOpen ? (
               <aside aria-label={t("Scene inspector")} className="vstudio-inspector">
                 <StudioInspector
-                  activeTool={activeTool}
+                  activeTool={activeSceneTool}
                   beginsAt={beginsAt}
                   capacity={capacity}
                   editableObjectIds={editableObjectIds}
@@ -691,7 +709,9 @@ export function OverviewDashboard() {
                   sceneKind={sceneKind}
                   seatedGuests={seatedGuests}
                   selectedObjectId={activeSelectedObjectId}
+                  staging={staging}
                   updatePlan={updatePlan}
+                  updateStaging={updateStaging}
                   warnings={warnings}
                 />
               </aside>
