@@ -1529,6 +1529,44 @@ a {
   text-transform: none;
 }
 
+/* The last intake question: two faces, generous and centred. Bigger than the
+   guest-list slots because here they are the whole question, not a row item. */
+.guided-portraits {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 8px 0;
+}
+
+.guided-portrait-slot {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.guided-portrait-slot .couple-face-avatar {
+  width: 96px;
+  height: 96px;
+}
+
+.guided-portrait-slot small {
+  max-width: 140px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Everything the three questions no longer ask, still fully editable. */
+.guided-advanced-stack {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
 .guided-role-presets {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

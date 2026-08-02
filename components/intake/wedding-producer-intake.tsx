@@ -18,7 +18,9 @@ import {
   type WeddingStylePreset
 } from "@/lib/project-composer";
 import { formatWeddingDate } from "@/lib/utils";
+import { fileToDownscaledDataUrl } from "@/lib/image-upload";
 import { useTranslation } from "@/lib/i18n";
+import { useCouplePhotos, type CoupleRole } from "@/lib/use-couple-photos";
 import { createStoredProjectDraft, readStoredProject, writeStoredProject } from "@/lib/local-project-store";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { clearStoredBudget } from "@/lib/use-budget";
@@ -45,7 +47,12 @@ const quickRolePresets = [
   }
 ];
 
-type IntakeQuestionId = "foundation" | "venue" | "guests" | "style" | "support";
+// Three questions, not five. Venue format, style and collaborators all still
+// shape the generated plan, but they are decisions with sane defaults that a
+// couple can revisit — asking them before the couple has seen anything put four
+// screens between "I want to try this" and the church. They now live in the
+// Advanced fold below, unchanged and still real.
+type IntakeQuestionId = "foundation" | "guests" | "portrait";
 
 const intakeQuestions: Array<{
   id: IntakeQuestionId;
@@ -60,28 +67,16 @@ const intakeQuestions: Array<{
     title: "Who is the wedding for?"
   },
   {
-    id: "venue",
-    kicker: "Question 2",
-    summary: "The venue model gives the digital twin its planning envelope.",
-    title: "Where does the day happen?"
-  },
-  {
     id: "guests",
-    kicker: "Question 3",
+    kicker: "Question 2",
     summary: "Guest count drives seating, flow, timing, and comfort.",
     title: "How many guests should the plan support?"
   },
   {
-    id: "style",
-    kicker: "Question 4",
-    summary: "Style and complexity decide how much detail the studio generates.",
-    title: "What should the day feel like?"
-  },
-  {
-    id: "support",
-    kicker: "Question 5",
-    summary: "Choose the collaborators who need a clean first handoff.",
-    title: "Who needs to be included?"
+    id: "portrait",
+    kicker: "Question 3",
+    summary: "Optional — your faces appear on the couple in the 3D church.",
+    title: "Add a photo of each of you?"
   }
 ];
 
@@ -91,10 +86,23 @@ export function WeddingProducerIntake() {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [intake, setIntake] = useState<WeddingProducerIntakeState>(defaultWeddingProducerIntake);
   const [status, setStatus] = useState<string | null>(null);
+  // Portraits are held here and only committed to the photo store when the plan
+  // is created. Writing them on upload would leave an abandoned intake's faces
+  // in storage, and would land them before the reset below could clear the
+  // previous couple's — so the new couple would look at someone else's face.
+  const [portraits, setPortraits] = useState<Record<CoupleRole, string | null>>({ bride: null, groom: null });
+  const { setPhoto } = useCouplePhotos();
   const plan = useMemo(() => composeWeddingProducerPlan(intake), [intake]);
   const activeQuestion = intakeQuestions[activeQuestionIndex];
   const coreRoleCount = intake.vendorRoles.length;
   const isFinalQuestion = activeQuestionIndex === intakeQuestions.length - 1;
+  // Same role mapping the guest studio uses: partner one is the groom figure.
+  // The slots take the names once they are typed, so nobody has to guess which
+  // face they are uploading.
+  const portraitSlots: Array<{ label: string; photo: string | null; role: CoupleRole }> = [
+    { label: intake.partnerOneName.trim() || t("Partner one"), photo: portraits.groom, role: "groom" },
+    { label: intake.partnerTwoName.trim() || t("Partner two"), photo: portraits.bride, role: "bride" }
+  ];
 
   function updateIntake(updates: Partial<WeddingProducerIntakeState>) {
     setStatus(null);
@@ -118,6 +126,16 @@ export function WeddingProducerIntake() {
 
   function setRolePreset(roles: string[]) {
     updateIntake({ vendorRoles: roles });
+  }
+
+  async function handlePortrait(role: CoupleRole, file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    setStatus(null);
+    const dataUrl = await fileToDownscaledDataUrl(file);
+    setPortraits((current) => ({ ...current, [role]: dataUrl }));
   }
 
   function goToNextQuestion() {
@@ -182,6 +200,12 @@ export function WeddingProducerIntake() {
     clearStoredCurrency();
     clearStoredWeddingStudioLayout();
 
+    // Written after the reset, and written unconditionally: passing null clears
+    // the slot, so a couple who skipped this step never inherits the faces of
+    // whoever used this browser before them.
+    setPhoto("groom", portraits.groom);
+    setPhoto("bride", portraits.bride);
+
     setStatus("Your first visual wedding plan is ready in this browser.");
 
     if (redirectTo) {
@@ -193,7 +217,7 @@ export function WeddingProducerIntake() {
     <div className="intake-studio guided-intake-studio">
       <section className="intake-hero guided-intake-hero" aria-labelledby="intake-title">
         <div>
-          <p className="eyebrow">{t("Start with 5 questions")}</p>
+          <p className="eyebrow">{t("Start with 3 questions")}</p>
           <h1 id="intake-title">{t("Get a first visual wedding plan before you start editing.")}</h1>
           <p>
             {t("Answer a few calm questions and watch your day take shape.")}
@@ -212,7 +236,7 @@ export function WeddingProducerIntake() {
       </section>
 
       <section className="guided-intake-shell" aria-label={t("Guided first wedding plan")}>
-        <aside className="guided-intake-steps" aria-label={t("Five question progress")}>
+        <aside className="guided-intake-steps" aria-label={t("Three question progress")}>
           {intakeQuestions.map((question, index) => (
             <button
               aria-current={index === activeQuestionIndex ? "step" : undefined}
@@ -264,7 +288,7 @@ export function WeddingProducerIntake() {
           <details className="guided-intake-details">
             <summary>
               <span>{t("Advanced project details")}</span>
-              <small>{t("Open only if you want to adjust exact venue names or all role choices.")}</small>
+              <small>{t("Format, style, venues and who is involved — all have sensible defaults.")}</small>
             </summary>
             {renderAdvancedDetails()}
           </details>
@@ -366,25 +390,6 @@ export function WeddingProducerIntake() {
       );
     }
 
-    if (activeQuestion.id === "venue") {
-      return (
-        <div className="guided-question-stack">
-          <IntakeSegment
-            label={t("Ceremony format")}
-            onChange={(value) => updateIntake({ ceremonyFormat: value as CeremonyFormat })}
-            options={ceremonyOptions}
-            value={intake.ceremonyFormat}
-          />
-          <IntakeSegment
-            label={t("Reception format")}
-            onChange={(value) => updateIntake({ receptionFormat: value as ReceptionFormat })}
-            options={receptionOptions}
-            value={intake.receptionFormat}
-          />
-        </div>
-      );
-    }
-
     if (activeQuestion.id === "guests") {
       return (
         <div className="guided-guest-control">
@@ -408,9 +413,63 @@ export function WeddingProducerIntake() {
       );
     }
 
-    if (activeQuestion.id === "style") {
-      return (
-        <div className="guided-question-stack">
+    // The last question is the only optional one, so it says so and can be
+    // walked past. The faces land on the couple in the church, which is the
+    // whole reason to ask.
+    return (
+      <div className="guided-portraits">
+        {portraitSlots.map(({ label, photo, role }) => (
+          <div className="guided-portrait-slot" key={role}>
+            <span className="guests-avatar couple-face-avatar" data-has-photo={photo ? "true" : undefined}>
+              {photo ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="" src={photo} />
+                  <button
+                    aria-label={t("Remove photo")}
+                    className="guests-avatar-remove"
+                    onClick={() => setPortraits((current) => ({ ...current, [role]: null }))}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                </>
+              ) : (
+                <label className="guests-avatar-add" title={t("Add photo")}>
+                  <span aria-hidden="true">+</span>
+                  <input
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => void handlePortrait(role, event.target.files?.[0] ?? null)}
+                    type="file"
+                  />
+                  <span className="sr-only">{t("Add photo")}</span>
+                </label>
+              )}
+            </span>
+            <small>{label}</small>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderAdvancedDetails() {
+    return (
+      <>
+        <div className="guided-advanced-stack">
+          <IntakeSegment
+            label={t("Ceremony format")}
+            onChange={(value) => updateIntake({ ceremonyFormat: value as CeremonyFormat })}
+            options={ceremonyOptions}
+            value={intake.ceremonyFormat}
+          />
+          <IntakeSegment
+            label={t("Reception format")}
+            onChange={(value) => updateIntake({ receptionFormat: value as ReceptionFormat })}
+            options={receptionOptions}
+            value={intake.receptionFormat}
+          />
           <IntakeSegment
             label={t("Wedding style")}
             onChange={(value) => updateIntake({ stylePreset: value as WeddingStylePreset })}
@@ -423,44 +482,35 @@ export function WeddingProducerIntake() {
             options={complexityOptions}
             value={intake.complexity}
           />
-        </div>
-      );
-    }
 
-    return (
-      <div className="guided-question-stack">
-        <div className="guided-role-presets" role="group" aria-label={t("Choose a collaborator preset")}>
-          {quickRolePresets.map((preset) => (
-            <button
-              data-active={preset.roles.every((role) => intake.vendorRoles.includes(role)) && intake.vendorRoles.length === preset.roles.length}
-              key={preset.label}
-              onClick={() => setRolePreset(preset.roles)}
-              type="button"
-            >
-              <strong>{t(preset.label)}</strong>
-              <span>{preset.roles.length} {t("roles")}</span>
-            </button>
-          ))}
-        </div>
-
-        <fieldset className="intake-role-fieldset guided-role-fieldset">
-          <legend>{t("Fine-tune included roles")}</legend>
-          <div>
-            {availableVendorRoles.map((role) => (
-              <label key={role}>
-                <input checked={intake.vendorRoles.includes(role)} onChange={() => toggleVendorRole(role)} type="checkbox" />
-                <span>{role}</span>
-              </label>
+          <div className="guided-role-presets" role="group" aria-label={t("Choose a collaborator preset")}>
+            {quickRolePresets.map((preset) => (
+              <button
+                data-active={preset.roles.every((role) => intake.vendorRoles.includes(role)) && intake.vendorRoles.length === preset.roles.length}
+                key={preset.label}
+                onClick={() => setRolePreset(preset.roles)}
+                type="button"
+              >
+                <strong>{t(preset.label)}</strong>
+                <span>{preset.roles.length} {t("roles")}</span>
+              </button>
             ))}
           </div>
-        </fieldset>
-      </div>
-    );
-  }
 
-  function renderAdvancedDetails() {
-    return (
-      <div className="guided-advanced-grid">
+          <fieldset className="intake-role-fieldset guided-role-fieldset">
+            <legend>{t("Fine-tune included roles")}</legend>
+            <div>
+              {availableVendorRoles.map((role) => (
+                <label key={role}>
+                  <input checked={intake.vendorRoles.includes(role)} onChange={() => toggleVendorRole(role)} type="checkbox" />
+                  <span>{role}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+
+        <div className="guided-advanced-grid">
         {/* Venues stay optional — plenty of couples plan before they have booked —
             so these carry a hint rather than a required marker. */}
         <label>
@@ -490,7 +540,8 @@ export function WeddingProducerIntake() {
             value={intake.guestCount}
           />
         </label>
-      </div>
+        </div>
+      </>
     );
   }
 }
@@ -561,16 +612,14 @@ function getPreviewPromise(questionId: IntakeQuestionId) {
   const promises: Record<IntakeQuestionId, string> = {
     foundation: "A named plan that feels ready to personalize.",
     guests: "A capacity-aware layout with tables, rows, and timing notes.",
-    style: "A visual direction that guides ceremony, reception, and briefs.",
-    support: "Role handoffs for the people who need to execute the day.",
-    venue: "A venue-aware ceremony and reception structure."
+    portrait: "Your own faces on the couple at the altar."
   };
 
   return promises[questionId];
 }
 
 function getPreviewSupportCopy(questionId: IntakeQuestionId, riskCount: number) {
-  if (questionId === "support") {
+  if (questionId === "portrait") {
     return riskCount > 0 ? `${riskCount} watch notes will be carried into the first plan.` : "The first plan has no major generated watch notes.";
   }
 
