@@ -190,6 +190,24 @@ function blankWedding(): Wedding {
   };
 }
 
+// One-shot data migration, ordered by the owner on 2026-08-02: his stored plan
+// was created with the test name "Klara", and he wants the couple to be Sanne &
+// Johan. The data lives only in localStorage on his machines, so a UI edit in
+// one browser cannot reach the others — this rewrites the name at read time
+// wherever the app runs. Keyed on the exact first name "Klara" so it is
+// idempotent and touches nothing else; remove once his plans all say Sanne.
+function renameKlaraToSanne(wedding: Wedding): Wedding {
+  const firstName = (value: string) => value.trim().split(/\s+/)[0] ?? "";
+  const swap = (value: string) => (firstName(value) === "Klara" ? value.replace(/^\s*Klara/, "Sanne") : value);
+  const partnerOneName = swap(wedding.partnerOneName);
+  const partnerTwoName = swap(wedding.partnerTwoName);
+  if (partnerOneName === wedding.partnerOneName && partnerTwoName === wedding.partnerTwoName) {
+    return wedding;
+  }
+  const coupleNames = [firstName(partnerOneName), firstName(partnerTwoName)].filter(Boolean).join(" & ");
+  return { ...wedding, coupleNames, partnerOneName, partnerTwoName };
+}
+
 export function readStoredProject() {
   if (typeof window === "undefined") {
     return null;
@@ -214,7 +232,7 @@ export function readStoredProject() {
           // was even slightly malformed saw the sample's 27 guests, complete with
           // meal choices, presented as their own on the summary, the exports and in
           // the 3D room. An empty list says "nothing here yet", which is true.
-          wedding: isWedding(parsed.wedding) ? parsed.wedding : blankWedding(),
+          wedding: renameKlaraToSanne(isWedding(parsed.wedding) ? parsed.wedding : blankWedding()),
           timelineItems: keepValid<TimelineItem>(parsed.timelineItems, isTimelineArray).items,
           musicCues: keepValid<MusicCue>(parsed.musicCues, isMusicCueArray).items,
           speeches: keepValid<Speech>(parsed.speeches, isSpeechArray).items,
