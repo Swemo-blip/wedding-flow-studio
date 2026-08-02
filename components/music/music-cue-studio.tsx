@@ -17,7 +17,7 @@ const musicRiskKinds = ["risk-music-backup", "risk-music-start-cue", "risk-cue-c
 
 export function MusicCueStudio() {
   const { t } = useTranslation();
-  const { addMusicCue, musicCues, removeMusicCue, resetMusicCues, timelineItems, updateMusicCue, updateWedding, wedding } = useLocalProject();
+  const { addMusicCue, musicCues, removeMusicCue, resetMusicCues, timelineItems, updateMusicCue, updateTimelineItems, updateWedding, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedCueId, setSelectedCueId] = useState(musicCues[0]?.id ?? "");
   const selectedCue = musicCues.find((cue) => cue.id === selectedCueId) ?? musicCues[0];
@@ -30,6 +30,32 @@ export function MusicCueStudio() {
   );
   const selectedCueRisks = selectedCue ? musicRisks.filter((risk) => risk.relatedEntityId === selectedCue.id) : [];
   const confirmedCueCount = musicCues.filter((cue) => cue.status === "confirmed").length;
+
+  // Cues were created with timelineItemId: "" and NO control ever wrote it, while
+  // five consumers read it — Preview, the DJ brief, the Director board, the role
+  // production sheet and the twin map all saw an unlinked cue and rendered
+  // nothing. The couple's own song choices never left this screen. Both sides of
+  // the link are written here: a moment holds one cue, a cue holds one moment, so
+  // pointing a cue at a new moment must also release the old pairing.
+  function linkSelectedCueToMoment(timelineItemId: string) {
+    if (!selectedCue) {
+      return;
+    }
+
+    updateMusicCue(selectedCue.id, { timelineItemId });
+    updateTimelineItems((items) =>
+      items.map((item) => {
+        if (item.id === timelineItemId) {
+          return { ...item, musicCueId: selectedCue.id };
+        }
+        // Release whichever moment used to own this cue.
+        if (item.musicCueId === selectedCue.id) {
+          return { ...item, musicCueId: undefined };
+        }
+        return item;
+      })
+    );
+  }
 
   function updateSelectedCue(updates: Partial<MusicCue>) {
     if (!selectedCue) {
@@ -186,6 +212,17 @@ export function MusicCueStudio() {
                 <small>{t("Open to adjust the song, people, start cue, backup, and notes.")}</small>
               </summary>
               <div className="form-grid music-cue-form">
+                <label className="field">
+                  <span>{t("Plays at")}</span>
+                  <select onChange={(event) => linkSelectedCueToMoment(event.target.value)} value={selectedCue.timelineItemId}>
+                    <option value="">{t("Not tied to a moment yet")}</option>
+                    {timelineItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.time} · {t(item.title)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <label className="field">
                   <span>{t("Moment")}</span>
                   <input onChange={(event) => updateSelectedCue({ moment: event.target.value })} value={selectedCue.moment} />

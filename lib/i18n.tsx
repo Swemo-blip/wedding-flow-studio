@@ -517,6 +517,8 @@ const sv: Record<string, string> = {
     "Det här ersätter de {count} moment som redan finns i din tidslinje med den klassiska ordningen. Ditt övriga arbete påverkas inte. Fortsätta?",
   "Your timeline is empty — build the day first and this brief fills itself in.": "Din tidslinje är tom — bygg dagen först, så fyller det här brevet i sig själv.",
   "No moments in your timeline belong to this brief yet.": "Inga moment i din tidslinje hör till det här brevet än.",
+  "Plays at": "Spelas vid",
+  "Not tied to a moment yet": "Inte kopplad till ett moment än",
   "Watch notes": "Att hålla koll på",
   "to review before the day": "att gå igenom före dagen",
   "Nudge the selected object": "Putta det valda objektet",
