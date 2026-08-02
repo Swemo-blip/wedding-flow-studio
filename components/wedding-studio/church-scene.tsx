@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Billboard, ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
-import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
@@ -510,30 +510,25 @@ export function CeremonyScene({
           {interiorVenue ? null : (
             <ContactShadows blur={2.4} color={isDay ? "#5a5238" : "#050602"} far={5} opacity={isDay ? 0.34 : 0.55} position={[0, -0.03, 0.1]} resolution={384} scale={11} />
           )}
-          {/* The film look lives here: contact occlusion (N8AO), restrained bloom
-              on flames only, a whisper of grain, and AgX tone mapping LAST — the
-              composer disables the renderer's own tone curve, so without the
-              ToneMapping pass the scene ships ungraded. */}
+          {/* Deliberately minimal: contact occlusion, candle bloom, ONE ACES tone
+              map — the same curve the renderer applies before the composer mounts,
+              so the settled frame matches the load-in frame instead of visibly
+              draining when the chain kicks in. The old AgX + vignette + noise +
+              brightness/contrast + saturation stack was measured 2026-08-02: it
+              cost the pews a third of their saturation, and the HueSaturation pass
+              existed only to compensate for what AgX removed. Do not re-add grade
+              passes here without measuring the pew region before and after
+              (scripts/scene-probe.js is the harness for that). */}
           {highQuality ? (
             <EffectComposer multisampling={4}>
               <N8AO aoRadius={0.8} distanceFalloff={0.75} halfRes intensity={3} quality="medium" />
               <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
-              <Vignette darkness={isDay ? 0.28 : 0.55} eskil={false} offset={0.3} />
-              <Noise opacity={0.05} premultiply />
-              <ToneMapping mode={ToneMappingMode.AGX} />
-              {/* AgX rolls off highlights beautifully but desaturates — this pass
-                  brings the warm ivory/candle tones back and adds a little depth
-                  so the scene reads rich, not pastel-flat. */}
-              <BrightnessContrast brightness={-0.015} contrast={0.09} />
-              <HueSaturation saturation={0.18} />
+              <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             </EffectComposer>
           ) : (
             <EffectComposer multisampling={4}>
               <Bloom intensity={isDay ? 0.32 : 0.68} luminanceSmoothing={0.2} luminanceThreshold={isDay ? 1.15 : 1.05} mipmapBlur />
-              <Vignette darkness={isDay ? 0.28 : 0.55} eskil={false} offset={0.3} />
-              <ToneMapping mode={ToneMappingMode.AGX} />
-              <BrightnessContrast brightness={-0.015} contrast={0.09} />
-              <HueSaturation saturation={0.18} />
+              <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             </EffectComposer>
           )}
           {isDay ? null : <GlowHalo />}
