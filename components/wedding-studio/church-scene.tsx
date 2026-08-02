@@ -260,7 +260,7 @@ const palettes: Record<StudioStyle, Palette> = {
     floor: "#d8cab0",
     guest: "#f1e7d2",
     pew: "#6e431f",
-    wall: "#ecdfc8"
+    wall: "#f0dcb4"
   },
   modern: {
     accent: "#9fb0a3",
@@ -296,7 +296,7 @@ const palettes: Record<StudioStyle, Palette> = {
     floor: "#d6c2a0",
     guest: "#efe2c8",
     pew: "#5f3819",
-    wall: "#e7dcc6"
+    wall: "#ecd8ae"
   }
 };
 
@@ -1601,25 +1601,24 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         const ny = normalAttr.getY(i);
         const contactBand = 1 - THREE.MathUtils.smoothstep(posAttr.getY(i), minY, contactTop);
         const occ = Math.max(0.55, 1 - 0.42 * Math.max(0, -ny) - 0.22 * contactBand);
-        // Saturation must be a FLOOR, not a scale. `hsl.s * 0.3` left the source
-        // greys at s=0, so the hue lerp toward warm had nothing to act on and the
-        // whole assembly stayed cold grey no matter what hue was targeted — the
-        // alabaster regrade was silently a no-op on exactly the vertices that
-        // needed it. Lightness is likewise remapped into a light stone band
-        // instead of merely nudged, so mid-grey clothing lands as pale limestone.
-        // The band has to be wide enough to tell two guests apart. Crushing every
-        // vertex into a 0.52-0.87 lightness sliver fixed the cold grey but made
-        // the assembly read as one repeated figure; the source model's own light
-        // and dark areas now survive as contrast within the alabaster family.
-        // Third pass on this band, and the honest summary is that I overshot twice:
-        // first too grey, then so light that every guest read as white. Lightness
-        // now tops out well below white and starts lower, so clothing is clearly
-        // clothing and skin is clearly skin, while the whole assembly still sits
-        // in one warm stone family.
+        // The "warm alabaster assembly" is retired. Clamping saturation at 0.3 and
+        // lerping 62% of the way to one warm hue made every guest the same pale
+        // stone — the owner's words were "alla gäster saknar färg", and the frame
+        // he photographed (the pre-regrade flash) shows the source models' real
+        // sage and olive clothing, which is what he wants back.
+        //
+        // Saturation is still a FLOOR, never a scale: `hsl.s * 0.3` left source
+        // greys at s=0 with nothing for the hue lerp to act on, which is why an
+        // earlier pass was silently a no-op. What changed is the ceiling (0.3 ->
+        // 0.62) and the hue pull (0.62 -> 0.12, a whisper of shared warmth rather
+        // than a repaint). Lightness keeps its remap so nobody blows out to white
+        // and mid-grey still reads as cloth, and `occ` keeps the baked contact
+        // shading. Measure the congregation region before/after — full-frame
+        // means are dominated by the pale wall and will lie about this.
         color.setHSL(
-          THREE.MathUtils.lerp(hsl.h, 0.085, 0.62),
-          THREE.MathUtils.clamp(Math.max(0.075, hsl.s * 0.55), 0.075, 0.3),
-          Math.min(0.74, 0.2 + hsl.l * 0.66) * occ
+          THREE.MathUtils.lerp(hsl.h, 0.085, 0.12),
+          THREE.MathUtils.clamp(Math.max(0.075, hsl.s * 0.95), 0.075, 0.62),
+          Math.min(0.78, 0.18 + hsl.l * 0.7) * occ
         );
         colorAttr.setXYZ(i, color.r, color.g, color.b);
       }
@@ -1666,10 +1665,11 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
       scale.setScalar(CONGREGATION_SCALE * (0.945 + 0.115 * h));
       matrix.compose(position, quaternion, scale);
       mesh.setMatrixAt(index, matrix);
-      // Per-guest tone, wide enough to read as different people from the aisle
-      // but still all one material family — ivory through warm stone, never a
-      // saturated costume colour.
-      tint.setHSL(0.07 + 0.07 * (h - 0.5), 0.16, 0.74 + 0.24 * (h - 0.5));
+      // Per-guest VARIETY only. This tint multiplies the vertex colours, so now
+      // that those carry the models' real clothing again it must stay near
+      // neutral (s 0.16 -> 0.05) and vary lightness — otherwise it washes a warm
+      // cast over every guest and undoes the regrade above.
+      tint.setHSL(0.07 + 0.07 * (h - 0.5), 0.05, 0.74 + 0.24 * (h - 0.5));
       mesh.setColorAt(index, tint);
     });
     mesh.instanceMatrix.needsUpdate = true;
