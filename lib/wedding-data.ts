@@ -1166,6 +1166,7 @@ export const exportTypes: ExportType[] = [
     title: "Toastmaster Brief",
     description: "Reception timing, speeches, secret layers, microphone cues, and program risks.",
     contactPerson: "Daniel Brooks",
+    phases: ["Reception", "Dinner Service", "Speeches", "Cake", "First Dance", "Party"],
     timelineItemIds: ["reception-doors", "welcome-toast", "brides-father-speech", "grooms-sister-speech", "best-man-speech", "friends-song", "cake-cutting", "couple-thank-you"],
     warningIds: ["risk-speech-length", "risk-secret-technical"]
   },
@@ -1174,6 +1175,7 @@ export const exportTypes: ExportType[] = [
     title: "Photographer Brief",
     description: "Ceremony positions, group photo timing, key people, chapel exit, and golden hour reminders.",
     contactPerson: "Clara Hayes",
+    phases: ["Photography", "Processional", "Ceremony", "Recessional", "Cake", "First Dance"],
     timelineItemIds: ["ceremony-begins", "recessional", "group-photos", "cake-cutting", "first-dance"],
     warningIds: ["risk-group-photo-time"]
   },
@@ -1182,6 +1184,7 @@ export const exportTypes: ExportType[] = [
     title: "DJ / Music Cue Sheet",
     description: "All music moments, start cues, backup plans, status, and related timeline items.",
     contactPerson: "Miles Reed",
+    phases: ["Processional", "Ceremony", "Recessional", "Cocktail Hour", "Reception", "First Dance", "Party"],
     timelineItemIds: ["prelude", "wedding-party-entrance", "couple-entrance", "recessional", "reception-doors", "first-dance", "party-begins"],
     warningIds: ["risk-music-backup", "risk-music-start-cue", "risk-cue-confirmation"]
   },
@@ -1190,6 +1193,7 @@ export const exportTypes: ExportType[] = [
     title: "Catering Timing & Allergy Sheet",
     description: "Dinner timing, allergy details, meal preferences, child meals, and service interruptions.",
     contactPerson: "Sophia Grant",
+    phases: ["Cocktail Hour", "Dinner Service", "Cake"],
     timelineItemIds: ["first-course", "brides-father-speech", "main-course", "friends-song"],
     warningIds: ["risk-catering-allergy", "risk-vegan-meal", "risk-child-meal"]
   },
@@ -1198,6 +1202,7 @@ export const exportTypes: ExportType[] = [
     title: "Ceremony Plan",
     description: "Chapel layout, ceremony order, processional cues, music moments, and photography positions.",
     contactPerson: "Reverend Thomas Allen",
+    phases: ["Ceremony Setup", "Guest Arrival", "Processional", "Ceremony", "Recessional"],
     timelineItemIds: ["guest-arrival", "prelude", "ceremony-begins", "wedding-party-entrance", "couple-entrance", "ring-exchange", "recessional"],
     warningIds: ["risk-music-backup"]
   },
@@ -1206,6 +1211,7 @@ export const exportTypes: ExportType[] = [
     title: "Reception Seating Plan",
     description: "Table assignments, guest notes, accessibility needs, meal preferences, and seating conflicts.",
     contactPerson: "Olivia Hart",
+    phases: ["Cocktail Hour", "Reception", "Dinner Service"],
     timelineItemIds: ["cocktail-hour", "reception-doors", "first-course", "main-course"],
     warningIds: ["risk-catering-allergy", "risk-accessibility", "risk-seating-conflict"]
   },
@@ -1214,6 +1220,7 @@ export const exportTypes: ExportType[] = [
     title: "Venue Setup Brief",
     description: "Room layout, service path, bar, dance floor, cake table, accessibility route, and setup notes.",
     contactPerson: "Henry Cole",
+    phases: ["Ceremony Setup", "Guest Arrival", "Cocktail Hour", "Reception", "Dinner Service", "Party"],
     timelineItemIds: ["guest-arrival", "cocktail-hour", "reception-doors", "first-course", "main-course", "party-begins"],
     warningIds: ["risk-accessibility"]
   }

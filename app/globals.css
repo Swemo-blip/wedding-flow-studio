@@ -6106,6 +6106,18 @@ a {
 /* The primary way into a full day, so it reads as the offer and the one-at-a-time
    presets above read as refinement. Quiet outline, not a second green fill —
    there is already one primary action on this surface. */
+/* A brief with no matching moments used to print a heading over an empty list,
+   which reads as "this vendor has nothing to do" rather than "nothing selected". */
+.export-empty {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
 .moment-library-classic {
   display: flex;
   flex-direction: column;

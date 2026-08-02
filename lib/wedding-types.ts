@@ -287,6 +287,14 @@ export type ExportType = {
   // A brief that covers the whole day sets this instead of listing moment ids, so
   // it always reflects the couple's live timeline — including moments they add.
   includesAllMoments?: boolean;
+  // Briefs used to select moments by hardcoded id. Those ids came from the SAMPLE
+  // timeline, so a couple who built their own day matched none of them and seven
+  // of eight briefs printed blank sheets for their vendors. Phase is the stable
+  // vocabulary — the moment library, the preview movements and the reception
+  // detection all already key on it — so a brief now says which parts of the day
+  // it covers and any timeline, however built, resolves against it. The ids are
+  // kept as an additional match so a sample-seeded plan still behaves.
+  phases?: string[];
   timelineItemIds: string[];
   warningIds: string[];
 };

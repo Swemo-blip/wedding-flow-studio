@@ -12,7 +12,6 @@ import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
-import { getTimelineItemsByIds } from "@/lib/use-local-timeline";
 import type { ExportType } from "@/lib/wedding-types";
 import { joinDetails } from "@/lib/utils";
 
@@ -36,13 +35,18 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
   const [copyStatus, setCopyStatus] = useState(t("Ready to copy"));
   const { dinnerTables, guests, hasLocalProject, musicCues, speeches, timelineItems, wedding } = useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
-  const items = useMemo(
-    () =>
-      exportType.includesAllMoments
-        ? timelineItems
-        : getTimelineItemsByIds(timelineItems, exportType.timelineItemIds),
-    [exportType.includesAllMoments, exportType.timelineItemIds, timelineItems]
-  );
+  // Select by PHASE first and fall back to the sample ids. Id-only selection meant
+  // a self-built timeline matched nothing and the brief printed an empty sheet.
+  const items = useMemo(() => {
+    if (exportType.includesAllMoments) {
+      return timelineItems;
+    }
+    const byId = new Set(exportType.timelineItemIds);
+    const byPhase = new Set(exportType.phases ?? []);
+    const matched = timelineItems.filter((item) => byId.has(item.id) || byPhase.has(item.phase));
+    // Order is the timeline's own, which the store keeps chronological.
+    return matched;
+  }, [exportType.includesAllMoments, exportType.phases, exportType.timelineItemIds, timelineItems]);
   // The linked timeline item owns each speech's time, so the brief matches the
   // Speeches studio and Day Flow rather than a speech's stale `timing` string.
   const timelineTimeById = useMemo(() => {
@@ -147,6 +151,13 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
           <div className="export-section">
             <h4>{t("Relevant Timeline")}</h4>
+            {items.length === 0 ? (
+              <p className="export-empty">
+                {timelineItems.length === 0
+                  ? t("Your timeline is empty — build the day first and this brief fills itself in.")
+                  : t("No moments in your timeline belong to this brief yet.")}
+              </p>
+            ) : null}
             <ol className="export-timeline">
               {items.map((item) => (
                 <li key={item.id}>
