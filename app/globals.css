@@ -1957,12 +1957,10 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.digital-twin-detail h3 {
+}.digital-twin-detail h3 {
   margin: 5px 0 8px;
   font-family: var(--font-serif);
-  font-size: clamp(1.65rem, 3vw, 2.7rem);
+  font-size: clamp(1.75rem, 3vw, 2.7rem);
   font-weight: 500;
   line-height: 1;
 }
@@ -2162,7 +2160,7 @@ a {
 
 .ceremony-scene-caption {
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--surface);
 }
 
 .ceremony-scene-caption strong {
@@ -2251,14 +2249,12 @@ a {
   gap: 14px;
   align-items: center;
   padding: 14px 16px;
-}
-
-.studio-command-main h2 {
+}.studio-command-main h2 {
   max-width: 720px;
   margin: 4px 0 0;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: clamp(1.55rem, 2.3vw, 2.3rem);
+  font-size: clamp(1.75rem, 2.3vw, 2.3rem);
   font-weight: 600;
   line-height: 1.08;
 }
@@ -2813,7 +2809,7 @@ a {
 }
 
 .day-flow-moment-inspector .moment-inspector-hero h3 {
-  font-size: clamp(1.55rem, 2.6vw, 2.2rem);
+  font-size: clamp(1.75rem, 2.6vw, 2.2rem);
 }
 
 .action-dock-card {
@@ -2834,7 +2830,7 @@ a {
   gap: 5px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--surface);
   padding: 11px 12px;
 }.action-dock-meta span {
   color: var(--muted);
@@ -3703,12 +3699,10 @@ a {
     rgba(255, 255, 255, 0.84);
   box-shadow: var(--shadow-card);
   padding: 18px;
-}
-
-.preview-next-move-card h3 {
+}.preview-next-move-card h3 {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(1.55rem, 2.5vw, 2.4rem);
+  font-size: clamp(1.75rem, 2.5vw, 2.4rem);
   line-height: 1.02;
   font-weight: 500;
 }
@@ -3911,7 +3905,7 @@ a {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--surface);
   box-shadow: var(--shadow-lg);
 }
 
@@ -4038,12 +4032,10 @@ a {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(216, 185, 119, 0.16)),
     rgba(255, 255, 255, 0.86);
-}
-
-.moment-primary-action h4 {
+}.moment-primary-action h4 {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-size: clamp(1.75rem, 2vw, 2rem);
   line-height: 1.05;
   font-weight: 500;
 }
@@ -5517,7 +5509,7 @@ a {
   }
 
   .studio-route-copy h1 {
-    font-size: clamp(1.45rem, 6.8vw, 2rem);
+    font-size: clamp(1.75rem, 6.8vw, 2rem);
   }
 
   .studio-route-actions {
@@ -6542,13 +6534,11 @@ a {
   gap: 18px;
   align-items: center;
   justify-content: space-between;
-}
-
-.studio-header-identity h1 {
+}.studio-header-identity h1 {
   margin: 0;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+  font-size: clamp(1.75rem, 2.4vw, 2.3rem);
   font-weight: 650;
   letter-spacing: 0.005em;
   line-height: 1;
@@ -6679,7 +6669,7 @@ a {
   }
 
   .studio-header-identity h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 
   .studio-saved-chip {
