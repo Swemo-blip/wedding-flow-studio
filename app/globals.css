@@ -10531,4 +10531,23 @@ a {
   .print-run {
     min-height: 34px;
   }
+
+  /* Bare inline links used as actions. Three of these sat at 17px tall inside the
+     preview's deep-layer drawer — a text link with no padding is 17px by
+     definition, and these are navigation, not prose. Given a real block target on
+     a phone; they stay inline on desktop where a cursor is precise. */
+  .preview-linked-moments p a,
+  .preview-dock-card p a,
+  .rail-link {
+    display: inline-block;
+    min-height: 34px;
+    padding: 8px 0;
+  }
+
+  /* Colour direction swatches on /ceremony, at 26px. A swatch is chosen by tapping
+     the colour, so the colour has to be big enough to tap. */
+  .setup-color {
+    min-width: 34px;
+    min-height: 34px;
+  }
 }
