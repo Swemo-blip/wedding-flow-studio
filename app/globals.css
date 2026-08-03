@@ -240,7 +240,7 @@ a {
 }
 
 ::selection {
-  background: rgba(65, 76, 55, 0.32);
+  background: rgba(30, 39, 51, 0.28);
 }
 
 .app-frame {
@@ -279,7 +279,7 @@ a {
   height: 100vh;
   border-right: 0;
   background:
-    radial-gradient(140% 50% at 50% 0%, rgba(65, 76, 55, 0.2), transparent 55%),
+    radial-gradient(140% 50% at 50% 0%, rgba(30, 39, 51, 0.2), transparent 55%),
     linear-gradient(180deg, rgba(23, 26, 19, 1), rgba(33, 36, 28, 1) 55%, rgba(20, 23, 17, 1)),
     var(--ink);
   color: rgba(248, 242, 228, 0.78);
@@ -2140,7 +2140,7 @@ a {
 
 .ceremony-processional-controls button[data-active="true"] {
   border-color: rgba(196, 208, 184, 0.4);
-  background: rgba(65, 76, 55, 0.5);
+  background: rgba(30, 39, 51, 0.5);
   color: #ffffff;
 }
 
@@ -2433,7 +2433,7 @@ a {
 
 .button-secondary:hover,
 .button-secondary:focus-visible {
-  border-color: rgba(65, 76, 55, 0.5);
+  border-color: rgba(30, 39, 51, 0.5);
   background: rgba(255, 255, 255, 0.95);
 }
 
@@ -4256,7 +4256,7 @@ a {
   min-height: 560px;
   height: 60vh;
   max-height: 760px;
-  border: 1px solid rgba(120, 106, 74, 0.28);
+  border: 1px solid var(--line-strong);
   border-radius: 14px;
   background: radial-gradient(120% 90% at 50% 12%, #f7f0df, #ece2cb 80%);
 }
@@ -6471,7 +6471,7 @@ a {
 
 .side-nav-link:hover,
 .side-nav-link:focus-visible {
-  background: rgba(65, 76, 55, 0.07);
+  background: rgba(30, 39, 51, 0.07);
   color: var(--ink);
 }
 
@@ -6874,7 +6874,7 @@ a {
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: 10px;
-  border: 1px solid rgba(120, 106, 74, 0.2);
+  border: 1px solid var(--line);
   object-fit: cover;
   background-size: cover;
   background-position: center;
@@ -7084,7 +7084,7 @@ a {
 }
 
 .preview-walkthrough-transport button:hover:not(:disabled) {
-  border-color: rgba(65, 76, 55, 0.6);
+  border-color: rgba(30, 39, 51, 0.6);
   transform: translateY(-1px);
 }
 
@@ -7101,9 +7101,9 @@ a {
 }
 
 .preview-walkthrough-play[data-playing="true"] {
-  border-color: rgba(65, 76, 55, 0.6) !important;
-  background: #414c37 !important;
-  color: #f4efe3 !important;
+  border-color: rgba(30, 39, 51, 0.6) !important;
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
 }
 
 @media (max-width: 680px) {
@@ -10028,7 +10028,7 @@ a {
   border: 0 !important;
   border-radius: 11px !important;
   background: var(--accent) !important;
-  color: #f4efe3 !important;
+  color: var(--accent-ink) !important;
 }
 
 .vstudio-playbar-play:hover {
@@ -10080,7 +10080,7 @@ a {
 }
 
 .vstudio-playbar-track button[data-state="active"] {
-  background-color: var(--gilt, #b39152);
+  background-color: var(--gilt);
 }
 
 .vstudio-playbar-track button:hover {
