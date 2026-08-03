@@ -10256,3 +10256,214 @@ a {
 .export-timeline li[data-run="struck"] {
   opacity: 0.75;
 }
+
+/* --- Run the day --------------------------------------------------------------
+   Held one-handed, in a room, in bad light, by someone with people waiting. So:
+   one column, the current moment at display size, and two targets big enough to
+   hit without looking. No cards, no drawers, nothing to scan past. */
+.run-day {
+  display: grid;
+  gap: 20px;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 8px 0 40px;
+}
+
+.run-day-head {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.run-day-tally {
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-day-now {
+  display: grid;
+  gap: 8px;
+}
+
+.run-day-time {
+  color: var(--ink-soft);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* The one thing that has to be readable across a room. */
+.run-day-now h1 {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.run-day-where {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1.125rem;
+}
+
+.run-day-notes {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--line-strong);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.run-day-state {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.run-day[data-state="done"] .run-day-state {
+  color: var(--success);
+}
+
+.run-day[data-state="struck"] .run-day-state {
+  color: var(--danger);
+}
+
+.run-day[data-state="struck"] .run-day-now h1 {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--danger);
+}
+
+.run-day-next {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-control);
+}
+
+.run-day-next > span {
+  color: var(--ink-faint);
+  font-size: 0.76rem;
+}
+
+.run-day-next strong {
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-day-next small {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+/* Two targets, 56px tall, side by side — thumb-sized without being a toy. */
+.run-day-verbs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.run-day-verbs button {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.run-day-done {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.run-day-done:hover {
+  background: var(--accent-hover);
+}
+
+.run-day-strike {
+  background: var(--surface);
+  border-color: var(--line-strong) !important;
+  color: var(--ink);
+}
+
+.run-day-strike:hover {
+  background: var(--surface-sunken);
+}
+
+.run-day-undo {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-color: var(--line-strong) !important;
+  color: var(--ink);
+}
+
+.run-day-step {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-day-step button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.run-day-step button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.run-day-return {
+  width: auto !important;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.run-day-empty {
+  max-width: 460px;
+  text-align: left;
+}
+
+.run-day-empty h1 {
+  margin: 6px 0 4px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.run-day-empty p {
+  margin: 0 0 16px;
+  color: var(--ink-soft);
+}

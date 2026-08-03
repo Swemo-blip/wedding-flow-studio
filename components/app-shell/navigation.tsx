@@ -17,6 +17,7 @@ import {
   Music2,
   Play,
   Store,
+  Timer,
   Users,
   UtensilsCrossed,
   Wallet,
@@ -64,6 +65,9 @@ const navGroups: NavGroup[] = [
     label: "Output",
     items: [
       { href: "/preview", icon: Play, label: "Preview Day" },
+      // Preview is the rehearsal; Run is the day itself. They sit together
+      // because they are the same day seen before and during.
+      { href: "/run", icon: Timer, label: "Run the day" },
       { href: "/summary", icon: FileCheck, label: "Summary" },
       { href: "/photos", icon: Camera, label: "Photos" },
       { href: "/print", icon: Printer, label: "Print" },
