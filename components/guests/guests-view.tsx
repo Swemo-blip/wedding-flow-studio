@@ -232,12 +232,6 @@ export function GuestsView() {
           </div>
           {filtered.map((guest) => {
             const profile = buildGuestProfile(guest, { guests, tables: dinnerTables, speeches });
-            const dietary =
-              guest.allergies.length > 0
-                ? guest.allergies.join(", ")
-                : guest.accessibilityNotes
-                  ? t("Accessibility")
-                  : "—";
             return (
               <div className="guests-row" key={guest.id} role="row">
                 <span className="guests-cell-name" role="cell">
@@ -317,8 +311,27 @@ export function GuestsView() {
                     value={guest.mealChoice}
                   />
                 </span>
+                {/* This cell was read-only text, and that is why /menu's
+                    allergy-conflict feature has never worked: the couple could see
+                    a dash for every guest and had nowhere to replace it. The
+                    allergies they type here are the ONLY source that feature reads.
+                    Editing stays inside the cell rather than opening a drawer —
+                    two fields do not earn a new surface. */}
                 <span className="guests-cell-diet" data-alert={guest.allergies.length > 0 ? "true" : undefined} role="cell">
-                  {dietary}
+                  <input
+                    aria-label={t("Allergies for {name}", { name: guest.name })}
+                    className="guests-cell-input"
+                    onChange={(event) => updateGuest(guest.id, { allergies: parseAllergies(event.target.value) })}
+                    placeholder={t("Allergies, comma separated")}
+                    value={guest.allergies.join(", ")}
+                  />
+                  <input
+                    aria-label={t("Accessibility notes for {name}", { name: guest.name })}
+                    className="guests-cell-input guests-cell-input-sub"
+                    onChange={(event) => updateGuest(guest.id, { accessibilityNotes: event.target.value })}
+                    placeholder={t("Step-free seat, hearing loop…")}
+                    value={guest.accessibilityNotes}
+                  />
                 </span>
                 <span className="guests-cell-actions" role="cell">
                   <button
@@ -339,6 +352,18 @@ export function GuestsView() {
       </div>
     </StudioRouteFrame>
   );
+}
+
+// Allergies are stored as a list because /menu groups courses by the distinct
+// allergy across the whole guest list. The couple types them as prose, so split on
+// commas, trim, and drop the empties a trailing comma leaves behind — otherwise a
+// half-typed "nuts, " becomes an allergy named "" and shows up as a blank conflict
+// chip on the menu.
+function parseAllergies(value: string): string[] {
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 function rsvpLabel(status: Guest["rsvpStatus"]) {

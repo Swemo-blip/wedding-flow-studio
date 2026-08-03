@@ -7612,15 +7612,22 @@ a {
   min-width: 0;
 }
 
+/* Two stacked fields: what they cannot eat, and how they get to their seat. */
 .guests-cell-diet {
+  display: grid;
+  gap: 3px;
+  align-content: center;
   color: var(--ink);
   font-size: 0.82rem;
   min-width: 0;
 }
 
+/* A recorded allergy is something the caterer has to act on, so the cell carries a
+   mark — but on its edge, not as the colour of the text the couple is typing.
+   Colouring an editable value red says "you made a mistake", and they have not. */
 .guests-cell-diet[data-alert="true"] {
-  color: var(--danger);
-  font-weight: 560;
+  padding-left: 8px;
+  border-left: 2px solid var(--warning);
 }
 
 .guests-rsvp {
