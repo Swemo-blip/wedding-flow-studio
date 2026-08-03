@@ -18,6 +18,10 @@ import {
 
 type Waypoint = {
   camera: SceneCameraOverride;
+  // The west doors, which until now were rendered with a hard-coded open={0} and
+  // had never moved. Open for the arrival and the entrance; shut once everyone is
+  // inside and the ceremony is under way.
+  doorsOpen?: boolean;
   lighting: SceneLighting;
   step: StudioPlanningStepId;
 };
@@ -25,9 +29,32 @@ type Waypoint = {
 // One cinematic waypoint per preview moment, in the same order as previewPhases.
 // Ceremony moments fly the aisle in daylight; the day warms to dusk as the
 // reception unfolds, so the camera literally walks the day before it happens.
+// The arrival begins IN the doorway, and that position is forced by geometry
+// rather than chosen. The portal opening is 1.2 x 1.4 in scene units, and those
+// units are not metres: the measured standing figure is 1.10 units for a 1.75 m
+// person, so the portal head at 1.4 is about 2.2 m of real door. A camera at the
+// 1.85-1.95 the rest of this sequence uses is therefore standing at roughly
+// 2.9 m — well ABOVE the lintel — and a dolly through the opening at that height
+// travels through solid stone, not through the doors.
+//
+// So the first waypoint sits at 1.12, inside the opening, and the sequence cranes
+// up as it enters. That is a real steadicam move rather than a compromise: a guest
+// walking in genuinely does see the nave open up above them. The later waypoints
+// keep their height because a preview has to see the couple over the congregation,
+// which an honest 1.02-unit eye level cannot do from the back of a full church.
 const walkthrough: Waypoint[] = [
-  { camera: { position: [0, 1.95, 5.3], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Guest arrival — back of the nave
-  { camera: { position: [0, 1.85, 3.9], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Prelude — down the aisle
+  // Arrival — standing in the open portal at the height of the doorway, looking
+  // the length of the nave. Verified on screen.
+  //
+  // A west-facing beat that actually SHOWS the doors swinging open was written and
+  // then pulled, because it could not be verified: every other waypoint in this
+  // list targets the altar, so the doors can open perfectly and no camera ever
+  // sees it. Showing them needs a shot looking back at the portal, and that shot
+  // frames a void — the nave floor stops 0.24 units past the west wall and beyond
+  // it the scene holds nothing but the sky dome. It belongs with the facade, in
+  // docs/blender-baked-venue.md, not in a camera path.
+  { camera: { position: [0, 1.12, 6.3], still: true, target: [0, 1, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" },
+  { camera: { position: [0, 1.85, 3.9], target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Prelude — down the aisle
   { camera: { position: [0, 1.7, 2.3], target: [0, 1.1, -4.5] }, lighting: "day", step: "preview" }, // Processional
   { camera: { position: [0, 1.62, 1.2], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Vows — framing the altar
   { camera: { position: [0, 1.75, 2.6], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional

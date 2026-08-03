@@ -147,6 +147,10 @@ function StoneWall({ args, color, position }: { args: [number, number, number]; 
 export type SceneCameraOverride = {
   position: [number, number, number];
   target: [number, number, number];
+  // An override normally inherits a slow idle dolly, which is right for a moment
+  // the viewer sits inside. A scripted move — walking in through the doors — has
+  // to arrive where it was told, so `still` drops the drift and tightens the damp.
+  still?: boolean;
 };
 
 export type CeremonyFirstPerson = "bride" | "groom" | null;
@@ -163,6 +167,10 @@ type CeremonySceneProps = {
   // their real table count + seated headcount instead of a capacity guess.
   dinnerTables?: DinnerTable[];
   autoProcessional?: boolean;
+  // The west doors. Defaults to following the processional; a caller driving the
+  // day moment by moment sets it explicitly so the couple arrive through an open
+  // portal rather than walking at a shut one.
+  doorsOpen?: boolean;
   budgetLevel: StudioBudgetLevel;
   // Who stands where. Optional so surfaces that only preview the day (exports,
   // the shared link) keep working without owning a staging editor.
@@ -349,6 +357,7 @@ export function CeremonyScene({
   venueType,
   viewMode,
   autoProcessional,
+  doorsOpen,
   aisleWidthFeet = 5,
   seatingLayout = "Traditional",
   dinnerTables,
@@ -566,6 +575,7 @@ export function CeremonyScene({
             palette={palette}
             processionalKey={processionalResetKey}
             processionalDriven={processionalDriven}
+            doorsOpen={doorsOpen ?? processionalActive}
             processionalPlaying={processionalActive}
             sceneEdits={sceneEdits}
             selectedObjectId={selectedObjectId}
@@ -771,6 +781,7 @@ function WeddingStageInterior({
   capacity,
   coupleHeadsRef,
   dinnerTables,
+  doorsOpen = false,
   firstPerson = null,
   highQuality = true,
   onMoveObject,
@@ -795,6 +806,7 @@ function WeddingStageInterior({
   capacity: WeddingStudioCapacity;
   coupleHeadsRef?: { current: CoupleHeads };
   dinnerTables?: DinnerTable[];
+  doorsOpen?: boolean;
   firstPerson?: CeremonyFirstPerson;
   highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
@@ -910,7 +922,7 @@ function WeddingStageInterior({
             </mesh>
           </EditableSceneObject>
 
-          <VenueBoundary palette={palette} venueType={venueType} viewMode={viewMode} />
+          <VenueBoundary doorsOpen={doorsOpen ? 1 : 0} palette={palette} venueType={venueType} viewMode={viewMode} />
           {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
 
           {activeStep !== "venue" ? (
@@ -1069,13 +1081,13 @@ function EditableSceneObject({
   return <group position={[offset.x, 0, offset.z]}>{children}</group>;
 }
 
-function VenueBoundary({ palette, venueType, viewMode }: { palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
+function VenueBoundary({ doorsOpen = 0, palette, venueType, viewMode }: { doorsOpen?: number; palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
   if (venueType === "garden" || venueType === "beach") {
     return <OutdoorVenueFrame palette={palette} venueType={venueType} />;
   }
 
   if (venueType === "church") {
-    return <ChurchNave palette={palette} viewMode={viewMode} />;
+    return <ChurchNave doorsOpen={doorsOpen} palette={palette} viewMode={viewMode} />;
   }
 
   return <RoomFrame palette={palette} venueType={venueType} viewMode={viewMode} />;
@@ -1742,15 +1754,36 @@ const PORTAL_PIER_X = PORTAL_WIDTH / 2 + PORTAL_PIER_WIDTH / 2;
 const DOOR_LEAF_WIDTH = 0.55;
 const DOOR_LEAF_HEIGHT = 1.29;
 
+// How far a leaf swings when fully open, and how long it takes. Doors this size
+// are heavy; 2.4 s of travel reads as ceremony, half a second reads as a shop.
+const DOOR_MAX_SWING = 1.6;
+const DOOR_SWING_LAMBDA = 1.3;
+
 function ChurchDoors({ open }: { open: number }) {
-  // Each leaf hangs in a group placed AT its hinge with the panel offset half its
-  // width, so the group's rotation swings the door about its edge, not its middle.
-  const swing = THREE.MathUtils.clamp(open, 0, 1) * 1.6;
+  // These leaves were modelled, textured, hinged — and then rendered with a
+  // hard-coded `open={0}` and nothing on earth able to change it. The one call
+  // site passed a literal, so the doors of the church have never once moved.
+  // They now follow the processional: shut while the guests are seated, swinging
+  // wide as the couple start their walk.
+  const leftRef = useRef<THREE.Group>(null);
+  const rightRef = useRef<THREE.Group>(null);
+  const swingRef = useRef(THREE.MathUtils.clamp(open, 0, 1) * DOOR_MAX_SWING);
+
+  useFrame((_, delta) => {
+    const target = THREE.MathUtils.clamp(open, 0, 1) * DOOR_MAX_SWING;
+    swingRef.current = THREE.MathUtils.damp(swingRef.current, target, DOOR_SWING_LAMBDA, delta);
+    if (leftRef.current) {
+      leftRef.current.rotation.y = swingRef.current;
+    }
+    if (rightRef.current) {
+      rightRef.current.rotation.y = -swingRef.current;
+    }
+  });
 
   return (
     <group position={[0, 0, WEST_WALL_Z - 0.02]}>
       {[-1, 1].map((side) => (
-        <group key={side} position={[side * (PORTAL_WIDTH / 2), 0, 0]} rotation={[0, side * -swing, 0]}>
+        <group key={side} position={[side * (PORTAL_WIDTH / 2), 0, 0]} ref={side === -1 ? leftRef : rightRef}>
           <mesh castShadow position={[(-side * DOOR_LEAF_WIDTH) / 2, DOOR_LEAF_HEIGHT / 2, 0]} receiveShadow>
             <boxGeometry args={[DOOR_LEAF_WIDTH, DOOR_LEAF_HEIGHT, 0.045]} />
             <meshStandardMaterial color="#5c4526" roughness={0.66} />
@@ -2921,7 +2954,7 @@ function WindowGobos({ intensity }: { intensity: number }) {
   );
 }
 
-function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioViewMode }) {
+function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palette: Palette; viewMode: StudioViewMode }) {
   // Real naves tower over the congregation — at eye height the ceiling ratio is
   // what separates "church" from "scale model". Everything below derives from
   // this so the room stays coherent.
@@ -2976,7 +3009,7 @@ function ChurchNave({ palette, viewMode }: { palette: Palette; viewMode: StudioV
         {/* Closed. The doors take an `open` 0-1 so the entrance fly-through can
             swing them on cue, but nothing drives that yet and a door that opens for
             no reason is worse than one that stays shut. */}
-        <ChurchDoors open={0} />
+        <ChurchDoors open={doorsOpen} />
       </Suspense>
 
       {/* Chancel wall: a carved blind arcade. This used to be a flat 2.6x4
@@ -4030,14 +4063,16 @@ function CameraSetup({
     const baseX = rawX * distanceScale;
     const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawY * distanceScale);
     const baseZ = rawZ * distanceScale;
-    const drifting = cameraOverride ? true : viewMode === "3d";
+    const drifting = cameraOverride ? !cameraOverride.still : viewMode === "3d";
     const dollyDepth = cameraOverride ? 0.1 : 0.24;
     const desiredX = baseX;
     const desiredY = baseY;
     const desiredZ = baseZ + (drifting ? Math.sin(time * 0.045) * dollyDepth : 0);
     const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode, venueType, activeStep);
     // Slower lambda on override so the fly-between-moments reads as a cinematic glide.
-    const lambda = cameraOverride ? 1.5 : 2.4;
+    // A `still` waypoint is a scripted position rather than a place to rest, so it
+    // gets there instead of easing in for half a second.
+    const lambda = cameraOverride ? (cameraOverride.still ? 2.6 : 1.5) : 2.4;
 
     camera.position.set(
       THREE.MathUtils.damp(camera.position.x, desiredX, lambda, delta),

@@ -610,6 +610,7 @@ export function OverviewDashboard() {
                 budgetLevel={plan.budgetLevel}
                 cameraOverride={previewWaypoint ? previewWaypoint.camera : null}
                 capacity={capacity}
+                doorsOpen={previewWaypoint?.doorsOpen}
                 congregationPhotos={congregationPhotos}
                 couplePhotos={couplePhotos}
                 dinnerTables={localProject.dinnerTables}
