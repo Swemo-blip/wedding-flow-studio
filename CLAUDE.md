@@ -168,11 +168,12 @@ dismissed. A shadow is permitted **only** on something dismissable.
    planned day.
 8. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
 
-**Open question for Johan, still unanswered.** The budget card shows an English
-label next to `53 000 kr`, because the language toggle is on EN while the currency
-is SEK — the app is doing what it was told. The fix is a product decision he has not
-made: either the language follows the currency, or Swedish users default to SV. Do
-not guess it.
+**Decided 2026-08-03 (delegated): the language follows the BROWSER, the currency
+stays independent.** A Swedish browser gets a Swedish interface; a stored toggle
+choice returns early and beats the locale, so one tap is permanent. Tying language
+to currency was rejected — plenty of Swedes plan in English and plenty of English
+speakers pay in kronor, so that would be a guess about the person, while a browser
+locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
 
 ## Verification Traps (learned the hard way)
 
