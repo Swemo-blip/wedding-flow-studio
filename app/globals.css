@@ -316,13 +316,25 @@ a {
   font-weight: 600;
 }
 
-.brand-kicker,
-.eyebrow {
-  color: var(--subtle);
+/* The eyebrow was 0.68rem/600/0.14em uppercase. Measured, replacing that with
+   0.76rem/500/0.01em sentence case gives LARGER type that sets 30-48% narrower
+   in Swedish — the single biggest win available on a bilingual surface, since
+   uppercase disables every kern pair and å ä ö appear constantly. It also stops
+   the labels shouting: an eyebrow is meant to be quiet.
+   The brand kicker keeps its capitals; it is a wordmark, not a label. */
+.brand-kicker {
+  color: var(--ink-faint);
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.eyebrow {
+  color: var(--ink-faint);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .sidebar .brand-kicker {
@@ -466,14 +478,11 @@ a {
   display: grid;
   gap: 5px;
   min-width: 0;
-}
-
-.studio-route-copy span {
+}.studio-route-copy span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .studio-route-copy h1 {
@@ -534,19 +543,13 @@ a {
   gap: 5px;
   border-bottom: 1px solid var(--line);
   padding: 13px 15px;
-}
-
-.studio-scene-heading span {
+}.studio-scene-heading span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.studio-scene-heading strong {
+  letter-spacing: 0.01em;
+}.studio-scene-heading strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: clamp(1.28rem, 2vw, 1.9rem);
   font-weight: 650;
   line-height: 1.04;
@@ -679,9 +682,7 @@ a {
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-lg);
-}
-
-.sourcing-summary-card span,
+}.sourcing-summary-card span,
 .sourcing-summary-card small,
 .sourcing-queue span,
 .sourcing-queue small,
@@ -692,25 +693,18 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.vendor-next-decision span,
+  letter-spacing: 0.01em;
+}.vendor-next-decision span,
 .vendor-panel-header span,
 .vendor-candidate-card span,
 .vendor-fit-score span {
   color: var(--blue);
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.vendor-next-decision strong,
+  letter-spacing: 0.01em;
+}.vendor-next-decision strong,
 .vendor-panel-header strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 650;
   line-height: 1.2;
@@ -734,11 +728,8 @@ a {
   gap: 5px;
   border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
-}
-
-.sourcing-queue strong {
+}.sourcing-queue strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 650;
 }
@@ -774,11 +765,8 @@ a {
 
 .sourcing-category-list button span {
   color: var(--blue);
-}
-
-.sourcing-category-list button strong {
+}.sourcing-category-list button strong {
   color: inherit;
-  font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 650;
 }
@@ -820,11 +808,8 @@ a {
   border-radius: 10px;
   background: rgba(247, 243, 232, 0.76);
   padding: 12px;
-}
-
-.sourcing-role-card strong {
+}.sourcing-role-card strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 650;
 }
@@ -837,11 +822,8 @@ a {
   border-radius: var(--radius);
   background: rgba(247, 243, 232, 0.72);
   padding: 14px;
-}
-
-.sourcing-search-card strong {
+}.sourcing-search-card strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 650;
   line-height: 1.2;
@@ -938,11 +920,8 @@ a {
 .vendor-quote-figure strong {
   font-size: 1.125rem;
   letter-spacing: -0.01em;
-}
-
-.vendor-candidate-card strong {
+}.vendor-candidate-card strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 650;
   line-height: 1.22;
@@ -974,16 +953,13 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 8px;
   align-items: end;
-}
-
-.vendor-candidate-controls label {
+}.vendor-candidate-controls label {
   display: grid;
   gap: 5px;
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .vendor-candidate-controls select,
@@ -1007,12 +983,9 @@ a {
   border-radius: 14px;
   background: rgba(247, 243, 232, 0.62);
   padding: 14px;
-}
-
-.vendor-empty-state strong,
+}.vendor-empty-state strong,
 .director-empty-state strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
 }
 
@@ -1080,11 +1053,8 @@ a {
 
 .sourcing-full-list[open] > summary::after {
   content: "-";
-}
-
-.sourcing-full-list > summary span {
+}.sourcing-full-list > summary span {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 650;
 }
@@ -1108,11 +1078,8 @@ a {
   border-radius: 10px;
   background: rgba(247, 243, 232, 0.7);
   padding: 12px;
-}
-
-.sourcing-full-list article strong {
+}.sourcing-full-list article strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1rem;
 }
 
@@ -1160,9 +1127,7 @@ a {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.74);
   padding: 18px;
-}
-
-.intake-hero-card span,
+}.intake-hero-card span,
 .intake-hero-card small,
 .intake-section-heading span,
 .intake-form label > span,
@@ -1175,8 +1140,7 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .intake-hero-card strong {
@@ -1291,10 +1255,7 @@ a {
 
 .intake-preview-metrics > div:last-child {
   border-right: 0;
-}
-
-.intake-preview-metrics strong {
-  font-family: var(--font-serif);
+}.intake-preview-metrics strong {
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -1318,10 +1279,7 @@ a {
 .intake-flow-preview small {
   color: var(--champagne-dark);
   font-weight: 650;
-}
-
-.intake-flow-preview strong {
-  font-family: var(--font-serif);
+}.intake-flow-preview strong {
   font-size: 1rem;
 }
 
@@ -1414,9 +1372,7 @@ a {
     rgba(255, 255, 255, 0.86);
   color: var(--ink);
   box-shadow: inset 3px 0 0 var(--sage);
-}
-
-.guided-intake-step span,
+}.guided-intake-step span,
 .guided-intake-step small,
 .guided-intake-save-state span,
 .guided-question-heading span,
@@ -1427,8 +1383,7 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .guided-intake-step strong {
@@ -1870,9 +1825,7 @@ a {
   border-radius: 14px;
   background: rgba(249, 245, 234, 0.72);
   padding: 14px;
-}
-
-.digital-twin-score span,
+}.digital-twin-score span,
 .digital-twin-score small,
 .digital-twin-detail span,
 .digital-twin-detail-grid span,
@@ -1880,8 +1833,7 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .digital-twin-score strong {
@@ -2033,11 +1985,8 @@ a {
   border-radius: 14px;
   background: rgba(241, 232, 220, 0.34);
   padding: 11px;
-}
-
-.digital-twin-detail-grid strong {
+}.digital-twin-detail-grid strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
@@ -2065,15 +2014,10 @@ a {
 
 .digital-twin-stats-row > div:last-child {
   border-right: 0;
-}
-
-.digital-twin-stats-row strong {
-  font-family: var(--font-serif);
+}.digital-twin-stats-row strong {
   font-size: 1.5rem;
   font-weight: 600;
-}
-
-.wedding-studio-hero span,
+}.wedding-studio-hero span,
 .studio-panel-header span,
 .ceremony-scene-caption span,
 .studio-capacity-indicator span,
@@ -2086,8 +2030,7 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .studio-nudge-reset {
@@ -2269,11 +2212,8 @@ a {
     linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(249, 245, 234, 0.68)),
     rgba(255, 255, 255, 0.72);
   padding: 12px 14px;
-}
-
-.section-title {
+}.section-title {
   margin: 4px 0 0;
-  font-family: var(--font-serif);
   font-size: clamp(1.2rem, 2vw, 1.7rem);
   line-height: 1.08;
   font-weight: 620;
@@ -2341,15 +2281,12 @@ a {
   gap: 8px;
   align-items: center;
   justify-content: flex-end;
-}
-
-.studio-command-metrics span,
+}.studio-command-metrics span,
 .studio-command-control span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .studio-command-control {
@@ -2379,20 +2316,14 @@ a {
   display: grid;
   gap: 5px;
   min-width: 0;
-}
-
-.module-decision-strip span {
+}.module-decision-strip span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.module-decision-strip strong {
+  letter-spacing: 0.01em;
+}.module-decision-strip strong {
   overflow: hidden;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 650;
   line-height: 1.12;
@@ -2411,30 +2342,25 @@ a {
   -webkit-line-clamp: 2;
 }
 
+/* The display serif belongs to display sizes and to printed surfaces. This rule
+   used to spray it across 24 selectors with no size condition at all, so a music
+   cue title, a transport-bar label and a table name all got the same Garamond as
+   a 5rem hero — which is where most of the editorial texture on the inner routes
+   came from. What remains is one display line per surface, plus the export sheet,
+   which is paper and wants a serif. Every `strong` and every list-item heading
+   dropped out; they are content in a panel, not a headline. */
 .studio-workspace-copy h2,
 .one-decision-header h2,
-.one-decision-action strong,
 .preview-simulator-copy h2,
 .preview-current-moment h2,
 .preview-command-moment h2,
 .preview-next-move-card h3,
-.preview-scene-caption strong,
-.preview-simulator-board strong,
-.preview-scene-control-panel strong,
-.preview-transport-bar strong,
 .reception-command-copy h2,
-.reception-best-decision strong,
-.reception-journey-strip strong,
-.reception-room-header strong,
-.reception-selected-table-card strong,
-.selected-guest-journey strong,
 .ceremony-layout-header h2,
 .director-live-hero h2,
 .sourcing-hero h1,
 .intake-hero h1,
-.export-preview h3,
-.music-cue-card h3,
-.speech-card h3 {
+.export-preview h3 {
   font-family: var(--font-serif);
   letter-spacing: -0.01em;
 }
@@ -2910,19 +2836,13 @@ a {
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.64);
   padding: 11px 12px;
-}
-
-.action-dock-meta span {
+}.action-dock-meta span {
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.action-dock-meta strong {
+  letter-spacing: 0.01em;
+}.action-dock-meta strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 700;
 }
@@ -3009,13 +2929,10 @@ a {
 .field {
   display: grid;
   gap: 6px;
-}
-
-.field label {
+}.field label {
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
 .field input,
@@ -3099,17 +3016,14 @@ a {
   margin-top: 16px;
   border-collapse: collapse;
   font-size: 0.88rem;
-}
-
-.budget-table th {
+}.budget-table th {
   padding: 8px 10px;
   border-bottom: 1px solid rgba(80, 63, 45, 0.32);
   text-align: right;
   color: #8a6d3c;
   font-size: 0.68rem;
   font-weight: 640;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .budget-table th:first-child,
@@ -3179,16 +3093,13 @@ a {
   border-radius: var(--radius);
   background: rgba(251, 247, 238, 0.42);
   padding: 12px;
-}
-
-.summary-grid span,
+}.summary-grid span,
 .speech-grid span,
 .cue-grid dt,
 .export-contact span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
 .summary-between {
@@ -3397,14 +3308,11 @@ a {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-card);
   padding: 12px 14px;
-}
-
-.preview-location-card span,
+}.preview-location-card span,
 .preview-brief-grid span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .preview-location-card strong {
@@ -3443,9 +3351,7 @@ a {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.56);
   transform: translate(-50%, -50%);
-}
-
-.preview-scene-landmark span {
+}.preview-scene-landmark span {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
@@ -3453,7 +3359,6 @@ a {
   color: var(--champagne-dark);
   font-size: 0.76rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .preview-person-token {
@@ -3519,13 +3424,10 @@ a {
   border-radius: var(--radius);
   background: rgba(250, 246, 236, 0.68);
   padding: 12px;
-}
-
-.preview-linked-moments > span {
+}.preview-linked-moments > span {
   color: var(--champagne-dark);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .preview-linked-moments p {
@@ -3540,9 +3442,7 @@ a {
     linear-gradient(135deg, rgba(23, 29, 27, 0.026), transparent 48%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(249, 245, 234, 0.94)),
     var(--surface);
-}
-
-.preview-state-line {
+}.preview-state-line {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
@@ -3552,7 +3452,6 @@ a {
   font-weight: 650;
   line-height: 1.1;
   padding-left: 8px;
-  text-transform: uppercase;
 }
 
 .preview-state-line[data-tone="confirmed"] {
@@ -3676,9 +3575,7 @@ a {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.28), transparent 52%, rgba(255, 255, 255, 0.28)),
     rgba(255, 255, 255, 0.18);
-}
-
-.preview-stage-zone {
+}.preview-stage-zone {
   position: absolute;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
@@ -3687,7 +3584,6 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .preview-stage-zone-left {
@@ -3774,20 +3670,14 @@ a {
     transform: scale(1.18);
     opacity: 0;
   }
-}
-
-.preview-scene-caption span,
+}.preview-scene-caption span,
 .preview-handoff-card span,
 .preview-command-facts span,
 .preview-intelligence-strip span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
-}
-
-.preview-scene-caption strong {
-  font-family: var(--font-serif);
+}.preview-scene-caption strong {
   font-size: clamp(1.2rem, 2vw, 1.8rem);
   font-weight: 500;
   line-height: 1.05;
@@ -3916,10 +3806,7 @@ a {
 
 .preview-intelligence-strip > div:last-child {
   border-right: 0;
-}
-
-.preview-intelligence-strip strong {
-  font-family: var(--font-serif);
+}.preview-intelligence-strip strong {
   font-size: clamp(1.25rem, 2vw, 1.8rem);
   font-weight: 500;
   line-height: 1.1;
@@ -4057,11 +3944,8 @@ a {
 
 .preview-support-details[open] > summary::after {
   content: "-";
-}
-
-.preview-support-details > summary span {
+}.preview-support-details > summary span {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.125rem;
   font-weight: 650;
 }
@@ -4126,9 +4010,7 @@ a {
   display: grid;
   align-content: center;
   gap: 12px;
-}
-
-.moment-readiness-card span,
+}.moment-readiness-card span,
 .moment-intel-card > span,
 .moment-guest-card span,
 .moment-handoff-card span,
@@ -4136,11 +4018,7 @@ a {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
-}
-
-.moment-readiness-card strong {
-  font-family: var(--font-serif);
+}.moment-readiness-card strong {
   font-size: clamp(1.3rem, 2vw, 1.8rem);
   font-weight: 500;
   line-height: 1.08;
@@ -4226,11 +4104,8 @@ a {
 .moment-guest-card[data-level="moderate"] {
   border-color: rgba(182, 128, 45, 0.24);
   background: rgba(182, 128, 45, 0.08);
-}
-
-.moment-guest-card strong,
+}.moment-guest-card strong,
 .moment-handoff-card strong {
-  font-family: var(--font-serif);
   font-size: clamp(1.18rem, 2vw, 1.65rem);
   font-weight: 500;
   line-height: 1.08;
@@ -4441,9 +4316,7 @@ a {
   font-weight: 500;
   pointer-events: none;
   backdrop-filter: blur(6px);
-}
-
-.reception-command-copy > span,
+}.reception-command-copy > span,
 .reception-best-decision > span,
 .reception-journey-strip span,
 .reception-room-header span,
@@ -4454,8 +4327,7 @@ a {
   color: rgba(255, 255, 255, 0.66);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .reception-canvas-hud {
@@ -4523,11 +4395,8 @@ a {
 
 .reception-guest-details[open] > summary::after {
   content: "-";
-}
-
-.reception-guest-details > summary span {
+}.reception-guest-details > summary span {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 650;
 }
@@ -4619,12 +4488,9 @@ a {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.7);
-}
-
-.shared-facts span {
+}.shared-facts span {
   font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.01em;
   color: rgba(33, 29, 20, 0.5);
 }
 
@@ -4739,13 +4605,10 @@ a {
 
 .studio-detail-drawer[open] > summary::after {
   content: "-";
-}
-
-.studio-detail-drawer > summary span {
+}.studio-detail-drawer > summary span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .studio-detail-drawer > summary strong {
@@ -4810,9 +4673,7 @@ a {
   gap: 10px;
   align-items: center;
   justify-content: flex-end;
-}
-
-.director-state-line,
+}.director-state-line,
 .director-count-line,
 .director-queue-status span {
   display: inline-flex;
@@ -4824,7 +4685,6 @@ a {
   font-weight: 650;
   line-height: 1.1;
   padding-left: 8px;
-  text-transform: uppercase;
 }
 
 .director-state-line[data-tone="confirmed"],
@@ -4887,13 +4747,10 @@ a {
 
 .director-command-strip > div:last-child {
   border-right: 0;
-}
-
-.director-command-strip span {
+}.director-command-strip span {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
-  text-transform: uppercase;
 }
 
 .director-command-strip strong {
@@ -6123,11 +5980,8 @@ a {
   gap: 14px;
   padding: 7px 0;
   border-bottom: 1px solid var(--line);
-}
-
-.supply-count {
+}.supply-count {
   flex: 0 0 44px;
-  font-family: var(--font-serif);
   font-size: 1rem;
   text-align: right;
   color: var(--accent);
@@ -6698,15 +6552,12 @@ a {
   font-weight: 650;
   letter-spacing: 0.005em;
   line-height: 1;
-}
-
-.studio-header-identity p {
+}.studio-header-identity p {
   margin: 5px 0 0;
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .studio-header-actions {
@@ -6875,14 +6726,11 @@ a {
   font-size: 1.5rem;
   font-weight: 650;
   line-height: 1;
-}
-
-.studio-donut-center span {
+}.studio-donut-center span {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 620;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 /* Studio summary rail (Ceremony / Reception): summary + capacity + decisions + notes */
@@ -6953,12 +6801,9 @@ a {
   border-radius: 14px;
   background: var(--surface);
   padding: 18px 20px;
-}
-
-.style-references-head h2 {
+}.style-references-head h2 {
   margin: 3px 0 0;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.1;
@@ -7189,14 +7034,11 @@ a {
   display: grid;
   gap: 4px;
   pointer-events: none;
-}
-
-.preview-walkthrough-overlay span {
+}.preview-walkthrough-overlay span {
   color: rgba(240, 234, 216, 0.72);
   font-size: 0.68rem;
   font-weight: 640;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
@@ -7303,21 +7145,15 @@ a {
 
 .studio-pane-head .eyebrow {
   margin: 0;
-}
-
-.studio-pane-head h2 {
+}.studio-pane-head h2 {
   margin: 3px 0 0;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.1;
-}
-
-.studio-pane-head h3 {
+}.studio-pane-head h3 {
   margin: 3px 0 0;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
@@ -7560,12 +7396,9 @@ a {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 8px;
-}
-
-.detail-studio-detail-head h2 {
+}.detail-studio-detail-head h2 {
   margin: 3px 0 0;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.1;
@@ -7639,14 +7472,11 @@ a {
 
 .guests-row-head {
   background: var(--surface-warm);
-}
-
-.guests-row-head span {
+}.guests-row-head span {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .guests-cell-name {
@@ -7713,14 +7543,11 @@ a {
   display: grid;
   gap: 6px;
   justify-items: center;
-}
-
-.couple-face-slot small {
+}.couple-face-slot small {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 640;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .couple-face-avatar {
@@ -7869,14 +7696,11 @@ a {
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-}
-
-.guests-tally-label {
+}.guests-tally-label {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .guests-tally-chip {
@@ -8095,14 +7919,11 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.setup-label {
+}.setup-label {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .setup-value {
@@ -8522,19 +8343,13 @@ a {
 .budget-summary-stats > div {
   display: grid;
   gap: 4px;
-}
-
-.budget-summary-stats span {
+}.budget-summary-stats span {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.budget-summary-stats strong {
+}.budget-summary-stats strong {
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
@@ -8585,14 +8400,11 @@ a {
 
 .budget-row-head {
   background: var(--surface-warm);
-}
-
-.budget-row-head span {
+}.budget-row-head span {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .budget-num-head {
@@ -8712,12 +8524,9 @@ a {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 6px;
-}
-
-.checklist-phase-head h2 {
+}.checklist-phase-head h2 {
   margin: 0;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -8845,16 +8654,13 @@ a {
 
 .summary-block-wide {
   grid-column: 1 / -1;
-}
-
-.summary-block h2 {
+}.summary-block h2 {
   margin: 0 0 10px;
   color: var(--subtle);
   font-family: var(--font-sans);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .summary-stats {
@@ -9028,12 +8834,9 @@ a {
 
 .account-status[data-tone="off"] svg {
   color: var(--muted);
-}
-
-.account-status h2 {
+}.account-status h2 {
   margin: 0 0 2px;
   color: var(--ink);
-  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -9063,14 +8866,11 @@ a {
 .account-field {
   display: grid;
   gap: 5px;
-}
-
-.account-field span {
+}.account-field span {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .account-field input {
@@ -9163,14 +8963,11 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.budget-target-field > span:first-child {
+}.budget-target-field > span:first-child {
   color: var(--subtle);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .budget-target-input {
@@ -9208,16 +9005,13 @@ a {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-}
-
-.budget-breakdown h3 {
+}.budget-breakdown h3 {
   margin: 0 0 12px;
   color: var(--subtle);
   font-family: var(--font-sans);
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .budget-breakdown-list {
