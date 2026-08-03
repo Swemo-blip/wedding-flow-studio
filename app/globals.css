@@ -10467,3 +10467,39 @@ a {
   margin: 0 0 16px;
   color: var(--ink-soft);
 }
+
+/* The automatic snapshot on /account. Quieter than the manual backup above it —
+   this is a net, not an action the couple has to take. */
+.account-snapshot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 13px 15px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-control);
+}
+
+.account-snapshot > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-snapshot span {
+  color: var(--ink-faint);
+  font-size: 0.76rem;
+}
+
+.account-snapshot strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.account-snapshot small {
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}

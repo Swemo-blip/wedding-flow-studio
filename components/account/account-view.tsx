@@ -1,9 +1,10 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, type ReactNode, useState } from "react";
-import { CloudCheck, CloudOff, Download, HardDrive, Heart, Upload } from "lucide-react";
+import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { CloudCheck, CloudOff, Download, HardDrive, Heart, History, Upload } from "lucide-react";
 import { StudioRouteFrame } from "@/components/ui/studio-route-frame";
 import { useTranslation } from "@/lib/i18n";
+import { readDailySnapshotSummary, restoreDailySnapshot } from "@/lib/local-project-store";
 import { downloadBackup, restoreBackup } from "@/lib/project-backup";
 import { useAuth } from "@/lib/use-auth";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -18,6 +19,12 @@ function buildCoupleNames(partnerOneName: string, partnerTwoName: string) {
 
 export function AccountView() {
   const { t } = useTranslation();
+  // Read after mount: the snapshot lives in localStorage, so reading it during
+  // render would make the server output and the first client paint disagree.
+  const [snapshot, setSnapshot] = useState<ReturnType<typeof readDailySnapshotSummary>>(null);
+  useEffect(() => {
+    queueMicrotask(() => setSnapshot(readDailySnapshotSummary()));
+  }, []);
   const { configured, loading, signIn, signOut, signUp, user } = useAuth();
   const { hasLocalProject, updatedAt, updateWedding, wedding } = useLocalProject();
   const [detailsNotice, setDetailsNotice] = useState<string | null>(null);
@@ -61,6 +68,17 @@ export function AccountView() {
     setDataError(null);
     downloadBackup();
     setDataNotice(t("Backup downloaded — keep it somewhere safe."));
+  }
+
+  function handleRestoreSnapshot() {
+    setDataError(null);
+    setDataNotice(null);
+    if (!restoreDailySnapshot()) {
+      setDataError(t("That saved version could not be read."));
+      return;
+    }
+    setDataNotice(t("Restored — reloading your plan…"));
+    window.setTimeout(() => window.location.reload(), 900);
   }
 
   async function handleRestoreBackup(event: ChangeEvent<HTMLInputElement>) {
@@ -208,6 +226,29 @@ export function AccountView() {
           </div>
           {dataNotice ? <p className="account-notice">{dataNotice}</p> : null}
           {dataError ? <p className="account-error">{dataError}</p> : null}
+
+          {/* The automatic net, shown only when there is actually something in it.
+              The download above is the copy you have to remember; this is the one
+              the app keeps for you. It states what it holds, because restoring
+              blind is how you lose a second version on top of the first. */}
+          {snapshot ? (
+            <div className="account-snapshot">
+              <div>
+                <span>{t("Kept automatically")}</span>
+                <strong>
+                  {t("How your plan looked on {date}", { date: snapshot.savedOn })}
+                </strong>
+                <small>
+                  {snapshot.coupleNames ? `${snapshot.coupleNames} · ` : ""}
+                  {t("{guests} guests · {moments} moments", { guests: snapshot.guests, moments: snapshot.moments })}
+                </small>
+              </div>
+              <button className="account-button account-button-secondary" onClick={handleRestoreSnapshot} type="button">
+                <History aria-hidden="true" size={16} />
+                {t("Go back to this")}
+              </button>
+            </div>
+          ) : null}
         </section>
       </div>
     </StudioRouteFrame>

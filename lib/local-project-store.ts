@@ -333,10 +333,103 @@ export function readStoredProject() {
   return null;
 }
 
+// One snapshot per calendar day, taken on the FIRST write of that day, holding the
+// state as it was when the day started.
+//
+// Why a day and not every write: a rolling one-write-back copy is useless against
+// the thing that actually destroys a plan. A bad write is rarely noticed
+// immediately, and the next few writes push the good copy out. A daily snapshot
+// survives any number of same-day mistakes, including a wipe, and costs one extra
+// copy of a blob that is already small enough to live in localStorage.
+//
+// This is not the same thing as the manual backup on /account. That one the couple
+// has to remember; this one is always there. It exists because an agent working on
+// this project deleted the stored plan on 2026-08-03 with its only copy in a
+// variable that the page reload it had just triggered destroyed — recovery was
+// luck, from a quarantine key that happened to be lying around.
+export const dailySnapshotStorageKey = "wedding-flow-studio.project.daily.v1";
+
+type DailySnapshot = {
+  savedOn: string;
+  raw: string;
+};
+
+function todayStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function captureDailySnapshot() {
+  try {
+    const outgoing = window.localStorage.getItem(projectStorageKey);
+    if (!outgoing) {
+      return;
+    }
+    const existing = window.localStorage.getItem(dailySnapshotStorageKey);
+    if (existing) {
+      const parsed = JSON.parse(existing) as DailySnapshot;
+      if (parsed?.savedOn === todayStamp()) {
+        return;
+      }
+    }
+    safeSetItem(dailySnapshotStorageKey, JSON.stringify({ raw: outgoing, savedOn: todayStamp() }));
+  } catch {
+    // A snapshot is a courtesy, never a precondition for saving the real thing.
+  }
+}
+
+/** What the snapshot holds, so a restore is an informed choice rather than a gamble. */
+export function readDailySnapshotSummary() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(dailySnapshotStorageKey);
+    if (!raw) {
+      return null;
+    }
+    const snapshot = JSON.parse(raw) as DailySnapshot;
+    const project = JSON.parse(snapshot.raw);
+    // Through the same rename the read path applies, or this row is the one place
+    // in the app still showing the couple a name they changed.
+    const wedding = project?.wedding ? renameKlaraToSanne(project.wedding as Wedding) : null;
+    return {
+      coupleNames: typeof wedding?.coupleNames === "string" ? wedding.coupleNames : "",
+      guests: Array.isArray(project?.guests) ? project.guests.length : 0,
+      moments: Array.isArray(project?.timelineItems) ? project.timelineItems.length : 0,
+      savedOn: snapshot.savedOn
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function restoreDailySnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  try {
+    const raw = window.localStorage.getItem(dailySnapshotStorageKey);
+    if (!raw) {
+      return false;
+    }
+    const snapshot = JSON.parse(raw) as DailySnapshot;
+    JSON.parse(snapshot.raw);
+    if (!safeSetItem(projectStorageKey, snapshot.raw)) {
+      return false;
+    }
+    notifyStoredProjectChange();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function writeStoredProject(project: StoredWeddingProject) {
   if (typeof window === "undefined") {
     return null;
   }
+
+  captureDailySnapshot();
 
   const nextProject = createStoredProjectDraft({
     ...project,
