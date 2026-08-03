@@ -50,6 +50,13 @@ export type Guest = {
   photoUrl?: string;
 };
 
+// How a moment stands on the day itself. A struck moment is MARKED struck and
+// never removed: the couple has to be able to change their mind at 19:00 and put
+// it back, and every printed deliverable must still show the day as planned —
+// a vendor holding yesterday's running order needs to see what was dropped, not
+// a gap where it used to be. Deleting is a separate, deliberate act.
+export type MomentRunState = "planned" | "done" | "struck";
+
 export type TimelineItem = {
   id: string;
   time: string;
@@ -64,6 +71,7 @@ export type TimelineItem = {
   visibility: Visibility;
   riskLevel?: RiskSeverity;
   durationMinutes?: number;
+  runState?: MomentRunState;
 };
 
 export type VenueObject = {

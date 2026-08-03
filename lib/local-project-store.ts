@@ -2,7 +2,7 @@ import { dinnerTables, guests, musicCues, sampleWedding, speeches, timelineItems
 import { safeSetItem } from "@/lib/persistence-status";
 import { sortTimelineByTime } from "@/lib/utils";
 import { MENU_COURSE_KINDS } from "@/lib/wedding-menu";
-import type { DinnerTable, Guest, MenuCourse, PhotoShot, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
+import type { DinnerTable, Guest, MenuCourse, MomentRunState, PhotoShot, MusicCue, Speech, TimelineItem, VendorCandidate, Wedding } from "@/lib/wedding-types";
 
 export const projectStorageKey = "wedding-flow-studio.project.v1";
 export const timelineStorageKey = "wedding-flow-studio.timeline.v1";
@@ -69,8 +69,21 @@ export type StoredRiskResolution = {
 // to the END of the array, and `preview-phases.ts` states outright that it assumes
 // a chronological timeline — so a 9:00 AM moment added late rendered below "Party
 // begins", and Preview, the exports and the .ics all inherited that order.
-export function createTimelineDraft(items: TimelineItem[]) {
-  return sortTimelineByTime(items.map((item) => ({ ...item })));
+const MOMENT_RUN_STATES: MomentRunState[] = ["planned", "done", "struck"];
+
+// The explicit return type matters: without it the normaliser below widens
+// `runState` to "required but possibly undefined", which is not TimelineItem, and
+// that inferred shape then propagates into every caller's useState.
+export function createTimelineDraft(items: TimelineItem[]): TimelineItem[] {
+  return sortTimelineByTime(
+    items.map((item) => ({
+      ...item,
+      // Anything unrecognised reads as planned rather than being trusted. A junk
+      // value here would render a moment struck-through on a printed running
+      // order, which is the one place a wrong state does real damage.
+      runState: MOMENT_RUN_STATES.includes(item.runState as MomentRunState) ? item.runState : "planned"
+    }))
+  );
 }
 
 export function createPhotoShotDraft(items: PhotoShot[]) {

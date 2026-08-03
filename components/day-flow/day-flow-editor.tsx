@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Ban, Check, Plus, Trash2 } from "lucide-react";
 import { ActionDock } from "@/components/action/action-dock";
 import { MomentInspector } from "@/components/moment/moment-inspector";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import { derivePreviewPhases } from "@/lib/preview-phases";
 import { useLocalProject } from "@/lib/use-local-project";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { previewPhases, timelineItems } from "@/lib/wedding-data";
-import type { PreviewPhase, RiskItem, RiskSeverity, TimelineItem, Visibility } from "@/lib/wedding-types";
+import type { MomentRunState, PreviewPhase, RiskItem, RiskSeverity, TimelineItem, Visibility } from "@/lib/wedding-types";
 import { getMomentEndMinutes, formatMinutesAsTime, joinDetails, sortTimelineByTime } from "@/lib/utils";
 
 const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "planner", "vendor", "secret"];
@@ -315,6 +315,18 @@ export function DayFlowEditor() {
     });
   }
 
+  // Marking is a plain field write on the moment, which means it rides the same
+  // persistence and the same undo surface as every other edit. It deliberately does
+  // NOT touch the item's order, time, or anything a vendor brief reads as fact.
+  function setMomentRunState(id: string, runState: MomentRunState) {
+    setActionStatus(null);
+    setProject((currentProject) => ({
+      ...currentProject,
+      items: currentProject.items.map((item) => (item.id === id ? { ...item, runState } : item)),
+      updatedAt: new Date().toISOString()
+    }));
+  }
+
   function removeMoment(id: string) {
     setActionStatus(null);
     setProject((currentProject) => {
@@ -479,8 +491,10 @@ export function DayFlowEditor() {
             const isSelected = item.id === selectedItem?.id;
             const itemIntelligence = timelineMomentMap.get(item.id);
 
+            const runState = item.runState ?? "planned";
+
             return (
-              <div className="editable-timeline-row" key={item.id}>
+              <div className="editable-timeline-row" data-run={runState} key={item.id}>
                 <button
                   aria-pressed={isSelected}
                   className="editable-timeline-card"
@@ -514,6 +528,32 @@ export function DayFlowEditor() {
                     </span>
                   </span>
                 </button>
+                {/* On the day, a toastmaster needs two verbs and neither of them is
+                    delete: tick it off as it happens, or strike it if it is not
+                    going to. A struck moment stays on the list, struck — the couple
+                    can change their mind at 19:00 and put it back, and every export
+                    still shows the day as it was planned. Deleting is the separate,
+                    deliberate act next to these. */}
+                <span className="editable-timeline-run" role="group" aria-label={t("Mark {title}", { title: item.title })}>
+                  <button
+                    aria-pressed={runState === "done"}
+                    data-active={runState === "done"}
+                    onClick={() => setMomentRunState(item.id, runState === "done" ? "planned" : "done")}
+                    title={runState === "done" ? t("Mark as not done yet") : t("Mark as done")}
+                    type="button"
+                  >
+                    <Check aria-hidden="true" size={14} strokeWidth={2.1} />
+                  </button>
+                  <button
+                    aria-pressed={runState === "struck"}
+                    data-active={runState === "struck"}
+                    onClick={() => setMomentRunState(item.id, runState === "struck" ? "planned" : "struck")}
+                    title={runState === "struck" ? t("Put this moment back") : t("Strike this moment from the day")}
+                    type="button"
+                  >
+                    <Ban aria-hidden="true" size={14} strokeWidth={2.1} />
+                  </button>
+                </span>
                 <button
                   aria-label={t("Remove {title}", { title: item.title })}
                   className="editable-timeline-remove"

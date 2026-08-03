@@ -10194,3 +10194,65 @@ a {
     min-width: 0;
   }
 }
+
+/* --- Moment run state ---------------------------------------------------------
+   Two verbs for the day itself: ticked off, or struck. Struck is a MARK, never a
+   removal, so it has to read as struck at a glance and still be legible — a
+   toastmaster reads this in low light, mid-service, on a phone. */
+.editable-timeline-run {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.editable-timeline-run button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.editable-timeline-run button[data-active="true"] {
+  border-color: var(--success);
+  background: var(--positive-soft);
+  color: #2c4f2b;
+}
+
+.editable-timeline-run button:last-child[data-active="true"] {
+  border-color: var(--danger);
+  background: #f4e2dc;
+  color: #7d2d17;
+}
+
+.editable-timeline-row[data-run="done"] .editable-timeline-card .timeline-time {
+  color: var(--success);
+}
+
+/* Struck: the title carries the line, not the whole card — the time, owner and
+   location must stay readable, because those are what someone checks when they
+   ask "wait, was that cut?". */
+.editable-timeline-row[data-run="struck"] .editable-timeline-card strong {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: var(--danger);
+}
+
+.editable-timeline-row[data-run="struck"] .editable-timeline-card {
+  opacity: 0.72;
+}
+
+/* Same rule on the printed sheet, where it matters most. */
+.export-timeline li[data-run="struck"] strong {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.export-timeline li[data-run="struck"] {
+  opacity: 0.75;
+}

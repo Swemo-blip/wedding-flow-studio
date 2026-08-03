@@ -12,7 +12,7 @@ import { analyzeWeddingFlow, getRisksByIds } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { useTranslation } from "@/lib/i18n";
 import { useLocalProject } from "@/lib/use-local-project";
-import type { ExportType } from "@/lib/wedding-types";
+import type { ExportType, MomentRunState } from "@/lib/wedding-types";
 import { joinDetails } from "@/lib/utils";
 
 type ExportPreviewProps = {
@@ -159,13 +159,17 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
               </p>
             ) : null}
             <ol className="export-timeline">
+              {/* A struck moment stays on the sheet, marked. Someone holding this
+                  running order needs to see that the receiving line was dropped —
+                  a silent gap tells them nothing and they will ask. */}
               {items.map((item) => (
-                <li key={item.id}>
+                <li data-run={item.runState ?? "planned"} key={item.id}>
                   <span>{item.time}</span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>
                       {joinDetails([item.location, item.responsiblePerson], " - ")}
+                      {item.runState === "struck" ? ` - ${t("cut from the day")}` : ""}
                     </p>
                   </div>
                 </li>
@@ -242,7 +246,14 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
 
 function buildExportBriefText(
   exportType: ExportType,
-  items: Array<{ time: string; title: string; location: string; responsiblePerson: string; notes: string }>,
+  items: Array<{
+    time: string;
+    title: string;
+    location: string;
+    responsiblePerson: string;
+    notes: string;
+    runState?: MomentRunState;
+  }>,
   risks: Array<{ title: string; description: string; suggestedFix: string }>,
   relatedSpeeches: Array<{ title: string; speakerName: string; durationMinutes: number; technicalNeeds: string[] }>,
   relatedCues: Array<{ moment: string; songTitle: string; artist: string; startCue: string; backupPlan: string }>,
@@ -251,7 +262,10 @@ function buildExportBriefText(
   ceremonySetup: { seatingLayout: string; aisleWidthFeet: number }
 ) {
   const timelineText = items
-    .map((item) => `- ${item.time}: ${item.title} | ${joinDetails([item.location, item.responsiblePerson], " | ")}\n  Notes: ${item.notes}`)
+    .map(
+      (item) =>
+        `- ${item.time}: ${item.title}${item.runState === "struck" ? " [CUT FROM THE DAY]" : ""} | ${joinDetails([item.location, item.responsiblePerson], " | ")}\n  Notes: ${item.notes}`
+    )
     .join("\n");
   const speechText = relatedSpeeches
     .map((speech) => `- ${speech.title}: ${speech.speakerName}, ${speech.durationMinutes} minutes, ${speech.technicalNeeds.join(", ")}`)
