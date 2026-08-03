@@ -10503,3 +10503,27 @@ a {
   font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* --- Touch floor -------------------------------------------------------------
+   Measured with a probe at 390px: several real controls sat between 24 and 30px
+   tall, which is under a comfortable thumb. Raised only on narrow widths, so
+   desktop density is untouched.
+
+   Two are deliberately left small. The per-guest remove button stays at 28px
+   because it destroys a row and a slightly harder target is protection, not a
+   defect. The EN/SV pair stays at 30px because switching language is a
+   once-a-session act, not something done mid-service. */
+@media (max-width: 720px) {
+  /* Cycles a guest's RSVP — a primary interaction that was 24px tall. */
+  .guests-rsvp-button {
+    min-height: 32px;
+    padding-inline: 13px;
+  }
+
+  /* Tick off / strike, added the same day this was measured. 26px for the two
+     verbs a toastmaster uses on a phone was the worst offender on the page. */
+  .editable-timeline-run button {
+    width: 34px;
+    height: 34px;
+  }
+}
