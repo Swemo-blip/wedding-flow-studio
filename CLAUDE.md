@@ -47,28 +47,73 @@ Then read:
 
 ## Current Design Direction
 
-The palette is **LOCKED** (chosen from the couple's own reference dashboard): warm
-cream canvas, deep forest-green as the single primary accent, gold as a small
-metallic detail only. Lavender/peach and plum were tried and rejected — do not
-reintroduce them. The tokens in `app/globals.css` `:root` are the source of truth.
+**WARM PAPER, COLD INK** (2026-08-03). The cream stays — it is the owner's own
+choice from his own reference — but the previous "LOCKED" green-and-gold palette
+was measured and found to be the mechanism behind his verdict that the app "looks
+like a magazine". Three findings drove the change, and re-introducing any of them
+undoes it:
 
-- Canvas and surfaces: warm cream `--background` / `--canvas` `#f4efe3`, white
-  cards `--surface`, warm off-white `--surface-soft` `#fbf8f1`; ink text `--ink`
-  `#2b2d24`; warm hairlines `--line` `rgba(120, 106, 74, 0.16)`; soft warm shadows.
-- Primary accent is forest green `--accent` `#414c37`: primary buttons are a solid
-  green fill with cream text (`.button-primary`), plus active nav and focus rings.
-  Secondary buttons are quiet outlines on near-white. Gold `--gilt` `#b39152` is a
-  restrained metallic detail (monogram, small accents) — **not** a button fill.
+1. **The chrome was drawn from the render's material list.** `--gilt` `#b39152`
+   was *byte-identical* to the brass in the church scene; `--accent` `#414c37` sat
+   3 degrees of hue and 1.2 dE from the pews at `#3c4a33`; `--canvas` was the
+   limestone. Pulling the page palette out of the photograph is how a magazine
+   spread is built, and it removes the categorical difference that makes a control
+   read as a control. **No UI token may match a scene material.**
+2. **The card fill was invisible.** `--surface` measured 1.11:1 against `--canvas`,
+   so every box was drawn purely by a 1px outline, a 10px gutter and a rounded
+   corner — plates separated by gutters. The plane step is now 1.19:1.
+3. **`--muted` (3.86:1) and `--subtle` (2.46:1) were below the accessibility floor**
+   while carrying 161 colour declarations. Both now resolve to `--ink-faint`.
+
+Current tokens (`app/globals.css` `:root` is the source of truth):
+
+- Page: `--canvas` `#e7e4dd`, `--surface` `#f9f7f3`, `--surface-sunken` `#eeebe4`.
+- Ink: `--ink` `#1b1d21`, `--ink-soft` `#4a4d53`, `--ink-faint` `#5d6067`.
+- **Accent is a blue-black** `--accent` `#1e2733` — printer's ink is cold, and
+  nothing in a church interior is blue-black, so a control can never be mistaken
+  for a material. Forest green survives as `--success`; `--gilt` dropped to
+  `#6f5e33` so it reads as printed foil rather than lit brass.
+- Rules are **solid, never rgba**: `--line` `#dad6cd` separates regions;
+  `--line-strong` `#827d71` bounds a **control** and clears 3:1.
+- **Cold is for marks, never for paper.** Selected rows stay warm
+  (`--accent-soft` `#e4e0d5`); a cool tint under a row reads as the lilac this
+  project has rejected twice. "All clear" has its own `--positive-soft`.
+- Lavender/peach and plum were tried and rejected — do not reintroduce them.
+
+Never nudge a hex by eye. Text must clear 4.5:1 and **any boundary that
+identifies a control must clear 3:1** — the floor all three candidate directions
+failed. Re-measure before and after.
+
+**A token change reaches less than you think.** `:root` defines ~57 properties,
+but the stylesheet carries 467 more colour literals outside that block. Run
+`node scripts/colour-audit.mjs --list` — it groups every one by the role its
+property implies. This is why earlier palette changes shipped looking half-done.
+
+Structure: the studio is **one chassis, not floating plates**. `gap: 0`,
+`--radius-panel: 0`, and each cell carries a rule on ONE facing edge so no seam
+doubles. The stage bleeds — no frame, no radius, nothing pale touching it, because
+a render inside a rounded card on a tinted page *is* a photograph in a layout.
+Radii mean something: 0 on chassis panels, `--radius-control` 6px in the flow of a
+panel, `--radius-float` 10px only on something absolutely positioned that can be
+dismissed. A shadow is permitted **only** on something dismissable.
+
 - Typography: **Cormorant Garamond** (`--font-display` → `--font-serif`, via
-  `next/font`) only for couple names and one display headline per surface.
-  Fraunces was used until 2026-08-02 and rejected: it ships a literal "wonk"
-  axis and read as playful on a product where couples commit six figures. Font
-  sizes follow a 12-step scale (0.68 → 3rem); before that sweep `globals.css`
-  held 50 distinct sizes, a dozen used exactly once (0.95 and 0.96rem side by
-  side). Snap to the nearest step rather than adding a size; **Inter**
-  (`--font-body` → `--font-sans`) for everything else. Eyebrow labels are rare,
-  small, tracked, muted — no decorative rules or gold dashes on labels.
-- Shell: sidebar with the gold WF serif monogram and a grouped lucide icon nav
+  `next/font`) only for couple names, one display headline per surface, and
+  printed sheets. **Never below 1.75rem** — it is a narrow Garamond and at 16-24px
+  its character is lost to anti-aliasing and reads as a magazine subhead. It was
+  on 61 call sites, 45 of them under 24px; one rule sprayed it across 24 selectors
+  with no size condition at all. When raising the floor, check the clamp
+  **minimum**, not the maximum: on a narrow viewport every clamp collapses to its
+  lower bound, and some sizes are set in a media query that never mentions the
+  font. Fraunces was used until 2026-08-02 and rejected: it ships a literal "wonk"
+  axis and read as playful on a product where couples commit six figures.
+- **Labels do not shout.** `.eyebrow` is 0.76rem/500/0.01em sentence case — larger
+  type that sets 30-48% narrower in Swedish, because uppercase disables every kern
+  pair and this product sets å ä ö constantly. 49 uppercase rules are down to 9;
+  capitals survive only on the wordmark, the sidebar group labels and the printed
+  sheets. Font sizes follow a 13-step scale (0.6 → 3rem); snap to the nearest step
+  rather than adding a size. **Inter** for everything else.
+- Shell: sidebar with the WF serif monogram and a grouped lucide icon nav
   (Plan / Details / Output — see `components/app-shell/navigation.tsx`, the single
   source of truth for routes); a light header with couple names, saved status,
   Share Studio, and the Preview Day CTA.
@@ -104,15 +149,51 @@ reintroduce them. The tokens in `app/globals.css` `:root` are the source of trut
 3. Cloud sync / share link / RSVP / collaboration still need the Supabase backend
    wired (allowed, free tier). Keep localStorage as the offline fallback so the app
    always runs with zero setup.
-4. QA less-visited surfaces (drawers, dialogs, deep states) at mobile widths.
-5. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
+4. QA less-visited surfaces (drawers, dialogs, deep states) at mobile widths. The
+   2026-08-03 sweep covered 14 routes at 1400px and the key surfaces at 390px, so
+   the deep states and the remaining routes are still unmeasured. Reuse the probe
+   pattern (composite backgrounds, real navigation — `history.pushState` does NOT
+   drive the Next router and will measure the same page repeatedly).
+5. **Guest allergies, accessibility notes and tags are read everywhere and writable
+   nowhere** (`components/guests/guests-view.tsx`). This is why `/menu`'s
+   allergy-conflict feature is permanently dead — the column shows "—" for every
+   guest. Size M, and the highest-value honesty fix left.
+6. The scene drag itself: `EditableSceneObject` accepts `onMoveObject` /
+   `onSelectObject` / `selectedObjectId` and uses none of them. The lying "or drag
+   it in the scene" hint was removed; the capability is still missing.
+7. Toastmaster live-run mode — Johan calls this one of his strongest ideas.
+   `/director` and `lib/risk-analysis.ts` are already half of it. **Design note
+   agreed with him: a struck moment must be marked struck, never deleted** — he has
+   to be able to change his mind at 19:00, and the exports must still show the
+   planned day.
+8. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
+
+**Open question for Johan, still unanswered.** The budget card shows an English
+label next to `53 000 kr`, because the language toggle is on EN while the currency
+is SEK — the app is doing what it was told. The fix is a product decision he has not
+made: either the language follows the currency, or Swedish users default to SV. Do
+not guess it.
 
 ## Verification Traps (learned the hard way)
 
-- **The 3D HD/postprocessing path renders blank in the agent's preview sandbox.**
-  Never ship a change to the 3D *look* that could not be verified — verify it on
+- **A blank 3D frame usually means the pane is hidden, not that the render broke.**
+  When the preview pane is hidden `document.visibilityState` becomes `"hidden"`,
+  which pauses `requestAnimationFrame`, which stops the scene rendering — so
+  screenshots and `toDataURL` both return the un-rendered loading state. This has
+  now been misdiagnosed three times, twice as a WebGL or postprocessing failure.
+  **Check `document.visibilityState` before concluding anything about the render.**
+  Also: `toDataURL` on a canvas without `preserveDrawingBuffer` must be read inside
+  the same frame as the draw, or it returns a cleared buffer.
+- Never ship a change to the 3D *look* that could not be verified — verify it on
   the live deploy instead, or don't make it. Reverting an unverifiable 3D change is
-  the correct call.
+  the correct call, and was taken again on 2026-08-03 for a west-facing arrival shot.
+- **Scene units are not metres.** The measured standing figure is 1.10 units for a
+  1.75 m person. The west portal is 1.2 x 1.4, i.e. about 2.2 m of real door — so a
+  camera at the walkthrough's usual 1.85-1.95 is standing near 2.9 m, *above the
+  lintel*. Derive any new figure from the figure height, never from what the real
+  object measures. Also: the whole interior sits in `<group position={[0, 0, 0.25]}>`
+  but the camera does not, so every `WEST_WALL_Z` / `PROCESSION_*_Z` constant is
+  local and world z = local + 0.25.
 - **`wedding-flow-studio.layout.v1` is shared** by the home studio and
   `/ceremony`. Always persist the *live hydrated* `sceneEdits`, and never
   re-derive style fields from `wedding.style` once a layout is saved — both
