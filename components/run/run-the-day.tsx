@@ -51,15 +51,15 @@ export function RunTheDay() {
     setManualIndex(null);
   }
 
+  // No button in this branch on purpose: with no plan the shell already shows a
+  // "Create your wedding" banner directly above, and two identical primary
+  // buttons stacked is worse than one. This says what the surface becomes; the
+  // banner does the acting.
   if (!hasLocalProject) {
     return (
       <div className="run-day run-day-empty">
-        <p className="eyebrow">{t("Run the day")}</p>
         <h1>{t("There is no day to run yet.")}</h1>
         <p>{t("Build your timeline first and this becomes the running order for whoever holds the room.")}</p>
-        <Link className="button button-primary" href="/intake">
-          {t("Create your wedding")}
-        </Link>
       </div>
     );
   }
@@ -67,7 +67,6 @@ export function RunTheDay() {
   if (!current) {
     return (
       <div className="run-day run-day-empty">
-        <p className="eyebrow">{t("Run the day")}</p>
         <h1>{t("Your timeline is empty.")}</h1>
         <p>{t("Lay out the day and every moment shows up here in order.")}</p>
         <Link className="button button-primary" href="/day-flow">
