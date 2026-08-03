@@ -1538,12 +1538,33 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
 
+  // A Swedish browser gets a Swedish interface, and the toggle still wins.
+  //
+  // The owner photographed a budget card reading an English label beside
+  // `53 000 kr` and called it wrong. The app was doing what it was told — the
+  // toggle sat on EN because EN was everyone's default — but "doing what it was
+  // told" is not a defence when nobody chose it. The decision taken (2026-08-03,
+  // delegated) is that the LANGUAGE follows the browser and the CURRENCY stays
+  // independent. The two are genuinely separate facts: plenty of Swedes plan in
+  // English, and plenty of English speakers pay in kronor. Tying one to the other
+  // would be a guess about the person; reading their browser is a guess about
+  // their language, which is what a browser locale is actually for.
+  //
+  // A stored choice always beats the locale, so one tap is permanent.
   useEffect(() => {
     queueMicrotask(() => {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored === "sv" || stored === "en") {
         setLanguageState(stored);
         document.documentElement.lang = stored;
+        return;
+      }
+      const prefersSwedish = [navigator.language, ...(navigator.languages ?? [])].some(
+        (tag) => typeof tag === "string" && tag.toLowerCase().startsWith("sv")
+      );
+      if (prefersSwedish) {
+        setLanguageState("sv");
+        document.documentElement.lang = "sv";
       }
     });
   }, []);
