@@ -10526,4 +10526,9 @@ a {
     width: 34px;
     height: 34px;
   }
+
+  /* The only action on /print, at 24px. Printing is the whole point of the page. */
+  .print-run {
+    min-height: 34px;
+  }
 }
