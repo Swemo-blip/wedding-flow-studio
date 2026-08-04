@@ -12,3 +12,7 @@ next-panic-*.log
 
 # macOS
 .DS_Store
+
+# Scratch preview pages written into public/ during QA. One of these was committed
+# by an over-eager `git add -A` and shipped 138KB of junk into history.
+public/__*
