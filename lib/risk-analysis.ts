@@ -130,7 +130,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   // a fixed id, briefing catering about one guest's allergy silenced the warning for
   // every guest with an allergy, forever — including one added months later. A
   // catering brief is per guest, so the risk is too.
-  for (const guest of guestItems.filter((item) => item.allergies.length > 0 && !hasTag(item, "allergy brief sent"))) {
+  for (const guest of guestItems.filter((item) => item.allergies.length > 0)) {
     risks.push({
       id: `risk-catering-allergy:${guest.id}`,
       severity: "high",
@@ -145,7 +145,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
-  for (const guest of guestItems.filter((item) => item.mealChoice.toLowerCase() === "vegan" && !hasTag(item, "meal confirmed"))) {
+  for (const guest of guestItems.filter((item) => item.mealChoice.toLowerCase() === "vegan")) {
     risks.push({
       id: `risk-vegan-meal:${guest.id}`,
       severity: "low",
@@ -158,7 +158,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
   }
 
   for (const guest of guestItems.filter(
-    (item) => item.tags.some((tag) => tag.toLowerCase().includes("child meal")) && !hasTag(item, "child setup confirmed")
+    (item) => item.mealChoice.toLowerCase().includes("child")
   )) {
     risks.push({
       id: `risk-child-meal:${guest.id}`,
@@ -173,7 +173,7 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
-  for (const guest of guestItems.filter((item) => item.accessibilityNotes.length > 0 && !hasTag(item, "accessibility route confirmed"))) {
+  for (const guest of guestItems.filter((item) => item.accessibilityNotes.length > 0)) {
     risks.push({
       id: `risk-accessibility:${guest.id}`,
       severity: "medium",
@@ -310,10 +310,6 @@ function findSeatingConflict(guestItems: Guest[], tables: DinnerTable[]) {
       .filter((guest): guest is Guest => Boolean(guest));
 
     for (const guest of assignedGuests) {
-      if (hasTag(guest, "seating conflict resolved")) {
-        continue;
-      }
-
       const conflictGuest = assignedGuests.find((candidate) => guest.conflictGuestIds.includes(candidate.id));
       if (conflictGuest) {
         return { guest, conflictGuest, table };
@@ -324,6 +320,3 @@ function findSeatingConflict(guestItems: Guest[], tables: DinnerTable[]) {
   return null;
 }
 
-function hasTag(guest: Guest, tag: string) {
-  return guest.tags.some((guestTag) => guestTag.toLowerCase() === tag.toLowerCase());
-}
