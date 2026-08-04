@@ -177,6 +177,21 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
 
 ## Verification Traps (learned the hard way)
 
+- **The default church render measures L\* ~73 — it is a BRIGHT daylight interior,
+  not a dark candlelit one.** Sampled 2026-08-04 out of the preserved drawing
+  buffer: mean RGB [186, 180, 161], darkest 22, brightest 244. The chrome sits at
+  L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
+  the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
+  reason about this render's luminance from the lighting you imagine; sample it.
+- **You cannot get a rendered frame from a tab you opened yourself.** Tested three
+  ways: the agent's own preview pane, a tab created via the Chrome extension, and a
+  re-navigated existing tab. All report `visibilityState: "hidden"` with 0 frames in
+  a second and a canvas stuck at its 300x150 default, because a tab only lays out
+  and renders once it has actually been the visible tab. The one real frame this
+  session came from a tab the OWNER had been looking at — and because the canvas
+  keeps `preserveDrawingBuffer`, that frame stays readable afterwards even when the
+  tab goes hidden. So: ask him to visit the view once, then measure the buffer for
+  the rest of the session. Do not burn his time trying to force it.
 - **A blank 3D frame usually means the pane is hidden, not that the render broke.**
   When the preview pane is hidden `document.visibilityState` becomes `"hidden"`,
   which pauses `requestAnimationFrame`, which stops the scene rendering — so
