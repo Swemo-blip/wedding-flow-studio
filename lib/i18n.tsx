@@ -573,6 +573,7 @@ const sv: Record<string, string> = {
   "Go back to this": "Gå tillbaka till den här",
   "That saved version could not be read.": "Den sparade versionen kunde inte läsas.",
   "Restored — reloading your plan…": "Återställd — laddar om din plan…",
+  "Speaks at": "Talar vid",
   "Handled": "Åtgärdat",
   "Run the day": "Kör dagen",
   "There is no day to run yet.": "Det finns ingen dag att köra än.",

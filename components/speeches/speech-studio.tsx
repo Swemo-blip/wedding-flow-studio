@@ -17,7 +17,8 @@ const visibilityOptions: Visibility[] = ["everyone", "couple", "toastmaster", "p
 
 export function SpeechStudio() {
   const { t } = useTranslation();
-  const { addSpeech, dinnerTables, guests, removeSpeech, resetSpeeches, speeches, timelineItems, updateSpeech, wedding } = useLocalProject();
+  const { addSpeech, dinnerTables, guests, removeSpeech, resetSpeeches, speeches, timelineItems, updateSpeech, updateTimelineItems, wedding } =
+    useLocalProject();
   const { resolvedRiskIds } = useRiskResolutions();
   const [selectedSpeechId, setSelectedSpeechId] = useState(speeches[0]?.id ?? "");
   const selectedSpeech = speeches.find((speech) => speech.id === selectedSpeechId) ?? speeches[0];
@@ -48,6 +49,31 @@ export function SpeechStudio() {
     .filter((speech) => speech.timelineItemId !== "couple-thank-you")
     .reduce((total, speech) => total + speech.durationMinutes, 0);
   const secretCount = speeches.filter((speech) => speech.isSecret).length;
+
+  // A speech's time was shown read-only, derived from `timelineItemId` — a link
+  // nothing in the app could create. So the moment owned the time, and the couple
+  // could not choose the moment: the field was unchangeable by design and by
+  // accident at once. This is the same gap the music cues had, fixed the same way,
+  // and it writes BOTH sides so the timeline card and the speech agree.
+  function linkSelectedSpeechToMoment(timelineItemId: string) {
+    if (!selectedSpeech) {
+      return;
+    }
+
+    updateSpeech(selectedSpeech.id, { timelineItemId });
+    updateTimelineItems((items) =>
+      items.map((item) => {
+        if (item.id === timelineItemId) {
+          return { ...item, speechId: selectedSpeech.id };
+        }
+        // Release whichever moment used to hold this speech.
+        if (item.speechId === selectedSpeech.id) {
+          return { ...item, speechId: undefined };
+        }
+        return item;
+      })
+    );
+  }
 
   function updateSelectedSpeech(updates: Partial<Speech>) {
     if (!selectedSpeech) {
@@ -211,8 +237,15 @@ export function SpeechStudio() {
                   <input onChange={(event) => updateSelectedSpeech({ relation: event.target.value })} value={selectedSpeech.relation} />
                 </label>
                 <label className="field">
-                  <span>{t("Timing")}</span>
-                  <input readOnly value={speechTiming(selectedSpeech)} />
+                  <span>{t("Speaks at")}</span>
+                  <select onChange={(event) => linkSelectedSpeechToMoment(event.target.value)} value={selectedSpeech.timelineItemId}>
+                    <option value="">{t("Not tied to a moment yet")}</option>
+                    {timelineItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.time} · {item.title}
+                      </option>
+                    ))}
+                  </select>
                   <small className="field-hint">{t("Set in the Day Flow timeline")}</small>
                 </label>
                 <label className="field">
