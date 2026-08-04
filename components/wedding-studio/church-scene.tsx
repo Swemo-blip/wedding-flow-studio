@@ -850,8 +850,21 @@ function WeddingStageInterior({
   // spread or angle toward the altar. Both the pew blocks and the seated
   // congregation derive from the SAME numbers so they never drift apart.
   const aisleScale = Math.max(0.5, aisleWidthFeet / 5);
-  const runnerWidth = surface.aisleWidth * aisleScale;
-  const aisleShift = (runnerWidth - surface.aisleWidth) / 2;
+  // The runner now MEETS the pews instead of stopping short of them.
+  //
+  // Measured, at the default: the runner rendered 1.25 units while the clear gap
+  // between the pew benches was 1.85, leaving a 0.30-unit (0.48 m) strip of bare
+  // floor down each side. The candle stands were correct — they sat at 0.92,
+  // effectively on the pew line — so the runner was the one thing out of place, and
+  // a carpet floating in the middle of a wider gap is exactly what reads as "the
+  // aisle is wrong relative to the pews".
+  //
+  // PEW_BLOCK_X (2.2) and the 2.55-wide bench are left alone deliberately: moving
+  // the pews inward would fix the strip but open 1.9 units of side aisle, and a
+  // nave with a narrow centre and wide sides is a different kind of wrong.
+  const pewInnerEdge = PEW_BLOCK_X - PEW_BENCH_WIDTH / 2;
+  const runnerWidth = pewInnerEdge * 2 * aisleScale;
+  const aisleShift = (runnerWidth - pewInnerEdge * 2) / 2;
   const rowSpacing = seatingLayout === "Spaced rows" ? 0.8 : 0.62;
   const pewYaw = seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0;
   const seatLayout = useMemo<SeatLayoutParams>(
@@ -989,7 +1002,10 @@ function WeddingStageInterior({
                     const z = -2.4 + rowIndex * rowSpacing;
                     // The candle border hugs the runner's edge, so widening the
                     // aisle visibly moves the whole candlelit corridor with it.
-                    const candleX = runnerWidth / 2 + 0.295;
+                    // Was runnerWidth / 2 + 0.295, which put the stands on the
+                    // bare strip outside the old narrow runner. That strip is gone,
+                    // so they stand just inside the runner's edge, clear of the walk.
+                    const candleX = runnerWidth / 2 - 0.115;
 
                     return (
                       <group key={`aisle-candle-${rowIndex}`}>
@@ -2706,6 +2722,10 @@ const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpa
 // which a gown and a groom can share. At the old 1.82 the gap was 1.09m and the
 // bride's skirt intersected the bench.
 const PEW_BLOCK_X = 2.2;
+// The pew bench's own width, from PewBody's boxGeometry. Named because the aisle
+// runner is derived from it: the two were independent numbers that quietly
+// disagreed by 0.30 units, and a literal repeated in two places is how they drifted.
+const PEW_BENCH_WIDTH = 2.55;
 
 // The nave's pews follow the wedding it is actually holding: enough rows to seat
 // everyone with a couple spare, never so many that a small wedding is framed
@@ -3572,14 +3592,14 @@ function PewBody({ palette, position, wood }: { palette: Palette; position: [num
   return (
     <group position={position}>
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[2.55, 0.16, 0.34]} />
+        <boxGeometry args={[PEW_BENCH_WIDTH, 0.16, 0.34]} />
         <meshStandardMaterial {...wood} color={palette.pew} roughness={0.72} />
       </mesh>
       {/* The backrest belongs BEHIND the sitter, on the entrance side. It sat at
           z -0.14, on the altar side, so every pew in the church faced backwards
           and the congregation appeared to be sitting in front of its own bench. */}
       <mesh castShadow receiveShadow position={[0, 0.2, 0.14]}>
-        <boxGeometry args={[2.55, 0.3, 0.07]} />
+        <boxGeometry args={[PEW_BENCH_WIDTH, 0.3, 0.07]} />
         <meshStandardMaterial {...wood} color={palette.pew} roughness={0.74} />
       </mesh>
       {[-1.26, 1.26].map((xPosition) => (
