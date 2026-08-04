@@ -10551,3 +10551,29 @@ a {
     min-height: 34px;
   }
 }
+
+/* A warning that can only be acknowledged, not navigated to. Quiet — it is an
+   admission that the app has nowhere better to send you. */
+.vstudio-warning-dismiss {
+  margin-top: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vstudio-warning-dismiss:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .vstudio-warning-dismiss {
+    min-height: 34px;
+  }
+}

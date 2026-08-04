@@ -38,6 +38,10 @@ export type SceneWarning = {
   actionLabel: string;
   href: string;
   id: string;
+  // Present when the warning has nowhere to be fixed and can only be
+  // acknowledged — a guest allergy that has been briefed to the caterer, say.
+  // Without this the couple gets a note they can read forever and never clear.
+  onDismiss?: () => void;
   text: string;
 };
 
@@ -387,6 +391,11 @@ export function StudioInspector({
                   {warning.actionLabel} <ChevronRight aria-hidden="true" size={13} />
                 </em>
               </Link>
+              {warning.onDismiss ? (
+                <button className="vstudio-warning-dismiss" onClick={warning.onDismiss} type="button">
+                  {t("Handled")}
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

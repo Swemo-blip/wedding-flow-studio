@@ -29,6 +29,7 @@ import { clearStoredProject } from "@/lib/local-project-store";
 import { derivePreviewPhases, isReceptionPhase, waypointIndexForPhase } from "@/lib/preview-phases";
 import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
+import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
 import { clearStoredCurrency } from "@/lib/use-currency";
 import { useCouplePhotos } from "@/lib/use-couple-photos";
@@ -81,6 +82,7 @@ const RAIL_TOOLS: Array<{ ceremonyOnly?: boolean; icon: typeof Compass; id: Stud
 export function OverviewDashboard() {
   const localProject = useLocalProject();
   const { language, setLanguage, t } = useTranslation();
+  const { resolvedRiskIds, resolveRisk } = useRiskResolutions();
   const canvasRef = useRef<HTMLElement & HTMLDivElement>(null);
   const menuRef = useRef<HTMLDetailsElement>(null);
 
@@ -162,17 +164,31 @@ export function OverviewDashboard() {
     return items.find((item) => !isReceptionPhase(item.phase))?.time ?? null;
   }, [localProject.timelineItems, sceneKind]);
 
+  // Six other surfaces run the analysis through filterResolvedRisks; this one did
+  // not, so a risk the couple had already resolved on the timeline kept nagging on
+  // the front page. Resolutions are global, so honouring them here is the fix.
   const risks = useMemo(
     () =>
-      analyzeWeddingFlow({
-        cues: localProject.musicCues,
-        guestItems: localProject.guests,
-        speechItems: localProject.speeches,
-        tables: localProject.dinnerTables,
-        timeline: localProject.timelineItems,
-        wedding: activeWedding
-      }),
-    [activeWedding, localProject.dinnerTables, localProject.guests, localProject.musicCues, localProject.speeches, localProject.timelineItems]
+      filterResolvedRisks(
+        analyzeWeddingFlow({
+          cues: localProject.musicCues,
+          guestItems: localProject.guests,
+          speechItems: localProject.speeches,
+          tables: localProject.dinnerTables,
+          timeline: localProject.timelineItems,
+          wedding: activeWedding
+        }),
+        resolvedRiskIds
+      ),
+    [
+      activeWedding,
+      localProject.dinnerTables,
+      localProject.guests,
+      localProject.musicCues,
+      localProject.speeches,
+      localProject.timelineItems,
+      resolvedRiskIds
+    ]
   );
 
   // Scene check: real, actionable problems only — each links to the place where
@@ -206,16 +222,23 @@ export function OverviewDashboard() {
       if (!belongsHere) {
         continue;
       }
+      // A risk about a guest has no timeline moment to fix and no resolution recipe
+      // — every recipe in risk-resolution.ts is keyed to a timelineItemId. Before
+      // today that did not matter, because allergies and accessibility notes were
+      // unwritable so the risks never fired. Making those fields real turned them
+      // into warnings the couple could never clear. So a guest risk gets a plain
+      // acknowledgement instead of a link to a page that cannot help it.
       list.push({
-        actionLabel: t("Fine-tune the timing"),
-        href: item ? `/day-flow?resolve=${risk.id}&focus=${item.id}` : `/day-flow?resolve=${risk.id}`,
+        actionLabel: item ? t("Fine-tune the timing") : t("Review guest list"),
+        href: item ? `/day-flow?resolve=${risk.id}&focus=${item.id}` : "/guests",
         id: risk.id,
+        onDismiss: risk.relatedEntityType === "guest" ? () => resolveRisk(risk.id) : undefined,
         text: t(risk.title)
       });
     }
 
     return list;
-  }, [capacity.overflowGuests, localProject.timelineItems, risks, sceneKind, t, unassignedGuests]);
+  }, [capacity.overflowGuests, localProject.timelineItems, resolveRisk, risks, sceneKind, t, unassignedGuests]);
 
   // Preview mode plays the couple's own day: phases derived from their real
   // timeline, falling back to the sample reel only if the timeline is empty.
