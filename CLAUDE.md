@@ -89,6 +89,25 @@ but the stylesheet carries 467 more colour literals outside that block. Run
 `node scripts/colour-audit.mjs --list` — it groups every one by the role its
 property implies. This is why earlier palette changes shipped looking half-done.
 
+`npm run check:colour` (`--check`) is the half of that audit which can FAIL. It
+measures only the roles with an unambiguous floor — a colour on a `:focus` rule
+(3:1, because a focus ring IS the boundary that identifies a control),
+`accent-color`/`caret-color` (3:1), and `color` (4:1.5) — and it fails a value only
+when it misses against ALL THREE light page surfaces, so it cannot invent a finding
+about a background it cannot see. Light values are **named, not dropped**: 31 of
+them sit on the render or on glass and the stylesheet cannot say which, so the
+check declines to judge them out loud rather than in silence. Silence is what let a
+1.36:1 focus ring live for months. It took three corrections to calibrate — a
+background on a focus rule is not a boundary, a light ink is text on something
+dark, and the light/dark decision belongs to the COMPONENT (`.scene-boot-monogram`
+and `.scene-boot-label` are one dark screen) — all recorded in the script.
+
+What it found on its first real run, all now fixed: every gold focus ring in the
+app was under 3:1, the worst at 1.36:1; the `/shared` page — **the only surface a
+guest ever opens** — had never received the palette pass and carried its secondary
+text as warm ink at 50-60% alpha (3.22:1) with gold times and links at 3.63:1; and
+`.digital-twin-node` was a button whose resting boundary measured 1.13:1.
+
 Structure: the studio is **one chassis, not floating plates**. `gap: 0`,
 `--radius-panel: 0`, and each cell carries a rule on ONE facing edge so no seam
 doubles. The stage bleeds — no frame, no radius, nothing pale touching it, because
@@ -251,6 +270,7 @@ Run relevant checks before reporting:
 
 ```bash
 npm run check:figures
+npm run check:colour
 npm run lint
 npm run typecheck
 npm run build

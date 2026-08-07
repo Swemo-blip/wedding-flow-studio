@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check:figures": "node scripts/figure-pose-probe.mjs public/models/figure_suit.glb --check && node scripts/figure-pose-probe.mjs public/models/figure_woman.glb --check"
+    "check:figures": "node scripts/figure-pose-probe.mjs public/models/figure_suit.glb --check && node scripts/figure-pose-probe.mjs public/models/figure_woman.glb --check",
+    "check:colour": "node scripts/colour-audit.mjs --check"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

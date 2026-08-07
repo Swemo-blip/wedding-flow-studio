@@ -227,7 +227,7 @@ textarea::placeholder {
 }
 
 select option {
-  color: #211d14;
+  color: var(--ink);
   background: #ffffff;
 }
 
@@ -401,7 +401,10 @@ a {
 }
 
 .sample-ribbon-text svg {
-  color: var(--gilt, #b0913f);
+  /* No fallback: --gilt is always defined, so #b0913f was unreachable — and it
+     measured 2.82:1, so if it ever did fire it would fail. A dead wrong value is
+     worse than no value. */
+  color: var(--gilt);
   flex: none;
 }
 
@@ -1908,7 +1911,10 @@ a {
   width: clamp(86px, 8vw, 126px);
   min-height: 76px;
   gap: 5px;
-  border: 1px solid rgba(71, 55, 39, 0.14);
+  /* This node is a button. Its resting boundary was warm ink at 14% (1.13:1) and
+     its hover/focus boundary gold at 42% (1.72:1) — a control with no visible edge
+     in either state. */
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: rgba(249, 245, 234, 0.84);
   padding: 10px;
@@ -1926,7 +1932,7 @@ a {
 .digital-twin-node:hover,
 .digital-twin-node:focus-visible,
 .digital-twin-node[data-active="true"] {
-  border-color: rgba(143, 110, 55, 0.42);
+  border-color: var(--accent);
   box-shadow: var(--shadow-lg);
   transform: translate(-50%, -52%);
 }
@@ -4440,13 +4446,17 @@ a {
 }
 
 /* Shared read-only preview (/shared) — a standalone, chrome-free page a guest
-   opens from a copied link. Light gallery aesthetic, couple names in serif. */
+   opens from a copied link. Light gallery aesthetic, couple names in serif.
+   MEASURED 2026-08-06: this page never received the palette pass. Every secondary
+   line was warm ink at 50-60% alpha (3.22-4.36:1) and the times and links were
+   #9a7d49 (3.63:1), all under the 4.5:1 text floor — on the only surface in the
+   product a stranger ever opens. Now on the tokens, 4.96:1 at worst on canvas. */
 .shared-view {
   max-width: 720px;
   margin: 0 auto;
   padding: 56px 24px 80px;
   min-height: 100vh;
-  color: #211d14;
+  color: var(--ink);
 }
 
 .shared-view-center {
@@ -4475,7 +4485,7 @@ a {
 }
 
 .shared-meta {
-  color: rgba(33, 29, 20, 0.6);
+  color: var(--ink-faint);
   font-size: 1rem;
   letter-spacing: 0.01em;
 }
@@ -4498,7 +4508,7 @@ a {
 }.shared-facts span {
   font-size: 0.68rem;
   letter-spacing: 0.01em;
-  color: rgba(33, 29, 20, 0.5);
+  color: var(--ink-faint);
 }
 
 .shared-facts strong {
@@ -4533,7 +4543,7 @@ a {
 
 .shared-time {
   font-variant-numeric: tabular-nums;
-  color: #9a7d49;
+  color: var(--gilt);
   font-weight: 600;
   font-size: 0.88rem;
   padding-top: 2px;
@@ -4546,7 +4556,7 @@ a {
 
 .shared-timeline p {
   margin: 2px 0 0;
-  color: rgba(33, 29, 20, 0.55);
+  color: var(--ink-faint);
   font-size: 0.88rem;
 }
 
@@ -4559,17 +4569,17 @@ a {
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
-  color: rgba(33, 29, 20, 0.5);
+  color: var(--ink-faint);
 }
 
 .shared-footer a {
-  color: #9a7d49;
+  color: var(--gilt);
   font-weight: 600;
   text-decoration: none;
 }
 
 .shared-loading {
-  color: rgba(33, 29, 20, 0.5);
+  color: var(--ink-faint);
 }
 
 .speech-wide-field {
@@ -8360,7 +8370,9 @@ a {
   align-items: center;
   gap: 3px;
   margin-top: 12px;
-  color: #9c7a36;
+  /* Was #9c7a36 at 3.74:1. A link is text and owes 4.5:1; --gilt keeps the gold and
+     clears 5.90:1. */
+  color: var(--gilt);
   font-size: 0.82rem;
   font-weight: 620;
   text-decoration: none;
