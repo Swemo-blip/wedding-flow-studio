@@ -270,9 +270,25 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   warning first: the defects are usually real but **the magnitudes and the stated causes
   often are not**. Two claims blamed a bounding box "half empty air"; the GLBs measure
   100% visible mesh. The candle flame floats 0.22 m, not the claimed 0.70. The biggest
-  single group is that seated figures do not meet their furniture anywhere — pews, dinner
-  chairs and the reception editor all place the seat surface 12-16 cm above the height at
-  which the model's body actually rests.
+  single group — thirteen findings saying the seat surface sits 12-16 cm too high — is
+  **wrong in kind, and must not be acted on**; see the next entry.
+- **Do not "lower the seat by 12-16 cm".** Measured 2026-08-06 with
+  `scripts/seat-contact-probe.mjs` (`npm run check:seats`). Those numbers came from a
+  `min()` over the seated model's rear, which returns whatever narrow thing hangs lowest:
+  on `cg_man_0` that is y 0.1941, a feature 11 vertices wide, while his lowest hip-wide
+  slice is 0.274 and the pew cushion tops out at 0.2775 — within 3.5 mm of it. Neither
+  number is trustworthy anyway: these meshes are coarse enough that occupancy is 1-2 of 6
+  columns in nearly every 5 mm slice, so "where the body rests" has no stable answer, and
+  the three variants differ by 6 cm.
+  **The defect is real but it is a DEPTH problem.** The definition-free test — count body
+  vertices inside the furniture volume — gives 623-889 inside the pew bench, 256-353 in
+  the cushion, 198-269 in the chair seat, 60-126 in the chair back. Sweeping the figure up
+  bottoms out at 179 and then rises again, because 173 of those verts sit AHEAD of the
+  figure's origin: shins and calves, which belong in front of the bench's front face. The
+  bench is a solid 0.34-deep, 0.16-thick box centred on the figure's own origin. Fixing it
+  means redesigning the bench section and the figure's z, which changes the look and must
+  not ship unseen. `check:seats` therefore ratchets rather than asserts: it fails only if
+  the intersection gets WORSE.
 - **`wedding-flow-studio.layout.v1` is shared** by the home studio and
   `/ceremony`. Always persist the *live hydrated* `sceneEdits`, and never
   re-derive style fields from `wedding.style` once a layout is saved — both
@@ -286,6 +302,7 @@ Run relevant checks before reporting:
 
 ```bash
 npm run check:figures
+npm run check:seats
 npm run check:colour
 npm run lint
 npm run typecheck

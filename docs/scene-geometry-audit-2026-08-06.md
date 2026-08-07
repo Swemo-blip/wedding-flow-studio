@@ -26,6 +26,36 @@ so far:
 So: re-measure before changing a number. The pattern is that the *defect* is usually
 real and the *quantity and the reason* often are not.
 
+## The largest group of findings is wrong in KIND, not just in magnitude
+
+Thirteen findings across four lenses said the same thing: pews, dinner chairs and the
+/reception editor place the seat surface 12-16 cm above where the seated model's body
+rests, so lower the seat. **Do not act on that.** Measured 2026-08-06 with
+`scripts/seat-contact-probe.mjs`:
+
+- Those numbers came from a `min()` over the model's rear band, which returns whatever
+  narrow thing hangs lowest — a hand beside a hip, a heel, a hem. On `cg_man_0` that is
+  y 0.1941, a feature 11 vertices wide spanning 3.8 cm. His lowest hip-wide slice is
+  0.274, eight centimetres higher, and the pew cushion tops out at 0.2775 — within
+  3.5 mm of it. The reported error was roughly its own size.
+- Neither number can be trusted anyway. These meshes are coarse: occupancy is 1-2 of 6
+  columns in almost every 5 mm slice, so "where the body rests" has no stable answer.
+  The three variants also differ by 6 cm in where their mass sits, so no single seat
+  height suits all of them.
+- **But the defect is real, and bigger than a height.** The definition-free test — count
+  body vertices inside the furniture volume — says 623-889 vertices of every figure are
+  inside the pew bench, 256-353 inside the cushion, 198-269 inside the chair seat and
+  60-126 inside the chair back. That is 11-16% of the mesh.
+- **And no height change fixes it.** Sweeping the figure up through the bench bottoms out
+  at 179 vertices at +0.06 and then rises again. 173 of the 623 sit AHEAD of the figure's
+  own origin: they are shins and calves, and they belong in front of the bench's front
+  face. The bench is a solid 0.34-deep, 0.16-thick box centred on the figure's origin, so
+  it occupies the volume a seated person's legs are in at any height.
+
+The fix is a redesign of the bench section and of where the figure sits in z, which is a
+change to the look and must not ship unseen. `CHAIR_SEAT_Y` and the pew's y are
+deliberately untouched.
+
 ## Already fixed (2026-08-06)
 
 Pendant flames sealed in closed cups; the altar candle's floating flame; the
