@@ -302,6 +302,19 @@ if (process.argv.includes("--intersect") || process.argv.includes("--check")) {
 
   if (process.argv.includes("--check")) {
     const failures = [];
+
+    // A narrow guard, and narrow on purpose. Both rooms' floor planes sat at y -0.04
+    // while every object in them is built from y 0, so the whole wedding floated 6.4 cm
+    // and the dance floor's own top finish ended up under its platform. This asserts the
+    // exact string rather than trying to parse five JSX planes, which is less clever and
+    // more likely to still be true in a year.
+    const church = readFileSync("components/wedding-studio/church-scene.tsx", "utf8");
+    const sunkFloors = church.split("position={[0, -0.04, 0.25]}").length - 1;
+    if (sunkFloors > 0) {
+      failures.push(`${sunkFloors} floor plane(s) back at y -0.04 while objects stand on y 0`);
+    } else {
+      console.log("  PASS  both rooms' floor planes sit on the y 0 datum their objects stand on");
+    }
     const worst = {};
     for (const [, scale] of SCALES) {
       for (const name of models.filter((entry) => entry.endsWith("_0.glb"))) {

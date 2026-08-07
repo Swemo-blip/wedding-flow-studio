@@ -903,16 +903,16 @@ function WeddingStageInterior({
           {venueType === "church" ? (
             <Suspense
               fallback={
-                <mesh position={[0, -0.04, 0.25]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+                <mesh position={[0, 0, 0.25]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
                   <planeGeometry args={[9.8, 12.8]} />
                   <meshStandardMaterial color={surface.floor} envMapIntensity={1.15} metalness={0.1} roughness={0.46} />
                 </mesh>
               }
             >
-              <TexturedGround color={surface.floor} position={[0, -0.04, 0.25]} size={[9.8, 12.8]} />
+              <TexturedGround color={surface.floor} position={[0, 0, 0.25]} size={[9.8, 12.8]} />
             </Suspense>
           ) : (
-            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
+            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.25]}>
               <planeGeometry args={[9.8, 12.8]} />
               {/* Polished stone: low roughness + a touch of metalness so the floor
                   catches a soft warm reflection of the HDRI + candlelight, like the
@@ -930,7 +930,12 @@ function WeddingStageInterior({
             selectedObjectId={selectedObjectId}
             size={[1.35, 11.8]}
           >
-            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.018, 0.45]}>
+            {/* 0.006 is 1 cm of carpet on a floor now at y 0. It used to be -0.018,
+                which only made sense because the floor had been pushed to -0.04, and
+                that is what left every figure, pew and altar floating 6.4 cm. The
+                polygonOffset below is what actually prevents flicker; the gap is
+                belt-and-braces. */}
+            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0.45]}>
               <planeGeometry args={[runnerWidth, 11.8]} />
               {/* The runner is a decal on the floor: a clear gap plus a forward
                   polygonOffset so it always wins the depth test (no flicker at
@@ -3711,9 +3716,14 @@ function PewBody({ palette, position, wood }: { palette: Palette; position: [num
         <boxGeometry args={[PEW_BENCH_WIDTH, 0.3, 0.07]} />
         <meshStandardMaterial {...wood} color={palette.pew} roughness={0.74} />
       </mesh>
+      {/* End panels. The group sits at y 0.18 and these were 0.38 tall centred at
+          local 0.1, so their lowest point was world y 0.09 — every pew in the church
+          hung 0.09 units above the datum, and 0.13 (21 cm) above the floor plane as it
+          was. Lengthened to 0.47 centred at 0.055 so the bottom reaches exactly y 0
+          and the top stays where it always was. */}
       {[-1.26, 1.26].map((xPosition) => (
-        <mesh castShadow key={xPosition} position={[xPosition, 0.1, 0]}>
-          <boxGeometry args={[0.05, 0.38, 0.36]} />
+        <mesh castShadow key={xPosition} position={[xPosition, 0.055, 0]}>
+          <boxGeometry args={[0.05, 0.47, 0.36]} />
           <meshStandardMaterial {...wood} color={palette.pew} roughness={0.7} />
         </mesh>
       ))}
@@ -3910,13 +3920,13 @@ function ReceptionInterior({
           the room reads as parquet-over-stone in the evening light. */}
       <Suspense
         fallback={
-          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0.25]}>
+          <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.25]}>
             <planeGeometry args={[10.2, 12.8]} />
             <meshStandardMaterial color={surface.floor} roughness={0.76} />
           </mesh>
         }
       >
-        <TexturedGround color="#d9c39b" position={[0, -0.04, 0.25]} size={[10.2, 12.8]} />
+        <TexturedGround color="#d9c39b" position={[0, 0, 0.25]} size={[10.2, 12.8]} />
       </Suspense>
 
       <VenueBoundary palette={palette} venueType={receptionVenue} viewMode={viewMode} />
@@ -3933,7 +3943,10 @@ function ReceptionInterior({
         selectedObjectId={selectedObjectId}
         size={[2.9, 2.55]}
       >
-        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.012, 4.3]}>
+        {/* This is the dance floor's inset top finish, and it was at y -0.012 while
+            its own platform box spans y 0 to 0.08 — under the thing it surfaces, so
+            it never rendered at all. 0.082 puts it on top. */}
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.082, 4.3]}>
           <planeGeometry args={[2.45, 2.15]} />
           <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.62} />
         </mesh>

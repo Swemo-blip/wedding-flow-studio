@@ -289,6 +289,14 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   means redesigning the bench section and the figure's z, which changes the look and must
   not ship unseen. `check:seats` therefore ratchets rather than asserts: it fails only if
   the intersection gets WORSE.
+- **Everything stands on y 0; the floor planes did not.** Both rooms drew their floor at
+  y -0.04 while every figure, pew, altar and table is built from y 0, so the whole
+  wedding floated 6.4 cm — and the pews floated a further 0.09 on top of that, because
+  their end panels stopped short of the datum. The only reason the floor was pushed down
+  was to stay under an aisle runner at -0.018, which has a `polygonOffset` and never
+  needed the room. Fixed 2026-08-07 and guarded by `npm run check:seats`. The dance
+  floor's own inset top finish was at -0.012 while its platform spans 0 to 0.08, so it
+  rendered underneath the thing it surfaces.
 - **`wedding-flow-studio.layout.v1` is shared** by the home studio and
   `/ceremony`. Always persist the *live hydrated* `sceneEdits`, and never
   re-derive style fields from `wedding.style` once a layout is saved — both
