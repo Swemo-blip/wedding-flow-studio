@@ -1161,7 +1161,7 @@ a {
 .intake-form input:focus-visible,
 .intake-segment button:focus-visible,
 .intake-role-fieldset input:focus-visible {
-  outline: 2px solid rgba(159, 121, 59, 0.42);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -2654,7 +2654,9 @@ a {
 .editable-timeline-remove:hover,
 .editable-timeline-remove:focus-visible {
   color: #a6472e;
-  border-color: rgba(166, 71, 46, 0.4);
+  /* Was the same red at 40%, which composites to 1.83:1. --danger keeps the
+     destructive meaning and clears 6.41:1. */
+  border-color: var(--danger);
   background: rgba(166, 71, 46, 0.06);
 }
 
@@ -2718,7 +2720,13 @@ a {
 
 .editable-timeline-card:hover .editable-timeline-body,
 .editable-timeline-card:focus-visible .editable-timeline-body {
-  border-color: rgba(216, 185, 119, 0.56);
+  /* MEASURED 2026-08-06: every gold focus ring in this stylesheet sat under the 3:1
+     floor a control boundary owes — 1.36:1 for gold at 56%, 1.63 at 42%, 1.92 at 55%,
+     2.45 for the #c19a52 literal. A focus ring IS the boundary that identifies the
+     control, and gold cannot carry it on warm paper at any alpha worth using, so all
+     of them are now cold ink at 14.09:1. The one exception left alone is the camera
+     cluster's light outline, which sits on dark glass and measures 10.90:1. */
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.96);
   transform: translateY(-1px);
 }
@@ -3170,7 +3178,7 @@ a {
 
 .studio-workflow-step:hover,
 .studio-workflow-step:focus-visible {
-  border-color: rgba(216, 185, 119, 0.56);
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.92);
   transform: translateY(-1px);
 }
@@ -3276,7 +3284,7 @@ a {
 }
 
 .preview-moment-rail li button:focus-visible {
-  outline: 2px solid rgba(159, 121, 59, 0.55);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: var(--radius);
 }
@@ -7806,7 +7814,7 @@ a {
 
 .guests-cell-input:focus {
   outline: none;
-  border-color: #c19a52;
+  border-color: var(--accent);
   background: var(--surface-warm);
 }
 
@@ -8033,7 +8041,9 @@ a {
 
 .setup-range {
   width: 100%;
-  accent-color: #c19a52;
+  /* accent-color paints the slider's own filled track and thumb, a non-text UI
+     component that owes 3:1. The gold literal measured 2.45:1. */
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -8961,7 +8971,7 @@ a {
 
 .account-field input:focus {
   outline: none;
-  border-color: #c19a52;
+  border-color: var(--accent);
 }
 
 .account-error {
