@@ -884,7 +884,7 @@ function WeddingStageInterior({
   // itself, a subconscious "floating game level" tell. Camera motion (a slow
   // dolly in CameraSetup) now carries all the life instead.
   return (
-    <group position={[0, 0, 0.25]}>
+    <group position={[0, 0, INTERIOR_Z]}>
       {activeStep === "reception" ? (
         <ReceptionInterior
           capacity={capacity}
@@ -1523,11 +1523,16 @@ function ChurchAltar({ decorScale, floralMark, palette }: { decorScale: number; 
   );
 }
 
-function ChurchPendant({ candleColor, position }: { candleColor: string; position: [number, number, number] }) {
+function ChurchPendant({ candleColor, drop, position }: { candleColor: string; drop: number; position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh position={[0, 1.3, 0]}>
-        <cylinderGeometry args={[0.006, 0.006, 2.6, 6]} />
+      {/* The suspension rod, sized to the room it hangs in rather than fixed.
+          It was 2.6 long centred at local 1.3, so it always ran from the cup at
+          y 3.55 up to y 6.15 — which in the dinner hall is 2.37 units, 3.77 m,
+          straight out through a ceiling at 3.78. The same component serves both
+          rooms, so the length has to come from the ceiling. */}
+      <mesh position={[0, drop / 2, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, drop, 6]} />
         <meshStandardMaterial color="#2c2519" roughness={0.8} />
       </mesh>
       <mesh position={[0, -0.02, 0]}>
@@ -1544,11 +1549,23 @@ function ChurchPendant({ candleColor, position }: { candleColor: string; positio
   );
 }
 
-function ChurchPendantRow({ candleColor }: { candleColor: string }) {
+// How far a pendant hangs below its own ceiling. 2.05 is what the church has always
+// had (a 5.6 wall top with the cup at 3.55) and it reads right there, but a third of
+// the room is the sensible cap: in the 3.8 hall a 2.05 drop would leave the cups at
+// head height.
+function pendantDrop(ceilingY: number) {
+  return Math.min(2.05, ceilingY * 0.36);
+}
+
+function ChurchPendantRow({ candleColor, ceilingY }: { candleColor: string; ceilingY: number }) {
+  const drop = pendantDrop(ceilingY);
+
   return (
     <group>
       {[-3.2, -1, 1.2, 3.2].map((z) =>
-        [-3.4, 3.4].map((x) => <ChurchPendant candleColor={candleColor} key={`${x}-${z}`} position={[x, 3.55, z]} />)
+        [-3.4, 3.4].map((x) => (
+          <ChurchPendant candleColor={candleColor} drop={drop} key={`${x}-${z}`} position={[x, ceilingY - drop, z]} />
+        ))
       )}
     </group>
   );
@@ -1578,29 +1595,51 @@ const CONGREGATION_MODELS = [
 // about from its own numbers:
 //
 //   Seated congregation geometry .... 4.001 units tall, minY exactly 0
-//   Instance scale ................. CONGREGATION_SCALE, so ~0.82 m in world
+//   Instance scale ................. CONGREGATION_SCALE, so 0.82 UNITS in world
 //   Standing hero rig node scale ... 23.5 (the armature carries an internal 100,
 //                                    NOT the 0.235 on the primitive)
-//   Dinner table height ............ 0.66 (TABLE_HEIGHT in dinner-props.tsx)
+//   Dinner table height ............ TABLE_HEIGHT, 0.49 units = 0.78 m
 //
-// A seated figure is therefore 0.82 m from base to crown. Anything placed against
-// it must be derived from that, in these proportions — the chair I wrote in real
-// world metres (0.45 m seat, 0.56 m back) came out nearly as tall as the person
-// and filled the dinner with brown slabs. Real-life dimensions are the wrong unit
-// here.
-//   => A seated guest occupies 4.001 * 0.205 = 0.82 m from base to crown.
+// CORRECTED 2026-08-08. This block used to read "0.82 m from base to crown", and it
+// twice named a dinner table height of 0.66 that TABLE_HEIGHT has not been for a long
+// time. Both errors are the same one: a scene unit is 1.591 m, so 0.82 units is 1.31 m
+// — the correct sitting height of a 1.75 m adult, which is exactly why the number
+// looked plausible with an "m" after it and went unchallenged. Anyone reasoning from
+// this block wrote a metre value into a unit field, and the head table was still
+// carrying that 0.66.
 //
-// Derive anything placed against a diner from that 0.82, in its proportions. A
-// chair seat belongs near 0.30 and its back near 0.62 — NOT the 0.45 and 0.56 a
-// real chair measures, which came out nearly as tall as the person. The one number
-// still missing before that chair can be built is the dinner seat's own y in the
-// instance matrix; read it in the DINNER view, not the church.
+//   => A seated guest occupies 4.001 * 0.205 = 0.82 UNITS = 1.31 m, base to crown.
+//
+// The lesson the old note was reaching for is still right, and worth keeping: derive
+// anything placed against a diner from the FIGURE, in its proportions, never from what
+// the real object measures. A chair written in real-world metres (0.45 seat, 0.56 back)
+// came out nearly as tall as the person and filled the dinner with brown slabs.
+//
+// MEASURED 2026-08-07/08 with scripts/seat-contact-probe.mjs, which reads these meshes
+// in plain Node and needs no browser:
+//
+//   Seated depth ..... 0.34 units (0.54 m) — this is what sets the banquet row pitch
+//   Seated width ..... 0.30 units (0.48 m)
+//   Soles ............ exactly y 0 on all nine variants
+//
+// The one thing NOT to take from this block is a seat height. "Where the body rests"
+// has no stable answer on meshes this coarse — a min() over the rear says 0.194 and the
+// lowest hip-wide slice says 0.274 — so ask instead whether body mesh is inside
+// furniture mesh (`--intersect`), which needs no definition.
 // One scene unit in metres, derived from the only thing in this world that was ever
 // measured against a person: a standing figure is 1.10 units for a 1.75 m adult.
 // Exported because its absence is why metre values kept being written into unit
 // fields — a camera at 2.39 m, a photo disc above a head, an aisle control off by a
 // factor of two. Anything shown to the couple as a distance must pass through it.
 export const SCENE_UNIT_METRES = 1.591;
+
+// The whole interior renders inside `<group position={[0, 0, INTERIOR_Z]}>` and the
+// camera does not, so world z = local z + INTERIOR_Z. Every WEST_WALL_Z /
+// PROCESSION_*_Z constant is local. This has caused three shipped bugs — a psalter
+// 40 cm in front of the officiant's hands, and a first-person camera standing behind
+// the person it was supposed to be — so the term now has a name instead of being a
+// literal that is easy to forget.
+export const INTERIOR_Z = 0.25;
 const FEET_PER_METRE = 1 / 0.3048;
 
 const CONGREGATION_SCALE = 0.205;
@@ -2755,8 +2794,12 @@ function Processional({
     // Publish the couple's eye positions so the first-person camera can ride along,
     // even for a hidden figure (whose group ref is null).
     if (headsRef) {
-      headsRef.current.groom.set(groomX, FIRST_PERSON_EYE_Y, groomZ);
-      headsRef.current.bride.set(brideX, FIRST_PERSON_EYE_Y, z);
+      // Published in WORLD space, because CameraSetup lives outside the interior group
+      // and consumes these directly. groomZ and z are local, so without INTERIOR_Z the
+      // first-person camera stood 0.25 units — 0.40 m — behind the head it was meant
+      // to be inside, looking through the back of their own skull.
+      headsRef.current.groom.set(groomX, FIRST_PERSON_EYE_Y, groomZ + INTERIOR_Z);
+      headsRef.current.bride.set(brideX, FIRST_PERSON_EYE_Y, z + INTERIOR_Z);
       headsRef.current.arrived = arrivedRef.current;
     }
   });
@@ -2994,7 +3037,10 @@ function ChancelArch({ wallFaceZ }: { wallFaceZ: number }) {
       <mesh geometry={field} position={[0, 0, wallFaceZ + 0.004]} receiveShadow>
         <meshStandardMaterial color="#b0a284" roughness={0.92} />
       </mesh>
-      {/* Moulded surround, projecting 24cm into the room. */}
+      {/* Moulded surround. The 0.24 depth passed above is SCENE UNITS, so it projects
+          0.38 m into the room, not the 24 cm this comment used to claim — the same
+          unit-for-metre slip that put a camera at 2.39 m and a tabletop at the couple's
+          jaw. The geometry is deliberate; only the note was wrong. */}
       <mesh castShadow geometry={surround} position={[0, 0, wallFaceZ]} receiveShadow>
         <meshStandardMaterial color="#e3d9be" roughness={0.85} />
       </mesh>
@@ -3612,7 +3658,10 @@ function LightingRibbon({ decorScale, palette, venueType }: { decorScale: number
   // Both interiors hang warm pendants from the ceiling — garden lantern poles
   // belong outdoors and never appear inside a room.
   if (venueType === "church" || venueType === "hall") {
-    return <ChurchPendantRow candleColor={palette.candle} />;
+    // The church nave's ceiling springs from the wall top at 5.6; the hall's is a flat
+    // plane at its own back-wall height of 3.8. Both are read from the values the
+    // rooms themselves are built with rather than repeated here.
+    return <ChurchPendantRow candleColor={palette.candle} ceilingY={venueType === "hall" ? 3.78 : 5.6} />;
   }
 
   const poleHeight = venueType === "garden" || venueType === "beach" ? 1.18 : 1.34;
@@ -4106,8 +4155,12 @@ function DetailLayer({ decorScale, palette }: { decorScale: number; palette: Pal
       {[-2.75, 2.75].map((xPosition) => (
         <group key={xPosition} position={[xPosition, 0.48, -4.48]}>
           <FlowerCluster palette={palette} position={[0, 0, 0]} radius={0.32} />
-          <mesh castShadow position={[0, -0.35, 0]}>
-            <cylinderGeometry args={[0.055, 0.08, 0.55, 12]} />
+          {/* The stand. It was 0.55 tall centred at local -0.35 in a group at y 0.48,
+              so it ran from world y -0.145 to 0.405 — its foot 0.145 units, 23 cm,
+              underneath the floor, holding the arrangement up from below ground. 0.40
+              tall centred at -0.28 stands it on y 0 with its top just under the blooms. */}
+          <mesh castShadow position={[0, -0.28, 0]}>
+            <cylinderGeometry args={[0.055, 0.08, 0.4, 12]} />
             <meshStandardMaterial color="#55604a" roughness={0.74} />
           </mesh>
         </group>

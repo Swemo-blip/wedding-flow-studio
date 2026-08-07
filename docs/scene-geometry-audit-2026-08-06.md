@@ -56,7 +56,36 @@ The fix is a redesign of the bench section and of where the figure sits in z, wh
 change to the look and must not ship unseen. `CHAIR_SEAT_Y` and the pew's y are
 deliberately untouched.
 
-## Already fixed (2026-08-06)
+## Already fixed (2026-08-07/08)
+
+The pendant flames sealed in closed cups; the altar candle's floating flame; the
+arrangement sunk into its vase; `COUPLE_FACE_Y`; `FIRST_PERSON_EYE_Y`; the couple
+rendered twice in the dinner hall and sitting on nothing; the nudge that separated them
+from their table; the head table at 0.66; the banquet row pitch; the aisle control that
+said 5 ft and drew 9.66; the nudge readout labelling units as metres; all eight window
+reveals buried in the wall; both rooms' floor planes at y -0.04; the pews floating 21 cm;
+the dance floor's finish under its own platform; the pendant rod running 3.77 m through
+the hall ceiling; the first-person camera standing 0.40 m behind the couple; the flower
+stand with its foot 23 cm under the floor; and the load-bearing scale note that said a
+seated figure is "0.82 m" when it is 0.82 units — 1.31 m — which is where this whole
+family of unit-for-metre bugs came from.
+
+`npm run check:figures`, `check:seats` and `check:colour` now guard the parts that can be
+guarded.
+
+## Not fixed, and why
+
+- **The seat/body intersection** (623-889 vertices of every figure inside the pew bench).
+  Real, measured, and NOT a height error — see the section above. Needs the bench section
+  and the figure's z redesigned, which changes the look.
+- **The altar urns "inside a dais at y 0.09".** There is no dais or chancel platform in
+  the source, and with the floor now at 0 the urns' bases sit on it exactly. Left as
+  unverified rather than "fixed".
+- Garment pokes of ~2 cm (the bride's GLB dress through the silk gown, the officiant's
+  trousers through the alb at the hip). Real but at the threshold where a fix is as likely
+  to look worse as better, and unverifiable from here.
+
+## Earlier notes (2026-08-06)
 
 Pendant flames sealed in closed cups; the altar candle's floating flame; the
 arrangement sunk into its own vase; `COUPLE_FACE_Y`; `FIRST_PERSON_EYE_Y`. The last
