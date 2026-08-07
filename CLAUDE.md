@@ -192,6 +192,34 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   keeps `preserveDrawingBuffer`, that frame stays readable afterwards even when the
   tab goes hidden. So: ask him to visit the view once, then measure the buffer for
   the rest of the session. Do not burn his time trying to force it.
+- **The reason is layout, not the frame loop, and that closes the door harder than it
+  looks.** Tested six ways on 2026-08-04/06, including a dev-only `RenderBridge` that
+  drives frames from `setInterval` instead of rAF specifically to sidestep the hidden-
+  tab throttle. It never ran, because R3F's `Canvas` sizes itself through a
+  `ResizeObserver` and a background tab is never handed a measurement — so the canvas
+  stays at its 300x150 default and the whole scene, bridge included, never mounts. It
+  failed even in a tab whose *document* had real layout (`clientWidth` 1470), which is
+  what ruled out every simpler explanation. There is no flag, no query parameter and
+  no fibre-tree walk that gets around this. One visit from the owner is the only key.
+  `components/wedding-studio/render-bridge.tsx` is still worth keeping: once the scene
+  HAS mounted it can draw a fresh frame on demand from a hidden tab, so state changed
+  after his visit is still measurable instead of leaving only a stale buffer.
+- **3D geometry can be verified without any render at all, and should be.** A GLB is a
+  JSON chunk plus a binary chunk: the bone hierarchy, the rest transforms and the
+  animation samplers are all readable in plain Node, which is enough to rebuild the
+  skeleton and evaluate a pose by forward kinematics. `scripts/figure-pose-probe.mjs`
+  does exactly that — `npm run check:figures` — and on its first real use it found
+  three defects that had shipped and survived every visual pass:
+  the officiant's stole sat at z 0.062 while the alb's own lathe profile puts its front
+  surface at 0.094-0.116, so the stole and its neck band were *inside the robe* and he
+  rendered as a featureless ivory cone; the psalter sat 0.25 units — 40 cm — in front
+  of his hands, in mid-air, because the original derivation forgot the interior's
+  `+0.25` z offset; and the couple's palms were 0.712 m and 0.737 m apart, the same
+  defect that had been diagnosed and fixed for the officiant alone. It cross-checks
+  against the live-measured `NECK_Y` to within 0.003. `--check` exits non-zero, and it
+  was proven in both directions: it fails when the three defects are put back.
+  Solve pose numbers with `--solve <pose> <target gap>`, never by eye, and solve the
+  bride on `figure_woman.glb` — the two rigs differ.
 - **A blank 3D frame usually means the pane is hidden, not that the render broke.**
   When the preview pane is hidden `document.visibilityState` becomes `"hidden"`,
   which pauses `requestAnimationFrame`, which stops the scene rendering — so
@@ -222,6 +250,7 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
 Run relevant checks before reporting:
 
 ```bash
+npm run check:figures
 npm run lint
 npm run typecheck
 npm run build

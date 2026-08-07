@@ -11,6 +11,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
+import { RenderBridge } from "@/components/wedding-studio/render-bridge";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { DinnerChair, DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
@@ -461,6 +462,9 @@ export function CeremonyScene({
           shadows={{ type: THREE.PCFShadowMap }}
         >
           <SceneCaptureHook />
+          {/* Development-only, and inert without ?agentrender=1. Lets a hidden tab
+              produce a real frame so 3D changes can be measured instead of guessed. */}
+          <RenderBridge />
           <CameraSetup activeStep={activeStep} cameraOverride={cameraOverride} firstPerson={firstPerson} headsRef={coupleHeadsRef} venueType={effectiveVenue} viewMode={viewMode} zoom={zoom} />
           <color args={[preset.fogColor]} attach="background" />
           <fog args={[preset.fogColor, preset.fogNear, preset.fogFar]} attach="fog" />
@@ -1999,11 +2003,23 @@ function findBone(root: THREE.Object3D, name: string) {
 type FigurePose = Record<string, [number, number, number]>;
 
 // Hands clasped low in front — the standard groom-at-the-altar stance.
+//
+// MEASURED 2026-08-06 with scripts/figure-pose-probe.mjs, which evaluates this pose
+// against the idle clip by forward kinematics straight out of the GLB and needs no
+// browser. The previous values put the groom's palms 0.712 m apart and the bride's
+// 0.737 m — the identical defect that was diagnosed and fixed for the officiant
+// alone, so for months the couple stood at their own altar with their hands almost
+// three quarters of a metre apart.
+//
+// The fix is the officiant's arm architecture, not a bigger shoulder twist: the
+// inward UpperArm x does most of the closing, which drops the y this pose needs from
+// 78 degrees to 21. Re-solve with `--solve hands_clasped <target gap in m>` rather
+// than nudging, and solve the bride on figure_woman.glb — the two rigs differ.
 const POSE_HANDS_CLASPED: FigurePose = {
   "Shoulder.L": [0, 0, -0.06],
   "Shoulder.R": [0, 0, 0.06],
-  "UpperArm.L": [0.04, 0.06, -0.2],
-  "UpperArm.R": [0.04, -0.06, 0.2],
+  "UpperArm.L": [-0.44, 0.362, -0.2],
+  "UpperArm.R": [-0.44, -0.362, 0.2],
   "LowerArm.L": [0.5, 0, -0.22],
   "LowerArm.R": [0.5, 0, 0.22],
   "Palm.L": [0.12, 0, -0.08],
@@ -2014,8 +2030,8 @@ const POSE_HANDS_CLASPED: FigurePose = {
 const POSE_BOUQUET: FigurePose = {
   "Shoulder.L": [0, 0, -0.05],
   "Shoulder.R": [0, 0, 0.05],
-  "UpperArm.L": [0.08, 0.05, -0.18],
-  "UpperArm.R": [0.08, -0.05, 0.18],
+  "UpperArm.L": [-0.44, 0.356, -0.18],
+  "UpperArm.R": [-0.44, -0.356, 0.18],
   "LowerArm.L": [0.62, 0, -0.2],
   "LowerArm.R": [0.62, 0, 0.2],
   "Palm.L": [0.14, 0, -0.06],
@@ -2049,8 +2065,8 @@ const POSE_BOUQUET: FigurePose = {
 const POSE_OFFICIANT: FigurePose = {
   "Shoulder.L": [0, 0, -0.05],
   "Shoulder.R": [0, 0, 0.05],
-  "UpperArm.L": [-0.39, 0.54, -0.16],
-  "UpperArm.R": [-0.49, -0.54, 0.16],
+  "UpperArm.L": [-0.44, 0.54, -0.16],
+  "UpperArm.R": [-0.44, -0.54, 0.16],
   "LowerArm.L": [0.72, 0, -0.26],
   "LowerArm.R": [0.72, 0, 0.26],
   "Palm.L": [0.16, 0, -0.1],
@@ -2386,6 +2402,12 @@ function StagingHandles({
 // and a hem radius of 0.235 was 43% of his height, which is why the alb read as a
 // bell. These numbers are proportions of 1.1, and the stole hangs from the real
 // neck at 0.951.
+// Liturgical gold: festive, which is the colour for a wedding, and legible at aisle
+// distance — L* 49.8 against the alb's 93 and the sampled room mean of 73.3. The
+// previous #3c4a33 was byte-identical to the pews, so the officiant's only ornament
+// was the same colour as the furniture. Deliberately off the brass at #b39152 too,
+// so a vestment cannot be read as a candlestick.
+const STOLE_COLOR = "#96702f";
 const ALB_HEM_Y = 0.02;
 const ALB_TOP_Y = 0.9;
 const NECK_Y = 0.951;
@@ -2417,29 +2439,52 @@ function Vestments() {
       <mesh castShadow geometry={albGeometry} receiveShadow>
         <meshStandardMaterial color="#f3ede0" roughness={0.74} side={THREE.DoubleSide} />
       </mesh>
-      {/* Stole: two panels from the neck down the chest, stopping above the hem. */}
+      {/* Stole: two panels from the neck down the chest, stopping above the hem.
+          MEASURED 2026-08-06 with scripts/figure-pose-probe.mjs: these panels sat at
+          z 0.062 while the alb's own lathe profile puts its front surface at z 0.094
+          to 0.113 across the panels' y range — so the entire stole was INSIDE the
+          robe, roughly 6 cm deep in the fabric, and so was the neck band. The
+          officiant therefore rendered as a plain ivory cone with no ornament at all,
+          which is the likeliest reason the owner reported him as looking very strange.
+          0.122 clears the widest point of the robe under the panels (0.113 at y 0.56)
+          with 0.005 to spare; check that figure again if the alb profile changes. */}
       {[-0.042, 0.042].map((x) => (
-        <mesh castShadow key={x} position={[x, (NECK_Y + 0.56) / 2, 0.062]}>
+        <mesh castShadow key={x} position={[x, (NECK_Y + 0.56) / 2, 0.122]}>
           <boxGeometry args={[0.044, NECK_Y - 0.56, 0.008]} />
-          <meshStandardMaterial color="#3c4a33" roughness={0.7} />
+          <meshStandardMaterial color={STOLE_COLOR} roughness={0.7} />
         </mesh>
       ))}
-      {/* The band joining them, AT the measured neck rather than above the head. */}
-      <mesh castShadow position={[0, NECK_Y - 0.01, 0.005]}>
-        <boxGeometry args={[0.125, 0.032, 0.1]} />
-        <meshStandardMaterial color="#3c4a33" roughness={0.7} />
+      {/* The band joining them, AT the measured neck rather than above the head, and
+          deep enough to actually reach the panels: it has to wrap from behind the
+          neck (z -0.05) to where they now sit (z 0.118). */}
+      <mesh castShadow position={[0, NECK_Y - 0.01, 0.035]}>
+        <boxGeometry args={[0.125, 0.032, 0.175]} />
+        <meshStandardMaterial color={STOLE_COLOR} roughness={0.7} />
       </mesh>
     </group>
   );
 }
 
-// The psalter the officiant reads from. Position is NOT guessed: the posed palms
+// The psalter the officiant reads from. Position is NOT guessed — but it WAS wrong,
+// and the way it was wrong is the trap CLAUDE.md warns about.
+//
+// The original derivation measured the palms at world (0.003, 0.591, -3.147), took
+// the Celebrant group's z as -3.55, and concluded local z 0.403. It dropped the
+// interior's own `<group position={[0, 0, 0.25]}>`: world z = local + 0.25, so the
+// palms are at local -3.147 - 0.25 + 3.55 = 0.153, and the book had been floating
+// 0.25 scene units — 40 cm — in front of the officiant's hands, in mid-air.
+//
+// Confirmed 2026-08-06 from the opposite direction by scripts/figure-pose-probe.mjs,
+// which reads the palms straight out of the GLB by forward kinematics and needs no
+// browser: local z 0.152, y 0.588. Two independent measurements 0.001 apart. The old
+// reasoning is kept below because the numbers in it are still correct in world space.
+// Superseded derivation: the posed palms
 // were measured at world mid (0.003, 0.591, -3.147) with a 0.108 m grip, and the
 // Celebrant group sits at z -3.55, so the book rests on the hands at local
 // (0, 0.605, 0.40). Sized for a 1.10 m figure (~0.63 world scale).
 function Psalter() {
   return (
-    <group position={[0, 0.605, 0.4]} rotation={[-0.3, 0, 0]}>
+    <group position={[0, 0.6, 0.155]} rotation={[-0.3, 0, 0]}>
       <mesh castShadow>
         <boxGeometry args={[0.16, 0.008, 0.105]} />
         <meshStandardMaterial color="#2b2d24" roughness={0.55} />

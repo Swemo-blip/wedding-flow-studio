@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:figures": "node scripts/figure-pose-probe.mjs public/models/figure_suit.glb --check && node scripts/figure-pose-probe.mjs public/models/figure_woman.glb --check"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
