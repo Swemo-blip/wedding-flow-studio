@@ -7638,10 +7638,51 @@ a {
   font-size: 0.76rem;
 }
 
-.guests-cell-muted {
-  color: var(--muted);
-  font-size: 0.82rem;
+/* The seat cell. It used to be one derived string under .guests-cell-muted, which
+   nothing references any more; it now also carries the seating conflicts, because a
+   conflict is a seating fact and this was the cell with room for it. */
+.guests-cell-seat {
+  display: grid;
+  gap: 4px;
+  align-content: center;
   min-width: 0;
+}
+
+.guests-seat-label {
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+}
+
+.guests-apart {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* This chip is a BUTTON — dropping the pair is its whole job — so it takes
+   --line-strong rather than the --line the non-interactive meal-tally chips use. A
+   boundary that identifies a control has to clear 3:1 and --line does not. */
+.guests-apart-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 2px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.guests-apart-chip:hover {
+  border-color: var(--accent);
+}
+
+.guests-apart-add {
+  font-size: 0.76rem;
 }
 
 /* Two stacked fields: what they cannot eat, and how they get to their seat. */
@@ -7876,6 +7917,12 @@ a {
   }
   .guests-cell-actions {
     justify-self: start;
+  }
+  /* Same touch floor the rest of the mobile sweep applies: a 26px chip is fine for
+     a cursor and not for a thumb. */
+  .guests-apart-chip {
+    min-height: 44px;
+    padding: 2px 12px;
   }
 }
 

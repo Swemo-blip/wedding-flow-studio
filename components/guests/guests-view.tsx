@@ -18,7 +18,7 @@ const RSVP_CYCLE: Guest["rsvpStatus"][] = ["attending", "pending", "declined"];
 
 export function GuestsView() {
   const { t } = useTranslation();
-  const { addGuest, dinnerTables, guests, removeGuest, speeches, updateGuest } = useLocalProject();
+  const { addGuest, dinnerTables, guests, removeGuest, setSeatingConflict, speeches, updateGuest } = useLocalProject();
   const [placeholderCount, setPlaceholderCount] = useState(50);
   // If the store had to reject stored guests, say so here rather than presenting a
   // shorter list as if it were complete. Read once after mount, since the count is
@@ -232,6 +232,14 @@ export function GuestsView() {
           </div>
           {filtered.map((guest) => {
             const profile = buildGuestProfile(guest, { guests, tables: dinnerTables, speeches });
+            // Resolved against the live list, so an id left behind by an older
+            // project file renders as nothing rather than as a blank chip.
+            const keptApart = guest.conflictGuestIds
+              .map((conflictGuestId) => guests.find((candidate) => candidate.id === conflictGuestId))
+              .filter((candidate): candidate is Guest => Boolean(candidate));
+            const apartCandidates = guests.filter(
+              (candidate) => candidate.id !== guest.id && !guest.conflictGuestIds.includes(candidate.id)
+            );
             return (
               <div className="guests-row" key={guest.id} role="row">
                 <span className="guests-cell-name" role="cell">
@@ -299,8 +307,49 @@ export function GuestsView() {
                     {t(rsvpLabel(guest.rsvpStatus))}
                   </button>
                 </span>
-                <span className="guests-cell-muted" role="cell">
-                  {profile.table ? profile.seatLabel : t("Unassigned")}
+                {/* Seating conflicts live in the SEAT cell because that is what they
+                    are about, and because this cell held one derived string and had
+                    room. Until now nothing in the app could write
+                    `conflictGuestIds`, so `risk-analysis.ts` carried a HIGH-severity
+                    "Seating conflict detected" rule that could never fire and the
+                    catering brief could never list a pair to separate. */}
+                <span className="guests-cell-seat" role="cell">
+                  <span className="guests-seat-label">{profile.table ? profile.seatLabel : t("Unassigned")}</span>
+                  {keptApart.length > 0 ? (
+                    <span className="guests-apart">
+                      {keptApart.map((other) => (
+                        <button
+                          aria-label={t("Stop keeping {name} and {other} apart", { name: guest.name, other: other.name })}
+                          className="guests-apart-chip"
+                          key={other.id}
+                          onClick={() => setSeatingConflict(guest.id, other.id, false)}
+                          type="button"
+                        >
+                          {other.name}
+                          <X aria-hidden="true" size={11} />
+                        </button>
+                      ))}
+                    </span>
+                  ) : null}
+                  {apartCandidates.length > 0 ? (
+                    <select
+                      aria-label={t("Keep {name} apart from another guest", { name: guest.name })}
+                      className="guests-cell-input guests-apart-add"
+                      onChange={(event) => {
+                        if (event.target.value) {
+                          setSeatingConflict(guest.id, event.target.value, true);
+                        }
+                      }}
+                      value=""
+                    >
+                      <option value="">{t("Keep apart from…")}</option>
+                      {apartCandidates.map((other) => (
+                        <option key={other.id} value={other.id}>
+                          {other.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
                 </span>
                 <span role="cell">
                   <input

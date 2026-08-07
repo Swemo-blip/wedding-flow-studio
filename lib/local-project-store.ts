@@ -221,8 +221,11 @@ function renameKlaraToSanne(wedding: Wedding): Wedding {
   return { ...wedding, coupleNames, partnerOneName, partnerTwoName };
 }
 
-// The guest list the owner ordered alongside the rename: "Johan och Sanne med
-// 50 gäster, auto-fyll med random-namn". Seeded ONLY while the Klara migration
+// The guest list the owner ordered alongside the rename, translated from his own
+// words: "Johan and Sanne with 50 guests, auto-fill with random names" (he asked in
+// Swedish; the quote is rendered in English here so the language scan stays a real
+// signal rather than one known hit everyone learns to skip). Seeded ONLY while the
+// Klara migration
 // is firing (i.e. exactly once per browser), and only into an EMPTY list — so a
 // list he later empties on purpose stays empty. Plain names without diacritics
 // keep the language scan clean; every field matches what addGuest writes.

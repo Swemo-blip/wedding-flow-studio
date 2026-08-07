@@ -304,8 +304,16 @@ function buildGuestImpact(phase: PreviewPhase, guests: Guest[], dinnerTables: Di
   const veganGuests = guests.filter((guest) => guest.mealChoice.toLowerCase().includes("vegan"));
   const childGuests = guests.filter((guest) => guest.mealChoice.toLowerCase().includes("child") || guest.tags.some((tag) => tag.toLowerCase().includes("child")));
   const accessibilityGuests = guests.filter((guest) => guest.accessibilityNotes);
+  // An unassigned guest carries tableId "", so without the emptiness guard two
+  // guests the couple has marked keep-apart but not yet seated would compare equal
+  // and be reported as a seating conflict in a room plan neither of them is in. That
+  // could not happen while nothing wrote `conflictGuestIds`; it can now.
   const conflictGuests = guests.filter((guest) =>
     guest.conflictGuestIds.some((conflictGuestId) => {
+      if (!guest.tableId) {
+        return false;
+      }
+
       const conflictGuest = guests.find((candidate) => candidate.id === conflictGuestId);
       return conflictGuest?.tableId === guest.tableId;
     })

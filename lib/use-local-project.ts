@@ -524,6 +524,45 @@ function updateGuest(guestId: string, updates: Partial<Guest>) {
   });
 }
 
+// The one thing that could write `conflictGuestIds`, which until now nothing did.
+// That is why `risk-analysis.ts` carried a HIGH-severity "Seating conflict detected"
+// rule that could never fire, and why `moment-intelligence` could never report one:
+// both read a field with no source. The field was typed, persisted, validated and
+// copied on every write, and empty forever.
+//
+// Stored on BOTH guests. `findSeatingConflict` iterates everyone at a table so a
+// one-sided link is enough to raise the risk, but a one-sided link means the couple
+// marks a pair on one row and the other row shows nothing — which reads as a control
+// that did not work. The invariant lives here rather than in the view so there is one
+// place it can be true.
+function setSeatingConflict(guestId: string, otherGuestId: string, keepApart: boolean) {
+  if (guestId === otherGuestId) {
+    return;
+  }
+
+  setStoreState((currentState) => {
+    const nextGuests = currentState.guests.map((guest) => {
+      if (guest.id !== guestId && guest.id !== otherGuestId) {
+        return guest;
+      }
+
+      const partnerId = guest.id === guestId ? otherGuestId : guestId;
+      const without = guest.conflictGuestIds.filter((id) => id !== partnerId);
+
+      return { ...guest, conflictGuestIds: keepApart ? [...without, partnerId] : without };
+    });
+    const storedProject = writeStoredReception(nextGuests, currentState.dinnerTables);
+
+    return {
+      ...currentState,
+      hasLocalProject: true,
+      guests: storedProject?.guests ?? nextGuests,
+      dinnerTables: storedProject?.dinnerTables ?? currentState.dinnerTables,
+      updatedAt: storedProject?.updatedAt ?? currentState.updatedAt
+    };
+  });
+}
+
 function addGuest(partial: Partial<Guest> = {}) {
   setStoreState((currentState) => {
     const newGuest: Guest = {
@@ -558,7 +597,22 @@ function addGuest(partial: Partial<Guest> = {}) {
 
 function removeGuest(guestId: string) {
   setStoreState((currentState) => {
-    const remainingGuests = currentState.guests.filter((guest) => guest.id !== guestId);
+    // Drop the departing guest from the other guests' relationship lists too, not
+    // just from the table. A dangling id is harmless to the risk rules — they
+    // resolve ids against the live list and a missing one simply never matches —
+    // but it survives into every backup and export, and it would render as a chip
+    // for a person who is no longer invited.
+    const remainingGuests = currentState.guests
+      .filter((guest) => guest.id !== guestId)
+      .map((guest) =>
+        guest.conflictGuestIds.includes(guestId) || guest.preferredGuestIds.includes(guestId)
+          ? {
+              ...guest,
+              conflictGuestIds: guest.conflictGuestIds.filter((id) => id !== guestId),
+              preferredGuestIds: guest.preferredGuestIds.filter((id) => id !== guestId)
+            }
+          : guest
+      );
     const nextTables = currentState.dinnerTables.map((table) => ({
       ...table,
       assignedGuestIds: table.assignedGuestIds.filter((assignedGuestId) => assignedGuestId !== guestId)
@@ -728,6 +782,7 @@ export function useLocalProject() {
     removeSpeech,
     resetSpeeches,
     updateGuest,
+    setSeatingConflict,
     addGuest,
     removeGuest,
     updateDinnerTable,

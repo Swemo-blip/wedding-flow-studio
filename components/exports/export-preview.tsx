@@ -80,7 +80,11 @@ export function ExportPreview({ exportType }: ExportPreviewProps) {
       guest.mealChoice.toLowerCase().includes("vegan") ||
       guest.mealChoice.toLowerCase().includes("child") ||
       guest.accessibilityNotes ||
-      guest.tags.some((tag) => tag.toLowerCase().includes("conflict"))
+      // Was `tags.some(tag => tag.includes("conflict"))`, which the day-flow action
+      // engine turns into a false positive: one of the tags it writes is "seating
+      // conflict resolved", so RESOLVING a conflict added the guest to the brief's
+      // conflict list. `conflictGuestIds` is the typed field the risk rules read.
+      guest.conflictGuestIds.length > 0
   );
   // Resolve each flagged guest to one identity (seat, relation, speaking role)
   // so the brief reads the same as the seating and speech studios.
