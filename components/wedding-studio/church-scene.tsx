@@ -13,7 +13,7 @@ import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferG
 import { LoopSubdivision } from "three-subdivide";
 import { RenderBridge } from "@/components/wedding-studio/render-bridge";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
-import { DinnerChair, DinnerTablescape, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
+import { DinnerChair, DinnerTablescape, TABLE_HEIGHT, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
 import { assetPath } from "@/lib/asset-path";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -1380,8 +1380,16 @@ function StainedGlassWindow({
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      {/* Arched stone reveal, following the same curve as the glass. */}
-      <mesh geometry={reveal} position={[0, 0, -0.07]}>
+      {/* Arched stone reveal, following the same curve as the glass.
+          MEASURED 2026-08-07: this sat at local z -0.07 and never rendered. The side
+          walls are 0.2 thick centred on x +-4.95, so their inner faces are at +-4.85,
+          and the lancets sit at +-4.79 — which put the reveal at +-4.86, one hundredth
+          of a unit BEHIND opaque stone. lancetGeometry is a flat ShapeGeometry with no
+          thickness, so there was nothing left to see. The west lancets were worse: they
+          sit 0.04 off a wall face at z -5.74, so their reveal was 0.03 inside it, and
+          they are the binding constraint on this number. -0.03 clears the side walls by
+          0.03 and the west wall by 0.01, and stays behind the lead came at -0.012. */}
+      <mesh geometry={reveal} position={[0, 0, -0.03]}>
         <meshStandardMaterial color="#cdc2a4" roughness={0.9} side={THREE.DoubleSide} />
       </mesh>
       {/* Lead came outlining the whole lancet. */}
@@ -1582,6 +1590,14 @@ const CONGREGATION_MODELS = [
 // real chair measures, which came out nearly as tall as the person. The one number
 // still missing before that chair can be built is the dinner seat's own y in the
 // instance matrix; read it in the DINNER view, not the church.
+// One scene unit in metres, derived from the only thing in this world that was ever
+// measured against a person: a standing figure is 1.10 units for a 1.75 m adult.
+// Exported because its absence is why metre values kept being written into unit
+// fields — a camera at 2.39 m, a photo disc above a head, an aisle control off by a
+// factor of two. Anything shown to the couple as a distance must pass through it.
+export const SCENE_UNIT_METRES = 1.591;
+const FEET_PER_METRE = 1 / 0.3048;
+
 const CONGREGATION_SCALE = 0.205;
 
 if (typeof window !== "undefined") {
@@ -2802,6 +2818,24 @@ const PEW_BLOCK_X = 2.2;
 // disagreed by 0.30 units, and a literal repeated in two places is how they drifted.
 const PEW_BENCH_WIDTH = 2.55;
 
+// What the aisle control actually renders, in feet.
+//
+// `aisleWidthFeet` is NOT a width in feet. It is a legacy 5-based scale: the clear gap
+// between the pew benches is (PEW_BLOCK_X - PEW_BENCH_WIDTH / 2) * 2 = 1.85 scene
+// units, which is 2.94 m — 9.66 ft — and the control multiplied that by
+// aisleWidthFeet / 5, so at its default it displayed "5 ft" while drawing 9.66. A
+// control that lies about a number the couple reads is the thing this product must
+// never ship, and the runner and the pews DO already move together (see aisleShift),
+// so the geometry was right and only the label was wrong.
+//
+// The field keeps its meaning rather than being renamed, because renaming it would
+// silently change the aisle in every plan already saved. This converts it for display,
+// and the inspector calls this rather than formatting the raw value.
+export function aisleWidthInFeet(aisleWidthFeet: number) {
+  const clearGap = (PEW_BLOCK_X - PEW_BENCH_WIDTH / 2) * 2;
+  return clearGap * Math.max(0.5, aisleWidthFeet / 5) * SCENE_UNIT_METRES * FEET_PER_METRE;
+}
+
 // The nave's pews follow the wedding it is actually holding: enough rows to seat
 // everyone with a couple spare, never so many that a small wedding is framed
 // against half a hall of empty benches. Eight seats per row is what the 3D lays
@@ -3822,33 +3856,43 @@ function ReceptionInterior({
   // each ringed by its actual seated headcount. The room fits ~12 tables, so
   // larger plans render a representative dozen (the exact number lives in the
   // inspector). Fall back to a capacity estimate only when no tables exist yet.
-  const hasRealTables = Boolean(dinnerTables && dinnerTables.length > 0);
+  // The couple's own table is drawn separately, as the head table at the back of the
+  // room, so it must not also appear in the guest grid. It did: `dinnerTables[0]` in
+  // a real plan is the Sweetheart Table with both partners assigned to it, so
+  // buildReceptionSeats ringed it with two figures while two MORE were appended for
+  // the head table. The couple were rendered twice in one room — 29 figures for 27
+  // diners — and only the grid copy got chairs. `shape: "sweetheart"` is the
+  // discriminator the data already carries.
+  const guestTables = useMemo(() => (dinnerTables ?? []).filter((table) => table.shape !== "sweetheart"), [dinnerTables]);
+  const hasRealTables = guestTables.length > 0;
   const tableCount = hasRealTables
-    ? Math.min(12, dinnerTables!.length)
+    ? Math.min(MAX_BANQUET_TABLES, guestTables.length)
     : Math.min(10, Math.max(4, Math.ceil(capacity.visibleGuestMarkers / 14)));
   const tablePositions = useMemo(() => buildReceptionTablePositions(tableCount), [tableCount]);
   const seatCounts = useMemo(() => {
     if (hasRealTables) {
       // Only the guests actually seated at a table get a chair — an unseated
       // table stands empty rather than inventing people who don't exist.
-      return tablePositions.map((_, index) => Math.min(10, dinnerTables![index]?.assignedGuestIds.length ?? 0));
+      return tablePositions.map((_, index) => Math.min(10, guestTables[index]?.assignedGuestIds.length ?? 0));
     }
     const perTable = Math.min(10, Math.max(4, capacity.seatsPerRow));
     return tablePositions.map(() => perTable);
-  }, [capacity.seatsPerRow, dinnerTables, hasRealTables, tablePositions]);
+  }, [capacity.seatsPerRow, guestTables, hasRealTables, tablePositions]);
   const receptionSeats = useMemo(() => buildReceptionSeats(tablePositions, seatCounts), [seatCounts, tablePositions]);
   // One chair per occupied seat. The diners were sitting on nothing.
   const dinnerChairs = receptionSeats;
-  // The couple, seated at the head table (z=-4.3), just behind it and facing the
-  // room (+z). Appended to the guest seats so one instanced congregation draws
-  // everyone — the couple always appear, even before any guests are seated.
-  const receptionSeatsWithCouple = useMemo<CongregationSeat[]>(
+  // The couple at their own table, in ITS coordinate space rather than the room's.
+  // They used to be appended to the guest seats at world z -4.86, which put them
+  // inside the draggable dinnerTables group while their table sat outside it — so
+  // nudging the tables walked the couple away from the table they were sitting at,
+  // by up to 2.86 m per axis. Local -0.56 against a head table at z -4.3 keeps them
+  // exactly where they were, and now they move with it.
+  const coupleSeats = useMemo<CongregationSeat[]>(
     () => [
-      ...receptionSeats,
-      { id: "dinner-couple-groom", position: [-0.34, 0, -4.86], rotationY: 0, variant: 0 },
-      { id: "dinner-couple-bride", position: [0.34, 0, -4.86], rotationY: 0, variant: 6 }
+      { id: "dinner-couple-groom", position: [-0.34, 0, -0.56], rotationY: 0, variant: 0 },
+      { id: "dinner-couple-bride", position: [0.34, 0, -0.56], rotationY: 0, variant: 6 }
     ],
-    [receptionSeats]
+    []
   );
   const tablescapeColors = useMemo<TablescapeColors>(
     () => ({ accent: palette.accent, candle: palette.candle, cloth: "#f6eedb", floral: palette.blush }),
@@ -3921,24 +3965,30 @@ function ReceptionInterior({
           {dinnerChairs.map((seat) => (
             <DinnerChair key={`chair-${seat.id}`} position={seat.position} rotationY={seat.rotationY} />
           ))}
-          <ChurchCongregation highQuality={highQuality} seats={receptionSeatsWithCouple} />
+          <ChurchCongregation highQuality={highQuality} seats={receptionSeats} />
         </Suspense>
       </EditableSceneObject>
 
       {/* The couple's head table sits at the back, facing the room, dressed like
           the guest tables. The couple figures themselves are seated via the
           shared congregation above. */}
+      {/* The couple's own table, and the couple, in ONE group so a nudge cannot
+          separate them. Its height is TABLE_HEIGHT, the same constant the guest
+          tables use: it was hard-coded 0.66, which is 0.17 units — 27 cm — taller
+          than every other table in the room and the exact height TABLE_HEIGHT was
+          lowered from. On a figure whose seated crown is 0.82, a 0.66 tabletop
+          crosses the couple at the jaw. */}
       <group position={[0, 0, -4.3]}>
-        <mesh castShadow receiveShadow position={[0, 0.33, 0]}>
-          <boxGeometry args={[2.4, 0.66, 0.72]} />
+        <mesh castShadow receiveShadow position={[0, TABLE_HEIGHT / 2, 0]}>
+          <boxGeometry args={[2.4, TABLE_HEIGHT, 0.72]} />
           <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.85} />
         </mesh>
-        <mesh receiveShadow position={[0, 0.662, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh receiveShadow position={[0, TABLE_HEIGHT + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[2.4, 0.72]} />
           <meshStandardMaterial color={tablescapeColors.cloth} roughness={0.8} />
         </mesh>
         {[-0.7, 0, 0.7].map((x) => (
-          <group key={x} position={[x, 0.68, 0]}>
+          <group key={x} position={[x, TABLE_HEIGHT + 0.02, 0]}>
             <mesh castShadow position={[0, 0.13, 0]}>
               <cylinderGeometry args={[0.02, 0.024, 0.26, 10]} />
               <meshStandardMaterial color="#f3ead2" roughness={0.55} />
@@ -3946,7 +3996,16 @@ function ReceptionInterior({
             <FlickerFlame base={2.3} color={palette.candle} position={[0, 0.29, 0]} radius={0.023} seed={x * 6.1} />
           </group>
         ))}
-        <FlowerCluster palette={palette} position={[0, 0.71, 0.02]} radius={0.2} />
+        <FlowerCluster palette={palette} position={[0, TABLE_HEIGHT + 0.05, 0.02]} radius={0.2} />
+        <Suspense fallback={null}>
+          {/* Chairs at last. The couple were the only two diners in the room sitting
+              on nothing: chairs came from the guest seat list and they were appended
+              to it afterwards, so the loop that draws chairs never saw them. */}
+          {coupleSeats.map((seat) => (
+            <DinnerChair key={`chair-${seat.id}`} position={seat.position} rotationY={seat.rotationY} />
+          ))}
+          <ChurchCongregation highQuality={highQuality} seats={coupleSeats} />
+        </Suspense>
       </group>
 
       <EditableSceneObject
@@ -4282,13 +4341,13 @@ function getCameraTarget(viewMode: StudioViewMode, venueType: StudioVenueType, a
 }
 
 function buildReceptionTablePositions(tableCount: number): Array<[number, number, number]> {
-  // A tidy banquet grid in front of the head table (which sits at z ≈ -4.5),
-  // filling the hall footprint from the dais toward the entrance. Two columns up
-  // to six tables, three columns beyond, so the room never feels lopsided.
-  const count = Math.max(1, Math.min(12, tableCount));
+  // A tidy banquet grid in front of the head table, filling the hall footprint from
+  // the head table toward the dance floor. Two columns up to six tables, three
+  // columns beyond, so the room never feels lopsided.
+  const count = Math.max(1, Math.min(MAX_BANQUET_TABLES, tableCount));
   const cols = count <= 2 ? count : count <= 6 ? 2 : 3;
   const xSpan = cols === 3 ? 2.5 : 2.9;
-  const zSpan = 1.5;
+  const zSpan = BANQUET_ROW_PITCH;
   const positions: Array<[number, number, number]> = [];
   let placed = 0;
 
@@ -4300,7 +4359,7 @@ function buildReceptionTablePositions(tableCount: number): Array<[number, number
     const rowCount = Math.min(cols, count - placed);
     for (let col = 0; col < rowCount; col += 1) {
       const x = (col - (rowCount - 1) / 2) * xSpan;
-      const z = -2.4 + row * zSpan;
+      const z = BANQUET_FIRST_ROW_Z + row * zSpan;
       positions.push([x, 0, z]);
       placed += 1;
     }
@@ -4309,13 +4368,40 @@ function buildReceptionTablePositions(tableCount: number): Array<[number, number
   return positions;
 }
 
+// The banquet grid, derived rather than chosen. Every number below comes from a
+// measurement, because the previous ones did not and the result was diners from
+// adjacent rows sitting inside each other.
+//
+// MEASURED 2026-08-07 (scripts/seat-contact-probe.mjs): a seated congregation figure
+// at CONGREGATION_SCALE is 0.34 scene units deep — 0.54 m. Seats ring a table at
+// radius 0.85. So the back seat of one row lands at +0.85 and the front seat of the
+// next at pitch - 0.85, and two bodies need 0.34 between their centres:
+//
+//   required pitch = 0.85 + 0.85 + 0.34 = 2.04
+//
+// The old pitch was 1.50, which puts those two seats 0.20 units on the WRONG side of
+// each other — the rings interpenetrate and the figures share space.
+//
+// How many rows fit: the head table is 0.72 deep at z -4.3, so its front face is at
+// -3.94 and the first row's front seats clear it at -3.94 + 0.85 = -3.09. The dance
+// floor is 2.2 deep at z 4.3, so its front face is 3.2 and the last row's back seats
+// clear it at 3.2 - 0.85 = 2.35. That is 5.44 units of usable band, which at 2.04
+// holds three rows — and at three columns, nine tables. The old cap of twelve needed
+// a fourth row that would have put guests on the dance floor even at the old pitch.
+const BANQUET_SEAT_RADIUS = 0.85;
+const BANQUET_SEATED_DEPTH = 0.34;
+const BANQUET_ROW_PITCH = BANQUET_SEAT_RADIUS * 2 + BANQUET_SEATED_DEPTH;
+const BANQUET_FIRST_ROW_Z = -3.09;
+const BANQUET_LAST_ROW_Z = 2.35;
+const MAX_BANQUET_TABLES = 3 * (Math.floor((BANQUET_LAST_ROW_Z - BANQUET_FIRST_ROW_Z) / BANQUET_ROW_PITCH) + 1);
+
 // Real seated guests ringed around each dinner table, facing the centre, feet
 // on the floor — reuses the instanced congregation meshes.
 function buildReceptionSeats(tablePositions: Array<[number, number, number]>, seatsPerTable: number | number[]): CongregationSeat[] {
   const seats: CongregationSeat[] = [];
   // Tight enough that the seat ring clears the head table / dance floor by the
   // room's margins, wide enough that guests sit just outside the 0.58 cloth.
-  const radius = 0.85;
+  const radius = BANQUET_SEAT_RADIUS;
 
   tablePositions.forEach(([tx, , tz], tableIndex) => {
     const seatsHere = Array.isArray(seatsPerTable) ? seatsPerTable[tableIndex] ?? 0 : seatsPerTable;

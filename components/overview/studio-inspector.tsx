@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronRight, Dot, Sunrise, SunMedium } from "lucide-react";
+import { SCENE_UNIT_METRES, aisleWidthInFeet } from "@/components/wedding-studio/church-scene";
 import type { SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -161,7 +162,10 @@ export function StudioInspector({
         </div>
 
         <p className="vstudio-offset" aria-live="polite">
-          {t("Offset")}: {offset.x.toFixed(2)} m · {offset.z.toFixed(2)} m
+          {/* The nudge moves the object in SCENE UNITS, and a scene unit is 1.591 m,
+              so printing the raw value with an "m" understated every move by 59%. */}
+          {t("Offset")}: {(offset.x * SCENE_UNIT_METRES).toFixed(2)} m ·{" "}
+          {(offset.z * SCENE_UNIT_METRES).toFixed(2)} m
         </p>
       </div>
     );
@@ -249,8 +253,11 @@ export function StudioInspector({
         <label className="vstudio-field">
           <span className="vstudio-field-split">
             {t("Aisle Width")}
+            {/* The stored value is a legacy 5-based scale, not feet: it read "5 ft"
+                while the nave rendered 9.66. aisleWidthInFeet converts it from the
+                same pew geometry the scene uses, so the two cannot drift. */}
             <strong>
-              {plan.aisleWidthFeet} {t("ft")}
+              {aisleWidthInFeet(plan.aisleWidthFeet).toFixed(1)} {t("ft")}
             </strong>
           </span>
           <input

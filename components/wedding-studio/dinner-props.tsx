@@ -30,7 +30,7 @@ export type TablescapeColors = {
 // as a child at an adult table.
 //
 //   0.60 x 0.82 = 0.49
-const TABLE_HEIGHT = 0.49;
+export const TABLE_HEIGHT = 0.49;
 
 // A single candle flame that breathes. No light attached — the glow is carried
 // by the bloom pass, so N candles cost N tiny emissive spheres, not N lights.
