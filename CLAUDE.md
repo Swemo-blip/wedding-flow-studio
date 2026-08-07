@@ -257,6 +257,22 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   object measures. Also: the whole interior sits in `<group position={[0, 0, 0.25]}>`
   but the camera does not, so every `WEST_WALL_Z` / `PROCESSION_*_Z` constant is
   local and world z = local + 0.25.
+- **A scene unit is 1.591 m, and `church-scene.tsx` has a comment claiming 0.63.** That
+  note (near `PROCESSION_DURATION`) is the INVERSE of the truth and is the root cause of
+  a whole family of shipped bugs: anyone reasoning from it wrote a metre value into a
+  unit field. It produced a first-person camera at 2.39 m eye height, 0.64 m above the
+  crown of the bride it was supposed to be, and a couple photo disc floating clear of
+  their hair. The note is kept in place with a correction beside it precisely so the next
+  reader sees the trap rather than the claim. `npm run check:figures` now asserts that
+  any constant placing something at a figure stays below that figure's crown.
+- **The 2026-08-06 scene audit is in `docs/scene-geometry-audit-2026-08-06.md`** — 43
+  measured findings that survived an adversarial pass, ranked, with five fixed. Read its
+  warning first: the defects are usually real but **the magnitudes and the stated causes
+  often are not**. Two claims blamed a bounding box "half empty air"; the GLBs measure
+  100% visible mesh. The candle flame floats 0.22 m, not the claimed 0.70. The biggest
+  single group is that seated figures do not meet their furniture anywhere — pews, dinner
+  chairs and the reception editor all place the seat surface 12-16 cm above the height at
+  which the model's body actually rests.
 - **`wedding-flow-studio.layout.v1` is shared** by the home studio and
   `/ceremony`. Always persist the *live hydrated* `sceneEdits`, and never
   re-derive style fields from `wedding.style` once a layout is saved — both

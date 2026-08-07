@@ -421,6 +421,33 @@ if (checkMode) {
     assert(Math.abs(bookY - palmY) < 0.05, "psalter sits in the hands (height)", `book y ${bookY}, palms y ${palmY.toFixed(3)}`);
   }
 
+  // Constants that place something AT a figure — an eye-height camera, a photo disc
+  // standing in for a face. Both were metre values written into unit fields, which put
+  // the first-person camera 0.64 m above the crown of the person it represents and the
+  // couple's uploaded photo clear of their hair. Checked against the figure's own
+  // documented height rather than against anything real-world.
+  const FIGURE_HEIGHT_UNITS = 1.1;
+  const EYE_FRACTION = 0.93;
+  const eyeHeight = FIGURE_HEIGHT_UNITS * EYE_FRACTION;
+  for (const token of ["COUPLE_FACE_Y", "FIRST_PERSON_EYE_Y"]) {
+    const declared = new RegExp(`const ${token} = ([\\d.]+)`).exec(source);
+    if (!declared) {
+      continue;
+    }
+
+    const value = Number(declared[1]);
+    assert(
+      value < FIGURE_HEIGHT_UNITS,
+      `${token} is below the crown`,
+      `${value} vs a figure ${FIGURE_HEIGHT_UNITS} units tall`
+    );
+    assert(
+      Math.abs(value - eyeHeight) < 0.12,
+      `${token} is near eye height`,
+      `${value}, eyes are at ${eyeHeight.toFixed(3)}`
+    );
+  }
+
   console.log(`\n${GLB}`);
   for (const line of pass) {
     console.log(`  PASS  ${line}`);

@@ -1521,7 +1521,12 @@ function ChurchPendant({ candleColor, position }: { candleColor: string; positio
         <cylinderGeometry args={[0.11, 0.13, 0.3, 8]} />
         <meshStandardMaterial color="#6e5326" metalness={0.78} roughness={0.34} />
       </mesh>
-      <FlickerFlame base={2} color={candleColor} position={[0, -0.02, 0]} radius={0.075} seed={position[0] * 2.9 + position[2] * 1.7} />
+      {/* The flame was at [0, -0.02, 0] — the cup's OWN centre. cylinderGeometry is
+          closed at both ends unless openEnded is set, so the cup above is a sealed
+          opaque brass can spanning y -0.17..0.13, and a 0.075-radius flame inside a
+          0.11-radius sealed cylinder cannot be seen from anywhere. Every pendant in
+          the nave was an unlit brass cup. 0.18 clears the rim at 0.13. */}
+      <FlickerFlame base={2} color={candleColor} position={[0, 0.18, 0]} radius={0.075} seed={position[0] * 2.9 + position[2] * 1.7} />
     </group>
   );
 }
@@ -1873,7 +1878,12 @@ function AltarArrangement({ palette, position }: { palette: Palette; position: [
   return (
     <group position={position}>
       <primitive object={vase} />
-      <FlowerCluster palette={palette} position={[0, 0.2, 0]} radius={0.17} />
+      {/* The vase is normalised to 0.22, so its mouth is at y 0.22. FlowerCluster
+          scales BLOOM_LAYOUT/LEAF_LAYOUT by its radius, and those span y -0.44..0.68,
+          so at position 0.2 with radius 0.17 the lowest leaf sat at 0.125 — 0.095
+          units (0.15 m) down inside an opaque vase. 0.28 leaves the tips just inside
+          the rim, which is where a hand-tied arrangement's stems belong. */}
+      <FlowerCluster palette={palette} position={[0, 0.28, 0]} radius={0.17} />
     </group>
   );
 }
@@ -1883,11 +1893,17 @@ function AltarCandle({ position, scale = 1 }: { position: [number, number, numbe
   return (
     <group position={position} scale={scale}>
       <primitive object={model} />
-      <mesh position={[0, 0.7, 0]}>
+      {/* useNormalizedModel scales the GLB so its bbox height is exactly the target
+          and drops its base to y 0, so this candlestick's top is at 0.56 — MEASURED,
+          because the obvious explanation for the gap (a bbox padded with empty air)
+          turned out to be false: the visible mesh is 100% of the box. The flame was
+          at 0.7, floating 0.14 units — 0.22 m — above the holder with nothing under
+          it. 0.582 rests the sphere's underside on the top. */}
+      <mesh position={[0, 0.582, 0]}>
         <sphereGeometry args={[0.022, 8, 8]} />
         <meshStandardMaterial color="#ffd99a" emissive="#ffb95e" emissiveIntensity={3} toneMapped={false} />
       </mesh>
-      <pointLight color="#ffca8c" decay={2} distance={2.4} intensity={2} position={[0, 0.72, 0]} />
+      <pointLight color="#ffca8c" decay={2} distance={2.4} intensity={2} position={[0, 0.6, 0]} />
     </group>
   );
 }
@@ -1949,7 +1965,12 @@ const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d
 // drawn only for the guests who actually uploaded a picture. Everyone else keeps
 // the sculpted alabaster head, which is honest: no invented likeness.
 const CONGREGATION_FACE_Y = 0.79;
-const COUPLE_FACE_Y = 1.27;
+// Eye height, not a guess: the documented standing figure is 1.10 scene units for a
+// 1.75 m person, and a human's eyes sit at about 93% of stature, so 1.02. This was
+// 1.27 — 0.17 units, 0.27 m, ABOVE the crown — so an uploaded couple photo rendered
+// as a disc hovering clear of the hair like a balloon on a string. The congregation's
+// own constant below was right all along, which is what made this one measurable.
+const COUPLE_FACE_Y = 1.02;
 
 function FaceDisc({ photoUrl, radius }: { photoUrl: string; radius: number }) {
   const texture = useMemo(() => {
@@ -2549,7 +2570,16 @@ const PROCESSION_END_Z = -2.55;
 // 6.95 m of aisle. 13 s peaked at 1.07 m/s — a hurry, not a processional.
 // 20 s averages ~0.35 m/s at this world's 0.63 scale, a ceremonial pace.
 const PROCESSION_DURATION = 20;
-const FIRST_PERSON_EYE_Y = 1.5;
+// 1.02 units = 1.62 m of eye height. It was 1.5, which is 2.39 m — the camera that
+// is supposed to show the day through the bride's or groom's eyes rode 0.40 units
+// (0.64 m) above their own crown, looking over their partner's head.
+//
+// The comment above is the root cause of this whole family of bugs, preserved
+// deliberately: "this world's 0.63 scale" is the INVERSE of the truth. One unit is
+// 1.591 m, not 0.63 m, so this aisle is 11.06 m and not 6.95, and the pace is
+// 0.55 m/s and not 0.35. Anyone who reasoned from that note wrote a metre value into
+// a unit field.
+const FIRST_PERSON_EYE_Y = 1.02;
 
 // An A-line gown profile, revolved. It was a truncated cone (a 20-segment cylinder
 // tapering 0.1 to 0.27), which is the single most lay-visible defect on the bride:
