@@ -92,7 +92,7 @@ property implies. This is why earlier palette changes shipped looking half-done.
 `npm run check:colour` (`--check`) is the half of that audit which can FAIL. It
 measures only the roles with an unambiguous floor — a colour on a `:focus` rule
 (3:1, because a focus ring IS the boundary that identifies a control),
-`accent-color`/`caret-color` (3:1), and `color` (4:1.5) — and it fails a value only
+`accent-color`/`caret-color` (3:1), and `color` (4.5:1) — and it fails a value only
 when it misses against ALL THREE light page surfaces, so it cannot invent a finding
 about a background it cannot see. Light values are **named, not dropped**: 31 of
 them sit on the render or on glass and the stylesheet cannot say which, so the
