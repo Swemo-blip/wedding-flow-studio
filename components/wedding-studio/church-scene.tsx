@@ -3291,6 +3291,12 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
         </group>
       ))}
 
+      {/* Tall east lancets flanking the chancel arch — the owner's reference shows
+          two arched leaded windows either side of the cross, and this wall was
+          bare stone from the pilasters out. y 2.3 centres them in the hero frame;
+          x +-2.5 sits between the pilasters (+-1.55) and the nave corner. */}
+      <StainedGlassWindow position={[-2.5, 2.3, -5.7]} rectHeight={1.7} seed={6} width={0.8} />
+      <StainedGlassWindow position={[2.5, 2.3, -5.7]} rectHeight={1.7} seed={3} width={0.8} />
       <StainedGlassWindow position={[-2.9, 4.94, -5.7]} rectHeight={0.9} seed={4} width={0.7} />
       <StainedGlassWindow position={[2.9, 4.94, -5.7]} rectHeight={0.9} seed={1} width={0.7} />
       <Crucifix position={[0, 2.14, -5.66]} />
