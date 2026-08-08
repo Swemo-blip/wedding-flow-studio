@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Billboard, ContactShadows, Html, useGLTF, useTexture } from "@react-three/drei";
+import { Billboard, ContactShadows, Html, MeshReflectorMaterial, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
@@ -107,13 +107,36 @@ function useSurfaceMaps(set: SurfaceTextureSet, repeatX: number, repeatY: number
 
 // Polished stone nave floor (marble PBR). color keeps the palette tint so the
 // floor still responds to the couple's style, multiplied over the scan.
-function TexturedGround({ color, position, size }: { color: string; position: [number, number, number]; size: [number, number] }) {
+function TexturedGround({ color, position, sheen = false, size }: { color: string; position: [number, number, number]; sheen?: boolean; size: [number, number] }) {
   const maps = useSurfaceMaps(CHURCH_TEXTURES.floor, size[0] / 1.4, size[1] / 1.4);
 
   return (
     <mesh position={position} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={size} />
-      <meshStandardMaterial {...maps} color={color} envMapIntensity={1.2} metalness={0.05} normalScale={new THREE.Vector2(0.5, 0.5)} roughness={0.9} />
+      {sheen ? (
+        // The reference's floor carries a soft blurred reflection of the pews and
+        // window light — the single strongest archviz cue in the image. drei's
+        // MeshReflectorMaterial renders the scene once more into a small RT, so it
+        // is only mounted where the composer already runs (the interiors).
+        <MeshReflectorMaterial
+          {...maps}
+          blur={[320, 90]}
+          color={color}
+          depthScale={0.8}
+          envMapIntensity={1.2}
+          maxDepthThreshold={1.6}
+          metalness={0.05}
+          minDepthThreshold={0.6}
+          mirror={0}
+          mixBlur={1}
+          mixStrength={5}
+          normalScale={new THREE.Vector2(0.5, 0.5)}
+          resolution={640}
+          roughness={0.82}
+        />
+      ) : (
+        <meshStandardMaterial {...maps} color={color} envMapIntensity={1.2} metalness={0.05} normalScale={new THREE.Vector2(0.5, 0.5)} roughness={0.9} />
+      )}
     </mesh>
   );
 }
@@ -477,19 +500,19 @@ export function CeremonyScene({
             args={[
               preset.hemisphereSky,
               preset.hemisphereGround,
-              effectiveVenue === "church" ? 0.22 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
+              effectiveVenue === "church" ? 0.14 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
             ]}
           />
           <ambientLight
             color={preset.ambientColor}
-            intensity={effectiveVenue === "church" ? 0.11 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
+            intensity={effectiveVenue === "church" ? 0.055 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
           />
           <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 10, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={effectiveVenue === "church" ? 2.9 : effectiveVenue === "hall" ? 2.2 : preset.keyIntensity}
-            position={[4.5, 9, 5.5]}
+            intensity={effectiveVenue === "church" ? 3.6 : effectiveVenue === "hall" ? 2.2 : preset.keyIntensity}
+            position={effectiveVenue === "church" ? [-6, 8.5, -0.5] : [4.5, 9, 5.5]}
             shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
             shadow-camera-far={32}
@@ -508,7 +531,7 @@ export function CeremonyScene({
                 ? isDay
                   ? effectiveVenue === "hall"
                     ? 2.4
-                    : 1.5
+                    : 2.3
                   : effectiveVenue === "hall"
                     ? 7
                     : 9
@@ -527,7 +550,7 @@ export function CeremonyScene({
               (Poly Haven "church_museum") so reflections match the room the viewer
               is standing in; open venues keep the warm lounge probe. */}
           <HdrEnvironment
-            intensity={effectiveVenue === "church" ? (isDay ? 0.62 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45}
+            intensity={effectiveVenue === "church" ? (isDay ? 0.48 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45}
             url={effectiveVenue === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
           />
           {/* Skip the contact-shadow plane in BOTH interiors: it's a second
@@ -909,7 +932,7 @@ function WeddingStageInterior({
                 </mesh>
               }
             >
-              <TexturedGround color={surface.floor} position={[0, 0, 0.25]} size={[9.8, 12.8]} />
+              <TexturedGround color={surface.floor} position={[0, 0, 0.25]} sheen size={[9.8, 12.8]} />
             </Suspense>
           ) : (
             <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.25]}>
@@ -1536,8 +1559,14 @@ function ChurchPendant({ candleColor, drop, position }: { candleColor: string; d
         <meshStandardMaterial color="#2c2519" roughness={0.8} />
       </mesh>
       <mesh position={[0, -0.02, 0]}>
-        <cylinderGeometry args={[0.11, 0.13, 0.3, 8]} />
-        <meshStandardMaterial color="#6e5326" metalness={0.78} roughness={0.34} />
+        <cylinderGeometry args={[0.11, 0.13, 0.3, 12]} />
+        <meshStandardMaterial color="#8a6f36" envMapIntensity={1.6} metalness={0.85} roughness={0.26} />
+      </mesh>
+      {/* Warm emissive throat so the cup glows from its own candle instead of
+          rendering as a black cone from below — the angle the hero shot sees. */}
+      <mesh position={[0, 0.11, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.045, 0.105, 12]} />
+        <meshStandardMaterial color="#ffca8c" emissive="#ffb95e" emissiveIntensity={1.6} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
       {/* The flame was at [0, -0.02, 0] — the cup's OWN centre. cylinderGeometry is
           closed at both ends unless openEnded is set, so the cup above is a sealed
@@ -1557,13 +1586,17 @@ function pendantDrop(ceilingY: number) {
   return Math.min(2.05, ceilingY * 0.36);
 }
 
-function ChurchPendantRow({ candleColor, ceilingY }: { candleColor: string; ceilingY: number }) {
-  const drop = pendantDrop(ceilingY);
+function ChurchPendantRow({ candleColor, ceilingY, drop: dropOverride }: { candleColor: string; ceilingY: number; drop?: number }) {
+  const drop = dropOverride ?? pendantDrop(ceilingY);
 
   return (
     <group>
+      {/* x ±1.7 hangs the pendants over the pew blocks rather than against the side
+          walls, and the church's deeper drop brings the cups down into the top of
+          the hero frame — in the owner's reference the pendants are IN the shot,
+          mid-room, not tucked out of view. Verified against a captured frame. */}
       {[-3.2, -1, 1.2, 3.2].map((z) =>
-        [-3.4, 3.4].map((x) => (
+        [-1.7, 1.7].map((x) => (
           <ChurchPendant candleColor={candleColor} drop={drop} key={`${x}-${z}`} position={[x, ceilingY - drop, z]} />
         ))
       )}
@@ -2696,9 +2729,18 @@ function Bouquet() {
     // and arrived it stays on her side of the couple instead of drifting to the
     // centreline in front of the groom (which read as him carrying it in).
     <group position={[0, 0.56, 0.13]}>
+      {/* Captured-frame finding 2026-08-08: smooth spheres read as a ball of dough
+          in her hands. The petal-built bloom geometry the altar arrangements use
+          (see the note above getBloomGeometry) is what a posy actually looks like. */}
       {blooms.map(([x, y, z, r], index) => (
-        <mesh castShadow key={index} position={[x, y, z]}>
-          <sphereGeometry args={[r, 10, 10]} />
+        <mesh
+          castShadow
+          geometry={getBloomGeometry()}
+          key={index}
+          position={[x, y, z]}
+          rotation={[x * 6, y * 8, z * 6]}
+          scale={r * 1.15}
+        >
           <meshStandardMaterial color={index % 2 === 0 ? "#f4ece0" : "#e7cdcf"} roughness={0.82} />
         </mesh>
       ))}
@@ -3253,11 +3295,11 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
       <StainedGlassWindow position={[2.9, 4.94, -5.7]} rectHeight={0.9} seed={1} width={0.7} />
       <Crucifix position={[0, 2.14, -5.66]} />
 
-      <WindowGobos intensity={2.6} />
+      <WindowGobos intensity={4.2} />
 
-      <pointLight color="#ffdca0" decay={2} distance={9} intensity={1.5} position={[0, 3.6, -1]} />
-      <pointLight color="#ffe7bc" decay={2} distance={9} intensity={1.4} position={[0, 3.4, 3]} />
-      <hemisphereLight args={["#fff1d2", "#cdb792", 0.34]} />
+      <pointLight color="#ffdca0" decay={2} distance={9} intensity={0.8} position={[0, 3.6, -1]} />
+      <pointLight color="#ffe7bc" decay={2} distance={9} intensity={0.7} position={[0, 3.4, 3]} />
+      <hemisphereLight args={["#fff1d2", "#cdb792", 0.2]} />
     </group>
   );
 }
@@ -3359,7 +3401,7 @@ function FlickerFlame({
   });
 
   return (
-    <mesh position={position}>
+    <mesh position={position} scale={[1, 1.75, 1]}>
       <sphereGeometry args={[radius, 8, 8]} />
       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={base} ref={materialRef} toneMapped={false} />
     </mesh>
@@ -3388,17 +3430,25 @@ function CandleFloorPool({ position, strength = 1 }: { position: [number, number
 }
 
 function CandleStand({ candleColor, position, scale = 1 }: { candleColor: string; position: [number, number, number]; scale?: number }) {
+  // Captured-frame finding 2026-08-08: the old stand was a fat brass cone (0.05 at
+  // the base) topped by a 0.035-radius wax puck — in the near foreground it read as
+  // a gold spike carrying a white pill. A church aisle stand is a slim pole, a drip
+  // pan, and a tall thin taper.
   return (
     <group position={position} scale={scale}>
-      <mesh castShadow position={[0, 0.3, 0]}>
-        <cylinderGeometry args={[0.016, 0.05, 0.6, 8]} />
+      <mesh castShadow position={[0, 0.31, 0]}>
+        <cylinderGeometry args={[0.013, 0.03, 0.62, 10]} />
         <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.28} />
       </mesh>
-      <mesh castShadow position={[0, 0.66, 0]}>
-        <cylinderGeometry args={[0.035, 0.035, 0.13, 8]} />
+      <mesh castShadow position={[0, 0.63, 0]}>
+        <cylinderGeometry args={[0.045, 0.03, 0.018, 12]} />
+        <meshStandardMaterial color="#a8833f" metalness={0.85} roughness={0.3} />
+      </mesh>
+      <mesh castShadow position={[0, 0.77, 0]}>
+        <cylinderGeometry args={[0.014, 0.016, 0.28, 8]} />
         <meshStandardMaterial color="#efe3c4" roughness={0.6} />
       </mesh>
-      <FlickerFlame base={2.2} color={candleColor} position={[0, 0.75, 0]} radius={0.024} seed={position[0] * 3.7 + position[2] * 1.31} />
+      <FlickerFlame base={2.2} color={candleColor} position={[0, 0.93, 0]} radius={0.018} seed={position[0] * 3.7 + position[2] * 1.31} />
     </group>
   );
 }
@@ -3488,13 +3538,17 @@ function ArchChandelier({ candleColor }: { candleColor: string }) {
 function Dais({ palette }: { palette: Palette }) {
   return (
     <group position={[0, 0, 0.1]}>
+      {/* Captured-frame finding 2026-08-08: this was #37332a — a near-black charcoal
+          disc, the single darkest mass in the hero frame, in a limestone church whose
+          reference shows a stone chancel step. Now dressed limestone, a shade deeper
+          than the floor so the step still reads as a step. */}
       <mesh receiveShadow position={[0, 0.045, 0]}>
         <cylinderGeometry args={[1.85, 1.95, 0.09, 44]} />
-        <meshStandardMaterial color="#37332a" roughness={0.62} />
+        <meshStandardMaterial color="#d8cdb4" roughness={0.82} />
       </mesh>
       <mesh position={[0, 0.095, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.72, 1.8, 44]} />
-        <meshStandardMaterial color={palette.accent} metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#a8905e" metalness={0.6} roughness={0.4} />
       </mesh>
     </group>
   );
@@ -3661,7 +3715,13 @@ function LightingRibbon({ decorScale, palette, venueType }: { decorScale: number
     // The church nave's ceiling springs from the wall top at 5.6; the hall's is a flat
     // plane at its own back-wall height of 3.8. Both are read from the values the
     // rooms themselves are built with rather than repeated here.
-    return <ChurchPendantRow candleColor={palette.candle} ceilingY={venueType === "hall" ? 3.78 : 5.6} />;
+    return (
+      <ChurchPendantRow
+        candleColor={palette.candle}
+        ceilingY={venueType === "hall" ? 3.78 : 5.6}
+        drop={venueType === "hall" ? undefined : 3.2}
+      />
+    );
   }
 
   const poleHeight = venueType === "garden" || venueType === "beach" ? 1.18 : 1.34;
