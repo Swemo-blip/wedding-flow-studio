@@ -1138,7 +1138,63 @@ function EditableSceneObject({
   return <group position={[offset.x, 0, offset.z]}>{children}</group>;
 }
 
+// Baked-GI shells (docs/blender-baked-venue.md, produced by scripts/bake-church-
+// shell.py — headless Cycles, no artist required since 2026-08-08). Only venues
+// listed here attempt to load, so a missing asset never suspends or throws; the
+// analytic shells below remain the permanent fallback. A shell entry is added ONLY
+// after its bake has been looked at through the capture loop.
+const BAKED_VENUE_URLS: Partial<Record<StudioVenueType, string>> = {
+  // church: assetPath("/models/venues/church-baked.glb"),
+};
+Object.values(BAKED_VENUE_URLS).forEach((url) => url && useGLTF.preload(url));
+
+function BakedVenueShell({ url, viewMode }: { url: string; viewMode: StudioViewMode }) {
+  const { scene } = useGLTF(url);
+  const shell = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      // The lighting is IN the texture — render unlit so the analytic rig (kept
+      // for the dynamic layers) does not double-light the room.
+      const source = mesh.material as THREE.MeshStandardMaterial;
+      mesh.material = new THREE.MeshBasicMaterial({ map: source.map ?? null, toneMapped: true });
+      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+    });
+    return clone;
+  }, [scene]);
+
+  useEffect(() => {
+    // The bake names its ceiling node so the top-down plan view can see the room.
+    shell.traverse((object) => {
+      if (object.name === "Ceiling") {
+        object.visible = viewMode !== "top";
+      }
+    });
+  }, [shell, viewMode]);
+
+  return <primitive object={shell} />;
+}
+
 function VenueBoundary({ doorsOpen = 0, palette, venueType, viewMode }: { doorsOpen?: number; palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
+  const bakedUrl = BAKED_VENUE_URLS[venueType];
+  if (bakedUrl) {
+    const fallback =
+      venueType === "church" ? (
+        <ChurchNave doorsOpen={doorsOpen} palette={palette} viewMode={viewMode} />
+      ) : (
+        <RoomFrame palette={palette} venueType={venueType} viewMode={viewMode} />
+      );
+    return (
+      <Suspense fallback={fallback}>
+        <BakedVenueShell url={bakedUrl} viewMode={viewMode} />
+      </Suspense>
+    );
+  }
+
   if (venueType === "garden" || venueType === "beach") {
     return <OutdoorVenueFrame palette={palette} venueType={venueType} />;
   }
