@@ -42,3 +42,8 @@ Loaded as-is and size-normalized at runtime; used at the ceremony focal point.
 The altar flower arrangement is the real `altar_vase.glb` holding the in-engine
 ivory bloom cluster (the bare CC0 flower meshes read as loose stems, so the
 vase + stylized blooms gives a cleaner wedding arrangement).
+
+## venues/church-baked.glb
+
+Baked in-project with scripts/bake-church-shell.py (Blender 5.2 Cycles, headless).
+Geometry authored from the scene's own constants; no external assets. CC0.

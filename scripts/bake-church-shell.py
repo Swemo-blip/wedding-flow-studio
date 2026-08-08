@@ -26,12 +26,12 @@ from mathutils import Euler
 
 OUT = sys.argv[sys.argv.index("--") + 1]
 
-WALL_ALBEDO = (0.842, 0.788, 0.686, 1.0)
-CEILING_ALBEDO = (0.925, 0.882, 0.795, 1.0)
+WALL_ALBEDO = (0.76, 0.7, 0.585, 1.0)
+CEILING_ALBEDO = (0.86, 0.81, 0.71, 1.0)
 WARM = (1.0, 0.83, 0.6)
 SHELL_RES = 2048
 CEILING_RES = 1024
-SAMPLES = 384
+SAMPLES = 512
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -128,29 +128,72 @@ def add_area(name, center, size, rotation, power, color=WARM):
 
 import math
 
-# Side windows: x +-4.79 facing inward. A Blender area light points down -Z; to
-# face +X rotate +90deg about Blender Y, to face -X rotate -90deg. Tilted a few
-# degrees downward so the pools rake across the floor, not the opposite wall.
-for index, app_z in enumerate((-3.2, -0.7, 1.8)):
-    add_area(f"WinL{index}", (-4.7, 2.576, app_z), (1.0, 2.4), (0, math.radians(-75), 0), 320)
-    add_area(f"WinR{index}", (4.7, 2.576, app_z), (1.0, 2.4), (0, math.radians(75), 0), 220)
+# BAKE #2 CORRECTION: plain area lights at 320W blew the interior faces past 1.0,
+# which an 8-bit PNG clips to flat white — and an unlit baked wall can no longer
+# receive the app's stained-glass gobo spotlights, so the lattice character died
+# with it. Both fixed the same way: the windows become PATTERNED EMISSIVE PLANES.
+# Cycles samples textured emission as light, so the mosaic prints itself into the
+# plaster with real bounce — the lattice is IN the bake now, not painted on after.
 
-# East lancets + clerestory: behind the altar, facing into the nave (+app-z is
-# Blender -Y; a light facing that way rotates -90deg about Blender X).
+
+def add_window_emitter(name, center, size, yaw_axis, strength):
+    bpy.ops.mesh.primitive_plane_add(size=1, location=app_to_blender(*center))
+    plane = bpy.context.active_object
+    plane.name = name
+    plane.scale = (size[0], size[1], 1)
+    # A default plane faces Blender +Z. Stand it upright facing the nave.
+    if yaw_axis == "left":
+        plane.rotation_euler = Euler((0, math.radians(90), 0))
+    elif yaw_axis == "right":
+        plane.rotation_euler = Euler((0, math.radians(-90), 0))
+    else:
+        plane.rotation_euler = Euler((math.radians(-90), 0, 0))
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
+
+    material = bpy.data.materials.new(f"{name}Mat")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    out = nodes.new("ShaderNodeOutputMaterial")
+    emission = nodes.new("ShaderNodeEmission")
+    # Leaded-mosaic light: voronoi cells in warm golds with muted rose/sage notes,
+    # matching the app's own stained-glass palette.
+    voronoi = nodes.new("ShaderNodeTexVoronoi")
+    voronoi.inputs["Scale"].default_value = 9.0
+    ramp = nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (1.0, 0.78, 0.45, 1.0)
+    ramp.color_ramp.elements[1].color = (0.85, 0.62, 0.5, 1.0)
+    mid = ramp.color_ramp.elements.new(0.55)
+    mid.color = (0.97, 0.9, 0.68, 1.0)
+    links.new(voronoi.outputs["Distance"], ramp.inputs["Fac"])
+    links.new(ramp.outputs["Color"], emission.inputs["Color"])
+    emission.inputs["Strength"].default_value = strength
+    links.new(emission.outputs["Emission"], out.inputs["Surface"])
+    plane.data.materials.append(material)
+    # Emitters are light sources for the bake, not exported geometry.
+    plane.hide_render = False
+    return plane
+
+
+emitters = []
+for app_z in (-3.2, -0.7, 1.8):
+    emitters.append(add_window_emitter(f"WinL{app_z}", (-4.72, 2.576, app_z), (1.0, 2.4), "left", 22))
+    emitters.append(add_window_emitter(f"WinR{app_z}", (4.72, 2.576, app_z), (1.0, 2.4), "right", 14))
 for app_x in (-2.5, 2.5):
-    add_area(f"East{app_x}", (app_x, 2.3, -5.6), (0.8, 1.7), (math.radians(-80), 0, 0), 150)
+    emitters.append(add_window_emitter(f"East{app_x}", (app_x, 2.3, -5.62), (0.8, 1.7), "flat", 10))
 for app_x in (-2.9, 2.9):
-    add_area(f"Clere{app_x}", (app_x, 4.94, -5.6), (0.7, 0.9), (math.radians(-80), 0, 0), 70)
+    emitters.append(add_window_emitter(f"Clere{app_x}", (app_x, 4.94, -5.62), (0.7, 0.9), "flat", 6))
 
 # Soft daylight through the west portal, and a whisper of warm ambient so no
 # corner goes to black — the reference's shadows sit near L* 35, never 0.
-add_area("Portal", (0, 2.4, 6.1), (1.6, 2.6), (math.radians(80), 0, 0), 120, (1.0, 0.93, 0.8))
+add_area("Portal", (0, 2.4, 6.1), (1.6, 2.6), (math.radians(80), 0, 0), 55, (1.0, 0.93, 0.8))
 world = bpy.data.worlds.new("World")
 scene.world = world
 world.use_nodes = True
 bg = world.node_tree.nodes["Background"]
 bg.inputs[0].default_value = (0.86, 0.78, 0.66, 1.0)
-bg.inputs[1].default_value = 0.14
+bg.inputs[1].default_value = 0.1
 
 # --- bake: diffuse direct+indirect+color = the finished unlit surface --------
 scene.render.bake.use_pass_direct = True
@@ -175,6 +218,20 @@ for obj, image in ((shell, shell_img), (ceiling, ceiling_img)):
     bsdf = nodes["Principled BSDF"]
     tex = nodes.active
     material.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+
+# PACK the baked images or the exporter embeds NOTHING: a generated image with no
+# filepath exports as an empty reference, the app's MeshBasicMaterial gets a null
+# map, and the whole room renders as white void. Found the hard way on bake #1.
+# Also save PNG copies so the bake can be inspected DIRECTLY as image files —
+# cheaper than a browser round, and it separates "bad bake" from "bad export".
+import os
+inspect_dir = os.path.join(os.path.dirname(os.path.abspath(OUT)), "..", "..", "..", "scratch-bakes")
+os.makedirs(inspect_dir, exist_ok=True)
+for image, label in ((shell_img, "shell"), (ceiling_img, "ceiling")):
+    image.filepath_raw = os.path.join(inspect_dir, f"{label}.png")
+    image.file_format = "PNG"
+    image.save()
+    image.pack()
 
 bpy.ops.object.select_all(action="DESELECT")
 shell.select_set(True)

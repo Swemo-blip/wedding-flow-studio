@@ -1140,11 +1140,15 @@ function EditableSceneObject({
 
 // Baked-GI shells (docs/blender-baked-venue.md, produced by scripts/bake-church-
 // shell.py — headless Cycles, no artist required since 2026-08-08). Only venues
-// listed here attempt to load, so a missing asset never suspends or throws; the
-// analytic shells below remain the permanent fallback. A shell entry is added ONLY
-// after its bake has been looked at through the capture loop.
+// listed here attempt to load, so a missing asset never suspends or throws.
+//
+// THE SEAM IS INSIDE ChurchNave, not at VenueBoundary: the first wiring swapped the
+// whole nave for bare baked walls and deleted the arch, cross, windows, doors and
+// lights with it — the room rendered as white void. The baked shell replaces ONLY
+// the plain wall/ceiling geometry; every piece of dressing stays app-drawn on top.
+// A shell entry is added ONLY after its bake has been looked at via the capture loop.
 const BAKED_VENUE_URLS: Partial<Record<StudioVenueType, string>> = {
-  // church: assetPath("/models/venues/church-baked.glb"),
+  church: assetPath("/models/venues/church-baked.glb")
 };
 Object.values(BAKED_VENUE_URLS).forEach((url) => url && useGLTF.preload(url));
 
@@ -1180,21 +1184,6 @@ function BakedVenueShell({ url, viewMode }: { url: string; viewMode: StudioViewM
 }
 
 function VenueBoundary({ doorsOpen = 0, palette, venueType, viewMode }: { doorsOpen?: number; palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
-  const bakedUrl = BAKED_VENUE_URLS[venueType];
-  if (bakedUrl) {
-    const fallback =
-      venueType === "church" ? (
-        <ChurchNave doorsOpen={doorsOpen} palette={palette} viewMode={viewMode} />
-      ) : (
-        <RoomFrame palette={palette} venueType={venueType} viewMode={viewMode} />
-      );
-    return (
-      <Suspense fallback={fallback}>
-        <BakedVenueShell url={bakedUrl} viewMode={viewMode} />
-      </Suspense>
-    );
-  }
-
   if (venueType === "garden" || venueType === "beach") {
     return <OutdoorVenueFrame palette={palette} venueType={venueType} />;
   }
@@ -3251,6 +3240,7 @@ function WindowGobos({ intensity }: { intensity: number }) {
 }
 
 function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palette: Palette; viewMode: StudioViewMode }) {
+  const bakedShellUrl = BAKED_VENUE_URLS.church;
   // Real naves tower over the congregation — at eye height the ceiling ratio is
   // what separates "church" from "scale model". Everything below derives from
   // this so the room stays coherent.
@@ -3283,10 +3273,16 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
           </group>
         }
       >
-        {[-4.95, 4.95].map((x) => (
-          <StoneWall args={[0.2, wallHeight, 12.4]} color={palette.wall} key={x} position={[x, wallHeight / 2, 0.1]} />
-        ))}
-        <StoneWall args={[10.1, wallHeight + 1.9, 0.22]} color={palette.wall} position={[0, (wallHeight + 1.9) / 2, -5.85]} />
+        {bakedShellUrl ? (
+          <BakedVenueShell url={bakedShellUrl} viewMode={viewMode} />
+        ) : (
+          <>
+            {[-4.95, 4.95].map((x) => (
+              <StoneWall args={[0.2, wallHeight, 12.4]} color={palette.wall} key={x} position={[x, wallHeight / 2, 0.1]} />
+            ))}
+            <StoneWall args={[10.1, wallHeight + 1.9, 0.22]} color={palette.wall} position={[0, (wallHeight + 1.9) / 2, -5.85]} />
+          </>
+        )}
 
         {/* West end. The side walls run z -6.1 to +6.3 and this end was simply
             open — the "From entrance" preset sits at z 9.2 and was looking at a
@@ -3294,14 +3290,18 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
             A box cannot have a hole cut in it without CSG, so the wall IS the
             opening: two piers and a lintel around a 1.2 x 1.4 portal. Those
             figures are derived, not chosen — see PORTAL_* below. */}
-        {[-PORTAL_PIER_X, PORTAL_PIER_X].map((x) => (
-          <StoneWall args={[PORTAL_PIER_WIDTH, wallHeight + 1.9, 0.22]} color={palette.wall} key={x} position={[x, (wallHeight + 1.9) / 2, WEST_WALL_Z]} />
-        ))}
-        <StoneWall
-          args={[PORTAL_WIDTH, wallHeight + 1.9 - PORTAL_HEIGHT, 0.22]}
-          color={palette.wall}
-          position={[0, PORTAL_HEIGHT + (wallHeight + 1.9 - PORTAL_HEIGHT) / 2, WEST_WALL_Z]}
-        />
+        {bakedShellUrl ? null : (
+          <>
+            {[-PORTAL_PIER_X, PORTAL_PIER_X].map((x) => (
+              <StoneWall args={[PORTAL_PIER_WIDTH, wallHeight + 1.9, 0.22]} color={palette.wall} key={x} position={[x, (wallHeight + 1.9) / 2, WEST_WALL_Z]} />
+            ))}
+            <StoneWall
+              args={[PORTAL_WIDTH, wallHeight + 1.9 - PORTAL_HEIGHT, 0.22]}
+              color={palette.wall}
+              position={[0, PORTAL_HEIGHT + (wallHeight + 1.9 - PORTAL_HEIGHT) / 2, WEST_WALL_Z]}
+            />
+          </>
+        )}
         {/* Closed. The doors take an `open` 0-1 so the entrance fly-through can
             swing them on cue, but nothing drives that yet and a door that opens for
             no reason is worse than one that stays shut. */}
@@ -3336,7 +3336,7 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
         <meshStandardMaterial color="#e0d5b8" roughness={0.86} />
       </mesh>
 
-      {showCeiling ? <ChurchCeiling color={palette.wall} wallTopY={wallHeight} /> : null}
+      {showCeiling && !bakedShellUrl ? <ChurchCeiling color={palette.wall} wallTopY={wallHeight} /> : null}
 
       {[-4.6, 4.6].map((x) =>
         columnZs.map((z) => (
