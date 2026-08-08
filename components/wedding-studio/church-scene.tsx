@@ -410,6 +410,13 @@ export function CeremonyScene({
   // dinner. The reception step always renders the hall room, whatever venue a
   // caller passes — the dinner never previews outdoors.
   const effectiveVenue: StudioVenueType = activeStep === "reception" ? "hall" : venueType;
+  // A baked shell carries the room's light in its own pixels, so the analytic rig
+  // only needs to light the DYNAMIC layer — figures, furniture, floor, props.
+  // Fill dims hard (the walls no longer need it); the key dims gently so the
+  // figures keep their shaping. docs/blender-baked-venue.md's ~40% guidance,
+  // tuned against captured frames of both rooms.
+  const bakedFillDim = BAKED_VENUE_URLS[effectiveVenue] ? 0.55 : 1;
+  const bakedKeyDim = BAKED_VENUE_URLS[effectiveVenue] ? 0.8 : 1;
   // Both scenes are interiors; they share the enclosed-room lighting treatment.
   const interiorVenue = effectiveVenue === "church" || effectiveVenue === "hall";
   const { t } = useTranslation();
@@ -509,18 +516,18 @@ export function CeremonyScene({
             args={[
               preset.hemisphereSky,
               preset.hemisphereGround,
-              effectiveVenue === "church" ? 0.14 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity
+              (effectiveVenue === "church" ? 0.14 : effectiveVenue === "hall" ? 0.5 : preset.hemisphereIntensity) * bakedFillDim
             ]}
           />
           <ambientLight
             color={preset.ambientColor}
-            intensity={effectiveVenue === "church" ? 0.055 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity}
+            intensity={(effectiveVenue === "church" ? 0.055 : effectiveVenue === "hall" ? 0.3 : preset.ambientIntensity) * bakedFillDim}
           />
           <directionalLight color={isDay ? "#e4cfa4" : "#aebdd6"} intensity={preset.rimIntensity} position={[-6, 10, -7]} />
           <directionalLight
             castShadow
             color="#ffd9a6"
-            intensity={effectiveVenue === "church" ? 3.6 : effectiveVenue === "hall" ? 2.2 : preset.keyIntensity}
+            intensity={(effectiveVenue === "church" ? 3.6 : effectiveVenue === "hall" ? 2.2 : preset.keyIntensity) * bakedKeyDim}
             position={effectiveVenue === "church" ? [-6, 8.5, -0.5] : [4.5, 9, 5.5]}
             shadow-bias={-0.00015}
             shadow-camera-bottom={-8}
@@ -559,7 +566,7 @@ export function CeremonyScene({
               (Poly Haven "church_museum") so reflections match the room the viewer
               is standing in; open venues keep the warm lounge probe. */}
           <HdrEnvironment
-            intensity={effectiveVenue === "church" ? (isDay ? 0.48 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45}
+            intensity={(effectiveVenue === "church" ? (isDay ? 0.48 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45) * bakedFillDim}
             url={effectiveVenue === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
           />
           {/* Skip the contact-shadow plane in BOTH interiors: it's a second
