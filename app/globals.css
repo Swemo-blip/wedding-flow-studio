@@ -7916,6 +7916,41 @@ a {
   text-align: center;
 }
 
+/* Photo mode: a floating status chip over the stage while the path tracer
+   develops the shot. Dismissable, so it may carry --radius-float and a shadow. */
+.vstudio-photo-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-float);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-float);
+  z-index: 6;
+}
+
+.vstudio-photo-action {
+  padding: 5px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vstudio-photo-action:hover {
+  border-color: var(--accent);
+}
+
 @media (max-width: 720px) {
   .guests-row-head {
     display: none;

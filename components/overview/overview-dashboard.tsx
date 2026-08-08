@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Armchair,
+  Camera,
   Compass,
   Expand,
   Heart,
@@ -18,6 +19,7 @@ import {
   SunMedium,
   Users
 } from "lucide-react";
+import type { PhotoPhase } from "@/components/wedding-studio/photo-mode";
 import { MobileNavigation } from "@/components/app-shell/navigation";
 import { SavedChip } from "@/components/app-shell/saved-chip";
 import { StudioInspector, type SceneWarning, type StudioTool } from "@/components/overview/studio-inspector";
@@ -93,6 +95,35 @@ export function OverviewDashboard() {
   const [dimension, setDimension] = useState<"2d" | "3d">("3d");
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [zoom, setZoom] = useState(1);
+  // Photo mode: freeze the scene and path-trace the current view. The phase
+  // drives the overlay; the canvas itself shows the photo developing.
+  // PARKED 2026-08-08 after a live test froze the tab hard enough that even
+  // devtools could not reach it for five minutes: WebGLPathTracer.setSceneAsync
+  // builds its BVH on the main thread, and this scene flattens to millions of
+  // triangles (96 instanced guests plus subdivided pews). Shipping a button that
+  // freezes the page is worse than not shipping it. The fix is a worker-built BVH
+  // or a slimmed tracer scene, and it must be proven on a live click before this
+  // flag flips. The UI, i18n and overlay are finished and waiting.
+  const PHOTO_MODE_ENABLED = false;
+  const [photoActive, setPhotoActive] = useState(false);
+  const [photoPhase, setPhotoPhase] = useState<PhotoPhase | null>(null);
+  const stageRef = useRef<HTMLElement | null>(null);
+
+  const downloadPhoto = () => {
+    const canvas = stageRef.current?.querySelector("canvas");
+    if (!canvas) {
+      return;
+    }
+    const link = document.createElement("a");
+    link.download = "wedding-flow-studio-photo.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  const closePhoto = () => {
+    setPhotoActive(false);
+    setPhotoPhase(null);
+  };
   const [activeTool, setActiveTool] = useState<StudioTool>("overview");
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [selectedObjectId, setSelectedObjectId] = useState<StudioSceneObjectId>("focalPoint");
@@ -625,6 +656,7 @@ export function OverviewDashboard() {
             <section
               aria-label={isPreview ? t("Ceremony preview") : t("3D venue workspace")}
               className={isPreview ? "vstudio-canvas vstudio-canvas-preview" : "vstudio-canvas"}
+              ref={stageRef}
             >
               <CeremonyScene
                 activeStep={previewWaypoint ? previewWaypoint.step : sceneStep}
@@ -644,6 +676,8 @@ export function OverviewDashboard() {
                 onSelectObject={isPreview ? noopSelectObject : selectObjectFromScene}
                 sceneEdits={sceneEdits}
                 selectedObjectId={isPreview ? "focalPoint" : activeSelectedObjectId}
+                photoActive={photoActive}
+                onPhotoPhase={setPhotoPhase}
                 staging={staging}
                 style={plan.style}
                 venueType={sceneVenueType}
@@ -655,6 +689,27 @@ export function OverviewDashboard() {
                 <div className="vstudio-preview-overlay">
                   <span>{phases[safePhaseIndex]?.timeRange}</span>
                   <strong>{t(phases[safePhaseIndex]?.title ?? "")}</strong>
+                </div>
+              ) : null}
+
+              {photoActive && photoPhase ? (
+                <div aria-live="polite" className="vstudio-photo-overlay" role="status">
+                  {photoPhase.kind === "building" ? <span>{t("Preparing the light…")}</span> : null}
+                  {photoPhase.kind === "sampling" ? (
+                    <span>{t("Developing… {percent}%", { percent: Math.round(photoPhase.fraction * 100) })}</span>
+                  ) : null}
+                  {photoPhase.kind === "failed" ? <span>{t("The photo could not be created on this device.")}</span> : null}
+                  {photoPhase.kind === "done" ? (
+                    <>
+                      <span>{t("Photo ready")}</span>
+                      <button className="vstudio-photo-action" onClick={downloadPhoto} type="button">
+                        {t("Download photo")}
+                      </button>
+                    </>
+                  ) : null}
+                  <button className="vstudio-photo-action" onClick={closePhoto} type="button">
+                    {photoPhase.kind === "done" || photoPhase.kind === "failed" ? t("Back to editing") : t("Cancel")}
+                  </button>
                 </div>
               ) : null}
 
@@ -691,6 +746,18 @@ export function OverviewDashboard() {
                   <Plus aria-hidden="true" size={14} strokeWidth={2} />
                 </button>
                 <i aria-hidden="true" />
+                {PHOTO_MODE_ENABLED ? (
+                  <button
+                    aria-label={t("Take a photo")}
+                    aria-pressed={photoActive}
+                    data-active={photoActive}
+                    onClick={() => (photoActive ? closePhoto() : setPhotoActive(true))}
+                    title={t("Take a photo")}
+                    type="button"
+                  >
+                    <Camera aria-hidden="true" size={14} strokeWidth={1.9} />
+                  </button>
+                ) : null}
                 <button aria-label={t("Toggle fullscreen preview")} onClick={toggleFullscreen} title={t("Toggle fullscreen preview")} type="button">
                   <Expand aria-hidden="true" size={14} strokeWidth={1.9} />
                 </button>

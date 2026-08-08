@@ -11,6 +11,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
+import { PhotoMode, type PhotoPhase } from "@/components/wedding-studio/photo-mode";
 import { RenderBridge } from "@/components/wedding-studio/render-bridge";
 import { SceneBootGate, preloadHdr } from "@/components/wedding-studio/scene-boot";
 import { DinnerChair, DinnerTablescape, TABLE_HEIGHT, type TablescapeColors } from "@/components/wedding-studio/dinner-props";
@@ -206,6 +207,11 @@ type CeremonySceneProps = {
   onMoveStagingMark?: (markId: CeremonyStagingMarkId, x: number, z: number) => void;
   cameraOverride?: SceneCameraOverride | null;
   firstPerson?: CeremonyFirstPerson;
+  // Photo mode: freeze the live loop and let a path tracer accumulate a real
+  // global-illumination render of the current view. Owned by the chrome so the
+  // overlay, progress and download live beside the other canvas controls.
+  photoActive?: boolean;
+  onPhotoPhase?: (phase: PhotoPhase) => void;
   capacity: WeddingStudioCapacity;
   colorDirection: StudioColorDirection;
   highQuality?: boolean;
@@ -387,6 +393,8 @@ export function CeremonyScene({
   dinnerTables,
   cameraOverride = null,
   firstPerson = null,
+  photoActive = false,
+  onPhotoPhase,
   highQuality = true,
   congregationPhotos,
   couplePhotos,
@@ -485,6 +493,7 @@ export function CeremonyScene({
           shadows={{ type: THREE.PCFShadowMap }}
         >
           <SceneCaptureHook />
+          <PhotoMode active={photoActive} onPhase={onPhotoPhase ?? (() => undefined)} />
           {/* Development-only, and inert without ?agentrender=1. Lets a hidden tab
               produce a real frame so 3D changes can be measured instead of guessed. */}
           <RenderBridge />
