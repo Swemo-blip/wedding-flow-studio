@@ -4279,16 +4279,22 @@ function CameraSetup({
     // locked-axis dolly (wedding-videography grammar), not the old sin/cos
     // hover that read as a drone.
     const [rawX, rawY, rawZ] = cameraOverride ? cameraOverride.position : getCameraPosition(viewMode, venueType, activeStep);
+    const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode, venueType, activeStep);
+    // Zoom is a dolly toward the look target, not a scale about the world origin.
+    // The old origin-radial scale only worked while the rig stood far from origin;
+    // with the hero eye at z 0.14 it moved the camera centimetres per step and the
+    // +/- buttons became dead controls. Dollying toward what the camera is looking
+    // at is also simply what "zoom" means on this kind of shot.
     const distanceScale = cameraOverride ? 1 : 1 / zoom;
-    const baseX = rawX * distanceScale;
-    const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawY * distanceScale);
-    const baseZ = rawZ * distanceScale;
+    const baseX = targetX + (rawX - targetX) * distanceScale;
+    const rawDollyY = targetY + (rawY - targetY) * distanceScale;
+    const baseY = viewMode === "top" && !cameraOverride ? rawY * distanceScale : Math.max(1.05, rawDollyY);
+    const baseZ = viewMode === "top" && !cameraOverride ? rawZ * distanceScale : targetZ + (rawZ - targetZ) * distanceScale;
     const drifting = cameraOverride ? !cameraOverride.still : viewMode === "3d";
     const dollyDepth = cameraOverride ? 0.1 : 0.24;
     const desiredX = baseX;
     const desiredY = baseY;
     const desiredZ = baseZ + (drifting ? Math.sin(time * 0.045) * dollyDepth : 0);
-    const [targetX, targetY, targetZ] = cameraOverride ? cameraOverride.target : getCameraTarget(viewMode, venueType, activeStep);
     // Slower lambda on override so the fly-between-moments reads as a cinematic glide.
     // A `still` waypoint is a scripted position rather than a place to rest, so it
     // gets there instead of easing in for half a second.
@@ -4327,7 +4333,9 @@ function getViewFov(viewMode: StudioViewMode, venueType: StudioVenueType, aspect
     return 42 + portraitBoost;
   }
 
-  return (venueType === "church" ? 32 : venueType === "hall" ? 34 : 36) + portraitBoost;
+  // Church 40: the reference reads as a ~35 mm lens, and at the behind-the-couple
+  // eye position 32 was too long to bring the flanking pews into frame.
+  return (venueType === "church" ? 40 : venueType === "hall" ? 34 : 36) + portraitBoost;
 }
 
 function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType, activeStep: StudioPlanningStepId): [number, number, number] {
@@ -4337,11 +4345,15 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
   // wedding-photography grammar, not the old drone altitude.
   if (venueType === "church" && activeStep !== "reception") {
     const churchPositions: Record<StudioViewMode, [number, number, number]> = {
-      // Measured, not guessed: the back pew row ends at z 4.42 and WEST_WALL_Z is
-      // 6.3, so the hero eye stands in the aisle between them. The old 8.7 pre-dated
-      // the west wall and left the camera outside the building, framing a blank
-      // limestone wall with the nave glimpsed through the portal.
-      "3d": [0, 1.7, 5.7],
+      // The owner's 2026-08-08 reference mockup: eye height on the aisle axis,
+      // one-point at the altar from BEHIND the couple, congregation flanking.
+      // CORRECTED AGAINST A CAPTURED FRAME, not just derived: the first pass put
+      // the eye at z 0.14 from pure frame-height maths and the capture showed the
+      // couple cut at the thigh with no pews in frame — the look-target at y 1.2
+      // tilts the frame up, which the derivation ignored. At z 1.7 with fov 40 the
+      // frame bottom at the couple plane sits at y -0.30 (floor visible beneath
+      // their feet) and the pew rows enter the frame from x 0.93 outward.
+      "3d": [0, 1.05, 1.7],
       guest: [0, 1.45, 4.2],
       top: [0, 11, 0.4],
       walkthrough: [0, 1.85, 4.8]
