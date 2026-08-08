@@ -161,10 +161,19 @@ dismissed. A shadow is permitted **only** on something dismissable.
 ## Best Next Work
 
 1. The remaining 3D jump is the Blender baked-GI venue shell — spec'd in
-   `docs/blender-baked-venue.md`. This is skilled manual 3D work (Johan or an
-   artist), not an agent task; the agent's job is the wire-in and the fallback.
-2. Cheaper 3D wins that come first: stained-glass light shafts, and the figure
-   silhouette (a rigged CC0 character swap — taste-sensitive, show a still first).
+   `docs/blender-baked-venue.md`, and since 2026-08-08 an AGENT task: Blender 5.2
+   LTS is installed (/Applications/Blender.app) and the headless pipeline is proven
+   (build → smart UV → Cycles bake → GLB export ran clean). The bake hours are the
+   owner's CPU, not tokens. Read the spec before scripting.
+2. Photo mode (path-traced GI stills of the couple's real plan) is FULLY BUILT and
+   parked behind `PHOTO_MODE_ENABLED = false` in `overview-dashboard.tsx`: the live
+   click froze the tab for 5+ minutes because three-gpu-pathtracer builds its BVH on
+   the main thread and the scene flattens to millions of triangles. Fix = worker-
+   built BVH or a slimmed tracer scene, PROVEN on a live click before the flag
+   flips. Do not delete the scaffolding; do not flip the flag blind.
+3. The 2026-08-08 look direction lives in memory (`photoreal-3d-target-2026-08-08`):
+   the owner's reference mockup, the sculptural figure decision, and the six
+   verified look commits. The dinner hall has had NONE of this treatment yet.
 3. Cloud sync / share link / RSVP / collaboration still need the Supabase backend
    wired (allowed, free tier). Keep localStorage as the offline fallback so the app
    always runs with zero setup.
@@ -202,15 +211,19 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
-- **You cannot get a rendered frame from a tab you opened yourself.** Tested three
-  ways: the agent's own preview pane, a tab created via the Chrome extension, and a
-  re-navigated existing tab. All report `visibilityState: "hidden"` with 0 frames in
-  a second and a canvas stuck at its 300x150 default, because a tab only lays out
-  and renders once it has actually been the visible tab. The one real frame this
-  session came from a tab the OWNER had been looking at — and because the canvas
-  keeps `preserveDrawingBuffer`, that frame stays readable afterwards even when the
-  tab goes hidden. So: ask him to visit the view once, then measure the buffer for
-  the rest of the session. Do not burn his time trying to force it.
+- **SUPERSEDED 2026-08-08: the agent CAN see the 3D, without the owner.** The
+  claude-in-chrome `computer {action:"screenshot"}` ACTIVATES the target tab, which
+  gives it visibility, which delivers the ResizeObserver measurement, which mounts
+  R3F. The full loop: create a tab → navigate to `localhost:3000/?agentrender=1` →
+  screenshot to wake it (~8-10 s boot) → `window.__wfs3d.drawOnce()` a few times →
+  downscale to ~900px JPEG on an offscreen canvas → POST to a local receiver script
+  (tool results TRUNCATE a full dataURL — the receiver is not optional) → Read the
+  file as an image. ~1-2k tokens per look. Every 3D change on 2026-08-08 was
+  verified this way, including one that was caught being 16x the intended size
+  within a minute. Two traps: an edit that changes a module's IMPORT LIST makes HMR
+  full-reload, unmounting the scene in a hidden tab — wake it again with another
+  screenshot; and a frozen renderer times out every CDP call at 45-300 s — close
+  that tab and open a fresh one, never probe it twice.
 - **The reason is layout, not the frame loop, and that closes the door harder than it
   looks.** Tested six ways on 2026-08-04/06, including a dev-only `RenderBridge` that
   drives frames from `setInterval` instead of rAF specifically to sidestep the hidden-
