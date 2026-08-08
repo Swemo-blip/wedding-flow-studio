@@ -1766,7 +1766,10 @@ function CongregationVariant({ highQuality = true, seats, url }: { highQuality?:
         // rather than tinted.
         const isSkinOrHair = hsl.h > 0.02 && hsl.h < 0.13 && hsl.s > 0.12;
         if (isSkinOrHair) {
-          color.setHSL(hsl.h, Math.min(0.42, hsl.s), Math.min(0.72, 0.2 + hsl.l * 0.68) * occ);
+          // Sculptural language (2026-08-08): heads and hands converge on the same
+          // warm alabaster as the hero figures — micro-variation kept via source
+          // lightness so the crowd is not a clone army, but no painted skin tones.
+          color.setHSL(0.1, 0.16, Math.min(0.74, 0.5 + hsl.l * 0.28) * occ);
         } else {
           // Formalwear: dark suiting dominates, with a minority in muted jewel
           // tones for dresses. The source hue is kept so two neighbours still
@@ -2023,27 +2026,33 @@ type Recolor = Record<string, string>;
 // defect a viewer notices before anything else about a figure. Naming Skin and Hair
 // in each recolor map replaces them with warm, plausible tones, varied between the
 // three so the hero figures are not colour clones of each other.
+// Sculptural figure language (owner's decision 2026-08-08): clothing keeps its
+// value and material; skin, HAIR and EYES converge on one warm alabaster family —
+// the couture-mannequin read, matching the congregation's regrade. `Eyes` was
+// previously absent from every map, which is why each figure kept the source
+// model's painted doll eyes.
 const GROOM_COLORS: Recolor = {
   Details: "#efe9dd",
-  Hair: "#33261d",
+  Eyes: "#d9cfba",
+  Hair: "#c9bda4",
   Pants: "#1f2027",
   Shirt: "#1f2027",
-  Skin: "#c68e6a",
-  TieTexture: "#6a4a54"
+  Skin: "#d9cfba",
+  TieTexture: "#4a3f44"
 };
-const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Hair: "#c9a563", Shoes: "#e9dfcf", Skin: "#d9a882" };
+const BRIDE_COLORS: Recolor = { Dress: "#f7f3ea", Eyes: "#d9cfba", Hair: "#cec2a9", Shoes: "#e9dfcf", Skin: "#d9cfba" };
 const PRIEST_COLORS: Recolor = {
   Details: "#24261f",
-  // Greying, so the officiant reads as the older figure without needing a new model.
-  Hair: "#8a857e",
+  Eyes: "#d9cfba",
+  // A touch greyer than the couple's stone so he still reads as the older figure.
+  Hair: "#ccc4b2",
   Pants: "#24261f",
-  // Ivory where the shirt shows: the cassock plus a clerical collar reads as an
-  // officiant. Head-to-toe #16161a crushed to a silhouette with no features.
+  // Ivory where the shirt shows under the alb; the body is dressed by Vestments.
   Shirt: "#e6dfd0",
-  Skin: "#b9825f",
+  Skin: "#d9cfba",
   TieTexture: "#24261f"
 };
-const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Hair: "#3f2c20", Skin: "#cf9d78" };
+const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Eyes: "#d9cfba", Hair: "#c9bda4", Skin: "#d9cfba" };
 
 // three's GLTFLoader pushes every node name through
 // PropertyBinding.sanitizeNodeName, which strips dots — so a rig authored with
