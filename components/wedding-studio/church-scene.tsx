@@ -3654,8 +3654,58 @@ const LEAF_LAYOUT: LeafPlacement[] = [
   [0.34, 0.62, 0.02, 0.38, 0.14, -2.85, -0.5]
 ];
 
-function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
+// A real hydrangea head is a DOME OF MANY SMALL FLORETS, not fifteen large lumps —
+// the captured frames showed every arrangement in the church reading as cauliflower.
+// ~52 florets on a golden-spiral dome, each oriented outward along its own normal,
+// merged into ONE geometry per colour so a whole head costs three draw calls where
+// the lump version cost fifteen.
+let hydrangeaCache: Record<"ivory" | "cream" | "blush", THREE.BufferGeometry> | null = null;
+
+function getHydrangeaGeometries() {
+  if (hydrangeaCache) {
+    return hydrangeaCache;
+  }
+
   const bloom = getBloomGeometry();
+  const parts: Record<"ivory" | "cream" | "blush", THREE.BufferGeometry[]> = { blush: [], cream: [], ivory: [] };
+  const keys: Array<"ivory" | "cream" | "blush"> = ["ivory", "ivory", "cream", "blush", "ivory"];
+  const COUNT = 52;
+  const up = new THREE.Vector3(0, 1, 0);
+
+  for (let index = 0; index < COUNT; index += 1) {
+    const t = (index + 0.5) / COUNT;
+    // Upper hemisphere, denser at the crown, squashed to a posy rather than a ball.
+    const theta = Math.acos(1 - t * 0.92);
+    const golden = index * 2.399963;
+    const normal = new THREE.Vector3(
+      Math.sin(theta) * Math.cos(golden),
+      Math.cos(theta) * 0.78 + 0.08,
+      Math.sin(theta) * Math.sin(golden)
+    ).normalize();
+    const radial = 0.5 + Math.sin(index * 12.9898) * 0.035;
+    const scale = 0.17 + (Math.sin(index * 78.233) * 0.5 + 0.5) * 0.06;
+
+    const piece = bloom.clone();
+    const matrix = new THREE.Matrix4().compose(
+      normal.clone().multiplyScalar(radial).add(new THREE.Vector3(0, 0.06, 0)),
+      new THREE.Quaternion()
+        .setFromUnitVectors(up, normal)
+        .multiply(new THREE.Quaternion().setFromAxisAngle(up, index * 1.7)),
+      new THREE.Vector3(scale, scale, scale)
+    );
+    piece.applyMatrix4(matrix);
+    parts[keys[index % keys.length]].push(piece);
+  }
+
+  hydrangeaCache = {
+    blush: mergeGeometries(parts.blush),
+    cream: mergeGeometries(parts.cream),
+    ivory: mergeGeometries(parts.ivory)
+  };
+  return hydrangeaCache;
+}
+
+function FlowerCluster({ palette, position, radius }: { palette: Palette; position: [number, number, number]; radius: number }) {
   const leaf = getLeafGeometry();
   const colors: Record<BloomPlacement[6], string> = {
     blush: palette.blush,
@@ -3665,8 +3715,8 @@ function FlowerCluster({ palette, position, radius }: { palette: Palette; positi
 
   return (
     <group position={position} scale={radius}>
-      {BLOOM_LAYOUT.map(([x, y, z, size, tilt, spin, key], index) => (
-        <mesh castShadow geometry={bloom} key={`b${index}`} position={[x, y, z]} rotation={[tilt, spin, 0]} scale={size}>
+      {(["ivory", "cream", "blush"] as const).map((key) => (
+        <mesh castShadow geometry={getHydrangeaGeometries()[key]} key={key}>
           <meshStandardMaterial color={colors[key]} roughness={0.86} />
         </mesh>
       ))}
