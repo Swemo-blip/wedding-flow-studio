@@ -97,13 +97,18 @@ export function OverviewDashboard() {
   const [zoom, setZoom] = useState(1);
   // Photo mode: freeze the scene and path-trace the current view. The phase
   // drives the overlay; the canvas itself shows the photo developing.
-  // PARKED 2026-08-08 after a live test froze the tab hard enough that even
-  // devtools could not reach it for five minutes: WebGLPathTracer.setSceneAsync
-  // builds its BVH on the main thread, and this scene flattens to millions of
-  // triangles (96 instanced guests plus subdivided pews). Shipping a button that
-  // freezes the page is worse than not shipping it. The fix is a worker-built BVH
-  // or a slimmed tracer scene, and it must be proven on a live click before this
-  // flag flips. The UI, i18n and overlay are finished and waiting.
+  // PARKED AGAIN 2026-08-09, second live test, and the diagnosis is now complete:
+  // 1. ParallelMeshBVHWorker throws at once — it needs SharedArrayBuffer, which
+  //    needs cross-origin isolation headers GitHub Pages cannot serve.
+  // 2. GenerateMeshBVHWorker constructs fine and moves the BVH build off-thread —
+  //    and the tab STILL froze, because setSceneAsync's StaticGeometryGenerator
+  //    FLATTENING (96 instanced guests + subdivided pews expanded to millions of
+  //    vertices in JS) runs on the main thread, and no worker in the library moves
+  //    that part.
+  // The remaining path is a SLIMMED TRACER SCENE: clone the scene for the photo
+  // with the congregation excluded or capped and the pews at their unsubdivided
+  // base, measure the flatten time, and only then flip this flag — after a live
+  // click that stays responsive end to end.
   const PHOTO_MODE_ENABLED = false;
   const [photoActive, setPhotoActive] = useState(false);
   const [photoPhase, setPhotoPhase] = useState<PhotoPhase | null>(null);
@@ -694,7 +699,11 @@ export function OverviewDashboard() {
 
               {photoActive && photoPhase ? (
                 <div aria-live="polite" className="vstudio-photo-overlay" role="status">
-                  {photoPhase.kind === "building" ? <span>{t("Preparing the light…")}</span> : null}
+                  {photoPhase.kind === "building" ? (
+                    <span>
+                      {t("Preparing the light…")} {Math.round(photoPhase.fraction * 100)}%
+                    </span>
+                  ) : null}
                   {photoPhase.kind === "sampling" ? (
                     <span>{t("Developing… {percent}%", { percent: Math.round(photoPhase.fraction * 100) })}</span>
                   ) : null}

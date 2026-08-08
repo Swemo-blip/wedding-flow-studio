@@ -17,12 +17,12 @@ import { useThree } from "@react-three/fiber";
 // and restored on exit. Sampling is driven by setTimeout, not rAF, so a photo
 // keeps developing even if the tab is backgrounded mid-render.
 export type PhotoPhase =
-  | { kind: "building" }
+  | { kind: "building"; fraction: number }
   | { kind: "sampling"; fraction: number }
   | { kind: "done" }
   | { kind: "failed" };
 
-const TARGET_SAMPLES = 140;
+const TARGET_SAMPLES = 110;
 
 export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phase: PhotoPhase) => void }) {
   const gl = useThree((state) => state.gl);
@@ -44,23 +44,43 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
     let tracer: { dispose: () => void } | null = null;
     restoreRef.current = frameloop === "never" ? "always" : frameloop;
     setFrameloop("never");
-    onPhase({ kind: "building" });
+    onPhase({ kind: "building", fraction: 0 });
 
     (async () => {
       try {
-        const { WebGLPathTracer } = await import("three-gpu-pathtracer");
+        // GenerateMeshBVHWorker, not ParallelMeshBVHWorker: the parallel variant
+        // needs SharedArrayBuffer, which needs cross-origin isolation headers this
+        // app does not serve (and GitHub Pages cannot). One worker thread is still
+        // the whole fix — the build leaves the main thread.
+        const [{ WebGLPathTracer }, { GenerateMeshBVHWorker }] = await Promise.all([
+          import("three-gpu-pathtracer"),
+          import("three-mesh-bvh/src/workers/GenerateMeshBVHWorker.js")
+        ]);
         if (cancelled) {
           return;
         }
 
         const pathTracer = new WebGLPathTracer(gl);
         tracer = pathTracer;
-        pathTracer.bounces = 5;
-        pathTracer.renderScale = 1;
+        // THE FIX for the first live test, which froze the tab so hard devtools
+        // could not reach it for five minutes: this scene flattens to millions of
+        // triangles (96 instanced guests + subdivided pews) and setSceneAsync
+        // built the BVH on the main thread. ParallelMeshBVHWorker moves that build
+        // to worker threads; the main thread only flattens geometry, and
+        // onProgress keeps the overlay honest while it happens.
+        pathTracer.setBVHWorker(new GenerateMeshBVHWorker());
+        pathTracer.bounces = 4;
+        pathTracer.renderScale = 0.85;
         // 3x3 tiles keep each renderSample call short enough that the page stays
         // responsive while the photo develops.
         pathTracer.tiles.set(3, 3);
-        await pathTracer.setSceneAsync(scene, camera);
+        await pathTracer.setSceneAsync(scene, camera, {
+          onProgress: (fraction: number) => {
+            if (!cancelled) {
+              onPhase({ kind: "building", fraction });
+            }
+          }
+        });
         if (cancelled) {
           return;
         }
@@ -78,9 +98,11 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
           }
         };
         step();
-      } catch {
+      } catch (error) {
         // A scene the tracer cannot ingest must degrade to a message, never to a
-        // black canvas: restore the live render immediately.
+        // black canvas: restore the live render immediately. Logged, because a
+        // silent catch cost a debugging round on 2026-08-09.
+        console.error("Photo mode failed:", error);
         if (!cancelled) {
           onPhase({ kind: "failed" });
           setFrameloop(restoreRef.current);
