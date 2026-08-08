@@ -1148,7 +1148,8 @@ function EditableSceneObject({
 // the plain wall/ceiling geometry; every piece of dressing stays app-drawn on top.
 // A shell entry is added ONLY after its bake has been looked at via the capture loop.
 const BAKED_VENUE_URLS: Partial<Record<StudioVenueType, string>> = {
-  church: assetPath("/models/venues/church-baked.glb")
+  church: assetPath("/models/venues/church-baked.glb"),
+  hall: assetPath("/models/venues/hall-baked.glb")
 };
 Object.values(BAKED_VENUE_URLS).forEach((url) => url && useGLTF.preload(url));
 
@@ -1205,28 +1206,37 @@ function RoomFrame({ palette, venueType, viewMode }: { palette: Palette; venueTy
   // The plan view looks straight down — a ceiling would hide the whole room
   // (same pattern as the church nave's showCeiling).
   const showCeiling = isHall && viewMode !== "top";
+  // Same seam discipline as ChurchNave: the baked shell replaces ONLY the plain
+  // walls and ceiling; the emissive window panes below stay app-drawn on top.
+  const bakedShellUrl = isHall ? BAKED_VENUE_URLS.hall : undefined;
 
   return (
     <group>
-      <mesh receiveShadow position={[0, backWallHeight / 2, -5.75]}>
-        <boxGeometry args={[9.8, backWallHeight, 0.2]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.88} />
-      </mesh>
-      <mesh receiveShadow position={[-4.9, sideWallHeight / 2, 0.1]}>
-        <boxGeometry args={[0.18, sideWallHeight, 11.8]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.88} />
-      </mesh>
-      <mesh receiveShadow position={[4.9, sideWallHeight / 2, 0.1]}>
-        <boxGeometry args={[0.18, sideWallHeight, 11.8]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.88} />
-      </mesh>
+      {bakedShellUrl ? (
+        <BakedVenueShell url={bakedShellUrl} viewMode={viewMode ?? "3d"} />
+      ) : (
+        <>
+          <mesh receiveShadow position={[0, backWallHeight / 2, -5.75]}>
+            <boxGeometry args={[9.8, backWallHeight, 0.2]} />
+            <meshStandardMaterial color={palette.wall} roughness={0.88} />
+          </mesh>
+          <mesh receiveShadow position={[-4.9, sideWallHeight / 2, 0.1]}>
+            <boxGeometry args={[0.18, sideWallHeight, 11.8]} />
+            <meshStandardMaterial color={palette.wall} roughness={0.88} />
+          </mesh>
+          <mesh receiveShadow position={[4.9, sideWallHeight / 2, 0.1]}>
+            <boxGeometry args={[0.18, sideWallHeight, 11.8]} />
+            <meshStandardMaterial color={palette.wall} roughness={0.88} />
+          </mesh>
 
-      {showCeiling ? (
-        <mesh position={[0, backWallHeight - 0.02, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[9.8, 11.8]} />
-          <meshStandardMaterial color="#efe5cf" roughness={0.92} side={THREE.DoubleSide} />
-        </mesh>
-      ) : null}
+          {showCeiling ? (
+            <mesh position={[0, backWallHeight - 0.02, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[9.8, 11.8]} />
+              <meshStandardMaterial color="#efe5cf" roughness={0.92} side={THREE.DoubleSide} />
+            </mesh>
+          ) : null}
+        </>
+      )}
 
       {/* Tall warm-glass panes on the back wall — the evening glow of the room. */}
       {[-3.2, -1.05, 1.05, 3.2].map((xPosition) => (

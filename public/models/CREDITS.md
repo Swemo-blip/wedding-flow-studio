@@ -47,3 +47,8 @@ vase + stylized blooms gives a cleaner wedding arrangement).
 
 Baked in-project with scripts/bake-church-shell.py (Blender 5.2 Cycles, headless).
 Geometry authored from the scene's own constants; no external assets. CC0.
+
+## venues/hall-baked.glb
+
+Baked in-project with scripts/bake-hall-shell.py (Blender 5.2 Cycles, headless).
+Dusk rig: emissive window panes + eight pendant glow spheres. No external assets. CC0.
