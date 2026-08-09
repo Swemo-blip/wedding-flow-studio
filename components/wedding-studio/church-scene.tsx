@@ -623,6 +623,7 @@ export function CeremonyScene({
           <DustMotes intensity={isDay ? 0.18 : 0.42} />
           <WeddingStageInterior
             activeStep={activeStep}
+            isDayLight={isDay}
             aisleWidthFeet={aisleWidthFeet}
             budgetLevel={budgetLevel}
             capacity={capacity}
@@ -843,6 +844,7 @@ function WeddingStageInterior({
   coupleHeadsRef,
   dinnerTables,
   doorsOpen = false,
+  isDayLight,
   firstPerson = null,
   highQuality = true,
   onMoveObject,
@@ -868,6 +870,7 @@ function WeddingStageInterior({
   coupleHeadsRef?: { current: CoupleHeads };
   dinnerTables?: DinnerTable[];
   doorsOpen?: boolean;
+  isDayLight: boolean;
   firstPerson?: CeremonyFirstPerson;
   highQuality?: boolean;
   onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
@@ -1001,7 +1004,7 @@ function WeddingStageInterior({
             </mesh>
           </EditableSceneObject>
 
-          <VenueBoundary doorsOpen={doorsOpen ? 1 : 0} palette={palette} venueType={venueType} viewMode={viewMode} />
+          <VenueBoundary doorsOpen={doorsOpen ? 1 : 0} isDayLight={isDayLight} palette={palette} venueType={venueType} viewMode={viewMode} />
           {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
 
           {activeStep !== "venue" ? (
@@ -1222,13 +1225,25 @@ function BakedVenueShell({ url, viewMode, wallColor }: { url: string; viewMode: 
   return <primitive object={shell} />;
 }
 
-function VenueBoundary({ doorsOpen = 0, palette, venueType, viewMode }: { doorsOpen?: number; palette: Palette; venueType: StudioVenueType; viewMode: StudioViewMode }) {
+function VenueBoundary({
+  doorsOpen = 0,
+  isDayLight,
+  palette,
+  venueType,
+  viewMode
+}: {
+  doorsOpen?: number;
+  isDayLight: boolean;
+  palette: Palette;
+  venueType: StudioVenueType;
+  viewMode: StudioViewMode;
+}) {
   if (venueType === "garden" || venueType === "beach") {
     return <OutdoorVenueFrame palette={palette} venueType={venueType} />;
   }
 
   if (venueType === "church") {
-    return <ChurchNave doorsOpen={doorsOpen} palette={palette} viewMode={viewMode} />;
+    return <ChurchNave doorsOpen={doorsOpen} isDayLight={isDayLight} palette={palette} viewMode={viewMode} />;
   }
 
   return <RoomFrame palette={palette} venueType={venueType} viewMode={viewMode} />;
@@ -3270,6 +3285,85 @@ function WindowGobo({ cookie, intensity, z }: { cookie: THREE.Texture; intensity
   );
 }
 
+// Visible light shafts — the last signal from the owner's reference that the scene
+// did not have. An earlier attempt used plain additive cones and rendered as opaque
+// wedges, because a solid mesh has no idea how much AIR the eye is looking through.
+// This is the fix: a shader that fades on three axes at once, so the slab behaves
+// like a volume rather than a card.
+//
+//   rim      1 - |x| across the beam, squared: dense in the core, gone at the edge
+//   throw    fades along the beam's length, so it dissolves before it hits anything
+//   grazing  1 - |dot(view, normal)|: strongest seen edge-on (light you look ALONG),
+//            invisible seen face-on — which is what stops it reading as a card
+//
+// Additive, depthWrite off, and BackSide so it never z-fights the wall it leaves.
+const SHAFT_VERTEX = `
+  varying vec2 vUv;
+  varying vec3 vView;
+  varying vec3 vNormal;
+  void main() {
+    vUv = uv;
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vView = normalize(cameraPosition - worldPosition.xyz);
+    vNormal = normalize(mat3(modelMatrix) * normal);
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+const SHAFT_FRAGMENT = `
+  uniform vec3 uColor;
+  uniform float uStrength;
+  varying vec2 vUv;
+  varying vec3 vView;
+  varying vec3 vNormal;
+  void main() {
+    float rim = 1.0 - abs(vUv.x * 2.0 - 1.0);
+    rim = pow(clamp(rim, 0.0, 1.0), 2.0);
+    float throwFade = pow(1.0 - clamp(vUv.y, 0.0, 1.0), 1.6);
+    float grazing = 1.0 - abs(dot(normalize(vView), normalize(vNormal)));
+    grazing = pow(clamp(grazing, 0.0, 1.0), 1.4);
+    float alpha = rim * throwFade * grazing * uStrength;
+    gl_FragColor = vec4(uColor * alpha, alpha);
+  }
+`;
+
+function LightShafts({ color, strength }: { color: string; strength: number }) {
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fragmentShader: SHAFT_FRAGMENT,
+        side: THREE.BackSide,
+        transparent: true,
+        uniforms: { uColor: { value: new THREE.Color(color) }, uStrength: { value: strength } },
+        vertexShader: SHAFT_VERTEX
+      }),
+    [color, strength]
+  );
+  useEffect(() => () => material.dispose(), [material]);
+
+  // One slab per side window, leaning down and inward from the opening — the
+  // reference's shafts angle from upper-left across the nave. Geometry is a plane
+  // 1.0 wide (the window) by 5.2 long (the throw), rotated to lie along the beam.
+  return (
+    <group>
+      {GOBO_ZS.map((z) =>
+        [-1, 1].map((side) => (
+          <mesh
+            key={`${side}-${z}`}
+            material={material}
+            position={[side * 3.5, 1.75, z + 0.6]}
+            rotation={[Math.PI / 2 - 0.55, 0, side * (Math.PI / 2 - 0.38)]}
+          >
+            <planeGeometry args={[1.15, 5.2]} />
+          </mesh>
+        ))
+      )}
+    </group>
+  );
+}
+
 function WindowGobos({ intensity }: { intensity: number }) {
   const cookie = useMemo(() => {
     const texture = createStainedGlassTexture(7);
@@ -3287,7 +3381,17 @@ function WindowGobos({ intensity }: { intensity: number }) {
   );
 }
 
-function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palette: Palette; viewMode: StudioViewMode }) {
+function ChurchNave({
+  doorsOpen,
+  isDayLight,
+  palette,
+  viewMode
+}: {
+  doorsOpen: number;
+  isDayLight: boolean;
+  palette: Palette;
+  viewMode: StudioViewMode;
+}) {
   const bakedShellUrl = BAKED_VENUE_URLS.church;
   // Real naves tower over the congregation — at eye height the ceiling ratio is
   // what separates "church" from "scale model". Everything below derives from
@@ -3424,6 +3528,9 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
       <Crucifix position={[0, 2.14, -5.66]} />
 
       <WindowGobos intensity={4.2} />
+      {/* Day only: at dusk the windows are the darkest thing in the room and a
+          shaft would be light arriving from nowhere. */}
+      {isDayLight ? <LightShafts color="#ffe3b4" strength={0.15} /> : null}
 
       <pointLight color="#ffdca0" decay={2} distance={9} intensity={0.8} position={[0, 3.6, -1]} />
       <pointLight color="#ffe7bc" decay={2} distance={9} intensity={0.7} position={[0, 3.4, 3]} />
@@ -4213,10 +4320,18 @@ function ReceptionInterior({
           </mesh>
         }
       >
+        {/* NO SHEEN HERE, and it is not an oversight. MeshReflectorMaterial renders
+            the whole scene a second time into a render target every frame, and the
+            hall is the heavy room: 27 tablescapes, ~29 instanced diners, 8 pendants,
+            40 candle flames. Switching to the dinner with the reflector on froze the
+            renderer hard enough that CDP timed out at 45 s — measured 2026-08-10, not
+            assumed. The church keeps its sheen (lighter scene, and it has shipped
+            fine); the hall gets one only if the reflector is given a smaller
+            resolution and a culled scene, proven on a live switch. */}
         <TexturedGround color="#d9c39b" position={[0, 0, 0.25]} size={[10.2, 12.8]} />
       </Suspense>
 
-      <VenueBoundary palette={palette} venueType={receptionVenue} viewMode={viewMode} />
+      <VenueBoundary isDayLight={false} palette={palette} venueType={receptionVenue} viewMode={viewMode} />
 
       {/* The dance floor sits at the FRONT of the room (near the entrance),
           clear of the banquet grid behind it — head table → guest tables →
