@@ -1160,9 +1160,22 @@ const BAKED_VENUE_URLS: Partial<Record<StudioVenueType, string>> = {
 };
 Object.values(BAKED_VENUE_URLS).forEach((url) => url && useGLTF.preload(url));
 
-function BakedVenueShell({ url, viewMode }: { url: string; viewMode: StudioViewMode }) {
+// The albedo the bake scripts paint the walls with. The couple's style choice must
+// keep working on a baked room, so the shell is tinted by the RATIO of the palette's
+// wall tone to this neutral — classic lands at ~1.0 and changes nothing, other
+// directions shift the room exactly as the analytic walls used to. Without this the
+// baked shell silently disconnected the Style tool from the very wall it colours.
+const BAKED_WALL_NEUTRAL = new THREE.Color(0.76, 0.7, 0.585);
+
+function BakedVenueShell({ url, viewMode, wallColor }: { url: string; viewMode: StudioViewMode; wallColor: string }) {
   const { scene } = useGLTF(url);
   const shell = useMemo(() => {
+    const tint = new THREE.Color(wallColor);
+    // sRGB palette hex vs the bake's linear albedo: convert before the ratio.
+    tint.convertSRGBToLinear();
+    tint.r = Math.min(1.6, tint.r / BAKED_WALL_NEUTRAL.r);
+    tint.g = Math.min(1.6, tint.g / BAKED_WALL_NEUTRAL.g);
+    tint.b = Math.min(1.6, tint.b / BAKED_WALL_NEUTRAL.b);
     const clone = scene.clone(true);
     clone.traverse((object) => {
       const mesh = object as THREE.Mesh;
@@ -1172,12 +1185,12 @@ function BakedVenueShell({ url, viewMode }: { url: string; viewMode: StudioViewM
       // The lighting is IN the texture — render unlit so the analytic rig (kept
       // for the dynamic layers) does not double-light the room.
       const source = mesh.material as THREE.MeshStandardMaterial;
-      mesh.material = new THREE.MeshBasicMaterial({ map: source.map ?? null, toneMapped: true });
+      mesh.material = new THREE.MeshBasicMaterial({ color: tint, map: source.map ?? null, toneMapped: true });
       mesh.castShadow = false;
       mesh.receiveShadow = true;
     });
     return clone;
-  }, [scene]);
+  }, [scene, wallColor]);
 
   useEffect(() => {
     // The bake names its ceiling node so the top-down plan view can see the room.
@@ -1220,7 +1233,7 @@ function RoomFrame({ palette, venueType, viewMode }: { palette: Palette; venueTy
   return (
     <group>
       {bakedShellUrl ? (
-        <BakedVenueShell url={bakedShellUrl} viewMode={viewMode ?? "3d"} />
+        <BakedVenueShell url={bakedShellUrl} viewMode={viewMode ?? "3d"} wallColor={palette.wall} />
       ) : (
         <>
           <mesh receiveShadow position={[0, backWallHeight / 2, -5.75]}>
@@ -3291,7 +3304,7 @@ function ChurchNave({ doorsOpen, palette, viewMode }: { doorsOpen: number; palet
         }
       >
         {bakedShellUrl ? (
-          <BakedVenueShell url={bakedShellUrl} viewMode={viewMode} />
+          <BakedVenueShell url={bakedShellUrl} viewMode={viewMode} wallColor={palette.wall} />
         ) : (
           <>
             {[-4.95, 4.95].map((x) => (

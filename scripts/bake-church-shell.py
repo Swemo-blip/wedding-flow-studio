@@ -82,7 +82,52 @@ bpy.ops.object.join()
 shell = bpy.context.active_object
 shell.name = "Shell"
 
-ceiling = add_box("Ceiling", (0, 5.61, 0.1), (9.9, 0.06, 12.6))
+# V2: the windows are REAL OPENINGS now, cut straight through the walls, so the
+# emissive glass lights the room through actual holes and every reveal edge earns
+# its own baked occlusion — the difference between a box with nice light and a
+# room. Cutter boxes run thicker than the wall; EXACT solver; deleted after use.
+import math
+
+
+def cut_opening(target, center, size, depth_axis):
+    cutter_size = (size[0], size[1], 0.6) if depth_axis == "z" else (0.6, size[1], size[0])
+    cutter = add_box("Cutter", center, cutter_size)
+    modifier = target.modifiers.new("cut", "BOOLEAN")
+    modifier.operation = "DIFFERENCE"
+    modifier.solver = "EXACT"
+    modifier.object = cutter
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.modifier_apply(modifier="cut")
+    bpy.ops.object.select_all(action="DESELECT")
+    cutter.select_set(True)
+    bpy.ops.object.delete()
+
+
+for app_z in (-3.2, -0.7, 1.8):
+    cut_opening(shell, (-4.95, 2.576, app_z), (1.0, 2.4), "x")
+    cut_opening(shell, (4.95, 2.576, app_z), (1.0, 2.4), "x")
+for app_x in (-2.5, 2.5):
+    cut_opening(shell, (app_x, 2.3, -5.85), (0.8, 1.7), "z")
+for app_x in (-2.9, 2.9):
+    cut_opening(shell, (app_x, 4.94, -5.85), (0.7, 0.9), "z")
+
+# V2: a BARREL VAULT instead of the flat lid. Springs from the wall top at 5.6
+# with a 1.7 rise — the east gable (7.5) and the west piers (7.5) cover its ends.
+# Normals are forced INWARD because the only viewer is inside the room, and the
+# loader's MeshBasicMaterial is single-sided.
+bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=1.0, depth=12.15, location=(0, 0.225, 5.6))
+ceiling = bpy.context.active_object
+ceiling.name = "Ceiling"
+ceiling.rotation_euler = Euler((math.radians(90), 0, 0))
+ceiling.scale = (4.95, 1.7, 1.0)
+bpy.ops.object.transform_apply(rotation=True, scale=True)
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+# Drop everything below the spring line, keep the upper half open-bottomed.
+bpy.ops.mesh.bisect(plane_co=(0, 0, 5.6), plane_no=(0, 0, -1), clear_inner=True)
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.normals_make_consistent(inside=True)
+bpy.ops.object.mode_set(mode="OBJECT")
 
 
 def make_material(name, albedo, image):
@@ -125,8 +170,6 @@ def add_area(name, center, size, rotation, power, color=WARM):
     light.rotation_euler = Euler(rotation)
     return light
 
-
-import math
 
 # BAKE #2 CORRECTION: plain area lights at 320W blew the interior faces past 1.0,
 # which an 8-bit PNG clips to flat white — and an unlit baked wall can no longer
@@ -213,7 +256,11 @@ for obj in (shell, ceiling):
 # with the principled surface left on defaults (the app forces MeshBasicMaterial
 # at load, per docs/blender-baked-venue.md).
 for obj, image in ((shell, shell_img), (ceiling, ceiling_img)):
-    material = obj.data.materials[0]
+    # Boolean/bisect edits can leave empty material slots; find the real one
+    # instead of trusting slot 0 — trusting it crashed bake V2's rewire.
+    material = next((slot for slot in obj.data.materials if slot is not None), None)
+    if material is None:
+        raise RuntimeError(f"{obj.name} lost its material")
     nodes = material.node_tree.nodes
     bsdf = nodes["Principled BSDF"]
     tex = nodes.active
