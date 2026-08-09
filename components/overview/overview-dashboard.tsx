@@ -97,7 +97,27 @@ export function OverviewDashboard() {
   const [zoom, setZoom] = useState(1);
   // Photo mode: freeze the scene and path-trace the current view. The phase
   // drives the overlay; the canvas itself shows the photo developing.
-  // PARKED AGAIN 2026-08-09, second live test, and the diagnosis is now complete:
+  // ROUND THREE, 2026-08-10, and the picture finally inverted: THE BLOCKER IS NOT
+  // SIZE. With crowd instances and non-physical materials excluded, the console
+  // reports 1,547,710 triangles and the main thread's worst stall across the whole
+  // build was 625 ms — responsive throughout. What fails is a MATERIAL:
+  //
+  //   TypeError: Cannot read properties of undefined (reading 'r')
+  //     at MaterialsTexture.updateFrom → WebGLPathTracer.updateMaterials
+  //
+  // The tracer walks every material expecting the physical set (color, emissive,
+  // roughness) and dies on one that lacks it. Excluding raw ShaderMaterial, points
+  // and sprites was not enough, so a fourth kind is still in there — and note that
+  // the instance filter matched ZERO objects, so the congregation is not a
+  // top-level InstancedMesh and the earlier "millions of triangles" story was
+  // wrong about the mechanism as well as the cost.
+  //
+  // NEXT ATTEMPT STARTS HERE: click the button with the flag on and read the
+  // "Materials:" census PhotoMode now prints before tracing. It names every
+  // material type still in the trace and how many meshes carry each. Find the one
+  // without a colour, exclude or convert it, and this ships.
+  //
+  // The older diagnosis, still true as far as it went:
   // 1. ParallelMeshBVHWorker throws at once — it needs SharedArrayBuffer, which
   //    needs cross-origin isolation headers GitHub Pages cannot serve.
   // 2. GenerateMeshBVHWorker constructs fine and moves the BVH build off-thread —

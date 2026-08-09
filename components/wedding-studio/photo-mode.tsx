@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 
 // Photo mode: hand the live canvas to a path tracer and let a real global-
@@ -23,6 +24,26 @@ export type PhotoPhase =
   | { kind: "failed" };
 
 const TARGET_SAMPLES = 110;
+// An instanced mesh with more members than this is a crowd, not a prop: hidden for
+// the trace. The couple's own two-seat instance and the small prop instances stay.
+const PHOTO_INSTANCE_LIMIT = 8;
+
+// Reported to the console before the trace so a slow photo can be diagnosed by
+// SIZE rather than by guesswork — the first two attempts were debugged blind.
+function countTriangles(root: THREE.Object3D) {
+  let total = 0;
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh & { isInstancedMesh?: boolean; count?: number };
+    if (!mesh.isMesh || !object.visible || !mesh.geometry) {
+      return;
+    }
+    const index = mesh.geometry.getIndex();
+    const position = mesh.geometry.getAttribute("position");
+    const per = index ? index.count / 3 : position ? position.count / 3 : 0;
+    total += per * (mesh.isInstancedMesh ? (mesh.count ?? 1) : 1);
+  });
+  return Math.round(total);
+}
 
 export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phase: PhotoPhase) => void }) {
   const gl = useThree((state) => state.gl);
@@ -42,6 +63,7 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
     let cancelled = false;
     let timer: number | null = null;
     let tracer: { dispose: () => void } | null = null;
+    let restoreVisibility: (() => void) | null = null;
     restoreRef.current = frameloop === "never" ? "always" : frameloop;
     setFrameloop("never");
     onPhase({ kind: "building", fraction: 0 });
@@ -62,18 +84,86 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
 
         const pathTracer = new WebGLPathTracer(gl);
         tracer = pathTracer;
-        // THE FIX for the first live test, which froze the tab so hard devtools
-        // could not reach it for five minutes: this scene flattens to millions of
-        // triangles (96 instanced guests + subdivided pews) and setSceneAsync
-        // built the BVH on the main thread. ParallelMeshBVHWorker moves that build
-        // to worker threads; the main thread only flattens geometry, and
-        // onProgress keeps the overlay honest while it happens.
+        // Round two moved the BVH build to a worker and the tab STILL froze, because
+        // the cost is not the BVH: setSceneAsync's StaticGeometryGenerator expands
+        // every InstancedMesh into one flat multi-million-vertex geometry, on the
+        // main thread, and no worker in the library moves that part.
+        //
+        // Round three therefore hands the tracer LESS SCENE. The photo is of the
+        // room, the couple and the dressing — a hundred instanced background guests
+        // contribute almost nothing to a frame they are barely visible in, and they
+        // are the entire cost. Everything skipped is named in PHOTO_SKIP so the
+        // exclusion is auditable rather than a mystery.
         pathTracer.setBVHWorker(new GenerateMeshBVHWorker());
         pathTracer.bounces = 4;
         pathTracer.renderScale = 0.85;
         // 3x3 tiles keep each renderSample call short enough that the page stays
         // responsive while the photo develops.
         pathTracer.tiles.set(3, 3);
+
+        // THE ACTUAL BLOCKER, found by reading the error instead of assuming:
+        // MaterialsTexture.updateFrom threw "Cannot read properties of undefined
+        // (reading 'r')" — the tracer walks every material expecting the physical
+        // set (color, emissive, roughness…) and dies on anything that does not have
+        // them. Our scene contains three such: the raw ShaderMaterial driving the
+        // light shafts, the PointsMaterial on the dust motes, and any sprite.
+        // They are all atmosphere, none of them is geometry a photo needs, and
+        // hidden objects are skipped by the geometry generator entirely.
+        //
+        // Size was never the failure here: the console reports 1.5 M triangles and
+        // the main thread's worst stall through the whole build was 625 ms.
+        const hidden: THREE.Object3D[] = [];
+        const hide = (object: THREE.Object3D) => {
+          if (object.visible) {
+            object.visible = false;
+            hidden.push(object);
+          }
+        };
+        scene.traverse((object) => {
+          const mesh = object as THREE.Mesh & { isPoints?: boolean; isSprite?: boolean; isInstancedMesh?: boolean; count?: number };
+          if (mesh.isPoints || mesh.isSprite) {
+            hide(object);
+            return;
+          }
+          const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+          // A raw ShaderMaterial carries none of the properties the tracer reads.
+          if (materials.some((material) => (material as THREE.Material).type === "ShaderMaterial")) {
+            hide(object);
+            return;
+          }
+          // Crowd instances are still skipped, but as a SPEED choice rather than a
+          // correctness one — and only when they are genuinely a crowd.
+          if (mesh.isInstancedMesh && (mesh.count ?? 0) > PHOTO_INSTANCE_LIMIT) {
+            hide(object);
+          }
+        });
+        restoreVisibility = () => {
+          for (const object of hidden) {
+            object.visible = true;
+          }
+        };
+
+        // Dump the material CENSUS before tracing. The blocker is a material the
+        // tracer cannot read, so the next attempt should start by looking at this
+        // line rather than re-deriving it: it names every material type still in
+        // the trace and how many meshes carry it.
+        const census = new Map<string, number>();
+        scene.traverse((object) => {
+          const mesh = object as THREE.Mesh;
+          if (!mesh.isMesh || !object.visible) {
+            return;
+          }
+          for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+            const type = (material as THREE.Material | undefined)?.type ?? "none";
+            census.set(type, (census.get(type) ?? 0) + 1);
+          }
+        });
+        const counted = countTriangles(scene);
+        console.info(
+          `Photo mode: tracing ${counted.toLocaleString()} triangles, ${hidden.length} object(s) hidden. Materials: ` +
+            [...census.entries()].map(([type, count]) => `${type} x${count}`).join(", ")
+        );
+
         await pathTracer.setSceneAsync(scene, camera, {
           onProgress: (fraction: number) => {
             if (!cancelled) {
@@ -81,6 +171,8 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
             }
           }
         });
+        restoreVisibility();
+        restoreVisibility = null;
         if (cancelled) {
           return;
         }
@@ -99,6 +191,8 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
         };
         step();
       } catch (error) {
+        restoreVisibility?.();
+        restoreVisibility = null;
         // A scene the tracer cannot ingest must degrade to a message, never to a
         // black canvas: restore the live render immediately. Logged, because a
         // silent catch cost a debugging round on 2026-08-09.
@@ -112,6 +206,7 @@ export function PhotoMode({ active, onPhase }: { active: boolean; onPhase: (phas
 
     return () => {
       cancelled = true;
+      restoreVisibility?.();
       if (timer !== null) {
         window.clearTimeout(timer);
       }
