@@ -45,6 +45,16 @@ export type SceneLighting = "day" | "dusk";
 // interior lights the church venue; the warm lounge lights the open venues.
 const CHURCH_HDR_URL = assetPath("/hdr/church_museum_2k.hdr");
 const INTERIOR_HDR_URL = assetPath("/hdr/lythwood_room_1k.hdr");
+// EACH ROOM'S OWN ENVIRONMENT, rendered by scripts/bake-room-hdri.py from inside
+// the very geometry the baked shell is made of — same walls, same window emitters,
+// an equirectangular camera at 1.62 m eye height. The Poly Haven HDRIs above lit
+// the couple, the brass and the glass with reflections of somebody ELSE'S building,
+// which is a quiet reason baked walls and live figures read as two layers instead
+// of one photograph. Used only where a baked shell is also present, so the room and
+// its reflections always come from the same source; the Poly Haven files stay as
+// the fallback for the analytic shells. A tenth the size, too (0.6 MB vs 6.8).
+const CHURCH_ROOM_HDR_URL = assetPath("/hdr/church-room.hdr");
+const HALL_ROOM_HDR_URL = assetPath("/hdr/hall-room.hdr");
 
 // Real CC0 scanned PBR sets (Poly Haven, see public/textures/CREDITS.md) that
 // replace the flat single-colour church surfaces — the #1 "gamey" tell. Each
@@ -567,7 +577,15 @@ export function CeremonyScene({
               is standing in; open venues keep the warm lounge probe. */}
           <HdrEnvironment
             intensity={(effectiveVenue === "church" ? (isDay ? 0.48 : 0.34) : effectiveVenue === "hall" ? (isDay ? 0.55 : 0.4) : isDay ? 0.72 : 0.45) * bakedFillDim}
-            url={effectiveVenue === "church" ? CHURCH_HDR_URL : INTERIOR_HDR_URL}
+            url={
+              BAKED_VENUE_URLS[effectiveVenue]
+                ? effectiveVenue === "church"
+                  ? CHURCH_ROOM_HDR_URL
+                  : HALL_ROOM_HDR_URL
+                : effectiveVenue === "church"
+                  ? CHURCH_HDR_URL
+                  : INTERIOR_HDR_URL
+            }
           />
           {/* Skip the contact-shadow plane in BOTH interiors: it's a second
               floor-parallel plane whose grazing edge z-fights the textured floor
@@ -1765,7 +1783,7 @@ if (typeof window !== "undefined") {
   CONGREGATION_MODELS.forEach((url) => useGLTF.preload(url));
   // The HDR environment is part of the boot too — preloading it here means the
   // boot gate holds the Canvas until the scene can light itself correctly.
-  preloadHdr(CHURCH_HDR_URL);
+  preloadHdr(BAKED_VENUE_URLS.church ? CHURCH_ROOM_HDR_URL : CHURCH_HDR_URL);
 }
 
 type CongregationSeat = {

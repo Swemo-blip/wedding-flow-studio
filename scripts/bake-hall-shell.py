@@ -77,7 +77,43 @@ bpy.ops.object.join()
 shell = bpy.context.active_object
 shell.name = "Shell"
 
+
+# V2, same discipline as the church: the window panes become REAL OPENINGS, so the
+# dusk glow reaches the room through apertures and every reveal edge bakes its own
+# shadow. Cutters run thicker than the wall; EXACT solver; deleted after use.
+def cut_opening(target, center, size, depth_axis):
+    cutter_size = (size[0], size[1], 0.6) if depth_axis == "z" else (0.6, size[1], size[0])
+    cutter = add_box("Cutter", center, cutter_size)
+    modifier = target.modifiers.new("cut", "BOOLEAN")
+    modifier.operation = "DIFFERENCE"
+    modifier.solver = "EXACT"
+    modifier.object = cutter
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.modifier_apply(modifier="cut")
+    bpy.ops.object.select_all(action="DESELECT")
+    cutter.select_set(True)
+    bpy.ops.object.delete()
+
+
+for app_x in (-3.2, -1.05, 1.05, 3.2):
+    cut_opening(shell, (app_x, 1.9, -5.75), (0.72, 2.3), "z")
+for app_z in (-3.4, 0.1, 3.6):
+    cut_opening(shell, (-4.9, 2.0, app_z), (0.9, 2.1), "x")
+    cut_opening(shell, (4.9, 2.0, app_z), (0.9, 2.1), "x")
+
+# V2 ceiling: a shallow COFFERED plane rather than a flat slab — a 0.12-deep
+# recess inset 0.6 from each wall, so the eight pendant pools land inside a
+# panel with its own shadowed edge instead of on a blank lid. Two boxes, no
+# booleans: the recess is a smaller box lifted above the border ring.
 ceiling = add_box("Ceiling", (0, 3.79, 0.1), (9.9, 0.06, 11.9))
+recess = add_box("CeilingRecess", (0, 3.87, 0.1), (8.7, 0.06, 10.7))
+bpy.ops.object.select_all(action="DESELECT")
+ceiling.select_set(True)
+recess.select_set(True)
+bpy.context.view_layer.objects.active = ceiling
+bpy.ops.object.join()
+ceiling = bpy.context.active_object
+ceiling.name = "Ceiling"
 
 
 def make_material(name, albedo, image):
@@ -175,6 +211,13 @@ scene.render.bake.use_pass_indirect = True
 scene.render.bake.use_pass_color = True
 scene.render.bake.margin = 8
 
+# scripts/bake-room-hdri.py imports this module to reuse the room construction —
+# same geometry, same emitters — and renders a panorama instead of a lightmap. It
+# sets WFS_SKIP_BAKE so it does not pay for a bake it will not use.
+if os.environ.get("WFS_SKIP_BAKE") == "1":
+    print("SKIP BAKE (room reused for HDRI)", flush=True)
+    raise SystemExit(0)
+
 for obj in (shell, ceiling):
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
@@ -199,7 +242,11 @@ bpy.ops.mesh.delete(type="VERT")
 bpy.ops.object.mode_set(mode="OBJECT")
 
 for obj, image in ((shell, shell_img), (ceiling, ceiling_img)):
-    material = obj.data.materials[0]
+    # Boolean/join edits can leave empty slots; find the real material rather than
+    # trusting index 0 (trusting it crashed the church's V2 bake).
+    material = next((slot for slot in obj.data.materials if slot is not None), None)
+    if material is None:
+        raise RuntimeError(f"{obj.name} lost its material")
     nodes = material.node_tree.nodes
     bsdf = nodes["Principled BSDF"]
     tex = nodes.active

@@ -11,3 +11,9 @@
 Used for image-based lighting in the 3D ceremony scene
 (`components/wedding-studio/church-scene.tsx`, `HdrEnvironment`), loaded and
 cached through `components/wedding-studio/scene-boot.tsx`.
+
+## church-room.hdr, hall-room.hdr
+
+Rendered in-project by scripts/bake-room-hdri.py: an equirectangular Cycles panorama
+shot from 1.62 m eye height inside the SAME Blender room the baked shell is made of,
+so the dynamic layer reflects its own venue. No external assets. CC0.

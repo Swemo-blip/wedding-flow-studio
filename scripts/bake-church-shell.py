@@ -19,6 +19,7 @@
 # prints the warm raking pools onto the baked plaster. Coordinates map
 # app (x, y, z) -> Blender (x, -z, y); the glTF exporter's Y-up conversion maps
 # them back exactly.
+import os
 import sys
 
 import bpy
@@ -243,6 +244,13 @@ scene.render.bake.use_pass_direct = True
 scene.render.bake.use_pass_indirect = True
 scene.render.bake.use_pass_color = True
 scene.render.bake.margin = 8
+
+# scripts/bake-room-hdri.py imports this module to reuse the room construction —
+# same geometry, same emitters — and renders a panorama instead of a lightmap. It
+# sets WFS_SKIP_BAKE so it does not pay for a bake it will not use.
+if os.environ.get("WFS_SKIP_BAKE") == "1":
+    print("SKIP BAKE (room reused for HDRI)", flush=True)
+    raise SystemExit(0)
 
 for obj in (shell, ceiling):
     bpy.ops.object.select_all(action="DESELECT")
