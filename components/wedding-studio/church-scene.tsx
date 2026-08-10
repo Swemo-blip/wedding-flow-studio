@@ -2647,7 +2647,11 @@ function StagingHandles({
 // previous #3c4a33 was byte-identical to the pews, so the officiant's only ornament
 // was the same colour as the furniture. Deliberately off the brass at #b39152 too,
 // so a vestment cannot be read as a candlestick.
-const STOLE_COLOR = "#96702f";
+// Raised from #96702f after a CLOSE capture: at arm's length the dark gold in flat
+// roughness 0.7 read as brown cardboard hanging from his neck, not as a vestment.
+// Lighter, and with a whisper of metalness below, it reads as silk with gold
+// thread. Still deliberately off the brass #b39152 — a vestment is not a candlestick.
+const STOLE_COLOR = "#ab8438";
 const ALB_HEM_Y = 0.02;
 const ALB_TOP_Y = 0.9;
 const NECK_Y = 0.951;
@@ -2691,7 +2695,7 @@ function Vestments() {
       {[-0.042, 0.042].map((x) => (
         <mesh castShadow key={x} position={[x, (NECK_Y + 0.56) / 2, 0.122]}>
           <boxGeometry args={[0.044, NECK_Y - 0.56, 0.008]} />
-          <meshStandardMaterial color={STOLE_COLOR} roughness={0.7} />
+          <meshStandardMaterial color={STOLE_COLOR} metalness={0.18} roughness={0.52} />
         </mesh>
       ))}
       {/* The band joining them, AT the measured neck rather than above the head, and
@@ -2699,7 +2703,7 @@ function Vestments() {
           neck (z -0.05) to where they now sit (z 0.118). */}
       <mesh castShadow position={[0, NECK_Y - 0.01, 0.035]}>
         <boxGeometry args={[0.125, 0.032, 0.175]} />
-        <meshStandardMaterial color={STOLE_COLOR} roughness={0.7} />
+        <meshStandardMaterial color={STOLE_COLOR} metalness={0.18} roughness={0.52} />
       </mesh>
     </group>
   );

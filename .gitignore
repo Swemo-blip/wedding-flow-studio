@@ -17,3 +17,4 @@ next-panic-*.log
 # by an over-eager `git add -A` and shipped 138KB of junk into history.
 public/__*
 scratch-bakes/
+*.bak
