@@ -605,10 +605,16 @@ def build_gown(body):
     centre = Vector((0.0, waist_y, 0.0))
 
     segments = 64
-    rings = 22
-    floor_radius = 0.34
+    rings = 26
+    floor_radius = 0.30
     hem_z = 0.012
     FOLDS = 13
+    # A skirt that eases outward from the hip in one sweep is a CONE from the
+    # side — the owner flagged it twice. Real fabric falls almost vertically
+    # over the thighs and flares from around the knee: fitted to the hip,
+    # near-straight fall to the knee, then an accelerating trumpet flare.
+    knee_z = 0.28 * height
+    over_knee_radius = hip_radius + 0.035
     skirt_mesh = bpy.data.meshes.new("gown.skirt")
     verts = []
     faces = []
@@ -620,19 +626,24 @@ def build_gown(body):
             # fitted section: follow the body from waist out to the hip
             s = (top_z - z) / (top_z - hip_z)
             base = (waist_radius + 0.012) * (1 - s) + (hip_radius + 0.012) * s
+        elif z >= knee_z:
+            # the fall: barely widening from hip to knee
+            s = (hip_z - z) / (hip_z - knee_z)
+            base = (hip_radius + 0.012) + (over_knee_radius - hip_radius - 0.012) * s
         else:
-            # flare section: ease from the hip out to the hem
-            s = (hip_z - z) / (hip_z - hem_z)
-            base = (hip_radius + 0.012) + (floor_radius - hip_radius - 0.012) * s**1.35
-        # drape folds: none at the hip, deepening toward the hem
+            # the trumpet: accelerate outward from the knee to the hem
+            s = (knee_z - z) / (knee_z - hem_z)
+            base = over_knee_radius + (floor_radius - over_knee_radius) * s**1.7
+        # drape folds: a whisper above the knee, deep at the hem
         drop = max(0.0, (hip_z - z) / (hip_z - hem_z))
-        fold_amp = 0.022 * drop**1.6
+        below_knee = max(0.0, (knee_z - z) / (knee_z - hem_z))
+        fold_amp = 0.006 * drop + 0.034 * below_knee**1.4
         for segment in range(segments):
             angle = 2 * math.pi * segment / segments
             radius = base + fold_amp * math.sin(angle * FOLDS)
             # train: the back hem (+y is behind the figure) reaches further out
             behind = max(0.0, math.sin(angle))
-            radius *= 1.0 + 0.32 * drop**2.2 * behind**2
+            radius *= 1.0 + 0.36 * below_knee**2.0 * behind**2
             verts.append((centre.x + radius * math.cos(angle), centre.y + radius * math.sin(angle), z))
     for ring in range(rings):
         for segment in range(segments):
@@ -846,6 +857,13 @@ elif MODE == "full":
     canonicalize_materials()
     frame_full_body(body)
     render(OUT + ".check.png", samples=64, x=560, y=1000)
+    # second angle: the owner judges the gown from the side-rear quarter, so
+    # the check must too — a skirt can pass head-on and still be a cone in profile
+    camera = bpy.context.scene.camera
+    body_height = visible_top(body)
+    camera.location = (2.6, -2.2, body_height * 0.52)
+    camera.rotation_euler = (math.radians(90), 0.0, math.radians(50))
+    render(OUT + ".side.png", samples=64, x=560, y=1000)
     export_glb(OUT, cap=RECIPES[FIGURE].get("texture_cap", 1024))
 else:
     raise SystemExit(f"unknown mode {MODE}")
