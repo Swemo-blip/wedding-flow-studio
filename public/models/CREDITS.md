@@ -52,3 +52,11 @@ Geometry authored from the scene's own constants; no external assets. CC0.
 
 Baked in-project with scripts/bake-hall-shell.py (Blender 5.2 Cycles, headless).
 Dusk rig: emissive window panes + eight pendant glow spheres. No external assets. CC0.
+
+## bride_realistic.glb
+
+Generated in-project with scripts/build-real-figures.py: MPFB 2 (MakeHuman-in-
+Blender, GPLv3 code) with the MakeHuman system asset pack — base mesh, skin,
+eyes, hair, eyebrows, eyelashes, teeth are all CC0 from makehumancommunity.org.
+Posed with Blender IK, gown constructed procedurally from the body's own
+measurements, textures baked/shrunk at export. CC0.

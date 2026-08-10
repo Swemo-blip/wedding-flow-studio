@@ -2322,6 +2322,49 @@ const POSE_RELAXED: FigurePose = {
   "LowerArm.R": [0.22, 0, 0.08]
 };
 
+// The MPFB-generated realistic figures (see scripts/build-real-figures.py) are
+// STATIC posed meshes — no rig, no clips — so they stand in for the stylized
+// figure whenever it is standing still, and hand back to the animated Quaternius
+// rig for the processional walk until a walk cycle is exported for them too.
+const BRIDE_REALISTIC = assetPath("/models/bride_realistic.glb");
+useGLTF.preload(BRIDE_REALISTIC);
+
+function RealisticFigure({ heightUnits, url }: { heightUnits: number; url: string }) {
+  const { scene } = useGLTF(url);
+  const object = useMemo(() => {
+    const copy = scene.clone(true);
+    const bounds = new THREE.Box3().setFromObject(copy);
+    const modelHeight = Math.max(0.01, bounds.max.y - bounds.min.y);
+    const scale = heightUnits / modelHeight;
+    copy.scale.setScalar(scale);
+    // feet exactly on the y0 datum, whatever tiny offset the export carries
+    copy.position.y = -bounds.min.y * scale;
+    copy.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      // The Blender export marks EVERY material alphaMode BLEND, which in
+      // three.js disables depth writes: hair strips lost the depth battle
+      // against the scalp (bald crown) and the mouth interior blended through
+      // the face (a brick-red head). Opaque by default; alpha-clip only the
+      // strip-based parts that genuinely carry cutout textures.
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        const standard = material as THREE.MeshStandardMaterial;
+        const cutout = /braid|hair|eyebrow|eyelash/i.test(standard.name);
+        standard.transparent = false;
+        standard.depthWrite = true;
+        standard.alphaTest = cutout ? 0.28 : 0;
+        standard.needsUpdate = true;
+      }
+    });
+    return copy;
+  }, [heightUnits, scene]);
+  return <primitive object={object} />;
+}
+
 function AnimatedFigure({
   clip,
   pose,
@@ -3006,8 +3049,15 @@ function Processional({
       ) : null}
       {hideFigure !== "bride" ? (
         <group position={[brideX, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
-          <AnimatedFigure clip={moving ? "walk" : "idle"} pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
-          <BridalGown />
+          {moving ? (
+            <>
+              <AnimatedFigure clip="walk" pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
+              <BridalGown />
+            </>
+          ) : (
+            // 1.68 m bride, converted through the measured scene unit
+            <RealisticFigure heightUnits={1.68 / SCENE_UNIT_METRES} url={BRIDE_REALISTIC} />
+          )}
           <Bouquet />
           {couplePhotos?.bride ? (
             <Billboard position={[0, COUPLE_FACE_Y, 0]}>
