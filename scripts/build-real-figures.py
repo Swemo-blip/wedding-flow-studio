@@ -83,7 +83,12 @@ RECIPES = {
         "teeth": "teeth_base.mhclo",
         "hair": "short02.mhclo",
         "skin_mhmat": "young_caucasian_male.mhmat",
-        "clothes": ["male_elegantsuit01.mhclo", "shoes06.mhclo"],
+        "clothes": ["male_elegantsuit01.mhclo", "shoes04.mhclo"],
+        "eye_color": "brownlight_eye.png",
+        "hair_tint": (0.38, 0.26, 0.16),
+        "skin_tint": (1.0, 0.95, 0.9),
+        "clasp_height": 0.56,
+        "suit_darken": True,
     },
     "officiant": {
         "name": "officiant",
@@ -105,7 +110,12 @@ RECIPES = {
         "teeth": "teeth_base.mhclo",
         "hair": "short01.mhclo",
         "skin_mhmat": "middleage_caucasian_male.mhmat",
-        "clothes": ["male_elegantsuit01.mhclo", "shoes06.mhclo"],
+        "clothes": ["male_elegantsuit01.mhclo", "shoes04.mhclo"],
+        "eye_color": "grey_eye.png",
+        "hair_tint": (0.55, 0.53, 0.5),
+        "skin_tint": (1.0, 0.95, 0.9),
+        "clasp_height": 0.63,
+        "suit_darken": True,
     },
 }
 
@@ -162,6 +172,50 @@ def _tint_image_pixels(match, tint):
             image.pack()
 
 
+def _darken_suit_pixels(match):
+    """Turn the grey CC0 suit charcoal-black while keeping the shirt and the
+    tie's light stripes: dark and mid pixels are pushed toward black on a luma
+    ramp, bright pixels pass through."""
+    import numpy as np
+
+    done = set()
+    for material in bpy.data.materials:
+        if not material.use_nodes:
+            continue
+        for node in material.node_tree.nodes:
+            if node.type != "TEX_IMAGE" or not node.image:
+                continue
+            image = node.image
+            if match not in image.filepath.lower() or image.name in done:
+                continue
+            done.add(image.name)
+            buffer = np.empty(image.size[0] * image.size[1] * 4, dtype=np.float32)
+            image.pixels.foreach_get(buffer)
+            pixels = buffer.reshape(-1, 4)
+            luma = pixels[:, :3].max(axis=1)
+            print(f"SUIT DARKEN: {image.name} luma p10 {np.percentile(luma,10):.2f} p50 {np.percentile(luma,50):.2f} p90 {np.percentile(luma,90):.2f}", flush=True)
+            # below 0.45 luma -> x0.18 (charcoal); above 0.75 -> x1.0; ramp between
+            factor = 0.18 + 0.82 * np.clip((luma - 0.45) / 0.3, 0.0, 1.0)
+            pixels[:, :3] *= factor[:, None]
+            image.pixels.foreach_set(pixels.ravel())
+            image.pack()
+    # The texture is only one path to Base Color: MAKESKIN routes it through a
+    # diffuseIntensity MIX whose flat Color1 wins at low factors. Darken every
+    # unlinked colour input on the way so no path keeps the suit grey.
+    for material in bpy.data.materials:
+        if match not in material.name.lower() or not material.use_nodes:
+            continue
+        for node in material.node_tree.nodes:
+            if node.type == "MIX_RGB":
+                for socket in (node.inputs["Color1"], node.inputs["Color2"]):
+                    if not socket.is_linked:
+                        r, g, b, a = socket.default_value
+                        socket.default_value = (r * 0.2, g * 0.2, b * 0.22, a)
+            if node.type == "BSDF_PRINCIPLED" and not node.inputs["Base Color"].is_linked:
+                r, g, b, a = node.inputs["Base Color"].default_value
+                node.inputs["Base Color"].default_value = (r * 0.2, g * 0.2, b * 0.22, a)
+
+
 def _matte_materials(match):
     """Hair strips ship glossy; under white key lights the specular sheen buries
     any base colour in silver — proven by the red-tint test."""
@@ -205,6 +259,11 @@ def beautify(recipe):
         # one matcher is enough: every hair texture lives under data/hair/
         _tint_image_pixels("/hair/", recipe["hair_tint"])
         _matte_materials("/hair/")
+    if recipe.get("suit_darken"):
+        _darken_suit_pixels("elegantsuit")
+        # the charcoal read as light grey in two renders running — it was
+        # specular sheen on the fabric, not colour; wool is matte
+        _matte_materials("elegantsuit")
     if recipe.get("skin_tint"):
         # matches young_LIGHTSKINNED_female_diffuse.png and its male sibling —
         # never the hair textures, which also end in _diffuse
@@ -230,9 +289,10 @@ def pose_altar_ik():
     height = visible_top(body)
     # figure faces -Y; hands almost touching at the centreline, a hand's depth
     # in front of the belly
+    clasp = RECIPES[FIGURE].get("clasp_height", 0.62)
     targets = {
-        "l": Vector((0.055, -0.185, 0.62 * height)),
-        "r": Vector((-0.055, -0.185, 0.62 * height)),
+        "l": Vector((0.055, -0.185, clasp * height)),
+        "r": Vector((-0.055, -0.185, clasp * height)),
     }
     helpers = []
     for side, position in targets.items():
@@ -580,7 +640,7 @@ if MODE == "bones":
                 print("BONE", bone.name, flush=True)
 elif MODE == "linkdump":
     for material in bpy.data.materials:
-        if "braid" not in material.name.lower():
+        if "braid" not in material.name.lower() and "elegantsuit" not in material.name.lower():
             continue
         for link in material.node_tree.links:
             print(

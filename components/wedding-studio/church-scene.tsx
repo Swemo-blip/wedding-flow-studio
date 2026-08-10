@@ -2327,7 +2327,11 @@ const POSE_RELAXED: FigurePose = {
 // figure whenever it is standing still, and hand back to the animated Quaternius
 // rig for the processional walk until a walk cycle is exported for them too.
 const BRIDE_REALISTIC = assetPath("/models/bride_realistic.glb");
+const GROOM_REALISTIC = assetPath("/models/groom_realistic.glb");
+const OFFICIANT_REALISTIC = assetPath("/models/officiant_realistic.glb");
 useGLTF.preload(BRIDE_REALISTIC);
+useGLTF.preload(GROOM_REALISTIC);
+useGLTF.preload(OFFICIANT_REALISTIC);
 
 function RealisticFigure({ heightUnits, url }: { heightUnits: number; url: string }) {
   const { scene } = useGLTF(url);
@@ -2789,13 +2793,13 @@ function Psalter() {
 }
 
 function Celebrant({ mark }: { mark: StudioSceneOffset }) {
-  // The officiant waits at the altar, facing the congregation.
+  // The officiant waits at the altar, facing the congregation. The realistic
+  // figure wears a black suit, so the stylized alb/stole/psalter props must not
+  // render on top of him.
   const home = ceremonyStagingMarks.celebrant.home;
   return (
     <group position={[home.x + mark.x, 0, home.z + mark.z]}>
-      <AnimatedFigure clip="idle" pose={POSE_OFFICIANT} recolor={PRIEST_COLORS} rotationY={0} url={FIGURE_SUIT} />
-      <Vestments />
-      <Psalter />
+      <RealisticFigure heightUnits={1.78 / SCENE_UNIT_METRES} url={OFFICIANT_REALISTIC} />
     </group>
   );
 }
@@ -3033,13 +3037,11 @@ function Processional({
           ref={groomRef}
           rotation={[0, Math.PI, 0]}
         >
-          <AnimatedFigure
-            clip={groomMoving ? "walk" : "idle"}
-            pose={groomMoving ? POSE_RELAXED : POSE_HANDS_CLASPED}
-            recolor={GROOM_COLORS}
-            rotationY={0}
-            url={FIGURE_SUIT}
-          />
+          {groomMoving ? (
+            <AnimatedFigure clip="walk" pose={POSE_RELAXED} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
+          ) : (
+            <RealisticFigure heightUnits={1.83 / SCENE_UNIT_METRES} url={GROOM_REALISTIC} />
+          )}
           {couplePhotos?.groom ? (
             <Billboard position={[0, COUPLE_FACE_Y, 0]}>
               <FaceDisc photoUrl={couplePhotos.groom} radius={0.115} />
