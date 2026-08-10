@@ -60,3 +60,10 @@ Blender, GPLv3 code) with the MakeHuman system asset pack — base mesh, skin,
 eyes, hair, eyebrows, eyelashes, teeth are all CC0 from makehumancommunity.org.
 Posed with Blender IK, gown constructed procedurally from the body's own
 measurements, textures baked/shrunk at export. CC0.
+
+## groom_realistic.glb, officiant_realistic.glb, congregant_f1/f2/m1/m2.glb
+
+Same in-project MPFB pipeline as bride_realistic.glb (scripts/
+build-real-figures.py); all source assets CC0 from makehumancommunity.org.
+Congregants are seated variants with darkened CC0 casual suits and half-size
+textures, instanced in the scene. CC0.

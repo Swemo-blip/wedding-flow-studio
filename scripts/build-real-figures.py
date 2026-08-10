@@ -117,6 +117,52 @@ RECIPES = {
         "clasp_height": 0.63,
         "suit_darken": True,
     },
+    # Congregation variants: seated guests for the pews. No shoes — the pew
+    # fronts hide the feet — and half-size textures; there will be many clones.
+    "congregant_f1": {
+        "name": "congregant_f1",
+        "phenotype": {"gender": 0.0, "age": 0.5, "muscle": 0.4, "weight": 0.5, "proportions": 0.55, "height": 0.5, "cupsize": 0.5, "firmness": 0.5,
+                      "race": {"asian": 0.0, "caucasian": 1.0, "african": 0.0}},
+        "rig": "game_engine",
+        "eyes": "low-poly.mhclo", "eyebrows": "eyebrow008.mhclo", "eyelashes": "eyelashes03.mhclo",
+        "hair": "bob01.mhclo", "skin_mhmat": "middleage_caucasian_female.mhmat",
+        "clothes": ["female_casualsuit01.mhclo"],
+        "eye_color": "green_eye.png", "hair_tint": (0.42, 0.3, 0.19), "skin_tint": (1.0, 0.95, 0.9),
+        "clothes_tint": (0.34, 0.38, 0.31), "seated": True, "no_subdiv": True, "texture_cap": 512,
+    },
+    "congregant_m1": {
+        "name": "congregant_m1",
+        "phenotype": {"gender": 1.0, "age": 0.55, "muscle": 0.5, "weight": 0.55, "proportions": 0.5, "height": 0.55, "cupsize": 0.5, "firmness": 0.5,
+                      "race": {"asian": 0.0, "caucasian": 1.0, "african": 0.0}},
+        "rig": "game_engine",
+        "eyes": "low-poly.mhclo", "eyebrows": "eyebrow002.mhclo", "eyelashes": "eyelashes04.mhclo",
+        "hair": "short03.mhclo", "skin_mhmat": "middleage_caucasian_male.mhmat",
+        "clothes": ["male_casualsuit03.mhclo"],
+        "eye_color": "brown_eye.png", "hair_tint": (0.3, 0.22, 0.15), "skin_tint": (1.0, 0.95, 0.9),
+        "clothes_tint": (0.3, 0.31, 0.36), "seated": True, "no_subdiv": True, "texture_cap": 512,
+    },
+    "congregant_f2": {
+        "name": "congregant_f2",
+        "phenotype": {"gender": 0.0, "age": 0.35, "muscle": 0.45, "weight": 0.45, "proportions": 0.6, "height": 0.48, "cupsize": 0.45, "firmness": 0.6,
+                      "race": {"asian": 0.35, "caucasian": 0.65, "african": 0.0}},
+        "rig": "game_engine",
+        "eyes": "low-poly.mhclo", "eyebrows": "eyebrow005.mhclo", "eyelashes": "eyelashes03.mhclo",
+        "hair": "long01.mhclo", "skin_mhmat": "young_asian_female.mhmat",
+        "clothes": ["female_casualsuit01.mhclo"],
+        "eye_color": "brown_eye.png", "hair_tint": (0.2, 0.15, 0.12), "skin_tint": (1.0, 0.95, 0.9),
+        "clothes_tint": (0.42, 0.24, 0.26), "seated": True, "no_subdiv": True, "texture_cap": 512,
+    },
+    "congregant_m2": {
+        "name": "congregant_m2",
+        "phenotype": {"gender": 1.0, "age": 0.4, "muscle": 0.55, "weight": 0.5, "proportions": 0.6, "height": 0.6, "cupsize": 0.5, "firmness": 0.5,
+                      "race": {"asian": 0.0, "caucasian": 0.7, "african": 0.3}},
+        "rig": "game_engine",
+        "eyes": "low-poly.mhclo", "eyebrows": "eyebrow007.mhclo", "eyelashes": "eyelashes04.mhclo",
+        "hair": "short04.mhclo", "skin_mhmat": "young_african_male.mhmat",
+        "clothes": ["male_casualsuit05.mhclo"],
+        "eye_color": "deepblue_eye.png", "hair_tint": (0.16, 0.13, 0.11), "skin_tint": (1.0, 0.95, 0.9),
+        "clothes_tint": (0.24, 0.27, 0.38), "seated": True, "no_subdiv": True, "texture_cap": 512,
+    },
 }
 
 
@@ -293,6 +339,9 @@ def beautify(recipe):
         # one matcher is enough: every hair texture lives under data/hair/
         _tint_image_pixels("/hair/", recipe["hair_tint"])
         _matte_materials("/hair/")
+    if recipe.get("clothes_tint"):
+        _tint_image_pixels("casualsuit", recipe["clothes_tint"])
+        _matte_materials("casualsuit")
     if recipe.get("suit_darken"):
         _darken_suit_pixels("elegantsuit")
         # the charcoal read as light grey in two renders running — it was
@@ -354,6 +403,55 @@ def pose_altar_ik():
     bpy.context.view_layer.update()
 
 
+def pose_seated():
+    """Sit the figure on a virtual pew bench: drop the pelvis to seat height,
+    fold the legs (thighs forward, calves down), rest the hands toward the lap.
+    All axes world-space through the same conversion the altar pose uses."""
+    from mathutils import Matrix, Vector
+
+    armature = _find_armature()
+    body = _body_object()
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode="POSE")
+    to_armature = armature.matrix_world.inverted().to_3x3()
+
+    # Pew seat surface in the scene measures 0.4415 m; the hip joint sits a bit
+    # above where the body meets the bench.
+    pelvis = armature.pose.bones["pelvis"]
+    pelvis_height = (armature.matrix_world @ pelvis.matrix.translation).z
+    drop = pelvis_height - 0.53
+    delta = to_armature @ Vector((0.0, 0.0, -drop))
+    pelvis.matrix = Matrix.Translation(delta) @ pelvis.matrix
+    bpy.context.view_layer.update()
+
+    world_axes = {"X": Vector((1, 0, 0)), "Y": Vector((0, 1, 0)), "Z": Vector((0, 0, 1))}
+
+    def rotate(bone_name, axis, degrees):
+        pose_bone = armature.pose.bones.get(bone_name)
+        if pose_bone is None:
+            print("MISSING BONE", bone_name, flush=True)
+            return
+        pivot = pose_bone.matrix.translation.copy()
+        armature_axis = (to_armature @ world_axes[axis]).normalized()
+        pose_bone.matrix = (
+            Matrix.Translation(pivot)
+            @ Matrix.Rotation(math.radians(degrees), 4, armature_axis)
+            @ Matrix.Translation(-pivot)
+        ) @ pose_bone.matrix
+        bpy.context.view_layer.update()
+
+    for side in ("l", "r"):
+        rotate(f"thigh_{side}", "X", -84)
+        rotate(f"calf_{side}", "X", 82)
+        rotate(f"upperarm_{side}", "Y", 68 if side == "l" else -68)
+        rotate(f"lowerarm_{side}", "X", -28)
+    for finger in ("index", "middle", "ring", "pinky"):
+        for joint in (1, 2):
+            rotate(f"{finger}_{joint:02d}_l", "Z", -18)
+            rotate(f"{finger}_{joint:02d}_r", "Z", 18)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
 def pose_altar(pose_spec):
     """Rotate pose bones about world axes at their own heads. The rig is the
     game_engine (UE-mannequin) rig; the figure faces -Y, arms along +/-X."""
@@ -406,7 +504,7 @@ def freeze():
             if modifier.type == "SUBSURF":
                 # keep render-level subdivision on the BODY (the face needs it);
                 # flat hair strips and lash cards only get heavier, not better
-                if obj.name.endswith(".body"):
+                if obj.name.endswith(".body") and not RECIPES[FIGURE].get("no_subdiv"):
                     modifier.levels = modifier.render_levels
                     modifier.show_viewport = True
                 else:
@@ -584,14 +682,14 @@ def shrink_images(cap=1024):
     for image in bpy.data.images:
         if not image.size[0]:
             continue
-        limit = cap if "skinned_" in image.filepath.lower() else 512
+        limit = cap if "skinned_" in image.filepath.lower() else min(512, cap)
         if max(image.size) > limit:
             factor = limit / max(image.size)
             image.scale(max(1, round(image.size[0] * factor)), max(1, round(image.size[1] * factor)))
 
 
-def export_glb(path):
-    shrink_images()
+def export_glb(path, cap=1024):
+    shrink_images(cap)
     for obj in bpy.data.objects:
         obj.select_set(obj.type == "MESH")
     bpy.ops.export_scene.gltf(
@@ -736,8 +834,11 @@ elif MODE == "posecheck":
     frame_full_body(body)
     render(OUT, samples=48, x=560, y=1000)
 elif MODE == "full":
-    pose_altar_ik()
-    pose_altar(ALTAR_POSE)
+    if RECIPES[FIGURE].get("seated"):
+        pose_seated()
+    else:
+        pose_altar_ik()
+        pose_altar(ALTAR_POSE)
     freeze()
     body = _body_object()
     if RECIPES[FIGURE].get("gown"):
@@ -745,6 +846,6 @@ elif MODE == "full":
     canonicalize_materials()
     frame_full_body(body)
     render(OUT + ".check.png", samples=64, x=560, y=1000)
-    export_glb(OUT)
+    export_glb(OUT, cap=RECIPES[FIGURE].get("texture_cap", 1024))
 else:
     raise SystemExit(f"unknown mode {MODE}")

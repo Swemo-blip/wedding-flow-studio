@@ -2043,11 +2043,77 @@ function ChurchDoors({ open }: { open: number }) {
   );
 }
 
+// The realistic congregation: four MPFB-generated seated guests (see
+// scripts/build-real-figures.py), instanced per part-mesh — one InstancedMesh
+// per material per variant keeps the whole crowd around two dozen draw calls,
+// the same budget the stylized crowd had.
+const REALISTIC_CONGREGANTS = [
+  "/models/congregant_f1.glb",
+  "/models/congregant_m1.glb",
+  "/models/congregant_f2.glb",
+  "/models/congregant_m2.glb"
+].map(assetPath);
+
+if (typeof window !== "undefined") {
+  REALISTIC_CONGREGANTS.forEach((url) => useGLTF.preload(url));
+}
+
+function RealisticCongregationVariant({ seats, url }: { seats: CongregationSeat[]; url: string }) {
+  const { scene } = useGLTF(url);
+  const group = useMemo(() => {
+    const root = new THREE.Group();
+    if (!seats.length) {
+      return root;
+    }
+    // The GLB is authored in metres; the scene works in its own unit.
+    const scale = 1 / SCENE_UNIT_METRES;
+    const seatMatrices = seats.map((seat) => {
+      const matrix = new THREE.Matrix4();
+      matrix.compose(
+        new THREE.Vector3(...seat.position),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(0, seat.rotationY, 0)),
+        new THREE.Vector3(scale, scale, scale)
+      );
+      return matrix;
+    });
+    scene.updateMatrixWorld(true);
+    scene.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) {
+        return;
+      }
+      // Same normalization the hero figures need: the export marks everything
+      // alphaMode BLEND, which kills depth writes.
+      const material = (mesh.material as THREE.MeshStandardMaterial).clone();
+      const cutout = /hair|bob0|long0|short0|eyebrow|eyelash/i.test(material.name);
+      material.transparent = false;
+      material.depthWrite = true;
+      material.alphaTest = cutout ? 0.28 : 0;
+      const instanced = new THREE.InstancedMesh(mesh.geometry, material, seats.length);
+      const composed = new THREE.Matrix4();
+      seatMatrices.forEach((seatMatrix, index) => {
+        composed.multiplyMatrices(seatMatrix, mesh.matrixWorld);
+        instanced.setMatrixAt(index, composed);
+      });
+      instanced.instanceMatrix.needsUpdate = true;
+      instanced.castShadow = true;
+      root.add(instanced);
+    });
+    return root;
+  }, [scene, seats]);
+  return <primitive object={group} />;
+}
+
 function ChurchCongregation({ highQuality = true, seats }: { highQuality?: boolean; seats: CongregationSeat[] }) {
+  void highQuality;
   return (
     <group>
-      {CONGREGATION_MODELS.map((url, variant) => (
-        <CongregationVariant highQuality={highQuality} key={url} seats={seats.filter((seat) => seat.variant === variant)} url={url} />
+      {REALISTIC_CONGREGANTS.map((url, variant) => (
+        <RealisticCongregationVariant
+          key={url}
+          seats={seats.filter((seat) => seat.variant % REALISTIC_CONGREGANTS.length === variant)}
+          url={url}
+        />
       ))}
     </group>
   );
