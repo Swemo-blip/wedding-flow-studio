@@ -59,7 +59,7 @@ RECIPES = {
         "hair": "braid01.mhclo",
         "skin_mhmat": "young_caucasian_female.mhmat",
         "eye_color": "blue_eye.png",
-        "hair_tint": (0.55, 0.38, 0.22),  # warm dark blonde
+        "hair_shades": ((0.28, 0.185, 0.075), (0.9, 0.75, 0.42)),  # golden blonde: shadow tone -> highlight tone
         "skin_tint": (1.0, 0.95, 0.9),  # takes the porcelain edge off
         "gown": True,
     },
@@ -172,6 +172,37 @@ def _tint_image_pixels(match, tint):
             image.pack()
 
 
+def _recolor_hair_pixels(match, dark, light):
+    """Recolour hair by LUMA REMAP, not multiply: a multiply can only darken,
+    so no tint could ever make the mid-grey strands blonde. Shadow pixels take
+    the dark tone, highlights take the light tone, everything between blends —
+    contrast survives, colour is fully replaced."""
+    import numpy as np
+
+    done = set()
+    for material in bpy.data.materials:
+        if not material.use_nodes:
+            continue
+        for node in material.node_tree.nodes:
+            if node.type != "TEX_IMAGE" or not node.image:
+                continue
+            image = node.image
+            if match not in image.filepath.lower() or image.name in done:
+                continue
+            done.add(image.name)
+            buffer = np.empty(image.size[0] * image.size[1] * 4, dtype=np.float32)
+            image.pixels.foreach_get(buffer)
+            pixels = buffer.reshape(-1, 4)
+            luma = pixels[:, :3].max(axis=1)
+            scale = max(1e-6, float(np.percentile(luma[pixels[:, 3] > 0.5], 92))) if (pixels[:, 3] > 0.5).any() else 1.0
+            mix = np.clip(luma / scale, 0.0, 1.0)[:, None]
+            dark_tone = np.asarray(dark, dtype=np.float32)
+            light_tone = np.asarray(light, dtype=np.float32)
+            pixels[:, :3] = dark_tone + (light_tone - dark_tone) * mix
+            image.pixels.foreach_set(pixels.ravel())
+            image.pack()
+
+
 def _darken_suit_pixels(match):
     """Turn the grey CC0 suit charcoal-black while keeping the shirt and the
     tie's light stripes: dark and mid pixels are pushed toward black on a luma
@@ -255,7 +286,10 @@ def _swap_eye_texture(color_png):
 def beautify(recipe):
     if recipe.get("eye_color"):
         _swap_eye_texture(recipe["eye_color"])
-    if recipe.get("hair_tint"):
+    if recipe.get("hair_shades"):
+        _recolor_hair_pixels("/hair/", *recipe["hair_shades"])
+        _matte_materials("/hair/")
+    elif recipe.get("hair_tint"):
         # one matcher is enough: every hair texture lives under data/hair/
         _tint_image_pixels("/hair/", recipe["hair_tint"])
         _matte_materials("/hair/")
@@ -445,33 +479,62 @@ def build_gown(body):
     duplicate.data.materials.clear()
     duplicate.data.materials.append(satin)
 
-    # --- skirt: lathed A-line from the measured waist -----------------------
+    # --- skirt: hip-fitted, draped, with a small train ----------------------
     # Measured on TORSO vertices only: the pose hangs arms and hands at waist
     # height, and including them once made the skirt as wide as the arm span.
-    body_bmesh = bmesh.new()
-    body_bmesh.from_mesh(body.data)
-    body_layer = body_bmesh.verts.layers.deform.active
-    waist_verts = [
-        v.co.copy()
-        for v in body_bmesh.verts
-        if abs(v.co.z - waist_z) < 0.03 and arm_weight_of(v, body_layer) < 0.2
-    ]
-    body_bmesh.free()
-    centre = Vector((0.0, float(np.mean([v.y for v in waist_verts])), 0.0))
-    waist_radius = max((Vector((v.x, v.y, 0)) - Vector((centre.x, centre.y, 0))).length for v in waist_verts)
+    # The first version interpolated waist->floor directly, which rendered as a
+    # smooth cone — a lampshade, the owner said. A gown follows the HIP before
+    # it flares, drapes in vertical folds that deepen toward the hem, and
+    # trails into a train at the back.
+    hip_z = 0.52 * height
 
-    segments = 48
-    rings = 14
-    floor_radius = 0.40
+    def torso_ring_radius(at_z):
+        body_bmesh = bmesh.new()
+        body_bmesh.from_mesh(body.data)
+        body_layer = body_bmesh.verts.layers.deform.active
+        ring = [
+            v.co.copy()
+            for v in body_bmesh.verts
+            if abs(v.co.z - at_z) < 0.03 and arm_weight_of(v, body_layer) < 0.2
+        ]
+        body_bmesh.free()
+        centre_y = float(np.mean([v.y for v in ring]))
+        radius = max((Vector((v.x, v.y - centre_y, 0))).length for v in ring)
+        return radius, centre_y
+
+    waist_radius, waist_y = torso_ring_radius(waist_z)
+    hip_radius, _ = torso_ring_radius(hip_z)
+    centre = Vector((0.0, waist_y, 0.0))
+
+    segments = 64
+    rings = 22
+    floor_radius = 0.34
+    hem_z = 0.012
+    FOLDS = 13
     skirt_mesh = bpy.data.meshes.new("gown.skirt")
     verts = []
     faces = []
+    top_z = waist_z + 0.02
     for ring in range(rings + 1):
         t = ring / rings
-        z = (waist_z + 0.02) * (1 - t) + 0.015 * t
-        radius = (waist_radius + 0.014) + (floor_radius - waist_radius - 0.014) * t**1.45
+        z = top_z * (1 - t) + hem_z * t
+        if z >= hip_z:
+            # fitted section: follow the body from waist out to the hip
+            s = (top_z - z) / (top_z - hip_z)
+            base = (waist_radius + 0.012) * (1 - s) + (hip_radius + 0.012) * s
+        else:
+            # flare section: ease from the hip out to the hem
+            s = (hip_z - z) / (hip_z - hem_z)
+            base = (hip_radius + 0.012) + (floor_radius - hip_radius - 0.012) * s**1.35
+        # drape folds: none at the hip, deepening toward the hem
+        drop = max(0.0, (hip_z - z) / (hip_z - hem_z))
+        fold_amp = 0.022 * drop**1.6
         for segment in range(segments):
             angle = 2 * math.pi * segment / segments
+            radius = base + fold_amp * math.sin(angle * FOLDS)
+            # train: the back hem (+y is behind the figure) reaches further out
+            behind = max(0.0, math.sin(angle))
+            radius *= 1.0 + 0.32 * drop**2.2 * behind**2
             verts.append((centre.x + radius * math.cos(angle), centre.y + radius * math.sin(angle), z))
     for ring in range(rings):
         for segment in range(segments):
