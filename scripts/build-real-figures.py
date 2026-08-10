@@ -586,7 +586,13 @@ def build_gown(body):
     # trails into a train at the back.
     hip_z = 0.52 * height
 
-    def torso_ring_radius(at_z):
+    # Cross-sections are ELLIPSES measured per axis, not circles: a body is
+    # wider side-to-side than front-to-back, and a circular skirt sized to the
+    # widest point stands off the body front and back — from the app's slightly
+    # elevated camera the 12 mm stand-off read as an open-topped cylinder with
+    # a visible rim (the owner's third screenshot). Flush at the top, elliptical
+    # through the fall, blending to a circle only in the flare.
+    def torso_ring_extents(at_z):
         body_bmesh = bmesh.new()
         body_bmesh.from_mesh(body.data)
         body_layer = body_bmesh.verts.layers.deform.active
@@ -597,11 +603,12 @@ def build_gown(body):
         ]
         body_bmesh.free()
         centre_y = float(np.mean([v.y for v in ring]))
-        radius = max((Vector((v.x, v.y - centre_y, 0))).length for v in ring)
-        return radius, centre_y
+        half_x = max(abs(v.x) for v in ring)
+        half_y = max(abs(v.y - centre_y) for v in ring)
+        return half_x, half_y, centre_y
 
-    waist_radius, waist_y = torso_ring_radius(waist_z)
-    hip_radius, _ = torso_ring_radius(hip_z)
+    waist_x, waist_y_half, waist_y = torso_ring_extents(waist_z)
+    hip_x, hip_y_half, _ = torso_ring_extents(hip_z)
     centre = Vector((0.0, waist_y, 0.0))
 
     segments = 64
@@ -614,7 +621,9 @@ def build_gown(body):
     # over the thighs and flares from around the knee: fitted to the hip,
     # near-straight fall to the knee, then an accelerating trumpet flare.
     knee_z = 0.28 * height
-    over_knee_radius = hip_radius + 0.035
+    # 6.5 mm over the skin: the bodice shell is 4.5 mm, so the skirt lies flush
+    # against it instead of leaving a rim to look into
+    EASE = 0.0065
     skirt_mesh = bpy.data.meshes.new("gown.skirt")
     verts = []
     faces = []
@@ -625,26 +634,41 @@ def build_gown(body):
         if z >= hip_z:
             # fitted section: follow the body from waist out to the hip
             s = (top_z - z) / (top_z - hip_z)
-            base = (waist_radius + 0.012) * (1 - s) + (hip_radius + 0.012) * s
+            base_x = (waist_x + EASE) * (1 - s) + (hip_x + EASE) * s
+            base_y = (waist_y_half + EASE) * (1 - s) + (hip_y_half + EASE) * s
+            circle_mix = 0.0
         elif z >= knee_z:
             # the fall: barely widening from hip to knee
             s = (hip_z - z) / (hip_z - knee_z)
-            base = (hip_radius + 0.012) + (over_knee_radius - hip_radius - 0.012) * s
+            base_x = hip_x + EASE + 0.03 * s
+            base_y = hip_y_half + EASE + 0.03 * s
+            circle_mix = 0.25 * s
         else:
-            # the trumpet: accelerate outward from the knee to the hem
+            # the trumpet: accelerate outward from the knee to the hem,
+            # relaxing the ellipse into a circle as the fabric leaves the body
             s = (knee_z - z) / (knee_z - hem_z)
-            base = over_knee_radius + (floor_radius - over_knee_radius) * s**1.7
+            flare = s**1.7
+            base_x = (hip_x + EASE + 0.03) + (floor_radius - hip_x - EASE - 0.03) * flare
+            base_y = (hip_y_half + EASE + 0.03) + (floor_radius - hip_y_half - EASE - 0.03) * flare
+            circle_mix = 0.25 + 0.75 * s
+        mean_radius = (base_x + base_y) / 2
+        base_x = base_x * (1 - circle_mix) + mean_radius * circle_mix
+        base_y = base_y * (1 - circle_mix) + mean_radius * circle_mix
         # drape folds: a whisper above the knee, deep at the hem
         drop = max(0.0, (hip_z - z) / (hip_z - hem_z))
         below_knee = max(0.0, (knee_z - z) / (knee_z - hem_z))
         fold_amp = 0.006 * drop + 0.034 * below_knee**1.4
         for segment in range(segments):
             angle = 2 * math.pi * segment / segments
-            radius = base + fold_amp * math.sin(angle * FOLDS)
+            fold = 1.0 + fold_amp * math.sin(angle * FOLDS) / max(0.05, mean_radius)
             # train: the back hem (+y is behind the figure) reaches further out
             behind = max(0.0, math.sin(angle))
-            radius *= 1.0 + 0.36 * below_knee**2.0 * behind**2
-            verts.append((centre.x + radius * math.cos(angle), centre.y + radius * math.sin(angle), z))
+            train = 1.0 + 0.36 * below_knee**2.0 * behind**2
+            verts.append((
+                centre.x + base_x * fold * train * math.cos(angle),
+                centre.y + base_y * fold * train * math.sin(angle),
+                z,
+            ))
     for ring in range(rings):
         for segment in range(segments):
             a = ring * segments + segment
@@ -861,8 +885,8 @@ elif MODE == "full":
     # the check must too — a skirt can pass head-on and still be a cone in profile
     camera = bpy.context.scene.camera
     body_height = visible_top(body)
-    camera.location = (2.6, -2.2, body_height * 0.52)
-    camera.rotation_euler = (math.radians(90), 0.0, math.radians(50))
+    camera.location = (2.4, -2.0, body_height * 0.78)
+    camera.rotation_euler = (math.radians(79), 0.0, math.radians(50))
     render(OUT + ".side.png", samples=64, x=560, y=1000)
     export_glb(OUT, cap=RECIPES[FIGURE].get("texture_cap", 1024))
 else:
