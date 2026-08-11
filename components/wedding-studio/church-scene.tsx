@@ -2404,10 +2404,50 @@ useGLTF.preload(OFFICIANT_REALISTIC);
 // one part of the day the couple actually watches. These are the same figures
 // with their skeleton kept and a walk clip baked on (scripts/build-real-figures
 // walk mode), so nothing about them changes when they move.
+// One gait cycle of the baked clip covers this much floor: two steps, each
+// 2 * leg length * sin(stride angle). Measured off the bake's own numbers
+// (scripts/build-real-figures.py, stride_degrees) rather than eyeballed.
+const WALK_CYCLE_METRES = 1.58;
 const BRIDE_WALK = assetPath("/models/bride_walk.glb");
 const GROOM_WALK = assetPath("/models/groom_walk.glb");
 useGLTF.preload(BRIDE_WALK);
 useGLTF.preload(GROOM_WALK);
+
+// Measuring a rigged figure is not Box3.setFromObject.
+//
+// The bride vanished from the aisle while the groom walked it fine, and the
+// difference between them is that her gown skirt is BONE-PARENTED (a node whose
+// parent is a bone) while everything he wears is skinned. Box3.setFromObject
+// walks world matrices that have not been updated on a fresh clone, and for a
+// skinned mesh it uses the bind-pose geometry box — together those produced a
+// bounding box metres tall, so heightUnits / modelHeight scaled her to a speck.
+//
+// Measure the SKIN instead: update the matrices first, then take the box of the
+// body meshes only, and refuse a result that is not plausibly a person rather
+// than silently scaling the couple out of their own wedding.
+function measureFigure(root: THREE.Object3D) {
+  root.updateMatrixWorld(true);
+  const bounds = new THREE.Box3();
+  root.traverse((node) => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) {
+      return;
+    }
+    if (!mesh.geometry.boundingBox) {
+      mesh.geometry.computeBoundingBox();
+    }
+    const box = mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrixWorld);
+    bounds.union(box);
+  });
+  const height = bounds.max.y - bounds.min.y;
+  if (!Number.isFinite(height) || height < 0.3 || height > 4) {
+    // The figures are authored in metres at human size; anything else means the
+    // measurement failed, and a wrong SCALE is invisible while a wrong height is
+    // merely wrong.
+    return { bottom: 0, height: 1.75 };
+  }
+  return { bottom: bounds.min.y, height };
+}
 
 function normalizeRealisticMaterials(root: THREE.Object3D) {
   root.traverse((node) => {
@@ -2438,11 +2478,10 @@ function RealisticWalker({ heightUnits, url }: { heightUnits: number; url: strin
   const { animations, scene } = useGLTF(url);
   const object = useMemo(() => {
     const copy = cloneSkinned(scene);
-    const bounds = new THREE.Box3().setFromObject(copy);
-    const modelHeight = Math.max(0.01, bounds.max.y - bounds.min.y);
-    const scale = heightUnits / modelHeight;
+    const { bottom, height } = measureFigure(copy);
+    const scale = heightUnits / height;
     copy.scale.setScalar(scale);
-    copy.position.y = -bounds.min.y * scale;
+    copy.position.y = -bottom * scale;
     normalizeRealisticMaterials(copy);
     return copy;
   }, [heightUnits, scene]);
@@ -2450,7 +2489,16 @@ function RealisticWalker({ heightUnits, url }: { heightUnits: number; url: strin
   useEffect(() => {
     const clip = animations.find((candidate) => /walk/i.test(candidate.name)) ?? animations[0];
     if (clip) {
-      mixer.clipAction(clip).reset().play();
+      const action = mixer.clipAction(clip).reset();
+      // Match the gait to the GROUND SPEED or the feet skate. The clip's one
+      // cycle covers WALK_CYCLE_METRES of floor; the couple cross the nave at
+      // (start - end) / PROCESSION_DURATION, which is a deliberate 0.55 m/s
+      // processional pace. Playing a 1.19 m/s gait at 0.55 m/s of travel is
+      // exactly the "walks very strangely" the owner saw.
+      const groundSpeed = ((PROCESSION_START_Z - PROCESSION_END_Z) / PROCESSION_DURATION) * SCENE_UNIT_METRES;
+      const wantedCycleSeconds = WALK_CYCLE_METRES / Math.max(0.05, groundSpeed);
+      action.timeScale = clip.duration / wantedCycleSeconds;
+      action.play();
     }
     return () => {
       mixer.stopAllAction();
@@ -2464,12 +2512,11 @@ function RealisticFigure({ heightUnits, url }: { heightUnits: number; url: strin
   const { scene } = useGLTF(url);
   const object = useMemo(() => {
     const copy = scene.clone(true);
-    const bounds = new THREE.Box3().setFromObject(copy);
-    const modelHeight = Math.max(0.01, bounds.max.y - bounds.min.y);
-    const scale = heightUnits / modelHeight;
+    const { bottom, height } = measureFigure(copy);
+    const scale = heightUnits / height;
     copy.scale.setScalar(scale);
     // feet exactly on the y0 datum, whatever tiny offset the export carries
-    copy.position.y = -bounds.min.y * scale;
+    copy.position.y = -bottom * scale;
     normalizeRealisticMaterials(copy);
     return copy;
   }, [heightUnits, scene]);
@@ -2979,35 +3026,15 @@ const GOWN_PROFILE: [number, number][] = [
   [0.094, 0.565]
 ];
 
-function BridalGown() {
-  const geometry = useMemo(() => {
-    const points = GOWN_PROFILE.map(([radius, height]) => new THREE.Vector2(radius, height));
-    const lathe = new THREE.LatheGeometry(points, 40);
-    // Revolved geometry is already indexed, so this genuinely smooths the skirt —
-    // the same reason the welded figures now shade smoothly.
-    lathe.computeVertexNormals();
-    return lathe;
-  }, []);
 
-  return (
-    <mesh castShadow geometry={geometry}>
-      {/* Silk reads as a soft sheen rather than a matte wall: lower roughness than the
-          figure fabrics, and a faint warm tint so the white does not clip flat. */}
-      <meshStandardMaterial color="#f7f1e6" envMapIntensity={1.15} roughness={0.52} />
-    </mesh>
-  );
-}
-
-// Grip height for each bride. The stylized rig clasps at 0.56 units; the
-// realistic figure (1.68 m, hands solved at 0.62 of her height) clasps 15 cm
-// higher, and the posy left at the old height floated at her HIP — a rounded
+// Grip height, derived from the figure rather than typed: the posy left at the
+// old stylized rig's height floated at the realistic bride's HIP — a rounded
 // blush lump on a white skirt, which the owner read as a seat showing through
-// the gown. Derived, not typed, so it cannot drift again.
-const STYLIZED_BOUQUET_Y = 0.56;
+// the gown.
 const REALISTIC_BRIDE_METRES = 1.68;
 const REALISTIC_BOUQUET_Y = (REALISTIC_BRIDE_METRES * 0.62) / SCENE_UNIT_METRES;
 
-function Bouquet({ gripY = STYLIZED_BOUQUET_Y }: { gripY?: number }) {
+function Bouquet({ gripY = REALISTIC_BOUQUET_Y }: { gripY?: number }) {
   // A small ivory + blush posy, offset from the palm origin into the grip.
   const blooms: Array<[number, number, number, number]> = [
     [0, 0, 0, 0.058],
@@ -3168,15 +3195,12 @@ function Processional({
       {hideFigure !== "bride" ? (
         <group position={[brideX, 0, PROCESSION_START_Z]} ref={brideRef} rotation={[0, Math.PI, 0]}>
           {moving ? (
-            <>
-              <AnimatedFigure clip="walk" pose={POSE_BOUQUET} recolor={BRIDE_COLORS} rotationY={0} url={FIGURE_WOMAN} />
-              <BridalGown />
-            </>
+            <RealisticWalker heightUnits={REALISTIC_BRIDE_METRES / SCENE_UNIT_METRES} url={BRIDE_WALK} />
           ) : (
             // 1.68 m bride, converted through the measured scene unit
             <RealisticFigure heightUnits={REALISTIC_BRIDE_METRES / SCENE_UNIT_METRES} url={BRIDE_REALISTIC} />
           )}
-          <Bouquet gripY={moving ? STYLIZED_BOUQUET_Y : REALISTIC_BOUQUET_Y} />
+          <Bouquet gripY={REALISTIC_BOUQUET_Y} />
           {couplePhotos?.bride ? (
             <Billboard position={[0, COUPLE_FACE_Y, 0]}>
               <FaceDisc photoUrl={couplePhotos.bride} radius={0.115} />

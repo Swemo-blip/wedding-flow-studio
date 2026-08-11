@@ -62,6 +62,9 @@ RECIPES = {
         "hair_shades": ((0.28, 0.185, 0.075), (0.9, 0.75, 0.42)),  # golden blonde: shadow tone -> highlight tone
         "skin_tint": (1.0, 0.95, 0.9),  # takes the porcelain edge off
         "hand_gap": 0.1,
+        # A bride holding a bouquet in both hands does not swing her arms; the
+        # clip did, and it read as a march.
+        "arm_swing": 0,
         "gown": True,
     },
     "groom": {
@@ -90,6 +93,7 @@ RECIPES = {
         "skin_tint": (1.0, 0.95, 0.9),
         "clasp_height": 0.56,
         "hand_gap": 0.125,
+        "arm_swing": 11,
         "suit_darken": True,
     },
     "officiant": {
@@ -981,6 +985,7 @@ def bind_to_armature(names):
 
 
 def bake_walk_clip(frames=32, stride_degrees=26, arm_degrees=17):
+    arm_degrees = RECIPES[FIGURE].get("arm_swing", arm_degrees)
     """A plain walk cycle authored on the rig: thighs and upper arms swing in
     opposite phase, calves fold on the back swing, and the pelvis bobs twice per
     cycle. Two keys per extreme with Blender's bezier interpolation is enough —

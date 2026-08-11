@@ -61,7 +61,13 @@ const walkthrough: Waypoint[] = [
   // two of them were literally above the dinner hall's ceiling.
   { camera: { position: [0, 1.1, 6.1], still: true, target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Arrival — inside the portal
   { camera: { position: [0, 1.15, 4.3], target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Prelude — down the aisle
-  { camera: { position: [0, 1.2, 2.6], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Processional
+  // THE PROCESSIONAL IS FILMED FROM THE ALTAR, LOOKING BACK.
+  // Every other shot in this list points at the altar, which put the camera
+  // AHEAD of the couple facing away from them: they walked up the aisle behind
+  // the lens and the owner never saw them arrive. A wedding videographer stands
+  // where the couple are going, not where they came from. Off the centreline so
+  // the officiant is not a pillar in the middle of the frame.
+  { camera: { position: [0.95, 1.15, -3.2], target: [0, 1.05, 2.6] }, lighting: "day", step: "preview" }, // Processional — they walk toward us
   { camera: { position: [0, 1.15, 0.6], target: [0, 1.05, -3.4] }, lighting: "day", step: "preview" }, // Vows — close on the couple at z -2.3
   { camera: { position: [0, 1.2, 2.2], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
   { camera: { position: [2.2, 1.3, 2.4], target: [0, 1.05, -3] }, lighting: "day", step: "preview" }, // Group photos — side angle

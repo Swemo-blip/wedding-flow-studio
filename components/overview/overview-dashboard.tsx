@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Armchair,
@@ -145,7 +145,13 @@ export function OverviewDashboard({ startInPreview = false }: { startInPreview?:
   // with the congregation excluded or capped and the pews at their unsubdivided
   // base, measure the flatten time, and only then flip this flag — after a live
   // click that stays responsive end to end.
-  const PHOTO_MODE_ENABLED = false;
+  // The reel's per-moment dwell. Held frames get a short beat; the processional
+// has to outlast the 20-second walk it is showing or the ceremony cuts to the
+// dinner with the couple still halfway up the aisle.
+const PHASE_DWELL_MS = 3400;
+const PROCESSION_DWELL_MS = 21500;
+
+const PHOTO_MODE_ENABLED = false;
   const [photoActive, setPhotoActive] = useState(false);
   const [photoPhase, setPhotoPhase] = useState<PhotoPhase | null>(null);
   const stageRef = useRef<HTMLElement | null>(null);
@@ -319,6 +325,17 @@ export function OverviewDashboard({ startInPreview = false }: { startInPreview?:
     return derived.length ? derived : previewPhases;
   }, [localProject.timelineItems]);
   const safePhaseIndex = Math.min(phaseIndex, phases.length - 1);
+  // A moment is "the processional" when its waypoint is the one that drives the
+  // couple up the aisle — the same test the scene uses to start the walk, so the
+  // dwell and the animation can never disagree about which beat this is.
+  const isProcessionalPhase = useCallback(
+    (index: number) => {
+      const waypointIndex = waypointIndexForPhase(phases[index]?.title ?? "");
+      const waypoint = walkthroughWaypoint(waypointIndex);
+      return isAutoProcessional(waypointIndex, waypoint);
+    },
+    [phases]
+  );
 
   // Edit and Preview used to render two SEPARATE CeremonyScene mounts, one in
   // each branch of the mode ternary. React tore one down and built the other on
@@ -334,7 +351,13 @@ export function OverviewDashboard({ startInPreview = false }: { startInPreview?:
       return;
     }
 
-    const interval = window.setInterval(() => {
+    // A moment that plays an ANIMATION has to outlast it. The processional is a
+    // 20-second walk up the aisle and the reel moved on after 3.4 s, so the
+    // ceremony cut to the dinner before the couple had reached the altar — the
+    // one beat the whole preview exists to show. Every other moment is a held
+    // frame and keeps the short beat.
+    const dwell = isProcessionalPhase(safePhaseIndex) ? PROCESSION_DWELL_MS : PHASE_DWELL_MS;
+    const timer = window.setTimeout(() => {
       setPhaseIndex((currentIndex) => {
         if (currentIndex >= phases.length - 1) {
           setIsPlaying(false);
@@ -342,10 +365,10 @@ export function OverviewDashboard({ startInPreview = false }: { startInPreview?:
         }
         return currentIndex + 1;
       });
-    }, 3400);
+    }, dwell);
 
-    return () => window.clearInterval(interval);
-  }, [isPlaying, mode, phases.length]);
+    return () => window.clearTimeout(timer);
+  }, [isPlaying, isProcessionalPhase, mode, phases.length, safePhaseIndex]);
 
   useEffect(() => {
     queueMicrotask(() => {
