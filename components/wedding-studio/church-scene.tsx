@@ -2399,6 +2399,67 @@ useGLTF.preload(BRIDE_REALISTIC);
 useGLTF.preload(GROOM_REALISTIC);
 useGLTF.preload(OFFICIANT_REALISTIC);
 
+// The couple used to revert to the stylized rigs the moment they started
+// walking — losing face, hair and gown for the whole processional, which is the
+// one part of the day the couple actually watches. These are the same figures
+// with their skeleton kept and a walk clip baked on (scripts/build-real-figures
+// walk mode), so nothing about them changes when they move.
+const BRIDE_WALK = assetPath("/models/bride_walk.glb");
+const GROOM_WALK = assetPath("/models/groom_walk.glb");
+useGLTF.preload(BRIDE_WALK);
+useGLTF.preload(GROOM_WALK);
+
+function normalizeRealisticMaterials(root: THREE.Object3D) {
+  root.traverse((node) => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) {
+      return;
+    }
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.frustumCulled = false;
+    // The Blender export marks EVERY material alphaMode BLEND, which in
+    // three.js disables depth writes: hair strips lost the depth battle
+    // against the scalp (bald crown) and the mouth interior blended through
+    // the face (a brick-red head). Opaque by default; alpha-clip only the
+    // strip-based parts that genuinely carry cutout textures.
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      const standard = material as THREE.MeshStandardMaterial;
+      const cutout = /braid|hair|eyebrow|eyelash/i.test(standard.name);
+      standard.transparent = false;
+      standard.depthWrite = true;
+      standard.alphaTest = cutout ? 0.28 : 0;
+      standard.needsUpdate = true;
+    }
+  });
+}
+
+function RealisticWalker({ heightUnits, url }: { heightUnits: number; url: string }) {
+  const { animations, scene } = useGLTF(url);
+  const object = useMemo(() => {
+    const copy = cloneSkinned(scene);
+    const bounds = new THREE.Box3().setFromObject(copy);
+    const modelHeight = Math.max(0.01, bounds.max.y - bounds.min.y);
+    const scale = heightUnits / modelHeight;
+    copy.scale.setScalar(scale);
+    copy.position.y = -bounds.min.y * scale;
+    normalizeRealisticMaterials(copy);
+    return copy;
+  }, [heightUnits, scene]);
+  const mixer = useMemo(() => new THREE.AnimationMixer(object), [object]);
+  useEffect(() => {
+    const clip = animations.find((candidate) => /walk/i.test(candidate.name)) ?? animations[0];
+    if (clip) {
+      mixer.clipAction(clip).reset().play();
+    }
+    return () => {
+      mixer.stopAllAction();
+    };
+  }, [animations, mixer]);
+  useFrame((_, delta) => mixer.update(delta));
+  return <primitive object={object} />;
+}
+
 function RealisticFigure({ heightUnits, url }: { heightUnits: number; url: string }) {
   const { scene } = useGLTF(url);
   const object = useMemo(() => {
@@ -2409,27 +2470,7 @@ function RealisticFigure({ heightUnits, url }: { heightUnits: number; url: strin
     copy.scale.setScalar(scale);
     // feet exactly on the y0 datum, whatever tiny offset the export carries
     copy.position.y = -bounds.min.y * scale;
-    copy.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh) {
-        return;
-      }
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      // The Blender export marks EVERY material alphaMode BLEND, which in
-      // three.js disables depth writes: hair strips lost the depth battle
-      // against the scalp (bald crown) and the mouth interior blended through
-      // the face (a brick-red head). Opaque by default; alpha-clip only the
-      // strip-based parts that genuinely carry cutout textures.
-      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-        const standard = material as THREE.MeshStandardMaterial;
-        const cutout = /braid|hair|eyebrow|eyelash/i.test(standard.name);
-        standard.transparent = false;
-        standard.depthWrite = true;
-        standard.alphaTest = cutout ? 0.28 : 0;
-        standard.needsUpdate = true;
-      }
-    });
+    normalizeRealisticMaterials(copy);
     return copy;
   }, [heightUnits, scene]);
   return <primitive object={object} />;
@@ -3113,7 +3154,7 @@ function Processional({
           rotation={[0, Math.PI, 0]}
         >
           {groomMoving ? (
-            <AnimatedFigure clip="walk" pose={POSE_RELAXED} recolor={GROOM_COLORS} rotationY={0} url={FIGURE_SUIT} />
+            <RealisticWalker heightUnits={1.83 / SCENE_UNIT_METRES} url={GROOM_WALK} />
           ) : (
             <RealisticFigure heightUnits={1.83 / SCENE_UNIT_METRES} url={GROOM_REALISTIC} />
           )}

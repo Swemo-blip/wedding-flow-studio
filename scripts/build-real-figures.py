@@ -510,9 +510,15 @@ def curl_fingers(degrees=30, thumb_degrees=16):
 
 
 
-def freeze():
+def freeze(keep_armature=False):
     """Apply every mesh's modifier stack (mask, subdiv, armature) so the pose
-    becomes plain static geometry, then drop the armature."""
+    becomes plain static geometry, then drop the armature.
+
+    keep_armature leaves the rig and the Armature modifiers in place, which is
+    what the walking variants need: a static export loses the figure entirely
+    the moment the app has to animate it, and the couple were reverting to the
+    old stylized rigs mid-aisle — losing face, hair and gown for the whole
+    processional."""
     for obj in [o for o in bpy.data.objects if o.type == "MESH"]:
         bpy.context.view_layer.objects.active = obj
         # MakeHuman's targets live on as shape keys, and a mesh with shape keys
@@ -520,6 +526,8 @@ def freeze():
         if obj.data.shape_keys is not None:
             bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
         for modifier in list(obj.modifiers):
+            if keep_armature and modifier.type == "ARMATURE":
+                continue
             if modifier.type == "SUBSURF":
                 # keep render-level subdivision on the BODY (the face needs it);
                 # flat hair strips and lash cards only get heavier, not better
@@ -533,6 +541,8 @@ def freeze():
                 bpy.ops.object.modifier_apply(modifier=modifier.name)
             except RuntimeError as error:
                 print("MODIFIER SKIPPED", obj.name, modifier.name, error, flush=True)
+    if keep_armature:
+        return
     armature = _find_armature()
     if armature is not None:
         bpy.data.objects.remove(armature, do_unlink=True)
@@ -579,10 +589,18 @@ def build_gown(body):
         mesh.verts.remove(vert)
     mesh.to_mesh(duplicate.data)
     mesh.free()
+    # The bodice is a COPY of the body's own faces, so its inner wall is exactly
+    # coincident with the skin and the two z-fight — the breasts came through the
+    # satin as skin-toned bumps. Push the copy out along its normals first so
+    # there is real air between body and cloth, then thicken it.
+    lift = duplicate.modifiers.new("lift", "DISPLACE")
+    lift.mid_level = 0.0
+    lift.strength = 0.005
     solidify = duplicate.modifiers.new("shell", "SOLIDIFY")
-    solidify.thickness = 0.0045
+    solidify.thickness = 0.005
     solidify.offset = 1.0
     bpy.context.view_layer.objects.active = duplicate
+    bpy.ops.object.modifier_apply(modifier="lift")
     bpy.ops.object.modifier_apply(modifier="shell")
 
     satin = bpy.data.materials.new("gown_satin")
@@ -924,6 +942,108 @@ def build_prayer_book(body):
     block.data.materials.append(pages)
 
 
+def bind_to_armature(names):
+    from mathutils import Matrix
+
+    """Parent the procedurally built garments and props to the rig so they walk
+    with the figure. The gown and the prayer book are rigid relative to the
+    pelvis and the hands respectively — a lathe skirt given automatic weights
+    tears at the knee, while a rigid bind reads as stiff cloth, which at a
+    walking pace and this distance is the better trade."""
+    armature = _find_armature()
+    if armature is None:
+        return
+    bone_for = {
+        "gown.skirt": "pelvis",
+        "gown.bodice": "spine_02",
+        "vestment.collar": "spine_03",
+        "vestment.stole": "spine_03",
+        "cross": "spine_03",
+        "book": "spine_02",
+    }
+    for obj in list(bpy.data.objects):
+        if obj.type != "MESH":
+            continue
+        match = next((prefix for prefix in bone_for if obj.name.startswith(prefix)), None)
+        if match is None or obj.name not in names:
+            continue
+        bone_name = bone_for[match]
+        if bone_name not in armature.pose.bones:
+            continue
+        obj.parent = armature
+        obj.parent_type = "BONE"
+        obj.parent_bone = bone_name
+        # parent_set to a bone puts the child at the bone's TAIL, so the
+        # inverse has to be captured explicitly or the gown jumps to the hips
+        obj.matrix_parent_inverse = (
+            armature.matrix_world @ armature.pose.bones[bone_name].matrix @ Matrix.Translation((0, armature.pose.bones[bone_name].length, 0))
+        ).inverted()
+
+
+def bake_walk_clip(frames=32, stride_degrees=26, arm_degrees=17):
+    """A plain walk cycle authored on the rig: thighs and upper arms swing in
+    opposite phase, calves fold on the back swing, and the pelvis bobs twice per
+    cycle. Two keys per extreme with Blender's bezier interpolation is enough —
+    at the distance the processional plays, the read is the swing, not the
+    footfall."""
+    from mathutils import Matrix, Vector
+
+    armature = _find_armature()
+    if armature is None:
+        return
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode="POSE")
+
+    scene = bpy.context.scene
+    scene.frame_start = 1
+    scene.frame_end = frames
+    rest = {bone.name: bone.matrix_basis.copy() for bone in armature.pose.bones}
+
+    def swing(bone_name, degrees):
+        pose_bone = armature.pose.bones.get(bone_name)
+        if pose_bone is None:
+            return
+        pivot = pose_bone.matrix.translation.copy()
+        axis = (armature.matrix_world.inverted().to_3x3() @ Vector((1, 0, 0))).normalized()
+        pose_bone.matrix = (
+            Matrix.Translation(pivot)
+            @ Matrix.Rotation(math.radians(degrees), 4, axis)
+            @ Matrix.Translation(-pivot)
+        ) @ pose_bone.matrix
+
+    for frame in range(1, frames + 1):
+        scene.frame_set(frame)
+        phase = 2 * math.pi * (frame - 1) / frames
+        for bone in armature.pose.bones:
+            bone.matrix_basis = rest[bone.name].copy()
+        bpy.context.view_layer.update()
+
+        swing("thigh_l", stride_degrees * math.sin(phase))
+        swing("thigh_r", stride_degrees * math.sin(phase + math.pi))
+        swing("calf_l", -max(0.0, -math.sin(phase)) * stride_degrees * 1.5)
+        swing("calf_r", -max(0.0, -math.sin(phase + math.pi)) * stride_degrees * 1.5)
+        swing("upperarm_l", arm_degrees * math.sin(phase + math.pi))
+        swing("upperarm_r", arm_degrees * math.sin(phase))
+
+        pelvis = armature.pose.bones.get("pelvis")
+        if pelvis is not None:
+            bob = 0.012 * math.cos(2 * phase)
+            local = (armature.matrix_world.inverted().to_3x3() @ Vector((0, 0, bob)))
+            pelvis.matrix = Matrix.Translation(local) @ pelvis.matrix
+
+        for bone in armature.pose.bones:
+            bone.keyframe_insert(data_path="location", frame=frame)
+            bone.rotation_mode = bone.rotation_mode
+            bone.keyframe_insert(
+                data_path="rotation_quaternion" if bone.rotation_mode == "QUATERNION" else "rotation_euler",
+                frame=frame,
+            )
+    if armature.animation_data and armature.animation_data.action:
+        armature.animation_data.action.name = "walk"
+    bpy.ops.object.mode_set(mode="OBJECT")
+    scene.frame_set(1)
+
+
 def canonicalize_materials():
     """Rewire every image material to the one shape the glTF exporter is
     guaranteed to understand: image -> Base Color, image alpha -> Alpha (as
@@ -966,11 +1086,18 @@ def export_glb(path, cap=1024):
     shrink_images(cap)
     for obj in bpy.data.objects:
         obj.select_set(obj.type == "MESH")
+    for obj in bpy.data.objects:
+        if obj.type == "ARMATURE":
+            obj.select_set(True)
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format="GLB",
         use_selection=True,
-        export_apply=True,
+        # export_apply bakes modifiers, which DESTROYS an armature deform:
+        # the walking figures would export as a static T-pose mesh with an
+        # unused skeleton. Off whenever a rig is going along.
+        export_apply=not any(o.type == "ARMATURE" for o in bpy.data.objects),
+        export_animations=True,
         export_image_format="AUTO",
     )
     print("EXPORTED ->", path, flush=True)
@@ -1137,6 +1264,29 @@ elif MODE == "posecheck":
     body = _body_object()
     frame_full_body(body)
     render(OUT, samples=48, x=560, y=1000)
+elif MODE == "walk":
+    # The SAME figure as `full`, but rigged and carrying a walk clip, so the
+    # processional keeps the couple's own face, hair and gown instead of
+    # reverting to the stylized rigs halfway up the aisle.
+    pose_altar_ik()
+    curl_fingers()
+    freeze(keep_armature=True)
+    body = _body_object()
+    built = set()
+    before = {o.name for o in bpy.data.objects}
+    if RECIPES[FIGURE].get("gown"):
+        build_gown(body)
+    if RECIPES[FIGURE].get("vestments"):
+        build_vestments(body)
+    if RECIPES[FIGURE].get("prayer_book"):
+        build_prayer_book(body)
+    built = {o.name for o in bpy.data.objects} - before
+    bind_to_armature(built)
+    bake_walk_clip()
+    canonicalize_materials()
+    frame_full_body(body)
+    render(OUT + ".check.png", samples=48, x=560, y=1000)
+    export_glb(OUT, cap=RECIPES[FIGURE].get("texture_cap", 1024))
 elif MODE == "full":
     if RECIPES[FIGURE].get("seated"):
         pose_seated()
