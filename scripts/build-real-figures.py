@@ -61,6 +61,7 @@ RECIPES = {
         "eye_color": "blue_eye.png",
         "hair_shades": ((0.28, 0.185, 0.075), (0.9, 0.75, 0.42)),  # golden blonde: shadow tone -> highlight tone
         "skin_tint": (1.0, 0.95, 0.9),  # takes the porcelain edge off
+        "hand_gap": 0.1,
         "gown": True,
     },
     "groom": {
@@ -88,6 +89,7 @@ RECIPES = {
         "hair_tint": (0.38, 0.26, 0.16),
         "skin_tint": (1.0, 0.95, 0.9),
         "clasp_height": 0.56,
+        "hand_gap": 0.125,
         "suit_darken": True,
     },
     "officiant": {
@@ -115,7 +117,10 @@ RECIPES = {
         "hair_tint": (0.55, 0.53, 0.5),
         "skin_tint": (1.0, 0.95, 0.9),
         "clasp_height": 0.63,
-        "suit_darken": True,
+        "suit_blackout": True,
+        "vestments": True,
+        "prayer_book": True,
+        "hand_gap": 0.125,
     },
     # Congregation variants: seated guests for the pews. No shoes — the pew
     # fronts hide the feet — and half-size textures; there will be many clones.
@@ -293,6 +298,32 @@ def _darken_suit_pixels(match):
                 node.inputs["Base Color"].default_value = (r * 0.2, g * 0.2, b * 0.22, a)
 
 
+def _blackout_pixels(match, level=0.12):
+    """Multiply EVERY pixel down, highlights included. The luma-ramped darken
+    deliberately preserves a white shirt and a striped tie — right for a groom,
+    wrong for an officiant, where they fight the clerical collar. Black torso,
+    one white band: that is what a priest looks like."""
+    import numpy as np
+
+    done = set()
+    for material in bpy.data.materials:
+        if not material.use_nodes:
+            continue
+        for node in material.node_tree.nodes:
+            if node.type != "TEX_IMAGE" or not node.image:
+                continue
+            image = node.image
+            if match not in image.filepath.lower() or image.name in done:
+                continue
+            done.add(image.name)
+            buffer = np.empty(image.size[0] * image.size[1] * 4, dtype=np.float32)
+            image.pixels.foreach_get(buffer)
+            pixels = buffer.reshape(-1, 4)
+            pixels[:, :3] *= level
+            image.pixels.foreach_set(pixels.ravel())
+            image.pack()
+
+
 def _matte_materials(match):
     """Hair strips ship glossy; under white key lights the specular sheen buries
     any base colour in silver — proven by the red-tint test."""
@@ -342,6 +373,9 @@ def beautify(recipe):
     if recipe.get("clothes_tint"):
         _tint_image_pixels("casualsuit", recipe["clothes_tint"])
         _matte_materials("casualsuit")
+    if recipe.get("suit_blackout"):
+        _blackout_pixels("elegantsuit")
+        _matte_materials("elegantsuit")
     if recipe.get("suit_darken"):
         _darken_suit_pixels("elegantsuit")
         # the charcoal read as light grey in two renders running — it was
@@ -373,9 +407,13 @@ def pose_altar_ik():
     # figure faces -Y; hands almost touching at the centreline, a hand's depth
     # in front of the belly
     clasp = RECIPES[FIGURE].get("clasp_height", 0.62)
+    # Hands must NOT meet. At 11 cm apart the palms interpenetrated into one
+    # mangled lump of fingers — what the owner saw. Interlaced fingers cannot be
+    # authored blind; separated hands with something between them can.
+    gap = RECIPES[FIGURE].get("hand_gap", 0.115)
     targets = {
-        "l": Vector((0.055, -0.185, clasp * height)),
-        "r": Vector((-0.055, -0.185, clasp * height)),
+        "l": Vector((gap, -0.185, clasp * height)),
+        "r": Vector((-gap, -0.185, clasp * height)),
     }
     helpers = []
     for side, position in targets.items():
@@ -445,50 +483,31 @@ def pose_seated():
         rotate(f"calf_{side}", "X", 82)
         rotate(f"upperarm_{side}", "Y", 68 if side == "l" else -68)
         rotate(f"lowerarm_{side}", "X", -28)
-    for finger in ("index", "middle", "ring", "pinky"):
-        for joint in (1, 2):
-            rotate(f"{finger}_{joint:02d}_l", "Z", -18)
-            rotate(f"{finger}_{joint:02d}_r", "Z", 18)
     bpy.ops.object.mode_set(mode="OBJECT")
+    curl_fingers(degrees=26)
 
 
-def pose_altar(pose_spec):
-    """Rotate pose bones about world axes at their own heads. The rig is the
-    game_engine (UE-mannequin) rig; the figure faces -Y, arms along +/-X."""
-    from mathutils import Matrix, Vector
-
+def curl_fingers(degrees=30, thumb_degrees=16):
+    """Curl the fingers around their OWN bone axis. World-axis rotation is
+    wrong for finger joints: each finger points a different way, so one shared
+    world axis splays them sideways instead of closing them — which is why the
+    hands read as spread claws. A pose bone's local X IS the curl axis on this
+    rig, so setting rotation_euler.x closes every joint correctly regardless of
+    which way the finger points."""
     armature = _find_armature()
     bpy.context.view_layer.objects.active = armature
     bpy.ops.object.mode_set(mode="POSE")
-    # Axes are given in WORLD space and converted per call: the armature object
-    # carries its own rotation, so armature-local "Y" turned out to be the world
-    # VERTICAL axis — posing against local axes swung the arms behind the back.
-    world_axes = {"X": Vector((1, 0, 0)), "Y": Vector((0, 1, 0)), "Z": Vector((0, 0, 1))}
-    to_armature = armature.matrix_world.inverted().to_3x3()
-    for bone_name, axis, degrees in pose_spec:
-        pose_bone = armature.pose.bones.get(bone_name)
-        if pose_bone is None:
-            print("MISSING BONE", bone_name, flush=True)
+    for pose_bone in armature.pose.bones:
+        name = pose_bone.name
+        if not any(name.startswith(f"{finger}_0") for finger in ("index", "middle", "ring", "pinky", "thumb")):
             continue
-        pivot = pose_bone.matrix.translation.copy()
-        armature_axis = (to_armature @ world_axes[axis]).normalized()
-        rotation = (
-            Matrix.Translation(pivot)
-            @ Matrix.Rotation(math.radians(degrees), 4, armature_axis)
-            @ Matrix.Translation(-pivot)
-        )
-        pose_bone.matrix = rotation @ pose_bone.matrix
-        bpy.context.view_layer.update()
+        pose_bone.rotation_mode = "XYZ"
+        amount = thumb_degrees if name.startswith("thumb") else degrees
+        pose_bone.rotation_euler.z = math.radians(amount if name.endswith("_l") else -amount)
+    bpy.context.view_layer.update()
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
-# Arms down to the sides, forearms raised to meet in front (bouquet height).
-# a soft two-joint curl per finger; the bouquet hides most of the hand,
-# but rigid spread fingers read as mannequin even at distance
-ALTAR_POSE = (
-    [(f"{finger}_{joint:02d}_l", "Z", -25) for finger in ("index", "middle", "ring", "pinky") for joint in (1, 2)]
-    + [(f"{finger}_{joint:02d}_r", "Z", 25) for finger in ("index", "middle", "ring", "pinky") for joint in (1, 2)]
-)
 
 
 def freeze():
@@ -611,6 +630,40 @@ def build_gown(body):
     hip_x, hip_y_half, _ = torso_ring_extents(hip_z)
     centre = Vector((0.0, waist_y, 0.0))
 
+    # THE defect the owner reported twice and I misread twice: the skirt's
+    # ellipse is centred on the WAIST's centre line, but the buttocks bulge
+    # behind the HIP's centre line — so the body pushed straight through the
+    # back of the gown and she stood in the aisle with a bare seat. Measure the
+    # body's real extent at every height and force the cloth outside it. No
+    # silhouette tuning can substitute for this clamp.
+    extent_bins = 96
+    body_half_x = [0.0] * (extent_bins + 1)
+    body_back = [0.0] * (extent_bins + 1)
+    body_front = [0.0] * (extent_bins + 1)
+    body_bmesh = bmesh.new()
+    body_bmesh.from_mesh(body.data)
+    body_layer = body_bmesh.verts.layers.deform.active
+    for vert in body_bmesh.verts:
+        if arm_weight_of(vert, body_layer) > 0.2:
+            continue
+        position = vert.co
+        if position.z > waist_z + 0.05 or position.z < 0.0:
+            continue
+        index = min(extent_bins, max(0, int(position.z / max(1e-6, waist_z + 0.05) * extent_bins)))
+        body_half_x[index] = max(body_half_x[index], abs(position.x))
+        body_back[index] = max(body_back[index], position.y - waist_y)
+        body_front[index] = max(body_front[index], waist_y - position.y)
+    body_bmesh.free()
+
+    def body_at(z):
+        index = min(extent_bins, max(0, int(z / max(1e-6, waist_z + 0.05) * extent_bins)))
+        window = range(max(0, index - 1), min(extent_bins, index + 1) + 1)
+        return (
+            max(body_half_x[i] for i in window),
+            max(body_back[i] for i in window),
+            max(body_front[i] for i in window),
+        )
+
     segments = 64
     rings = 26
     floor_radius = 0.30
@@ -654,6 +707,21 @@ def build_gown(body):
         mean_radius = (base_x + base_y) / 2
         base_x = base_x * (1 - circle_mix) + mean_radius * circle_mix
         base_y = base_y * (1 - circle_mix) + mean_radius * circle_mix
+        # clear the body wherever it is wider or deeper than the drape wants
+        skin_x, skin_back, skin_front = body_at(z)
+        base_x = max(base_x, skin_x + 0.013)
+        base_y = max(base_y, skin_front + 0.013)
+        # The BACK is a single straight line from the waist to the hem: a body-
+        # following back profile has a slope break at the hip ring that shades
+        # exactly like a seat under tight fabric — "man ser en rumpa", the
+        # owner said, and he was right. Fabric spans from the waist over the
+        # seat's widest point and falls straight into the train; it never
+        # curves back in. The line clears the measured hip depth by a few mm
+        # because the hem is far behind the body.
+        t_linear = (top_z - z) / (top_z - hem_z)
+        back_hem = floor_radius * 1.32  # the train's reach, and the line's end
+        back_straight = (waist_y_half + EASE) + (back_hem - waist_y_half - EASE) * t_linear
+        back_straight = max(back_straight, skin_back + 0.016)
         # drape folds: a whisper above the knee, deep at the hem
         drop = max(0.0, (hip_z - z) / (hip_z - hem_z))
         below_knee = max(0.0, (knee_z - z) / (knee_z - hem_z))
@@ -661,12 +729,13 @@ def build_gown(body):
         for segment in range(segments):
             angle = 2 * math.pi * segment / segments
             fold = 1.0 + fold_amp * math.sin(angle * FOLDS) / max(0.05, mean_radius)
-            # train: the back hem (+y is behind the figure) reaches further out
+            # +y is behind the figure: blend from the body-following depth at
+            # the sides to the straight back line at the centre back.
             behind = max(0.0, math.sin(angle))
-            train = 1.0 + 0.36 * below_knee**2.0 * behind**2
+            depth = base_y + (max(back_straight, base_y) - base_y) * behind**1.5
             verts.append((
-                centre.x + base_x * fold * train * math.cos(angle),
-                centre.y + base_y * fold * train * math.sin(angle),
+                centre.x + base_x * fold * math.cos(angle),
+                centre.y + depth * fold * math.sin(angle),
                 z,
             ))
     for ring in range(rings):
@@ -676,6 +745,22 @@ def build_gown(body):
             c = (ring + 1) * segments + (segment + 1) % segments
             d = (ring + 1) * segments + segment
             faces.append((a, b, c, d))
+    # Seeded at -inf, not 0: a max() seeded at zero can never report a passing
+    # (negative) clearance, so the guard would have "found" a 0.0 mm violation
+    # on a gown that fits perfectly — and a guard that fails on success gets
+    # deleted rather than trusted.
+    worst = float("-inf")
+    for ring_index in range(rings + 1):
+        z = top_z * (1 - ring_index / rings) + hem_z * (ring_index / rings)
+        skin_x, skin_back, skin_front = body_at(z)
+        ring_verts = verts[ring_index * segments:(ring_index + 1) * segments]
+        cloth_x = max(abs(v[0]) for v in ring_verts)
+        cloth_back = max(v[1] - centre.y for v in ring_verts)
+        worst = max(worst, skin_x - cloth_x, skin_back - cloth_back)
+    print(f"GOWN clearance: worst body-outside-cloth {worst * 1000:.1f} mm (want negative)", flush=True)
+    if worst > -0.002:
+        raise RuntimeError(f"the body pokes through the gown by {worst * 1000:.1f} mm")
+
     skirt_mesh.from_pydata(verts, [], faces)
     skirt_mesh.update()
     skirt = bpy.data.objects.new("gown.skirt", skirt_mesh)
@@ -683,6 +768,160 @@ def build_gown(body):
     skirt.data.materials.append(satin)
     for poly in skirt.data.polygons:
         poly.use_smooth = True
+
+
+def build_vestments(body):
+    """Black suit + WHITE CLERICAL COLLAR + a small pectoral cross. That is the
+    whole priest, and it is deliberately small.
+
+    Two larger ideas were built and thrown away. An alb lathed as a loose robe
+    became a white barrel that swallowed the shoulders and left the arms outside
+    it. A stole — first as boxes, then as ribbons measured onto the jacket's own
+    front surface — kept rendering as two slabs floating in front of the arms,
+    occluding the hands. Both failures are the same one: large cloth needs
+    simulation, not procedural geometry. Two small correct props beat one large
+    wrong one, and the collar is the signal people actually read.
+
+    The collar is sized from the JACKET's collar ring, not from the neck: a band
+    matched to the neck's own diameter sits inside the skin and renders as
+    nothing, which is exactly what the first two attempts did."""
+    import numpy as np
+
+    height = visible_top(body)
+
+    def ring_extent(obj, at_z, tolerance):
+        ring = [
+            (obj.matrix_world @ v.co).copy()
+            for v in obj.data.vertices
+            if abs((obj.matrix_world @ v.co).z - at_z) < tolerance
+        ]
+        if len(ring) < 6:
+            return None
+        centre_y = float(np.mean([v.y for v in ring]))
+        return max(abs(v.x) for v in ring), max(abs(v.y - centre_y) for v in ring), centre_y
+
+    suit = next((o for o in bpy.data.objects if o.type == "MESH" and "elegantsuit" in o.name.lower()), None)
+    if suit is None:
+        raise RuntimeError("no suit to hang the vestments on")
+    suit_top = max((suit.matrix_world @ v.co).z for v in suit.data.vertices)
+    collar_ring = ring_extent(suit, suit_top - 0.02, 0.02)
+    if collar_ring is None:
+        raise RuntimeError("no jacket collar ring found")
+    print(
+        f"VESTMENTS height {height:.3f} suit_top {suit_top:.3f} "
+        f"jacket collar {collar_ring[0]:.3f}x{collar_ring[1]:.3f} centre_y {collar_ring[2]:.3f}",
+        flush=True,
+    )
+
+    linen = bpy.data.materials.new("vestment_collar")
+    linen.use_nodes = True
+    linen_bsdf = next(n for n in linen.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    linen_bsdf.inputs["Base Color"].default_value = (0.9, 0.895, 0.875, 1.0)
+    linen_bsdf.inputs["Roughness"].default_value = 0.66
+
+    gold = bpy.data.materials.new("pectoral_cross")
+    gold.use_nodes = True
+    gold_bsdf = next(n for n in gold.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    gold_bsdf.inputs["Base Color"].default_value = (0.42, 0.31, 0.11, 1.0)
+    gold_bsdf.inputs["Roughness"].default_value = 0.34
+    gold_bsdf.inputs["Metallic"].default_value = 0.75
+
+    # --- the clerical collar: the white tab in the black V ------------------
+    # A ring around the neck cannot work on this figure: the jacket collar
+    # reaches 1.574 and the jaw starts around 1.59, so a band sized to the neck
+    # is swallowed by one or the other — four placements proved it. What a
+    # viewer actually reads on a priest from the front is the white TAB sitting
+    # in the dark V of the collar, and that has a clear, measurable home.
+    tab_z = suit_top - 0.072
+    front_candidates = [
+        (suit.matrix_world @ v.co)
+        for v in suit.data.vertices
+        if abs((suit.matrix_world @ v.co).z - tab_z) < 0.022 and abs((suit.matrix_world @ v.co).x) < 0.03
+    ]
+    tab_y = min((v.y for v in front_candidates), default=-0.12)
+    print(f"VESTMENTS tab at z {tab_z:.3f} y {tab_y:.3f}", flush=True)
+
+    bpy.ops.mesh.primitive_cube_add(size=1.0)
+    collar = bpy.context.active_object
+    collar.name = "vestment.collar"
+    collar.scale = (0.023, 0.008, 0.034)
+    collar.location = (0.0, tab_y - 0.003, tab_z)
+    collar.rotation_euler = (math.radians(-6), 0.0, 0.0)
+    collar.data.materials.append(linen)
+
+    # --- the pectoral cross: small, on the chest, on a chain ----------------
+    chest_z = 0.70 * height
+    chest = ring_extent(suit, chest_z, 0.04)
+    front_y = (chest[2] - chest[1]) if chest else -0.15
+    arm_length = 0.036
+    for axis_scale, offset_z in (((0.008, 0.006, arm_length), 0.0), ((arm_length * 0.62, 0.006, 0.008), arm_length * 0.34)):
+        bpy.ops.mesh.primitive_cube_add(size=1.0)
+        bar = bpy.context.active_object
+        bar.name = "cross.bar"
+        bar.scale = axis_scale
+        bar.location = (0.0, front_y - 0.008, chest_z + offset_z)
+        bar.data.materials.append(gold)
+
+    # A torus here read as a hoop lying on his chest. A chain is two cords
+    # running up from the cross to the back of the neck, so that is what it is.
+    cord_top_z = suit_top - 0.05
+    cord_top_x = 0.055
+    for side in (-1, 1):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.0032, depth=1.0)
+        cord = bpy.context.active_object
+        cord.name = "cross.chain"
+        top = (side * cord_top_x, front_y + 0.03, cord_top_z)
+        bottom = (0.0, front_y - 0.006, chest_z + arm_length + 0.02)
+        span = (bottom[0] - top[0], bottom[1] - top[1], bottom[2] - top[2])
+        length = math.sqrt(sum(component * component for component in span))
+        cord.scale = (1.0, 1.0, length)
+        cord.location = tuple((top[i] + bottom[i]) / 2 for i in range(3))
+        cord.rotation_euler = (
+            math.acos(span[2] / length),
+            0.0,
+            math.atan2(-span[0], span[1]),
+        )
+        cord.data.materials.append(gold)
+
+
+def build_prayer_book(body):
+    """A closed book held at waist height between the hands. It fills the gap
+    the separated hands leave, covers the fingertips — the weakest geometry on
+    the figure — and reads as the liturgy he is reading from."""
+    height = visible_top(body)
+    clasp = RECIPES[FIGURE].get("clasp_height", 0.62)
+    centre_z = clasp * height
+
+    leather = bpy.data.materials.new("book_leather")
+    leather.use_nodes = True
+    leather_bsdf = next(n for n in leather.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    # A black book on a black suit is not a book, it is a hole. Oxblood.
+    leather_bsdf.inputs["Base Color"].default_value = (0.115, 0.035, 0.03, 1.0)
+    leather_bsdf.inputs["Roughness"].default_value = 0.55
+
+    pages = bpy.data.materials.new("book_pages")
+    pages.use_nodes = True
+    pages_bsdf = next(n for n in pages.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    pages_bsdf.inputs["Base Color"].default_value = (0.82, 0.79, 0.72, 1.0)
+    pages_bsdf.inputs["Roughness"].default_value = 0.85
+
+    bpy.ops.mesh.primitive_cube_add(size=1.0)
+    cover = bpy.context.active_object
+    cover.name = "book.cover"
+    cover.scale = (0.16, 0.115, 0.032)
+    cover.location = (0.0, -0.205, centre_z)
+    cover.rotation_euler = (math.radians(-18), 0.0, 0.0)
+    cover.data.materials.append(leather)
+
+    bpy.ops.mesh.primitive_cube_add(size=1.0)
+    block = bpy.context.active_object
+    block.name = "book.pages"
+    # the page block stands proud of the boards at the fore-edge, or it is
+    # sealed inside the cover and never renders
+    block.scale = (0.148, 0.121, 0.026)
+    block.location = (0.004, -0.206, centre_z + 0.001)
+    block.rotation_euler = (math.radians(-18), 0.0, 0.0)
+    block.data.materials.append(pages)
 
 
 def canonicalize_materials():
@@ -745,8 +984,12 @@ def frame_full_body(body):
     camera.data.lens = 50
     bpy.context.scene.camera = camera
 
+    # 900 W blew every surface past 1.0 radiance, and AgX desaturates blown
+    # highlights toward white: a dark brown stole rendered pale sand and the
+    # gown rendered flat white, so two rounds of colour work were judged on an
+    # over-exposed frame. These levels keep a white gown just under clipping.
     key = bpy.data.lights.new("key", "AREA")
-    key.energy = 900
+    key.energy = 240
     key.size = 2.5
     key.color = (1.0, 0.94, 0.85)
     key_obj = bpy.data.objects.new("key", key)
@@ -754,7 +997,7 @@ def frame_full_body(body):
     key_obj.rotation_euler = (math.radians(55), 0.0, math.radians(35))
     bpy.context.collection.objects.link(key_obj)
     fill = bpy.data.lights.new("fill", "AREA")
-    fill.energy = 300
+    fill.energy = 85
     fill.size = 3.5
     fill.color = (0.92, 0.94, 1.0)
     fill_obj = bpy.data.objects.new("fill", fill)
@@ -859,11 +1102,37 @@ elif MODE == "matdump":
 elif MODE == "portrait":
     frame_face(basemesh)
     render(OUT)
+elif MODE == "handprobe":
+    # One build answers which bone-local axis curls a finger: left hand about
+    # local X, right hand about local Z, both hard over. Guessing the axis cost
+    # a full rebuild once already.
+    pose_altar_ik()
+    armature = _find_armature()
+    bpy.context.view_layer.objects.active = armature
+    bpy.ops.object.mode_set(mode="POSE")
+    for pose_bone in armature.pose.bones:
+        name = pose_bone.name
+        if not any(name.startswith(f"{f}_0") for f in ("index", "middle", "ring", "pinky", "thumb")):
+            continue
+        pose_bone.rotation_mode = "XYZ"
+        pose_bone.rotation_euler.z = math.radians(55 if name.endswith("_l") else -55)
+    bpy.context.view_layer.update()
+    bpy.ops.object.mode_set(mode="OBJECT")
+    freeze()
+    body = _body_object()
+    frame_full_body(body)
+    camera = bpy.context.scene.camera
+    body_height = visible_top(body)
+    clasp = RECIPES[FIGURE].get("clasp_height", 0.62)
+    camera.location = (0.0, -0.95, body_height * clasp)
+    camera.rotation_euler = (math.radians(90), 0.0, 0.0)
+    camera.data.lens = 110
+    render(OUT, samples=48, x=700, y=700)
 elif MODE == "posecheck":
     # the gownless build: when arms disappear, this frame says whether the pose
     # buried them or the gown swallowed them
     pose_altar_ik()
-    pose_altar(ALTAR_POSE)
+    curl_fingers()
     freeze()
     body = _body_object()
     frame_full_body(body)
@@ -873,11 +1142,15 @@ elif MODE == "full":
         pose_seated()
     else:
         pose_altar_ik()
-        pose_altar(ALTAR_POSE)
+        curl_fingers()
     freeze()
     body = _body_object()
     if RECIPES[FIGURE].get("gown"):
         build_gown(body)
+    if RECIPES[FIGURE].get("vestments"):
+        build_vestments(body)
+    if RECIPES[FIGURE].get("prayer_book"):
+        build_prayer_book(body)
     canonicalize_materials()
     frame_full_body(body)
     render(OUT + ".check.png", samples=64, x=560, y=1000)
@@ -885,9 +1158,24 @@ elif MODE == "full":
     # the check must too — a skirt can pass head-on and still be a cone in profile
     camera = bpy.context.scene.camera
     body_height = visible_top(body)
-    camera.location = (2.4, -2.0, body_height * 0.78)
-    camera.rotation_euler = (math.radians(79), 0.0, math.radians(50))
+    # REAR quarter, tilted down like the app camera: the seat and the back
+    # profile are only visible from behind, and a front-quarter check passed a
+    # gown the owner then photographed from behind with a visible seat.
+    camera.location = (2.3, 2.0, body_height * 0.78)
+    camera.rotation_euler = (math.radians(79), 0.0, math.radians(131))
     render(OUT + ".side.png", samples=64, x=560, y=1000)
+    # hands close-up: fingers are 2 cm of geometry that the full-body frame
+    # cannot resolve, and the owner reads them at conversational distance
+    clasp = RECIPES[FIGURE].get("clasp_height", 0.62)
+    camera.location = (0.0, -0.95, body_height * clasp)
+    camera.rotation_euler = (math.radians(90), 0.0, 0.0)
+    camera.data.lens = 110
+    render(OUT + ".hands.png", samples=64, x=700, y=700)
+    if RECIPES[FIGURE].get("vestments"):
+        camera.location = (0.0, -0.8, body_height * 0.86)
+        camera.rotation_euler = (math.radians(88), 0.0, 0.0)
+        camera.data.lens = 95
+        render(OUT + ".collar.png", samples=64, x=700, y=700)
     export_glb(OUT, cap=RECIPES[FIGURE].get("texture_cap", 1024))
 else:
     raise SystemExit(f"unknown mode {MODE}")

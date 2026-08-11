@@ -2957,7 +2957,16 @@ function BridalGown() {
   );
 }
 
-function Bouquet() {
+// Grip height for each bride. The stylized rig clasps at 0.56 units; the
+// realistic figure (1.68 m, hands solved at 0.62 of her height) clasps 15 cm
+// higher, and the posy left at the old height floated at her HIP — a rounded
+// blush lump on a white skirt, which the owner read as a seat showing through
+// the gown. Derived, not typed, so it cannot drift again.
+const STYLIZED_BOUQUET_Y = 0.56;
+const REALISTIC_BRIDE_METRES = 1.68;
+const REALISTIC_BOUQUET_Y = (REALISTIC_BRIDE_METRES * 0.62) / SCENE_UNIT_METRES;
+
+function Bouquet({ gripY = STYLIZED_BOUQUET_Y }: { gripY?: number }) {
   // A small ivory + blush posy, offset from the palm origin into the grip.
   const blooms: Array<[number, number, number, number]> = [
     [0, 0, 0, 0.058],
@@ -2971,7 +2980,7 @@ function Bouquet() {
     // Front-of-body, centred: rotates WITH her, so walking it sits at her hands
     // and arrived it stays on her side of the couple instead of drifting to the
     // centreline in front of the groom (which read as him carrying it in).
-    <group position={[0, 0.56, 0.13]}>
+    <group position={[0, gripY, 0.13]}>
       {/* Captured-frame finding 2026-08-08: smooth spheres read as a ball of dough
           in her hands. The petal-built bloom geometry the altar arrangements use
           (see the note above getBloomGeometry) is what a posy actually looks like. */}
@@ -3124,9 +3133,9 @@ function Processional({
             </>
           ) : (
             // 1.68 m bride, converted through the measured scene unit
-            <RealisticFigure heightUnits={1.68 / SCENE_UNIT_METRES} url={BRIDE_REALISTIC} />
+            <RealisticFigure heightUnits={REALISTIC_BRIDE_METRES / SCENE_UNIT_METRES} url={BRIDE_REALISTIC} />
           )}
-          <Bouquet />
+          <Bouquet gripY={moving ? STYLIZED_BOUQUET_Y : REALISTIC_BOUQUET_Y} />
           {couplePhotos?.bride ? (
             <Billboard position={[0, COUPLE_FACE_Y, 0]}>
               <FaceDisc photoUrl={couplePhotos.bride} radius={0.115} />
