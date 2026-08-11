@@ -61,13 +61,20 @@ const walkthrough: Waypoint[] = [
   // two of them were literally above the dinner hall's ceiling.
   { camera: { position: [0, 1.1, 6.1], still: true, target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Arrival — inside the portal
   { camera: { position: [0, 1.15, 4.3], target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Prelude — down the aisle
-  // THE PROCESSIONAL IS FILMED FROM THE ALTAR, LOOKING BACK.
+  // THE PROCESSIONAL IS FILMED FROM THE FRONT OF THE AISLE, LOOKING BACK.
   // Every other shot in this list points at the altar, which put the camera
   // AHEAD of the couple facing away from them: they walked up the aisle behind
   // the lens and the owner never saw them arrive. A wedding videographer stands
-  // where the couple are going, not where they came from. Off the centreline so
-  // the officiant is not a pillar in the middle of the frame.
-  { camera: { position: [0.95, 1.15, -3.2], target: [0, 1.05, 2.6] }, lighting: "day", step: "preview" }, // Processional — they walk toward us
+  // where the couple are going, not where they came from.
+  //
+  // The first attempt at that put the lens at world z -3.2 — which is where the
+  // OFFICIANT stands (ceremonyStagingMarks.celebrant, local -3.55 + INTERIOR_Z),
+  // so the shot was the inside of a person and rendered as a blank cream frame.
+  // This sits at z -1.0, ahead of where the couple stop (-2.30) and inside the
+  // clear aisle (|x| < 0.925, from PEW_BLOCK_X 2.2 and PEW_BENCH_WIDTH 2.55), so
+  // they approach the camera for the whole walk. They pass it at the very end,
+  // which is fine: the next moment cuts to the vows at the altar.
+  { camera: { position: [0.72, 1.15, -1], target: [0, 1.05, 4.2] }, lighting: "day", step: "preview" }, // Processional — they walk toward us
   { camera: { position: [0, 1.15, 0.6], target: [0, 1.05, -3.4] }, lighting: "day", step: "preview" }, // Vows — close on the couple at z -2.3
   { camera: { position: [0, 1.2, 2.2], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
   { camera: { position: [2.2, 1.3, 2.4], target: [0, 1.05, -3] }, lighting: "day", step: "preview" }, // Group photos — side angle

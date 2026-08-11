@@ -263,15 +263,25 @@ const lightingPresets: Record<
     keyIntensity: 2.2,
     rimIntensity: 0.5
   },
+  // Candlelight, not moonlight. Measured 2026-08-12: this preset lit the dinner
+  // hall with THREE blue-violet sources — ambient #5a5868 at hue 248°, fog
+  // #3a3340 at 272°, and a hemisphere sky #6c6e90 — and the baked wall between
+  // the warm window panes came out lavender. Lavender is a colour this project
+  // has rejected twice by name, and here it was arriving through the lighting
+  // rather than through a swatch, which is why it survived the palette passes.
+  //
+  // A room lit by candles and warm pendants has no violet in it at all. Every
+  // hue below is 27-39°, and the luminances are unchanged so the dusk still
+  // reads as evening rather than as a second daylight.
   dusk: {
-    ambientColor: "#5a5868",
+    ambientColor: "#6b5a46",
     ambientIntensity: 0.46,
-    fogColor: "#3a3340",
+    fogColor: "#2b2119",
     fogFar: 38,
     fogNear: 15,
     hemisphereGround: "#2a2419",
     hemisphereIntensity: 0.72,
-    hemisphereSky: "#6c6e90",
+    hemisphereSky: "#8a7a62",
     keyIntensity: 2,
     rimIntensity: 0.55
   }
