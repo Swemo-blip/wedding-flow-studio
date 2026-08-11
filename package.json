@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "check:figures": "node scripts/figure-pose-probe.mjs public/models/figure_suit.glb --check && node scripts/figure-pose-probe.mjs public/models/figure_woman.glb --check",
     "check:colour": "node scripts/colour-audit.mjs --check",
-    "check:seats": "node scripts/seat-contact-probe.mjs --check"
+    "check:seats": "node scripts/seat-contact-probe.mjs --check",
+    "check:cameras": "node scripts/camera-bounds-probe.mjs --check"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

@@ -234,12 +234,22 @@ bpy.context.view_layer.objects.active = shell
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="DESELECT")
 bpy.ops.object.mode_set(mode="OBJECT")
-# Vertices belonging to the entrance wall sit at app z 5.9..6.1 -> Blender y -6.1..-5.9.
-for vertex in shell.data.vertices:
-    vertex.select = -6.15 <= vertex.co.y <= -5.85
+# Delete the entrance wall by FACE, not by vertex. Selecting every vertex in the
+# band app z 5.85..6.15 also caught the last vertex ring of the two SIDE walls,
+# and deleting a vertex deletes every face touching it — so the side walls lost
+# their whole final segment and the baked hall ended at app z 4.05 instead of
+# 6.05. Six preview cameras and the dance floor then sat outside their own room,
+# which is the "cameras start outside" the owner reported. A face whose centre
+# lies in the band belongs to the entrance wall alone.
+mesh = shell.data
+for polygon in mesh.polygons:
+    polygon.select = -6.15 <= polygon.center.y <= -5.85
 bpy.ops.object.mode_set(mode="EDIT")
-bpy.ops.mesh.delete(type="VERT")
+bpy.ops.mesh.select_mode(type="FACE")
+bpy.ops.mesh.delete(type="FACE")
 bpy.ops.object.mode_set(mode="OBJECT")
+kept = max((v.co.y for v in shell.data.vertices), default=0.0)
+print(f"HALL SHELL: walls now reach app z {-min(v.co.y for v in shell.data.vertices):.2f} .. {-kept:.2f}", flush=True)
 
 for obj, image in ((shell, shell_img), (ceiling, ceiling_img)):
     # Boolean/join edits can leave empty slots; find the real material rather than

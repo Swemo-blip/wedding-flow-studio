@@ -53,22 +53,30 @@ const walkthrough: Waypoint[] = [
   // frames a void — the nave floor stops 0.24 units past the west wall and beyond
   // it the scene holds nothing but the sky dome. It belongs with the facade, in
   // docs/blender-baked-venue.md, not in a camera path.
-  { camera: { position: [0, 1.12, 6.3], still: true, target: [0, 1, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" },
-  { camera: { position: [0, 1.85, 3.9], target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Prelude — down the aisle
-  { camera: { position: [0, 1.7, 2.3], target: [0, 1.1, -4.5] }, lighting: "day", step: "preview" }, // Processional
-  { camera: { position: [0, 1.62, 1.2], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Vows — framing the altar
-  { camera: { position: [0, 1.75, 2.6], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
-  { camera: { position: [2.4, 1.95, 3], target: [0, 1, -4.2] }, lighting: "day", step: "preview" }, // Group photos — side angle
+  // MEASURED against the rooms, after the audit found seven of these outside the
+  // room they point at. Church interior (world): x ±4.85, z -5.49..6.44, y 0..5.6.
+  // Hall interior (world): x ±4.81, z -5.40..6.25, ceiling y 2.375 units = 3.78 m.
+  // A standing eye is 1.04 units (1.65 m / SCENE_UNIT_METRES 1.591) — the old
+  // heights of 1.85-2.5 units were 2.9-4.0 m, i.e. filmed from a stepladder, and
+  // two of them were literally above the dinner hall's ceiling.
+  { camera: { position: [0, 1.1, 6.1], still: true, target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Arrival — inside the portal
+  { camera: { position: [0, 1.15, 4.3], target: [0, 1.05, -4.4] }, doorsOpen: true, lighting: "day", step: "preview" }, // Prelude — down the aisle
+  { camera: { position: [0, 1.2, 2.6], target: [0, 1.05, -4.5] }, lighting: "day", step: "preview" }, // Processional
+  { camera: { position: [0, 1.15, 0.6], target: [0, 1.05, -3.4] }, lighting: "day", step: "preview" }, // Vows — close on the couple at z -2.3
+  { camera: { position: [0, 1.2, 2.2], target: [0, 1.05, -4.4] }, lighting: "day", step: "preview" }, // Recessional
+  { camera: { position: [2.2, 1.3, 2.4], target: [0, 1.05, -3] }, lighting: "day", step: "preview" }, // Group photos — side angle
   // The dinner is an ENCLOSED hall with a ceiling at ~3.8 m — every reception
-  // shot stays inside the room at guest height, entering through the doorway
-  // and gliding between the candlelit tables.
-  { camera: { position: [0, 1.9, 7.4], target: [0, 1, -1.6] }, lighting: "dusk", step: "reception" }, // Cocktail hour — at the doorway
-  { camera: { position: [0, 1.8, 6.2], target: [0, 0.95, -1] }, lighting: "dusk", step: "reception" }, // Entrance — stepping into the room
-  { camera: { position: [0, 2.4, 5.6], target: [0, 0.5, -0.8] }, lighting: "dusk", step: "reception" }, // Dinner — over the tables
-  { camera: { position: [0, 2.1, 5.4], target: [0, 0.8, -3.6] }, lighting: "dusk", step: "reception" }, // Speeches — toward the head table
-  { camera: { position: [1.7, 1.7, 3.4], target: [0, 0.6, -0.4] }, lighting: "dusk", step: "reception" }, // Cake
-  { camera: { position: [0, 2, 4.6], target: [0, 0.6, 0.9] }, lighting: "dusk", step: "reception" }, // First dance
-  { camera: { position: [0, 2.5, 5.9], target: [0, 0.6, 0.5] }, lighting: "dusk", step: "reception" } // Party — pulled back inside the room
+  // shot stays inside the room at guest height, gliding between the candlelit
+  // tables. The hall's own side walls used to stop at world z 4.30 because the
+  // bake deleted them (scripts/bake-hall-shell.py), which is why these numbers
+  // and the room disagreed for so long.
+  { camera: { position: [0, 1.2, 5.8], target: [0, 1, -1.6] }, lighting: "dusk", step: "reception" }, // Cocktail hour — at the open end
+  { camera: { position: [0, 1.1, 5.2], target: [0, 0.95, -1] }, lighting: "dusk", step: "reception" }, // Entrance — stepping into the room
+  { camera: { position: [0, 1.3, 4.4], target: [0, 0.55, -0.8] }, lighting: "dusk", step: "reception" }, // Dinner — over the tables
+  { camera: { position: [0, 1.3, 4], target: [0, 0.8, -3.6] }, lighting: "dusk", step: "reception" }, // Speeches — toward the head table
+  { camera: { position: [-1.5, 1.25, -2.4], target: [-2.9, 0.55, -4.65] }, lighting: "dusk", step: "reception" }, // Cake — the cake table is at (-2.9, -4.65), which the old shot missed by 15 m
+  { camera: { position: [0, 1.3, 6], target: [0, 0.8, 4.3] }, lighting: "dusk", step: "reception" }, // First dance — looking AT the dance floor (world z 3.45..5.65), not standing on it
+  { camera: { position: [0, 1.3, 5.6], target: [0, 0.7, 0.5] }, lighting: "dusk", step: "reception" } // Party — pulled back inside the room
 ];
 
 // Exposed so a surface that already renders CeremonyScene (the home studio) can

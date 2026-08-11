@@ -4879,9 +4879,11 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
       // frame bottom at the couple plane sits at y -0.30 (floor visible beneath
       // their feet) and the pew rows enter the frame from x 0.93 outward.
       "3d": [0, 1.05, 1.7],
-      guest: [0, 1.45, 4.2],
+      // 1.45 and 1.85 UNITS are 2.31 m and 2.94 m — the metre/unit confusion this
+      // file warns about, seen from a stepladder. A standing eye is 1.04 units.
+      guest: [0, 1.04, 4.2],
       top: [0, 11, 0.4],
-      walkthrough: [0, 1.85, 4.8]
+      walkthrough: [0, 1.08, 4.8]
     };
 
     return churchPositions[viewMode];
@@ -4889,12 +4891,18 @@ function getCameraPosition(viewMode: StudioViewMode, venueType: StudioVenueType,
 
   // The dinner hall has a real ceiling at ~3.8 m — every eye stays inside the
   // room, a guest's-height view across the candlelit tables.
+  //
+  // MEASURED, because these numbers were all wrong: the hall's back wall is at
+  // local z -5.75 and its side walls and ceiling span 11.8 centred at local 0.1,
+  // so the room ends at world z 6.25 — and the resting camera sat at 7.6, which
+  // is 5.25 m OUTSIDE it, past the walls, the ceiling and the floor. Every
+  // reception surface opened on the back of the building.
   if (venueType === "hall") {
     const hallPositions: Record<StudioViewMode, [number, number, number]> = {
-      "3d": [0, 1.85, 7.6],
-      guest: [0, 1.5, 5.4],
+      "3d": [0, 1.3, 5.2],
+      guest: [0, 1.04, 4.6],
       top: [0, 10.6, 0.5],
-      walkthrough: [0, 1.9, 6.4]
+      walkthrough: [0, 1.15, 5.4]
     };
 
     return hallPositions[viewMode];

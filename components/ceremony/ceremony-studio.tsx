@@ -36,11 +36,22 @@ import {
 type CanvasTab = "studio" | "plan";
 type PresetKey = "overview" | "entrance" | "couple" | "side";
 
+// EVERY number here is WORLD space, and the church's own walls bound it:
+// the nave is x -4.85..4.85, z -5.49..6.44, y 0..5.6 (side walls at x ±4.95 with
+// 0.2 thickness, chancel wall at local z -5.85, west wall at WEST_WALL_Z 6.3 with
+// 0.22-thick piers, all + INTERIOR_Z 0.25). Three of the four presets used to sit
+// OUTSIDE that box — "Overview" 3.1 m and "From entrance" 4.4 m behind the west
+// wall, "Side" 4.4 m past the side wall — so the couple pressed a camera button
+// and got a picture of the outside face of a stone wall. That is the "cameras
+// start outside the church" complaint, and it is arithmetic, not taste.
+//
+// A standing eye is 1.65 m = 1.04 units (SCENE_UNIT_METRES 1.591). Anything much
+// above 1.3 here is a person on a ladder.
 const CAMERA_PRESETS: Record<PresetKey, SceneCameraOverride> = {
-  overview: { position: [0, 2, 8.4], target: [0, 1.05, -3] },
-  entrance: { position: [0, 1.85, 9.2], target: [0, 1.05, -3] },
-  couple: { position: [0, 1.95, -3.1], target: [0, 1.25, 4.6] },
-  side: { position: [7.6, 3.1, 1.6], target: [0, 0.85, -2.2] }
+  overview: { position: [0, 1.3, 5.5], target: [0, 1, -2.6] },
+  entrance: { position: [0, 1.04, 6.05], target: [0, 1.04, -2.6] },
+  couple: { position: [0, 1.12, 0.3], target: [0, 1.02, -2.3] },
+  side: { position: [3.1, 1.28, -0.4], target: [0, 1, -2.3] }
 };
 
 const PRESET_LABELS: Record<PresetKey, string> = {
