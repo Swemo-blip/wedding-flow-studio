@@ -60,13 +60,16 @@ for (const match of walkthroughBody.matchAll(/position:\s*\[([^\]]+)\][\s\S]{0,1
   });
 }
 
-const ceremony = readFileSync("components/ceremony/ceremony-studio.tsx", "utf8");
-const presetBlock = ceremony.slice(ceremony.indexOf("const CAMERA_PRESETS"), ceremony.indexOf("const PRESET_LABELS"));
-for (const match of presetBlock.matchAll(/(\w+):\s*\{\s*position:\s*\[([^\]]+)\]/g)) {
+// The named framings moved to lib/studio-framings.ts so the home studio and
+// /ceremony share one table; read them THERE, or this probe silently checks
+// four fewer cameras than the app ships (it did, for one commit).
+const framings = readFileSync("lib/studio-framings.ts", "utf8");
+const framingBlock = framings.slice(framings.indexOf("export const STUDIO_FRAMINGS"));
+for (const match of framingBlock.matchAll(/position:\s*\[([^\]]+)\][\s\S]{0,90}?key:\s*"(\w+)"/g)) {
   cameras.push({
-    file: "components/ceremony/ceremony-studio.tsx",
-    label: `/ceremony preset "${match[1]}"`,
-    position: match[2].split(",").map((piece) => Number(piece.trim())),
+    file: "lib/studio-framings.ts",
+    label: `framing "${match[2]}"`,
+    position: match[1].split(",").map((piece) => Number(piece.trim())),
     room: "church"
   });
 }

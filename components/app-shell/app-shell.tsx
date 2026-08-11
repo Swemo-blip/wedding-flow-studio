@@ -13,6 +13,9 @@ type AppShellProps = {
   wedding: Wedding;
 };
 
+// The routes that render the studio itself and therefore own their own chrome.
+const STUDIO_ROUTES = new Set(["/", "/preview"]);
+
 export function AppShell({ children, wedding }: AppShellProps) {
   const { t } = useTranslation();
   const pathname = usePathname();
@@ -64,8 +67,11 @@ export function AppShell({ children, wedding }: AppShellProps) {
       <div className="workspace">
         {/* The home route IS the 3D studio workspace — it brings its own minimal
             header (scene selector, Edit/Preview mode, save state, one primary
-            action), so the global top bar would only duplicate CTAs above it. */}
-        {pathname === "/" ? null : <TopBar wedding={wedding} />}
+            action), so the global top bar would only duplicate CTAs above it.
+            /preview renders that same studio already in preview, so it needs the
+            same treatment; without it the page carried two headers and two
+            "Preview the day" buttons stacked on each other. */}
+        {STUDIO_ROUTES.has(pathname) ? null : <TopBar wedding={wedding} />}
         <SampleRibbon />
         <main className="page-shell" id="main-content" tabIndex={-1}>
           {children}

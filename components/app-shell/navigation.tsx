@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarClock,
-  Church,
   CircleUser,
   ClipboardList,
   FileCheck,
@@ -15,7 +14,6 @@ import {
   ListChecks,
   Mic2,
   Music2,
-  Play,
   Store,
   Timer,
   Users,
@@ -43,9 +41,12 @@ const navGroups: NavGroup[] = [
   {
     label: "Plan",
     items: [
+      // ONE way into the 3D. The studio owns the scene; the ceremony and
+      // seating tools are reached from inside it, from the panel that needs
+      // them (Staging -> /ceremony, Seating -> /reception), because listing
+      // three doors to the same room is what made the app feel scattered.
+      // Both routes still exist and every existing link still works.
       { href: "/", icon: LayoutGrid, label: "Studio" },
-      { href: "/ceremony", icon: Church, label: "Ceremony" },
-      { href: "/reception", icon: UtensilsCrossed, label: "Reception" },
       { href: "/day-flow", icon: CalendarClock, label: "Timeline" }
     ]
   },
@@ -64,9 +65,9 @@ const navGroups: NavGroup[] = [
   {
     label: "Output",
     items: [
-      { href: "/preview", icon: Play, label: "Preview Day" },
-      // Preview is the rehearsal; Run is the day itself. They sit together
-      // because they are the same day seen before and during.
+      // Preview is the rehearsal; Run is the day itself. Preview lives on the
+      // studio's own Edit/Preview switch and on the header CTA, so a third
+      // sidebar door to it was pure duplication.
       { href: "/run", icon: Timer, label: "Run the day" },
       { href: "/summary", icon: FileCheck, label: "Summary" },
       { href: "/photos", icon: Camera, label: "Photos" },

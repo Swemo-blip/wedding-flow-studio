@@ -26,6 +26,12 @@ import { StudioInspector, type SceneWarning, type StudioTool } from "@/component
 import { StudioPlayback } from "@/components/overview/studio-playback";
 import { isAutoProcessional, walkthroughWaypoint } from "@/components/preview/preview-walkthrough";
 import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import {
+  STUDIO_FRAMINGS,
+  studioFramingCamera,
+  studioFramingFirstPerson,
+  type StudioFramingKey
+} from "@/lib/studio-framings";
 import { useTranslation } from "@/lib/i18n";
 import { clearStoredProject } from "@/lib/local-project-store";
 import { derivePreviewPhases, isReceptionPhase, waypointIndexForPhase } from "@/lib/preview-phases";
@@ -81,18 +87,28 @@ const RAIL_TOOLS: Array<{ ceremonyOnly?: boolean; icon: typeof Compass; id: Stud
   { icon: SunMedium, id: "lighting", label: "Lighting" }
 ];
 
-export function OverviewDashboard() {
+export function OverviewDashboard({ startInPreview = false }: { startInPreview?: boolean } = {}) {
   const localProject = useLocalProject();
   const { language, setLanguage, t } = useTranslation();
   const { resolvedRiskIds, resolveRisk } = useRiskResolutions();
   const canvasRef = useRef<HTMLElement & HTMLDivElement>(null);
   const menuRef = useRef<HTMLDetailsElement>(null);
 
-  const [mode, setMode] = useState<StudioMode>("edit");
+  // /preview renders this same studio with the reel already running, rather
+  // than a second mount of the scene. That route used to be its own
+  // CeremonyScene fed by a thinner data path — no guest faces, no couple photos,
+  // no staging, and a pew count taken from the intake number instead of the live
+  // guest list — so the cinematic reel showed a measurably different wedding
+  // than the editor did. One mount, one set of data, one truth.
+  const [mode, setMode] = useState<StudioMode>(startInPreview ? "preview" : "edit");
   const [plan, setPlan] = useState<WeddingStudioPlan>(defaultWeddingStudioPlan);
   const [sceneEdits, setSceneEdits] = useState<StudioSceneEdits>(defaultStudioSceneEdits);
   const [heroScene, setHeroScene] = useState<HeroScene>("ceremony");
   const [dimension, setDimension] = useState<"2d" | "3d">("3d");
+  // The camera framings used to live ONLY on /ceremony, which is why a couple
+  // who wanted to see the aisle from the entrance had to leave the studio and
+  // find another page. They belong on the scene they frame.
+  const [framing, setFraming] = useState<StudioFramingKey>("default");
   const [lighting, setLighting] = useState<SceneLighting>("day");
   const [zoom, setZoom] = useState(1);
   // Photo mode: freeze the scene and path-trace the current view. The phase
@@ -156,7 +172,7 @@ export function OverviewDashboard() {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareFallbackUrl, setShareFallbackUrl] = useState<string | null>(null);
   const [phaseIndex, setPhaseIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(startInPreview);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const activeWedding = localProject.hasLocalProject ? localProject.wedding : sampleWedding;
@@ -688,7 +704,7 @@ export function OverviewDashboard() {
                 aisleWidthFeet={plan.aisleWidthFeet}
                 autoProcessional={previewWaypoint ? isAutoProcessional(previewWaypointIndex, previewWaypoint) : undefined}
                 budgetLevel={plan.budgetLevel}
-                cameraOverride={previewWaypoint ? previewWaypoint.camera : null}
+                cameraOverride={previewWaypoint ? previewWaypoint.camera : studioFramingCamera(framing)}
                 capacity={capacity}
                 doorsOpen={previewWaypoint?.doorsOpen}
                 congregationPhotos={congregationPhotos}
@@ -706,7 +722,8 @@ export function OverviewDashboard() {
                 staging={staging}
                 style={plan.style}
                 venueType={sceneVenueType}
-                viewMode={isPreview ? "3d" : dimension === "2d" ? "top" : "3d"}
+                firstPerson={isPreview ? null : studioFramingFirstPerson(framing)}
+                viewMode={isPreview ? "3d" : dimension === "2d" ? "top" : framing === "guest" ? "guest" : "3d"}
                 zoom={isPreview ? 1 : zoom}
               />
 
@@ -749,6 +766,20 @@ export function OverviewDashboard() {
                   </button>
                 ) : (
                   <>
+                <select
+                  aria-label={t("Camera")}
+                  className="vstudio-framing"
+                  disabled={dimension === "2d"}
+                  onChange={(event) => setFraming(event.target.value as StudioFramingKey)}
+                  value={framing}
+                >
+                  {STUDIO_FRAMINGS.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {t(option.label)}
+                    </option>
+                  ))}
+                </select>
+                <i aria-hidden="true" />
                 <button aria-pressed={dimension === "2d"} data-active={dimension === "2d"} onClick={() => setDimension("2d")} type="button">
                   2D
                 </button>

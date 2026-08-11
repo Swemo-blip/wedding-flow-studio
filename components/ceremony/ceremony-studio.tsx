@@ -12,6 +12,7 @@ import {
   type CeremonyStaging,
   type CeremonyStagingMarkId
 } from "@/lib/wedding-studio-plan";
+import { studioFramingCamera } from "@/lib/studio-framings";
 import { useTranslation } from "@/lib/i18n";
 import { useCouplePhotos } from "@/lib/use-couple-photos";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -36,22 +37,14 @@ import {
 type CanvasTab = "studio" | "plan";
 type PresetKey = "overview" | "entrance" | "couple" | "side";
 
-// EVERY number here is WORLD space, and the church's own walls bound it:
-// the nave is x -4.85..4.85, z -5.49..6.44, y 0..5.6 (side walls at x ±4.95 with
-// 0.2 thickness, chancel wall at local z -5.85, west wall at WEST_WALL_Z 6.3 with
-// 0.22-thick piers, all + INTERIOR_Z 0.25). Three of the four presets used to sit
-// OUTSIDE that box — "Overview" 3.1 m and "From entrance" 4.4 m behind the west
-// wall, "Side" 4.4 m past the side wall — so the couple pressed a camera button
-// and got a picture of the outside face of a stone wall. That is the "cameras
-// start outside the church" complaint, and it is arithmetic, not taste.
-//
-// A standing eye is 1.65 m = 1.04 units (SCENE_UNIT_METRES 1.591). Anything much
-// above 1.3 here is a person on a ladder.
+// The framings live in lib/studio-framings.ts now — one table, shared with the
+// home studio, so the two surfaces cannot drift apart and a camera fix lands in
+// both. scripts/camera-bounds-probe.mjs reads that table.
 const CAMERA_PRESETS: Record<PresetKey, SceneCameraOverride> = {
-  overview: { position: [0, 1.3, 5.5], target: [0, 1, -2.6] },
-  entrance: { position: [0, 1.04, 6.05], target: [0, 1.04, -2.6] },
-  couple: { position: [0, 1.12, 0.3], target: [0, 1.02, -2.3] },
-  side: { position: [3.1, 1.28, -0.4], target: [0, 1, -2.3] }
+  overview: studioFramingCamera("overview")!,
+  entrance: studioFramingCamera("entrance")!,
+  couple: studioFramingCamera("couple")!,
+  side: studioFramingCamera("side")!
 };
 
 const PRESET_LABELS: Record<PresetKey, string> = {
