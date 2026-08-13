@@ -700,6 +700,15 @@ const sv: Record<string, string> = {
   "Next moment to review": "Nästa moment att se över",
   "more to review": "fler att se över",
   "Bride's eyes": "Brudens vy",
+  // The camera framings in the studio's canvas chrome (lib/studio-framings.ts).
+  // "Bride's eyes" and "Groom's eyes" already had Swedish from the ceremony
+  // studio; these five were new with the picker and shipped in English inside a
+  // Swedish interface.
+  "Studio view": "Studiovy",
+  "From the entrance": "Från entrén",
+  "The couple": "Paret",
+  "From the side": "Från sidan",
+  "A guest's seat": "En gästs plats",
   "Groom's eyes": "Brudgummens vy",
   "Add photo": "Lägg till foto",
   "Remove photo": "Ta bort foto",
