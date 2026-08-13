@@ -160,6 +160,15 @@ dismissed. A shadow is permitted **only** on something dismissable.
 
 ## Best Next Work
 
+0. **The dinner hall is NOT missing a material pass** — measured 2026-08-12 after
+   claiming twice that it was. It already renders DinnerTablescape, FlowerCluster,
+   FlickerFlame, TablescapeColors, real chairs, the baked GI shell and its own room
+   HDRI, and since 2026-08-12 the realistic seated guests. The only thing the
+   church has that it lacks is LightShafts, which are sun through windows and
+   correctly day-only. What made the hall look worse than the church was the DUSK
+   LIGHTING washing it blue-violet (fixed 2026-08-12); judge it on screen before
+   building anything else for it.
+
 1. The remaining 3D jump is the Blender baked-GI venue shell — spec'd in
    `docs/blender-baked-venue.md`, and since 2026-08-08 an AGENT task: Blender 5.2
    LTS is installed (/Applications/Blender.app) and the headless pipeline is proven
@@ -198,9 +207,13 @@ dismissed. A shadow is permitted **only** on something dismissable.
    `MomentRunState` in `lib/wedding-types.ts` carries the agreed rule in its own
    comment — a struck moment is MARKED struck, never removed — and
    `components/exports/export-preview.tsx` prints "[CUT FROM THE DAY]" so a vendor
-   sees what was dropped rather than a gap. What is genuinely missing is smaller:
-   nothing shows WHO is responsible for the current moment during the run, and the
-   risk analysis is not surfaced there.
+   sees what was dropped rather than a gap. **Nothing is missing here, and I got
+   that wrong too within one turn of writing it: the responsible person IS shown
+   (run-the-day.tsx joins location + responsiblePerson into the "where" line), and
+   the risks are absent BY DESIGN — the file's own header explains that a
+   toastmaster standing in bad light with a queue of people needs what is now, what
+   is next, and two verbs, and that risks/readiness/inspectors are noise there.
+   Do not "fix" that.**
 8. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
 
 **Decided 2026-08-03 (delegated): the language follows the BROWSER, the currency
