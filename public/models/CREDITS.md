@@ -67,3 +67,10 @@ Same in-project MPFB pipeline as bride_realistic.glb (scripts/
 build-real-figures.py); all source assets CC0 from makehumancommunity.org.
 Congregants are seated variants with darkened CC0 casual suits and half-size
 textures, instanced in the scene. CC0.
+
+## singer_realistic.glb
+
+Same in-project MPFB pipeline (scripts/build-real-figures.py), CC0 sources from
+makehumancommunity.org. Soloist: standing pose with hands low and open, sage
+recital two-piece produced by a luma remap of the CC0 elegant suit, dark shoes.
+CC0.

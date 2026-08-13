@@ -126,6 +126,47 @@ RECIPES = {
         "prayer_book": True,
         "hand_gap": 0.125,
     },
+    # The soloist. She is the last figure in the scene still wearing the stylized
+    # rig while everyone around her has a real face, which reads as a continuity
+    # error rather than a style. She stands at a microphone singing, so her hands
+    # rest lower and further apart than a bride holding a bouquet — nothing to
+    # hold, and a clasp at bouquet height would read as prayer.
+    "singer": {
+        "name": "singer",
+        "phenotype": {
+            "gender": 0.0,
+            "age": 0.4,
+            "muscle": 0.45,
+            "weight": 0.46,
+            "proportions": 0.65,
+            "height": 0.5,
+            "cupsize": 0.5,
+            "firmness": 0.55,
+            "race": {"asian": 0.0, "caucasian": 0.55, "african": 0.45},
+        },
+        "rig": "game_engine",
+        "eyes": "high-poly.mhclo",
+        "eyebrows": "eyebrow009.mhclo",
+        "eyelashes": "eyelashes02.mhclo",
+        "teeth": "teeth_base.mhclo",
+        "hair": "afro01.mhclo",
+        "skin_mhmat": "young_african_female.mhmat",
+        # Shoes matter here and not on the congregation: she stands in the open
+        # where the pew fronts hide nobody's feet.
+        "clothes": ["female_elegantsuit01.mhclo", "shoes04.mhclo"],
+        "eye_color": "brown_eye.png",
+        "hair_tint": (0.22, 0.16, 0.13),
+        "skin_tint": (1.0, 0.95, 0.9),
+        # hands low and open at her sides, not clasped in front
+        "clasp_height": 0.48,
+        "hand_gap": 0.34,
+        # a recital dress, not a gown: darker than ivory so she does not read as a
+        # second bride standing beside the couple
+        # A multiply on the elegantsuit crushed it to black twice; the remap gives
+        # her a deep sage recital dress with shape instead of a silhouette.
+        "clothes_shades": ((0.11, 0.13, 0.11), (0.42, 0.46, 0.40)),
+        "shoes_tint": (0.3, 0.28, 0.27),
+    },
     # Congregation variants: seated guests for the pews. No shoes — the pew
     # fronts hide the feet — and half-size textures; there will be many clones.
     "congregant_f1": {
@@ -201,6 +242,20 @@ def build(figure_key):
     return basemesh
 
 
+# A texture is not automatically a COLOUR. The CC0 garments ship _diffuse, _ao and
+# _normal maps side by side, and both recolour helpers matched on the garment name
+# alone — so tinting a dress also painted its normal map (destroying the surface
+# lighting) and its ambient-occlusion map (multiplying the albedo dark a second
+# time). The singer came out black twice while the numbers looked right, and the
+# congregation's clothes had been going through the same mangle unnoticed.
+NON_COLOUR_MAPS = ("_normal", "_ao", "_bump", "_spec", "_rough", "_metal", "_disp", "_height")
+
+
+def _is_colour_map(image):
+    name = image.filepath.lower()
+    return not any(suffix in name for suffix in NON_COLOUR_MAPS)
+
+
 def _tint_image_pixels(match, tint):
     """Multiply a tint into the texture PIXELS themselves. The glTF exporter only
     understands simple material trees, so tinting via extra mix nodes would render
@@ -216,7 +271,7 @@ def _tint_image_pixels(match, tint):
             if node.type != "TEX_IMAGE" or not node.image:
                 continue
             image = node.image
-            if match not in image.filepath.lower() or image.name in tinted:
+            if match not in image.filepath.lower() or image.name in tinted or not _is_colour_map(image):
                 continue
             tinted.add(image.name)
             buffer = np.empty(image.size[0] * image.size[1] * 4, dtype=np.float32)
@@ -227,11 +282,13 @@ def _tint_image_pixels(match, tint):
             image.pack()
 
 
-def _recolor_hair_pixels(match, dark, light):
-    """Recolour hair by LUMA REMAP, not multiply: a multiply can only darken,
-    so no tint could ever make the mid-grey strands blonde. Shadow pixels take
-    the dark tone, highlights take the light tone, everything between blends —
-    contrast survives, colour is fully replaced."""
+def _remap_pixels_to_shades(match, dark, light):
+    """Recolour by LUMA REMAP, not multiply: a multiply can only darken, so no
+    tint could ever make mid-grey hair blonde — or give an already-dark garment a
+    colour instead of crushing it to black. Shadow pixels take the dark tone,
+    highlights take the light tone, everything between blends: contrast survives,
+    colour is fully replaced. Written for the bride's hair, then needed verbatim
+    for the singer's dress, which is why it no longer says "hair"."""
     import numpy as np
 
     done = set()
@@ -242,14 +299,23 @@ def _recolor_hair_pixels(match, dark, light):
             if node.type != "TEX_IMAGE" or not node.image:
                 continue
             image = node.image
-            if match not in image.filepath.lower() or image.name in done:
+            if match not in image.filepath.lower() or image.name in done or not _is_colour_map(image):
                 continue
             done.add(image.name)
             buffer = np.empty(image.size[0] * image.size[1] * 4, dtype=np.float32)
             image.pixels.foreach_get(buffer)
             pixels = buffer.reshape(-1, 4)
             luma = pixels[:, :3].max(axis=1)
-            scale = max(1e-6, float(np.percentile(luma[pixels[:, 3] > 0.5], 92))) if (pixels[:, 3] > 0.5).any() else 1.0
+            # Normalise against the texture's OWN brightest pixels. The first
+            # version filtered to alpha > 0.5 and fell back to 1.0 when nothing
+            # passed — and the CC0 garment textures carry a zeroed alpha channel,
+            # so the fallback fired, mix collapsed to the raw luma of an already
+            # dark texture, and the remap produced black twice in a row while
+            # looking like a colour choice.
+            opaque = pixels[:, 3] > 0.5
+            sample = luma[opaque] if opaque.any() else luma
+            scale = max(1e-6, float(np.percentile(sample, 92)))
+            print(f"REMAP {image.name}: luma p92 {scale:.3f} (opaque pixels {int(opaque.sum())})", flush=True)
             mix = np.clip(luma / scale, 0.0, 1.0)[:, None]
             dark_tone = np.asarray(dark, dtype=np.float32)
             light_tone = np.asarray(light, dtype=np.float32)
@@ -368,15 +434,28 @@ def beautify(recipe):
     if recipe.get("eye_color"):
         _swap_eye_texture(recipe["eye_color"])
     if recipe.get("hair_shades"):
-        _recolor_hair_pixels("/hair/", *recipe["hair_shades"])
+        _remap_pixels_to_shades("/hair/", *recipe["hair_shades"])
         _matte_materials("/hair/")
     elif recipe.get("hair_tint"):
         # one matcher is enough: every hair texture lives under data/hair/
         _tint_image_pixels("/hair/", recipe["hair_tint"])
         _matte_materials("/hair/")
     if recipe.get("clothes_tint"):
-        _tint_image_pixels("casualsuit", recipe["clothes_tint"])
-        _matte_materials("casualsuit")
+        # Both CC0 suit families, because matching only one silently left a figure
+        # in the pack's own striped-shirt colours: the singer wears elegantsuit
+        # while the congregation wears casualsuit.
+        for family in ("casualsuit", "elegantsuit"):
+            _tint_image_pixels(family, recipe["clothes_tint"])
+            _matte_materials(family)
+    if recipe.get("clothes_shades"):
+        for family in ("casualsuit", "elegantsuit"):
+            _remap_pixels_to_shades(family, *recipe["clothes_shades"])
+            _matte_materials(family)
+    if recipe.get("shoes_tint"):
+        # The CC0 shoe assets have WHITE SOCKS painted into their texture. Under
+        # trousers nobody sees them; on a figure in a dress they were two bright
+        # bands between a dark hem and dark shoes, and they read as gym socks.
+        _tint_image_pixels("shoes0", recipe["shoes_tint"])
     if recipe.get("suit_blackout"):
         _blackout_pixels("elegantsuit")
         _matte_materials("elegantsuit")

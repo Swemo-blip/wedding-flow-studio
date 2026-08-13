@@ -2245,7 +2245,6 @@ const PRIEST_COLORS: Recolor = {
   Skin: "#d9cfba",
   TieTexture: "#24261f"
 };
-const SINGER_COLORS: Recolor = { Dress: "#7d3b46", Eyes: "#d9cfba", Hair: "#c9bda4", Skin: "#d9cfba" };
 
 // three's GLTFLoader pushes every node name through
 // PropertyBinding.sanitizeNodeName, which strips dots — so a rig authored with
@@ -2405,9 +2404,11 @@ const POSE_RELAXED: FigurePose = {
 const BRIDE_REALISTIC = assetPath("/models/bride_realistic.glb");
 const GROOM_REALISTIC = assetPath("/models/groom_realistic.glb");
 const OFFICIANT_REALISTIC = assetPath("/models/officiant_realistic.glb");
+const SINGER_REALISTIC = assetPath("/models/singer_realistic.glb");
 useGLTF.preload(BRIDE_REALISTIC);
 useGLTF.preload(GROOM_REALISTIC);
 useGLTF.preload(OFFICIANT_REALISTIC);
+useGLTF.preload(SINGER_REALISTIC);
 
 // The couple used to revert to the stylized rigs the moment they started
 // walking — losing face, hair and gown for the whole processional, which is the
@@ -2991,7 +2992,11 @@ function Singer({ mark }: { mark: StudioSceneOffset }) {
   const home = ceremonyStagingMarks.singer.home;
   return (
     <group position={[home.x + mark.x, 0, home.z + mark.z]} rotation={[0, -0.55, 0]}>
-      <AnimatedFigure clip="idle" pose={POSE_RELAXED} recolor={SINGER_COLORS} rotationY={0.35} url={FIGURE_WOMAN} />
+      {/* The last stylized figure in the scene. With the couple, the officiant and
+          every guest wearing a real face, a smooth-headed soloist beside them read
+          as a continuity error rather than a style. 1.70 m through the measured
+          scene unit. */}
+      <RealisticFigure heightUnits={1.7 / SCENE_UNIT_METRES} url={SINGER_REALISTIC} />
       <group position={[0.2, 0, 0.16]}>
         <MicrophoneStand />
       </group>
