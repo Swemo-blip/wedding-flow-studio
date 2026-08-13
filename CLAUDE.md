@@ -182,18 +182,25 @@ dismissed. A shadow is permitted **only** on something dismissable.
    the deep states and the remaining routes are still unmeasured. Reuse the probe
    pattern (composite backgrounds, real navigation — `history.pushState` does NOT
    drive the Next router and will measure the same page repeatedly).
-5. **Guest allergies, accessibility notes and tags are read everywhere and writable
-   nowhere** (`components/guests/guests-view.tsx`). This is why `/menu`'s
-   allergy-conflict feature is permanently dead — the column shows "—" for every
-   guest. Size M, and the highest-value honesty fix left.
+5. ~~Guest allergies, accessibility notes and tags are read everywhere and writable
+   nowhere.~~ **DONE — and this entry was STALE for a while, which cost real time:
+   allergies and accessibility notes became editable earlier (their `updateGuest`
+   calls are right there in `guests-view.tsx`, with a comment recording the fix),
+   `/menu` reads them and has an honest empty state, and tags got their editor on
+   2026-08-12. Verify a "Best Next Work" item against the code before planning
+   around it — this list is not automatically true.**
 6. The scene drag itself: `EditableSceneObject` accepts `onMoveObject` /
    `onSelectObject` / `selectedObjectId` and uses none of them. The lying "or drag
    it in the scene" hint was removed; the capability is still missing.
-7. Toastmaster live-run mode — Johan calls this one of his strongest ideas.
-   `/director` and `lib/risk-analysis.ts` are already half of it. **Design note
-   agreed with him: a struck moment must be marked struck, never deleted** — he has
-   to be able to change his mind at 19:00, and the exports must still show the
-   planned day.
+7. ~~Toastmaster live-run mode.~~ **ALSO ALREADY BUILT**, and also stale here:
+   `/run` (`components/run/run-the-day.tsx`, in the sidebar as "Run the day") walks
+   the timeline moment by moment and marks each one done or struck;
+   `MomentRunState` in `lib/wedding-types.ts` carries the agreed rule in its own
+   comment — a struck moment is MARKED struck, never removed — and
+   `components/exports/export-preview.tsx` prints "[CUT FROM THE DAY]" so a vendor
+   sees what was dropped rather than a gap. What is genuinely missing is smaller:
+   nothing shows WHO is responsible for the current moment during the run, and the
+   risk analysis is not surfaced there.
 8. Prepare a clean commit only after lint, typecheck, build, and browser QA pass.
 
 **Decided 2026-08-03 (delegated): the language follows the BROWSER, the currency

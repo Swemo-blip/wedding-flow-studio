@@ -7869,12 +7869,20 @@ a {
 
 .guests-cell-subrow {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .guests-cell-subrow .guests-cell-input {
   flex: 1;
   min-width: 0;
+}
+
+/* Tags take their own line inside the same cell. Three inputs abreast truncated
+   every one of them to about six characters even at 1400px, and a field you
+   cannot read the contents of is worse than no field. */
+.guests-cell-subrow .guests-cell-tags {
+  flex-basis: 100%;
 }
 
 .guests-nudge {

@@ -293,6 +293,21 @@ export function GuestsView() {
                         placeholder={t("Household / +1 group")}
                         value={guest.household}
                       />
+                      {/* Tags were the last guest field with readers and no writer.
+                          lib/moment-intelligence.ts finds the children on the guest
+                          list by looking for a tag containing "child" — so with no
+                          way to type one, that whole piece of intelligence could
+                          never fire from anything the couple did. The seating
+                          groupings read tags too. It sits here rather than in the
+                          diet cell because a tag says who someone is, not what they
+                          eat. */}
+                      <input
+                        aria-label={t("Tags for {name}", { name: guest.name })}
+                        className="guests-cell-input guests-cell-input-sub guests-cell-tags"
+                        onChange={(event) => updateGuest(guest.id, { tags: parseTags(event.target.value) })}
+                        placeholder={t("Tags: family, child, speech…")}
+                        value={guest.tags.join(", ")}
+                      />
                     </span>
                   </span>
                 </span>
@@ -413,6 +428,23 @@ function parseAllergies(value: string): string[] {
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
+}
+
+// Tags are matched case-insensitively by the readers (moment-intelligence looks
+// for a tag containing "child"), so they are stored lowercase to keep "Child"
+// and "child" from becoming two different tags on one guest list.
+function parseTags(value: string): string[] {
+  const seen = new Set<string>();
+  return value
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => {
+      if (!entry || seen.has(entry)) {
+        return false;
+      }
+      seen.add(entry);
+      return true;
+    });
 }
 
 function rsvpLabel(status: Guest["rsvpStatus"]) {
