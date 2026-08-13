@@ -231,6 +231,22 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
+- **A camera can be PROVEN to frame what it is for, without a screenshot.**
+  `npm run check:cameras` (`scripts/camera-bounds-probe.mjs`) grew three checks on
+  2026-08-12 beyond the room bounds: the camera's TARGET must also land inside the
+  room, no camera may sit within 0.45 units of a standing position parsed from
+  `ceremonyStagingMarks`, and the processional waypoint must have the bride in front
+  of the lens and inside the horizontal fov at three sampled points of her walk.
+  Tested in both directions, and the second direction is why this entry exists: the
+  ORIGINAL processional camera the owner complained about scores "bride visible at
+  1/3 points" and FAILS, while the current one scores 3/3. **Correcting the record:
+  the claim in commit c1f99e9 that that camera "stood on the officiant" and rendered
+  "the inside of a person" is FALSE — it measured 1.52 m to his side. The blank frame
+  was `document.visibilityState: "hidden"` pausing rAF, which was proven separately.
+  The body-clearance check has therefore never caught anything real; it is kept
+  because a camera dropped on a mark is a plausible failure, not because it has
+  earned its keep.**
+
 - **SUPERSEDED 2026-08-08: the agent CAN see the 3D, without the owner.** The
   claude-in-chrome `computer {action:"screenshot"}` ACTIVATES the target tab, which
   gives it visibility, which delivers the ResizeObserver measurement, which mounts

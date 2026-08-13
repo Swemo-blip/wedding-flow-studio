@@ -50,13 +50,18 @@ const cameras = [];
 
 const walkthrough = readFileSync("components/preview/preview-walkthrough.tsx", "utf8");
 const walkthroughBody = walkthrough.slice(walkthrough.indexOf("const walkthrough: Waypoint[]"));
-for (const match of walkthroughBody.matchAll(/position:\s*\[([^\]]+)\][\s\S]{0,120}?step:\s*"(\w+)"/g)) {
+for (const match of walkthroughBody.matchAll(
+  /position:\s*\[([^\]]+)\][\s\S]{0,80}?target:\s*\[([^\]]+)\][\s\S]{0,120}?step:\s*"(\w+)"/g
+)) {
   const position = match[1].split(",").map((piece) => Number(piece.trim()));
+  const target = match[2].split(",").map((piece) => Number(piece.trim()));
   cameras.push({
     file: "components/preview/preview-walkthrough.tsx",
+    index: cameras.length,
     label: `waypoint ${cameras.length}`,
     position,
-    room: match[2] === "reception" ? "hall" : "church"
+    room: match[3] === "reception" ? "hall" : "church",
+    target
   });
 }
 
@@ -65,12 +70,15 @@ for (const match of walkthroughBody.matchAll(/position:\s*\[([^\]]+)\][\s\S]{0,1
 // four fewer cameras than the app ships (it did, for one commit).
 const framings = readFileSync("lib/studio-framings.ts", "utf8");
 const framingBlock = framings.slice(framings.indexOf("export const STUDIO_FRAMINGS"));
-for (const match of framingBlock.matchAll(/position:\s*\[([^\]]+)\][\s\S]{0,90}?key:\s*"(\w+)"/g)) {
+for (const match of framingBlock.matchAll(
+  /position:\s*\[([^\]]+)\][\s\S]{0,40}?target:\s*\[([^\]]+)\][\s\S]{0,90}?key:\s*"(\w+)"/g
+)) {
   cameras.push({
     file: "lib/studio-framings.ts",
-    label: `framing "${match[2]}"`,
+    label: `framing "${match[3]}"`,
     position: match[1].split(",").map((piece) => Number(piece.trim())),
-    room: "church"
+    room: "church",
+    target: match[2].split(",").map((piece) => Number(piece.trim()))
   });
 }
 
@@ -89,6 +97,63 @@ for (const [table, room] of [["churchPositions", "church"], ["hallPositions", "h
       skipHeight: entry.position[1] > 6
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Where people STAND, parsed from the plan so it cannot drift. A camera dropped
+// on one of these renders the inside of a person: the processional shot did
+// exactly that at world z -3.2, which is the officiant's mark, and the frame came
+// out a featureless cream rectangle. Marks are LOCAL; world z = local + INTERIOR_Z.
+// ---------------------------------------------------------------------------
+const plan = readFileSync("lib/wedding-studio-plan.ts", "utf8");
+const marksBlock = plan.slice(plan.indexOf("export const ceremonyStagingMarks"), plan.indexOf("export const ceremonyStagingMarkIds"));
+const OCCUPIED = [];
+for (const match of marksBlock.matchAll(/(\w+):\s*\{\s*home:\s*\{\s*x:\s*(-?[\d.]+),\s*z:\s*(-?[\d.]+)\s*\}/g)) {
+  OCCUPIED.push({ role: match[1], x: Number(match[2]), z: Number(match[3]) + INTERIOR_Z });
+}
+// A standing adult is about 0.30 units across the shoulders; half of that plus the
+// camera's 0.3 near plane is the radius inside which the lens sees only torso.
+const BODY_CLEARANCE = 0.45;
+
+// The couple's own path, from the scene's constants. The processional shot exists
+// to show this walk, so the check is literal: are they in front of the lens and
+// inside the horizontal field of view while they walk it?
+const sceneSource = readFileSync("components/wedding-studio/church-scene.tsx", "utf8");
+function sceneNumber(name) {
+  const match = sceneSource.match(new RegExp(`${name}\\s*=\\s*(-?[\\d.]+)`));
+  return match ? Number(match[1]) : null;
+}
+const PATH_START_Z = sceneNumber("PROCESSION_START_Z") + INTERIOR_Z;
+const PATH_END_Z = sceneNumber("PROCESSION_END_Z") + INTERIOR_Z;
+const BRIDE_X = 0.26;
+const FOV_DEGREES = 40;
+// The frame is wider than it is tall, so the HORIZONTAL half-angle is the
+// generous one; using the vertical fov here would reject shots that are fine.
+const ASPECT = 16 / 10;
+const HALF_FOV = Math.atan(Math.tan((FOV_DEGREES / 2) * (Math.PI / 180)) * ASPECT);
+
+function framesTheCouple(camera) {
+  if (!camera.target) {
+    return { note: "no target parsed", ok: true };
+  }
+  const forward = [camera.target[0] - camera.position[0], camera.target[2] - camera.position[2]];
+  const forwardLength = Math.hypot(forward[0], forward[1]) || 1;
+  const unit = [forward[0] / forwardLength, forward[1] / forwardLength];
+  const samples = [0, 0.25, 0.5];
+  const seen = samples.filter((t) => {
+    const z = PATH_START_Z + (PATH_END_Z - PATH_START_Z) * t;
+    const to = [BRIDE_X - camera.position[0], z - camera.position[2]];
+    const distance = Math.hypot(to[0], to[1]);
+    if (distance < 0.01) {
+      return false;
+    }
+    const dot = (to[0] * unit[0] + to[1] * unit[1]) / distance;
+    return dot > 0 && Math.acos(Math.min(1, dot)) <= HALF_FOV;
+  });
+  return {
+    note: `bride visible at ${seen.length}/${samples.length} points of the walk`,
+    ok: seen.length >= 2
+  };
 }
 
 let failures = 0;
@@ -111,15 +176,40 @@ for (const camera of cameras) {
   if (!camera.skipHeight && y * SCENE_UNIT_METRES > MAX_EYE_METRES) {
     problems.push(`eye height ${(y * SCENE_UNIT_METRES).toFixed(2)} m — nobody is that tall`);
   }
+  if (camera.room === "church" && !camera.skipHeight) {
+    for (const person of OCCUPIED) {
+      const distance = Math.hypot(x - person.x, z - person.z);
+      if (distance < BODY_CLEARANCE) {
+        problems.push(`stands ${(distance * SCENE_UNIT_METRES).toFixed(2)} m from the ${person.role} — inside a person`);
+      }
+    }
+  }
+  if (camera.target) {
+    const [tx, , tz] = camera.target;
+    if (Math.abs(tx) > room.maxX || tz > room.maxZ || tz < room.minZ) {
+      problems.push(`aims at (${tx}, ${tz}), which is outside the ${room.name}`);
+    }
+  }
+  // Waypoint 2 is the processional; it exists to show the walk.
+  let framing = null;
+  if (camera.index === 2) {
+    framing = framesTheCouple(camera);
+    if (!framing.ok) {
+      problems.push(`the processional shot does not frame the couple — ${framing.note}`);
+    }
+  }
   if (problems.length) {
     failures += 1;
     console.log(`  FAIL  ${camera.label} (${room.name}) — ${problems.join("; ")}`);
   } else {
-    console.log(`  PASS  ${camera.label} — inside the ${room.name} at ${(y * SCENE_UNIT_METRES).toFixed(2)} m`);
+    const extra = framing ? `, ${framing.note}` : "";
+    console.log(`  PASS  ${camera.label} — inside the ${room.name} at ${(y * SCENE_UNIT_METRES).toFixed(2)} m${extra}`);
   }
 }
 
-console.log(`\n${cameras.length} cameras checked, ${failures} outside their room.`);
+console.log(
+  `\n${cameras.length} cameras checked against ${OCCUPIED.length} standing positions, ${failures} with problems.`
+);
 if (process.argv.includes("--check") && failures > 0) {
   process.exit(1);
 }
