@@ -72,7 +72,10 @@ type StudioMode = "edit" | "preview";
 
 // Module-level so their identity is stable across renders — the scene is now a
 // single long-lived mount, and a fresh closure every render would churn its props.
-const noopMoveObject = () => {};
+// Preview passes UNDEFINED for the move handler rather than a no-op: the scene
+// mounts its drag catch plane only when a real handler exists, so the cinematic
+// reel carries no invisible 60x60 raycast target and no phantom grab. Selection
+// still needs a callable no-op because the scene calls it unconditionally.
 const noopSelectObject = () => {};
 
 // Staging is ceremony-only — there is no processional to stage at the dinner —
@@ -736,7 +739,7 @@ const PHOTO_MODE_ENABLED = false;
                 seatingLayout={plan.seatingLayout}
                 colorDirection={plan.colorDirection}
                 lighting={previewWaypoint ? previewWaypoint.lighting : lighting}
-                onMoveObject={isPreview ? noopMoveObject : moveSceneObject}
+                onMoveObject={isPreview ? undefined : moveSceneObject}
                 onSelectObject={isPreview ? noopSelectObject : selectObjectFromScene}
                 sceneEdits={sceneEdits}
                 selectedObjectId={isPreview ? "focalPoint" : activeSelectedObjectId}

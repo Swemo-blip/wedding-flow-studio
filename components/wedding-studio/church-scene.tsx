@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Billboard, ContactShadows, Html, MeshReflectorMaterial, useGLTF, useTexture } from "@react-three/drei";
 import { Bloom, EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
@@ -28,6 +28,7 @@ import {
 } from "@/lib/wedding-studio-plan";
 import type { DinnerTable } from "@/lib/wedding-types";
 import {
+  clampSceneOffset,
   type StudioBudgetLevel,
   type StudioColorDirection,
   type StudioPlanningStepId,
@@ -226,7 +227,9 @@ type CeremonySceneProps = {
   colorDirection: StudioColorDirection;
   highQuality?: boolean;
   lighting?: SceneLighting;
-  onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
+  // Optional: a surface with no move handler (the preview reel) mounts no drag
+  // catch plane at all, rather than one wired to a no-op that pretends to work.
+  onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   sceneEdits: StudioSceneEdits;
   selectedObjectId: StudioSceneObjectId;
@@ -883,7 +886,7 @@ function WeddingStageInterior({
   isDayLight: boolean;
   firstPerson?: CeremonyFirstPerson;
   highQuality?: boolean;
-  onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
+  onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
   processionalDriven: boolean;
@@ -991,133 +994,138 @@ function WeddingStageInterior({
             </mesh>
           )}
 
-          <EditableSceneObject
-            objectId="ceremonyPath"
-            onMoveObject={onMoveObject}
-            onSelectObject={onSelectObject}
-            outlineCenter={[0, 0.45]}
-            sceneEdits={sceneEdits}
-            selectedObjectId={selectedObjectId}
-            size={[1.35, 11.8]}
-          >
-            {/* 0.006 is 1 cm of carpet on a floor now at y 0. It used to be -0.018,
-                which only made sense because the floor had been pushed to -0.04, and
-                that is what left every figure, pew and altar floating 6.4 cm. The
-                polygonOffset below is what actually prevents flicker; the gap is
-                belt-and-braces. */}
-            <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0.45]}>
-              <planeGeometry args={[runnerWidth, 11.8]} />
-              {/* The runner is a decal on the floor: a clear gap plus a forward
-                  polygonOffset so it always wins the depth test (no flicker at
-                  grazing angles). */}
-              <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.82} />
-            </mesh>
-          </EditableSceneObject>
-
-          <VenueBoundary doorsOpen={doorsOpen ? 1 : 0} isDayLight={isDayLight} palette={palette} venueType={venueType} viewMode={viewMode} />
-          {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
-
-          {activeStep !== "venue" ? (
+          {/* One catch plane for the whole room, mounted whenever the scene is
+              editable — never created on grab, which is how the plan view learnt
+              that a quick drag loses its first pointermove. */}
+          <SceneDragSurface onMoveObject={onMoveObject}>
             <EditableSceneObject
-              objectId="focalPoint"
+              objectId="ceremonyPath"
               onMoveObject={onMoveObject}
               onSelectObject={onSelectObject}
-              outlineCenter={[0, -4.4]}
+              outlineCenter={[0, 0.45]}
               sceneEdits={sceneEdits}
               selectedObjectId={selectedObjectId}
-              size={[2.65, 1.4]}
+              size={[1.35, 11.8]}
             >
-              <CeremonyFocalPoint decorScale={decorScale} floralMark={staging.marks.florals} palette={palette} venueType={venueType} />
+              {/* 0.006 is 1 cm of carpet on a floor now at y 0. It used to be -0.018,
+                  which only made sense because the floor had been pushed to -0.04, and
+                  that is what left every figure, pew and altar floating 6.4 cm. The
+                  polygonOffset below is what actually prevents flicker; the gap is
+                  belt-and-braces. */}
+              <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0.45]}>
+                <planeGeometry args={[runnerWidth, 11.8]} />
+                {/* The runner is a decal on the floor: a clear gap plus a forward
+                    polygonOffset so it always wins the depth test (no flicker at
+                    grazing angles). */}
+                <meshStandardMaterial color={surface.path} polygonOffset polygonOffsetFactor={-2} polygonOffsetUnits={-2} roughness={0.82} />
+              </mesh>
             </EditableSceneObject>
-          ) : null}
 
-          {activeStep === "budget" || budgetLevel !== "essential" ? (
-            <EditableSceneObject
-              objectId="lighting"
-              onMoveObject={onMoveObject}
-              onSelectObject={onSelectObject}
-              outlineCenter={[0, -0.5]}
-              sceneEdits={sceneEdits}
-              selectedObjectId={selectedObjectId}
-              size={[6.4, 8.2]}
-            >
-              <LightingRibbon decorScale={decorScale} palette={palette} venueType={venueType} />
-            </EditableSceneObject>
-          ) : null}
+            <VenueBoundary doorsOpen={doorsOpen ? 1 : 0} isDayLight={isDayLight} palette={palette} venueType={venueType} viewMode={viewMode} />
+            {activeStep === "venue" ? <VenueShellMarkers palette={palette} venueType={venueType} /> : null}
 
-          <EditableSceneObject
-            objectId="guestSeating"
-            onMoveObject={onMoveObject}
-            onSelectObject={onSelectObject}
-            outlineCenter={[0, -2.4 + (Math.max(0, pewRows - 1) * rowSpacing) / 2]}
-            sceneEdits={sceneEdits}
-            selectedObjectId={selectedObjectId}
-            size={[6.4 + aisleShift * 2, Math.max(2.4, pewRows * (rowSpacing + 0.08))]}
-          >
-            <Suspense fallback={null}>
-              {rowIndexes.map((rowIndex) => {
-                const z = -2.4 + rowIndex * rowSpacing;
-
-                return (
-                  <group key={rowIndex}>
-                    <group position={[-(PEW_BLOCK_X + aisleShift), 0.18, z]} rotation={[0, -pewYaw, 0]}>
-                      <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
-                    </group>
-                    <group position={[PEW_BLOCK_X + aisleShift, 0.18, z]} rotation={[0, pewYaw, 0]}>
-                      <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
-                    </group>
-                  </group>
-                );
-              })}
-            </Suspense>
-
-            {/* Candle stands lining the aisle (every other row) — the warm
-                candlelit aisle from the reference. Emissive + bloom only, no extra
-                lights, to stay mobile-safe. */}
-            {ceremonyVenue
-              ? rowIndexes
-                  .filter((rowIndex) => rowIndex % 2 === 0)
-                  .map((rowIndex) => {
-                    const z = -2.4 + rowIndex * rowSpacing;
-                    // The candle border hugs the runner's edge, so widening the
-                    // aisle visibly moves the whole candlelit corridor with it.
-                    // Was runnerWidth / 2 + 0.295, which put the stands on the
-                    // bare strip outside the old narrow runner. That strip is gone,
-                    // so they stand just inside the runner's edge, clear of the walk.
-                    const candleX = runnerWidth / 2 - 0.115;
-
-                    return (
-                      <group key={`aisle-candle-${rowIndex}`}>
-                        <CandleStand candleColor={palette.candle} position={[-candleX, 0, z]} scale={decorScale * 0.82} />
-                        <CandleStand candleColor={palette.candle} position={[candleX, 0, z]} scale={decorScale * 0.82} />
-                        {/* Each lantern pools warm light on the stone beneath it —
-                            the pooled-candlelight gradient of the reference aisle. */}
-                        <CandleFloorPool position={[-candleX, 0.004, z]} />
-                        <CandleFloorPool position={[candleX, 0.004, z]} />
-                        {/* White floral posies nestled beside each candle so the
-                            aisle reads as a continuous candlelit-floral border. */}
-                        <FlowerCluster palette={palette} position={[-(candleX + 0.1), 0.12, z]} radius={0.16} />
-                        <FlowerCluster palette={palette} position={[candleX + 0.1, 0.12, z]} radius={0.16} />
-                      </group>
-                    );
-                  })
-              : null}
-
-            {ceremonyVenue
-              ? activeStep !== "venue"
-                ? (
-                  <Suspense fallback={null}>
-                    <ChurchCongregation highQuality={highQuality} seats={seatedGuests} />
-                  </Suspense>
-                )
-                : null
-              : showGuests
-                ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />)
-                : null}
-            {showGuests && !ceremonyVenue && capacity.overflowGuests > 0 ? (
-              <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} />
+            {activeStep !== "venue" ? (
+              <EditableSceneObject
+                objectId="focalPoint"
+                onMoveObject={onMoveObject}
+                onSelectObject={onSelectObject}
+                outlineCenter={[0, -4.4]}
+                sceneEdits={sceneEdits}
+                selectedObjectId={selectedObjectId}
+                size={[2.65, 1.4]}
+              >
+                <CeremonyFocalPoint decorScale={decorScale} floralMark={staging.marks.florals} palette={palette} venueType={venueType} />
+              </EditableSceneObject>
             ) : null}
-          </EditableSceneObject>
+
+            {activeStep === "budget" || budgetLevel !== "essential" ? (
+              <EditableSceneObject
+                objectId="lighting"
+                onMoveObject={onMoveObject}
+                onSelectObject={onSelectObject}
+                outlineCenter={[0, -0.5]}
+                sceneEdits={sceneEdits}
+                selectedObjectId={selectedObjectId}
+                size={[6.4, 8.2]}
+              >
+                <LightingRibbon decorScale={decorScale} palette={palette} venueType={venueType} />
+              </EditableSceneObject>
+            ) : null}
+
+            <EditableSceneObject
+              objectId="guestSeating"
+              onMoveObject={onMoveObject}
+              onSelectObject={onSelectObject}
+              outlineCenter={[0, -2.4 + (Math.max(0, pewRows - 1) * rowSpacing) / 2]}
+              sceneEdits={sceneEdits}
+              selectedObjectId={selectedObjectId}
+              size={[6.4 + aisleShift * 2, Math.max(2.4, pewRows * (rowSpacing + 0.08))]}
+            >
+              <Suspense fallback={null}>
+                {rowIndexes.map((rowIndex) => {
+                  const z = -2.4 + rowIndex * rowSpacing;
+
+                  return (
+                    <group key={rowIndex}>
+                      <group position={[-(PEW_BLOCK_X + aisleShift), 0.18, z]} rotation={[0, -pewYaw, 0]}>
+                        <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
+                      </group>
+                      <group position={[PEW_BLOCK_X + aisleShift, 0.18, z]} rotation={[0, pewYaw, 0]}>
+                        <CeremonySeatBlock palette={palette} position={[0, 0, 0]} venueType={venueType} />
+                      </group>
+                    </group>
+                  );
+                })}
+              </Suspense>
+
+              {/* Candle stands lining the aisle (every other row) — the warm
+                  candlelit aisle from the reference. Emissive + bloom only, no extra
+                  lights, to stay mobile-safe. */}
+              {ceremonyVenue
+                ? rowIndexes
+                    .filter((rowIndex) => rowIndex % 2 === 0)
+                    .map((rowIndex) => {
+                      const z = -2.4 + rowIndex * rowSpacing;
+                      // The candle border hugs the runner's edge, so widening the
+                      // aisle visibly moves the whole candlelit corridor with it.
+                      // Was runnerWidth / 2 + 0.295, which put the stands on the
+                      // bare strip outside the old narrow runner. That strip is gone,
+                      // so they stand just inside the runner's edge, clear of the walk.
+                      const candleX = runnerWidth / 2 - 0.115;
+
+                      return (
+                        <group key={`aisle-candle-${rowIndex}`}>
+                          <CandleStand candleColor={palette.candle} position={[-candleX, 0, z]} scale={decorScale * 0.82} />
+                          <CandleStand candleColor={palette.candle} position={[candleX, 0, z]} scale={decorScale * 0.82} />
+                          {/* Each lantern pools warm light on the stone beneath it —
+                              the pooled-candlelight gradient of the reference aisle. */}
+                          <CandleFloorPool position={[-candleX, 0.004, z]} />
+                          <CandleFloorPool position={[candleX, 0.004, z]} />
+                          {/* White floral posies nestled beside each candle so the
+                              aisle reads as a continuous candlelit-floral border. */}
+                          <FlowerCluster palette={palette} position={[-(candleX + 0.1), 0.12, z]} radius={0.16} />
+                          <FlowerCluster palette={palette} position={[candleX + 0.1, 0.12, z]} radius={0.16} />
+                        </group>
+                      );
+                    })
+                : null}
+
+              {ceremonyVenue
+                ? activeStep !== "venue"
+                  ? (
+                    <Suspense fallback={null}>
+                      <ChurchCongregation highQuality={highQuality} seats={seatedGuests} />
+                    </Suspense>
+                  )
+                  : null
+                : showGuests
+                  ? guestMarkers.map((marker) => <GuestDot key={marker.id} palette={palette} position={marker.position} />)
+                  : null}
+              {showGuests && !ceremonyVenue && capacity.overflowGuests > 0 ? (
+                <OverflowCluster guestCount={capacity.overflowGuests} palette={palette} />
+              ) : null}
+            </EditableSceneObject>
+          </SceneDragSurface>
 
           {ceremonyVenue && congregationPhotos && showGuests ? (
             <CongregationFaces photos={congregationPhotos} seats={seatedGuests} />
@@ -1154,26 +1162,159 @@ function WeddingStageInterior({
   );
 }
 
+// Dragging an object in the scene.
+//
+// The scene has always LOOKED draggable: objects highlight, the inspector nudges
+// them with buttons, and EditableSceneObject has accepted onMoveObject and
+// onSelectObject since it was written. It ignored both, and the hint that said
+// "or drag it in the scene" was removed rather than made true. That is the last
+// control in the studio that implies a capability it does not have.
+//
+// The discipline here is copied from StagingHandles, which solved the same
+// problem in the plan view and left its scars in comments:
+//   - the live gate is a REF, because gating on state drops the first
+//     pointermove of a quick drag and the whole gesture silently does nothing;
+//   - the catch plane is mounted for as long as dragging is POSSIBLE, never
+//     created in response to pointerdown, for the same reason;
+//   - the parent hears about the move once, on release. Reporting every
+//     pointermove wrote the whole layout to localStorage and reconciled the
+//     church sixty times a second.
+// One shared surface serves every object, so the scene carries a single extra
+// raycast target rather than one per draggable.
+type SceneDragState = {
+  begin: (objectId: StudioSceneObjectId, origin: { x: number; z: number }) => void;
+  delta: { x: number; z: number } | null;
+  draggingId: StudioSceneObjectId | null;
+};
+
+const SceneDragContext = createContext<SceneDragState | null>(null);
+
+function SceneDragSurface({
+  children,
+  onMoveObject
+}: {
+  children: ReactNode;
+  onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const draggingRef = useRef<StudioSceneObjectId | null>(null);
+  const grabRef = useRef<{ x: number; z: number } | null>(null);
+  const deltaRef = useRef<{ x: number; z: number } | null>(null);
+  const [draggingId, setDraggingId] = useState<StudioSceneObjectId | null>(null);
+  const [delta, setDelta] = useState<{ x: number; z: number } | null>(null);
+
+  const begin = useCallback((objectId: StudioSceneObjectId, origin: { x: number; z: number }) => {
+    draggingRef.current = objectId;
+    grabRef.current = origin;
+    deltaRef.current = { x: 0, z: 0 };
+    setDraggingId(objectId);
+    setDelta({ x: 0, z: 0 });
+  }, []);
+
+  function release() {
+    const objectId = draggingRef.current;
+    const moved = deltaRef.current;
+    draggingRef.current = null;
+    grabRef.current = null;
+    deltaRef.current = null;
+    setDraggingId(null);
+    setDelta(null);
+    if (objectId && moved && (moved.x !== 0 || moved.z !== 0)) {
+      onMoveObject?.(objectId, moved.x, moved.z);
+    }
+  }
+
+  const value = useMemo<SceneDragState>(() => ({ begin, delta, draggingId }), [begin, delta, draggingId]);
+
+  return (
+    <SceneDragContext.Provider value={value}>
+      <group ref={groupRef}>
+        {onMoveObject ? (
+          <mesh
+            onPointerMove={(event) => {
+              if (!draggingRef.current || !grabRef.current || !groupRef.current) {
+                return;
+              }
+              event.stopPropagation();
+              // event.point is WORLD space and the objects live in this group's
+              // local space, which sits at z + INTERIOR_Z. Skipping this landed
+              // every drop a quarter of a unit up the nave.
+              const local = groupRef.current.worldToLocal(event.point.clone());
+              const next = { x: local.x - grabRef.current.x, z: local.z - grabRef.current.z };
+              deltaRef.current = next;
+              setDelta(next);
+            }}
+            onPointerUp={(event) => {
+              if (!draggingRef.current) {
+                return;
+              }
+              event.stopPropagation();
+              release();
+            }}
+            // Leaving the surface ends the drag rather than leaving a phantom
+            // gesture armed for the next click somewhere else in the room.
+            onPointerLeave={() => {
+              if (draggingRef.current) {
+                release();
+              }
+            }}
+            position={[0, 0.015, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[60, 60]} />
+            <meshBasicMaterial depthWrite={false} opacity={0} transparent />
+          </mesh>
+        ) : null}
+        {children}
+      </group>
+    </SceneDragContext.Provider>
+  );
+}
+
 function EditableSceneObject({
   children,
   objectId,
-  sceneEdits
+  onSelectObject,
+  sceneEdits,
+  selectedObjectId
 }: {
   children: ReactNode;
   objectId: StudioSceneObjectId;
   sceneEdits: StudioSceneEdits;
-  // Accepted for caller compatibility but no longer used — the scene is a
-  // placed preview, not a draggable editor.
+  // Kept in the signature because every call site passes it; the surface above
+  // owns the actual move so that one catch plane serves the whole room.
   onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject?: (objectId: StudioSceneObjectId) => void;
   outlineCenter?: [number, number];
   selectedObjectId?: StudioSceneObjectId;
   size?: [number, number];
 }) {
-  // The 3D scene is a calm preview, not an editor — objects are placed, not draggable.
+  const drag = useContext(SceneDragContext);
   const offset = sceneEdits[objectId];
+  const isDragging = drag?.draggingId === objectId;
+  // Show where it will actually LAND: the store clamps the offset on release, so
+  // following the cursor past the clamp would promise a position it refuses.
+  const live =
+    isDragging && drag?.delta
+      ? { x: clampSceneOffset(offset.x + drag.delta.x), z: clampSceneOffset(offset.z + drag.delta.z) }
+      : offset;
 
-  return <group position={[offset.x, 0, offset.z]}>{children}</group>;
+  return (
+    <group
+      onPointerDown={(event) => {
+        if (!drag) {
+          return;
+        }
+        event.stopPropagation();
+        onSelectObject?.(objectId);
+        const point = event.point.clone();
+        drag.begin(objectId, { x: point.x - offset.x, z: point.z - INTERIOR_Z - offset.z });
+      }}
+      position={[live.x, 0, live.z]}
+    >
+      {children}
+    </group>
+  );
 }
 
 // Baked-GI shells (docs/blender-baked-venue.md, produced by scripts/bake-church-
@@ -4459,7 +4600,7 @@ function ReceptionInterior({
   capacity: WeddingStudioCapacity;
   dinnerTables?: DinnerTable[];
   highQuality?: boolean;
-  onMoveObject: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
+  onMoveObject?: (objectId: StudioSceneObjectId, deltaX: number, deltaZ: number) => void;
   onSelectObject: (objectId: StudioSceneObjectId) => void;
   palette: Palette;
   sceneEdits: StudioSceneEdits;

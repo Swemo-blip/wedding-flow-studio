@@ -36,6 +36,8 @@ export function RenderBridge() {
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
+  // The whole store, so a probe can raycast exactly the way the pointer does.
+  const getState = useThree((state) => state.get);
   const advance = useThree((state) => state.advance);
 
   useEffect(() => {
@@ -48,6 +50,11 @@ export function RenderBridge() {
     // need the query flag — reading the scene graph is free, drawing is not.
     target.__wfs3d = {
       camera,
+      // The R3F store, so a probe can raycast exactly the way the pointer does.
+      // Without it, "the drag does not fire" has no way to become "the ray hits
+      // the floor plane first" — which is the difference between a guess and a
+      // measurement.
+      getState,
       canvas: gl.domElement,
       gl,
       scene,
@@ -79,7 +86,7 @@ export function RenderBridge() {
     }, 250);
 
     return () => window.clearInterval(timer);
-  }, [advance, camera, gl, scene]);
+  }, [advance, camera, getState, gl, scene]);
 
   return null;
 }
