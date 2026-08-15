@@ -1167,8 +1167,8 @@ function WeddingStageInterior({
 // The scene has always LOOKED draggable: objects highlight, the inspector nudges
 // them with buttons, and EditableSceneObject has accepted onMoveObject and
 // onSelectObject since it was written. It ignored both, and the hint that said
-// "or drag it in the scene" was removed rather than made true. That is the last
-// control in the studio that implies a capability it does not have.
+// "or drag it in the scene" was removed rather than made true. The gesture works
+// now, and the inspector says so again.
 //
 // The discipline here is copied from StagingHandles, which solved the same
 // problem in the plan view and left its scars in comments:

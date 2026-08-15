@@ -522,6 +522,7 @@ const sv: Record<string, string> = {
   "Watch notes": "Att hålla koll på",
   "to review before the day": "att gå igenom före dagen",
   "Nudge the selected object": "Putta det valda objektet",
+  "Nudge the selected object, or drag it in the scene": "Finjustera det valda objektet, eller dra det i scenen",
   "Something only we have": "Något bara vi har",
   "Getting ready": "Förberedelser",
   "First look": "First look",

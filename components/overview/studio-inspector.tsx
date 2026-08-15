@@ -130,7 +130,11 @@ export function StudioInspector({
             accepts onMoveObject/onSelectObject/selectedObjectId and uses none of
             them, so dragging in the scene does nothing on this surface. Instruct
             only what actually works until the drag is implemented. */}
-        <p className="vstudio-panel-hint">{t("Nudge the selected object")}</p>
+        {/* The hint says BOTH ways now. It used to say "or drag it in the scene",
+            which was removed because the scene ignored the gesture; the drag is
+            real again, and a capability nobody is told about is nearly as bad as
+            one that does not exist. */}
+        <p className="vstudio-panel-hint">{t("Nudge the selected object, or drag it in the scene")}</p>
 
         <div className="vstudio-nudge" role="group" aria-label={t("Nudge {object}", { object: t(studioEditableObjects[selectedObjectId].label) })}>
           <span />
