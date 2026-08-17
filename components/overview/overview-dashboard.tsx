@@ -25,7 +25,15 @@ import { SavedChip } from "@/components/app-shell/saved-chip";
 import { StudioInspector, type SceneWarning, type StudioTool } from "@/components/overview/studio-inspector";
 import { StudioPlayback } from "@/components/overview/studio-playback";
 import { isAutoProcessional, walkthroughWaypoint } from "@/components/preview/preview-walkthrough";
-import { CeremonyScene, type SceneLighting } from "@/components/wedding-studio/church-scene";
+import {
+  buildChurchSeatedGuests,
+  CeremonyScene,
+  navePewRows,
+  PROCESSION_END_Z,
+  type SceneLighting
+} from "@/components/wedding-studio/church-scene";
+import { analyzeSightlines, churchSightlineObstacles } from "@/lib/sightlines";
+import { INTERIOR_Z } from "@/lib/scene-units";
 import {
   STUDIO_FRAMINGS,
   studioFramingCamera,
@@ -348,6 +356,41 @@ const PHOTO_MODE_ENABLED = false;
   const previewWaypointIndex = waypointIndexForPhase(phases[safePhaseIndex]?.title ?? "");
   const previewWaypoint = mode === "preview" ? walkthroughWaypoint(previewWaypointIndex) : null;
   const isPreview = previewWaypoint !== null;
+
+  // Who can see the ceremony. Computed from the SAME seat builder the nave
+  // renders, so the answer describes the room the couple is looking at rather
+  // than a parallel model of it. Null in the dinner hall on purpose: nobody sits
+  // facing an altar at dinner, and pretending this analysis applies there would
+  // be the kind of invented answer this product must not ship.
+  const sightlines = useMemo(() => {
+    if (sceneVenueType !== "church" || isPreview) {
+      return null;
+    }
+    const rows = Math.min(navePewRows(capacity.visibleGuestMarkers), capacity.maxComfortableRows);
+    const seats = buildChurchSeatedGuests(rows, capacity.visibleGuestMarkers).map((seat) => ({
+      id: seat.id,
+      // The scene's seat positions are LOCAL to the interior group.
+      x: seat.position[0],
+      z: seat.position[2] + INTERIOR_Z
+    }));
+    if (seats.length === 0) {
+      return null;
+    }
+    const verdicts = analyzeSightlines({
+      coupleX: 0.26 + staging.marks.couple.x,
+      coupleZ: PROCESSION_END_Z + staging.marks.couple.z + INTERIOR_Z,
+      obstacles: churchSightlineObstacles({ floralMark: staging.marks.florals, interiorZ: INTERIOR_Z }),
+      seats
+    });
+    return {
+      blocked: verdicts.filter((verdict) => verdict.issues.includes("blocked")).map((verdict) => ({ blockedBy: verdict.blockedBy, id: verdict.id })),
+      clear: verdicts.filter((verdict) => verdict.issues.length === 0).length,
+      distant: verdicts.filter((verdict) => verdict.issues.includes("distant")).length,
+      sideOn: verdicts.filter((verdict) => verdict.issues.includes("side-on")).length,
+      total: verdicts.length
+    };
+  }, [capacity.maxComfortableRows, capacity.visibleGuestMarkers, isPreview, sceneVenueType, staging.marks]);
+
 
   useEffect(() => {
     if (mode !== "preview" || !isPlaying) {
@@ -886,6 +929,7 @@ const PHOTO_MODE_ENABLED = false;
                   sceneKind={sceneKind}
                   seatedGuests={seatedGuests}
                   selectedObjectId={activeSelectedObjectId}
+                sightlines={sightlines}
                   staging={staging}
                   updatePlan={updatePlan}
                   updateStaging={updateStaging}

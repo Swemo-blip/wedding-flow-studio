@@ -9,6 +9,7 @@ import { ToneMappingMode } from "postprocessing";
 import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { INTERIOR_Z, SCENE_UNIT_METRES } from "@/lib/scene-units";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
 import { PhotoMode, type PhotoPhase } from "@/components/wedding-studio/photo-mode";
@@ -1932,7 +1933,7 @@ const CONGREGATION_MODELS = [
 // Exported because its absence is why metre values kept being written into unit
 // fields — a camera at 2.39 m, a photo disc above a head, an aisle control off by a
 // factor of two. Anything shown to the couple as a distance must pass through it.
-export const SCENE_UNIT_METRES = 1.591;
+export { SCENE_UNIT_METRES } from "@/lib/scene-units";
 
 // The whole interior renders inside `<group position={[0, 0, INTERIOR_Z]}>` and the
 // camera does not, so world z = local z + INTERIOR_Z. Every WEST_WALL_Z /
@@ -1940,7 +1941,7 @@ export const SCENE_UNIT_METRES = 1.591;
 // 40 cm in front of the officiant's hands, and a first-person camera standing behind
 // the person it was supposed to be — so the term now has a name instead of being a
 // literal that is easy to forget.
-export const INTERIOR_Z = 0.25;
+export { INTERIOR_Z } from "@/lib/scene-units";
 const FEET_PER_METRE = 1 / 0.3048;
 
 const CONGREGATION_SCALE = 0.205;
@@ -3146,7 +3147,7 @@ function Singer({ mark }: { mark: StudioSceneOffset }) {
 }
 
 const PROCESSION_START_Z = 4.4;
-const PROCESSION_END_Z = -2.55;
+export const PROCESSION_END_Z = -2.55;
 // 6.95 m of aisle. 13 s peaked at 1.07 m/s — a hurry, not a processional.
 // 20 s averages ~0.35 m/s at this world's 0.63 scale, a ceremonial pace.
 const PROCESSION_DURATION = 20;
@@ -3414,11 +3415,14 @@ const NAVE_SEATS_PER_ROW = 8;
 const MIN_PEW_ROWS = 8;
 const MAX_PEW_ROWS = 14;
 
-function navePewRows(guestCount: number) {
+export function navePewRows(guestCount: number) {
   return Math.max(MIN_PEW_ROWS, Math.min(MAX_PEW_ROWS, Math.ceil(guestCount / NAVE_SEATS_PER_ROW) + 2));
 }
 
-function buildChurchSeatedGuests(
+// Exported so the sightline analysis reads the SAME seats the nave renders. A
+// second implementation of "where do the guests sit" would drift, and the whole
+// value of the analysis is that it describes what the couple is looking at.
+export function buildChurchSeatedGuests(
   visibleRows: number,
   maxGuests: number,
   layout: SeatLayoutParams = DEFAULT_SEAT_LAYOUT

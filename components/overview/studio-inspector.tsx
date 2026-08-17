@@ -57,6 +57,14 @@ const styleSwatches: Record<string, string> = {
 // feel of dragging in the 3D view without letting a tap fling anything.
 const NUDGE_STEP = 0.15;
 
+export type SightlineSummary = {
+  blocked: { blockedBy?: string; id: string }[];
+  clear: number;
+  distant: number;
+  sideOn: number;
+  total: number;
+};
+
 type StudioInspectorProps = {
   activeTool: StudioTool;
   beginsAt: string | null;
@@ -75,6 +83,10 @@ type StudioInspectorProps = {
   sceneKind: "ceremony" | "reception";
   seatedGuests: number;
   selectedObjectId: StudioSceneObjectId;
+  // Null when there is nothing to say — a ceremony with no seats yet, or the
+  // dinner hall, whose sightline question is a different one (nobody sits facing
+  // an altar at dinner) and is not answered by pretending this analysis applies.
+  sightlines: SightlineSummary | null;
   staging: CeremonyStaging;
   updatePlan: (plan: WeddingStudioPlan) => void;
   updateStaging: (staging: CeremonyStaging) => void;
@@ -99,6 +111,7 @@ export function StudioInspector({
   sceneKind,
   seatedGuests,
   selectedObjectId,
+  sightlines,
   staging,
   updatePlan,
   updateStaging,
@@ -278,6 +291,39 @@ export function StudioInspector({
             ? t("{seated} of {invited} guests have a seat", { invited: invitedGuests, seated: seatedGuests })
             : `${t(capacity.capacityLabel)} · ${invitedGuests} ${t("guests")}, ${capacity.totalCapacity} ${t("seats")}`}
         </p>
+
+        {/* The one answer a checklist cannot give: who can actually SEE the
+            ceremony. Counts only, and only the ones that are true — no
+            percentage, no score. The arithmetic is lib/sightlines.ts and it is
+            asserted by npm run check:sightlines, including a regression that
+            drags an arrangement into the aisle and confirms the analysis notices. */}
+        {sightlines ? (
+          <div className="vstudio-sightlines">
+            <span className="eyebrow">{t("Who can see the ceremony")}</span>
+            <p className="vstudio-sightline-clear">
+              {t("{count} of {total} seats have a clear view", {
+                count: sightlines.clear,
+                total: sightlines.total
+              })}
+            </p>
+            <ul>
+              {sightlines.sideOn > 0 ? (
+                <li>{t("{count} sit side-on and will see the vows in profile", { count: sightlines.sideOn })}</li>
+              ) : null}
+              {sightlines.distant > 0 ? (
+                <li>{t("{count} sit more than 12 m back", { count: sightlines.distant })}</li>
+              ) : null}
+              {sightlines.blocked.length > 0 ? (
+                <li>
+                  {t("{count} are blocked by {what}", {
+                    count: sightlines.blocked.length,
+                    what: t(sightlines.blocked[0].blockedBy ?? "")
+                  })}
+                </li>
+              ) : null}
+            </ul>
+          </div>
+        ) : null}
 
         <Link className="vstudio-link" href="/reception">
           {t("Open Seating Plan")} <ChevronRight aria-hidden="true" size={14} />

@@ -231,6 +231,20 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
+- **The sightline analysis is the product's one genuinely differentiated answer, and
+  it is arithmetic.** `lib/sightlines.ts` + `npm run check:sightlines`: for each
+  seat the nave actually renders (it imports `buildChurchSeatedGuests`, it does not
+  re-model the grid), it reports a clear view, side-on, beyond 12 m, or blocked by
+  a NAMED obstacle. Two honesty decisions are load-bearing and must not be
+  "improved" away: the head of the guest in front is deliberately NOT an obstacle
+  (true in every church, unfixable, and reporting it would cry wolf), and the aisle
+  candle stands are excluded because their post measures under 4 cm. The altar urns
+  ARE passed in even though they sit 1.84 units BEHIND the couple and therefore
+  never block — because the couple can drag them, and `--regress` proves the
+  analysis notices when they are pulled into the aisle (10 seats blocked). The
+  `--check` mode fails if every seat is clear OR no seat is clear: an analysis that
+  flags everybody says nothing.
+
 - **A camera can be PROVEN to frame what it is for, without a screenshot.**
   `npm run check:cameras` (`scripts/camera-bounds-probe.mjs`) grew three checks on
   2026-08-12 beyond the room bounds: the camera's TARGET must also land inside the
@@ -360,6 +374,7 @@ Run relevant checks before reporting:
 ```bash
 npm run check:figures
 npm run check:seats
+npm run check:sightlines
 npm run check:colour
 npm run lint
 npm run typecheck

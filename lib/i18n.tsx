@@ -522,6 +522,15 @@ const sv: Record<string, string> = {
   "Watch notes": "Att hålla koll på",
   "to review before the day": "att gå igenom före dagen",
   "Nudge the selected object": "Putta det valda objektet",
+  // Sightline analysis (lib/sightlines.ts). Counts only — the product shows what
+  // it measured, never a score.
+  "Who can see the ceremony": "Vilka ser vigseln",
+  "{count} of {total} seats have a clear view": "{count} av {total} platser har fri sikt",
+  "{count} sit side-on and will see the vows in profile": "{count} sitter i sidled och ser löftena i profil",
+  "{count} sit more than 12 m back": "{count} sitter mer än 12 m bak",
+  "{count} are blocked by {what}": "{count} skyms av {what}",
+  "the left altar arrangement": "den vänstra altarbuketten",
+  "the right altar arrangement": "den högra altarbuketten",
   "Nudge the selected object, or drag it in the scene": "Finjustera det valda objektet, eller dra det i scenen",
   "Something only we have": "Något bara vi har",
   "Getting ready": "Förberedelser",

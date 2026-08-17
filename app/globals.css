@@ -10752,3 +10752,31 @@ a {
   outline: 2px solid var(--line-strong);
   outline-offset: 2px;
 }
+
+/* The sightline answer. A short block inside the Seating panel, not a card of its
+   own: the studio's rule is zones within one surface rather than new plates. The
+   clear-view line carries the weight because it is the reassuring number; the
+   compromises are a quiet list under it. */
+.vstudio-sightlines {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+}
+
+.vstudio-sightline-clear {
+  color: var(--ink);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.vstudio-sightlines ul {
+  color: var(--ink-faint);
+  display: grid;
+  font-size: 0.78rem;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
