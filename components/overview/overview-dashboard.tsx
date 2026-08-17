@@ -28,11 +28,17 @@ import { isAutoProcessional, walkthroughWaypoint } from "@/components/preview/pr
 import {
   buildChurchSeatedGuests,
   CeremonyScene,
+  churchSeatLayout,
   navePewRows,
   PROCESSION_END_Z,
   type SceneLighting
 } from "@/components/wedding-studio/church-scene";
-import { analyzeSightlines, churchSightlineObstacles } from "@/lib/sightlines";
+import {
+  analyzeSightlines,
+  churchSightlineObstacles,
+  seatedGuestObstacles,
+  summarizeSightlines
+} from "@/lib/sightlines";
 import { INTERIOR_Z } from "@/lib/scene-units";
 import {
   STUDIO_FRAMINGS,
@@ -367,7 +373,11 @@ const PHOTO_MODE_ENABLED = false;
       return null;
     }
     const rows = Math.min(navePewRows(capacity.visibleGuestMarkers), capacity.maxComfortableRows);
-    const seats = buildChurchSeatedGuests(rows, capacity.visibleGuestMarkers).map((seat) => ({
+    // The SAME layout the nave renders. Passing this is not optional: without it
+    // the panel reported the traditional grid while the couple switched to Spaced
+    // rows and watched the number hold still.
+    const layout = churchSeatLayout({ aisleWidthFeet: plan.aisleWidthFeet, seatingLayout: plan.seatingLayout });
+    const seats = buildChurchSeatedGuests(rows, capacity.visibleGuestMarkers, layout).map((seat) => ({
       id: seat.id,
       // The scene's seat positions are LOCAL to the interior group.
       x: seat.position[0],
@@ -379,17 +389,33 @@ const PHOTO_MODE_ENABLED = false;
     const verdicts = analyzeSightlines({
       coupleX: 0.26 + staging.marks.couple.x,
       coupleZ: PROCESSION_END_Z + staging.marks.couple.z + INTERIOR_Z,
-      obstacles: churchSightlineObstacles({ floralMark: staging.marks.florals, interiorZ: INTERIOR_Z }),
+      obstacles: [
+        ...churchSightlineObstacles({
+          celebrantMark: staging.marks.celebrant,
+          floralMark: staging.marks.florals,
+          focalPointEdit: sceneEdits.focalPoint,
+          interiorZ: INTERIOR_Z,
+          showSinger: staging.showSinger,
+          singerMark: staging.marks.singer
+        }),
+        // Other guests' heads. Measured, but summarised as a statement about the
+        // layout rather than blamed on the guest sitting in front.
+        ...seatedGuestObstacles(seats)
+      ],
       seats
     });
-    return {
-      blocked: verdicts.filter((verdict) => verdict.issues.includes("blocked")).map((verdict) => ({ blockedBy: verdict.blockedBy, id: verdict.id })),
-      clear: verdicts.filter((verdict) => verdict.issues.length === 0).length,
-      distant: verdicts.filter((verdict) => verdict.issues.includes("distant")).length,
-      sideOn: verdicts.filter((verdict) => verdict.issues.includes("side-on")).length,
-      total: verdicts.length
-    };
-  }, [capacity.maxComfortableRows, capacity.visibleGuestMarkers, isPreview, sceneVenueType, staging.marks]);
+    return summarizeSightlines(verdicts);
+  }, [
+    capacity.maxComfortableRows,
+    capacity.visibleGuestMarkers,
+    isPreview,
+    plan.aisleWidthFeet,
+    plan.seatingLayout,
+    sceneEdits.focalPoint,
+    sceneVenueType,
+    staging.marks,
+    staging.showSinger
+  ]);
 
 
   useEffect(() => {
@@ -423,6 +449,21 @@ const PHOTO_MODE_ENABLED = false;
       if (storedLayout) {
         setPlan(storedLayout.plan);
         setSceneEdits(storedLayout.sceneEdits);
+        // STAGING BELONGS HERE TOO, and its absence was a silent data loss.
+        //
+        // The record holds three slices and this mount-time hydration restored two
+        // of them. The only other place staging is loaded is the project-sync
+        // effect below, which returns early unless `localProject.hasLocalProject`
+        // — so for anyone without a saved project the couple's groom-start choice,
+        // the singer toggle and EVERY person mark they dragged were written to
+        // localStorage and then dropped on the next visit.
+        //
+        // Found by measuring, not by reading: the sightline panel was asked to
+        // prove it noticed the officiant being dragged in front of the couple, and
+        // it kept reporting the resting numbers. The panel was right; the state was
+        // never loaded. Restoring two of three slices reads as a complete
+        // hydration, which is why this survived several passes over this file.
+        setStaging(storedLayout.staging);
       }
     });
   }, []);

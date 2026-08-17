@@ -942,13 +942,11 @@ function WeddingStageInterior({
   // nave with a narrow centre and wide sides is a different kind of wrong.
   const pewInnerEdge = PEW_BLOCK_X - PEW_BENCH_WIDTH / 2;
   const runnerWidth = pewInnerEdge * 2 * aisleScale;
-  const aisleShift = (runnerWidth - pewInnerEdge * 2) / 2;
-  const rowSpacing = seatingLayout === "Spaced rows" ? 0.8 : 0.62;
-  const pewYaw = seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0;
   const seatLayout = useMemo<SeatLayoutParams>(
-    () => ({ aisleShift, pewYaw, rowSpacing }),
-    [aisleShift, pewYaw, rowSpacing]
+    () => churchSeatLayout({ aisleWidthFeet, seatingLayout }),
+    [aisleWidthFeet, seatingLayout]
   );
+  const { aisleShift, pewYaw, rowSpacing } = seatLayout;
   const seatedGuests = useMemo(
     () => (ceremonyVenue ? buildChurchSeatedGuests(seatedRows, capacity.visibleGuestMarkers, seatLayout) : []),
     [capacity.visibleGuestMarkers, ceremonyVenue, seatLayout, seatedRows]
@@ -3369,13 +3367,38 @@ function Processional({
   );
 }
 
-type SeatLayoutParams = {
+export type SeatLayoutParams = {
   aisleShift: number;
   pewYaw: number;
   rowSpacing: number;
 };
 
 const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpacing: 0.62 };
+
+// What the two seating controls actually do to the nave, as one exported function.
+//
+// This derivation used to live inline in the scene component, which is how the
+// sightline panel shipped BLIND to the controls it renders directly beneath: the
+// panel called buildChurchSeatedGuests without a layout, so it kept reporting the
+// traditional grid while the couple switched to Spaced rows and watched the number
+// hold still. A live figure next to a live control that does not move it is the
+// dead-control failure this product exists to avoid. One function, two callers.
+export function churchSeatLayout({
+  aisleWidthFeet,
+  seatingLayout
+}: {
+  aisleWidthFeet: number;
+  seatingLayout: string;
+}): SeatLayoutParams {
+  const aisleScale = Math.max(0.5, aisleWidthFeet / 5);
+  const pewInnerEdge = PEW_BLOCK_X - PEW_BENCH_WIDTH / 2;
+  const runnerWidth = pewInnerEdge * 2 * aisleScale;
+  return {
+    aisleShift: (runnerWidth - pewInnerEdge * 2) / 2,
+    pewYaw: seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0,
+    rowSpacing: seatingLayout === "Spaced rows" ? 0.8 : 0.62
+  };
+}
 
 // Distance from the nave centreline to each pew block's centre. The blocks are
 // 2.55 wide, so this also sets the aisle: 2.2 leaves 1.85m between the pew ends,

@@ -5,6 +5,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ChevronRight, Dot, Sunrise, 
 import { SCENE_UNIT_METRES, aisleWidthInFeet } from "@/components/wedding-studio/church-scene";
 import type { SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
+import type { SightlineSummary } from "@/lib/sightlines";
 import {
   colorDirectionOptions,
   decorLevelOptions,
@@ -57,13 +58,10 @@ const styleSwatches: Record<string, string> = {
 // feel of dragging in the 3D view without letting a tap fling anything.
 const NUDGE_STEP = 0.15;
 
-export type SightlineSummary = {
-  blocked: { blockedBy?: string; id: string }[];
-  clear: number;
-  distant: number;
-  sideOn: number;
-  total: number;
-};
+// Defined in lib/sightlines.ts, beside the arithmetic that fills it, and
+// re-exported here only because this panel is what renders it. Two declarations
+// of the same shape is how the first version's probe drifted from its own lib.
+export type { SightlineSummary };
 
 type StudioInspectorProps = {
   activeTool: StudioTool;
@@ -293,34 +291,61 @@ export function StudioInspector({
         </p>
 
         {/* The one answer a checklist cannot give: who can actually SEE the
-            ceremony. Counts only, and only the ones that are true — no
-            percentage, no score. The arithmetic is lib/sightlines.ts and it is
-            asserted by npm run check:sightlines, including a regression that
-            drags an arrangement into the aisle and confirms the analysis notices. */}
+            ceremony.
+            The HEADLINE is which partner each seat sees during the vows, because
+            the couple turn to face each other and that answer is always
+            non-trivial and always actionable — it is also the question planners
+            get asked at every rehearsal. Warnings appear only when something is
+            genuinely wrong. The first version led with "N of M have a clear view"
+            and spent its warnings on the front row being at a wide angle, which
+            is the best seat in the church. The arithmetic is lib/sightlines.ts,
+            asserted by npm run check:sightlines. */}
         {sightlines ? (
           <div className="vstudio-sightlines">
             <span className="eyebrow">{t("Who can see the ceremony")}</span>
             <p className="vstudio-sightline-clear">
-              {t("{count} of {total} seats have a clear view", {
-                count: sightlines.clear,
-                total: sightlines.total
+              {t("{bride} seats see the bride's face during the vows, {groom} see the groom's", {
+                bride: sightlines.brideFace,
+                groom: sightlines.groomFace
               })}
             </p>
             <ul>
-              {sightlines.sideOn > 0 ? (
-                <li>{t("{count} sit side-on and will see the vows in profile", { count: sightlines.sideOn })}</li>
-              ) : null}
-              {sightlines.distant > 0 ? (
-                <li>{t("{count} sit more than 12 m back", { count: sightlines.distant })}</li>
+              {sightlines.profile > 0 ? (
+                <li>{t("{count} sit on the aisle and see both in profile", { count: sightlines.profile })}</li>
               ) : null}
               {sightlines.blocked.length > 0 ? (
-                <li>
-                  {t("{count} are blocked by {what}", {
+                <li className="vstudio-sightline-warn">
+                  {t("{count} cannot see past {what}", {
                     count: sightlines.blocked.length,
                     what: t(sightlines.blocked[0].blockedBy ?? "")
                   })}
                 </li>
               ) : null}
+              {sightlines.levelWithCouple > 0 ? (
+                <li className="vstudio-sightline-warn">
+                  {t("{count} now sit level with the couple", { count: sightlines.levelWithCouple })}
+                </li>
+              ) : null}
+              {sightlines.headInLine > 0 ? (
+                <li>
+                  {/* NO ADVICE ON THIS LINE, and that is a measured decision made
+                      twice. The first draft said "spaced rows opens it up": false,
+                      the count moves 28 → 27. The second said "a wider aisle opens
+                      it up", which holds on a full 14-row nave (47 at 3 ft, 18 at
+                      8 ft) but INVERTS on a small one — on the live plan below,
+                      going 5 ft → 10 ft took it from 2 to 3, because seats pushed
+                      outward look along their own row more obliquely. A count that
+                      is true beats a lever that is true only sometimes; the panel
+                      is live, so the couple can watch it move. */}
+                  {t("{count} of {total} have a guest's head in the line", {
+                    count: sightlines.headInLine,
+                    total: sightlines.total
+                  })}
+                </li>
+              ) : null}
+              {/* Spaced rows' real cost, which nothing else in the app says out
+                  loud: it pushes the back row from 14.2 m to 17.7 m. */}
+              <li>{t("Back row {metres} m from the altar", { metres: sightlines.furthestMetres })}</li>
             </ul>
           </div>
         ) : null}

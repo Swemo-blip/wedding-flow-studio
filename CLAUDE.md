@@ -234,16 +234,72 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
 - **The sightline analysis is the product's one genuinely differentiated answer, and
   it is arithmetic.** `lib/sightlines.ts` + `npm run check:sightlines`: for each
   seat the nave actually renders (it imports `buildChurchSeatedGuests`, it does not
-  re-model the grid), it reports a clear view, side-on, beyond 12 m, or blocked by
-  a NAMED obstacle. Two honesty decisions are load-bearing and must not be
-  "improved" away: the head of the guest in front is deliberately NOT an obstacle
-  (true in every church, unfixable, and reporting it would cry wolf), and the aisle
-  candle stands are excluded because their post measures under 4 cm. The altar urns
-  ARE passed in even though they sit 1.84 units BEHIND the couple and therefore
-  never block — because the couple can drag them, and `--regress` proves the
-  analysis notices when they are pulled into the aisle (10 seats blocked). The
-  `--check` mode fails if every seat is clear OR no seat is clear: an analysis that
-  flags everybody says nothing.
+  re-model the grid) it reports which partner's face that seat sees during the vows,
+  plus a warning only when something is genuinely wrong. **It shipped WRONG IN KIND
+  on 2026-08-17 and was rebuilt on 2026-08-18** — the correction is worth more than
+  the feature, so read `lib/sightlines.ts`'s header before touching it. The five
+  failures that generalise:
+  1. **It reported thresholds as defects.** "Side-on" and "beyond 12 m" flagged 30 of
+     112 seats, including the entire front row at 78-86° from 1.8 m — the parents'
+     seats, where a human turns their head. Both criteria are gone.
+  2. **One user-facing sentence was the exact opposite of the render.** It said a
+     side-on seat "will see the vows in profile", but the scene turns the couple to
+     face EACH OTHER on arrival (groom to π/2, bride to 3π/2), so the aisle seat sees
+     two profiles and the side seat sees one face square on. **The vow facing is now
+     the headline**, because it is always non-trivial and always actionable.
+  3. **A threshold's justification was invented.** The 12 m comment claimed a
+     visual-acuity derivation; a face at 12 m subtends ~46 arcmin, ~46× the acuity
+     limit. Distance is now a measured fact with no verdict — "the back row is 14.2 m
+     from the altar" cannot be wrong.
+  4. **The obstacle geometry was measured off the wrong part, and mirrored wrongly.**
+     The altar arrangement was given the *vase* (0.19 × 0.98) when the bloom mass
+     measures 0.365 × 1.476, and its left copy was translated with the right one
+     instead of mirrored, landing up to 1.8 units from where it renders. It also
+     omitted the `focalPoint` edit that moves the whole altar group.
+  5. **The check certified an unreachable state.** `--regress` dragged the florals
+     2.4 units when `clampStagingOffset` caps that mark at 0.9 — the same trap this
+     file records for the camera body-clearance check. It now drags the **officiant**
+     to his real clamp of 1.5, which carries him to world z -1.80, half a unit in
+     front of the couple: **38 seats blocked.** He was omitted entirely before, and he
+     is the only figure whose own reach can ruin the room.
+  What survives, and why: **the lean allowance** (`LEAN_UNITS` 0.19 = 30 cm) is the
+  load-bearing idea. An obstruction a lean defeats is not a blocked view, and testing
+  the ray from three head positions replaced two hand-waved exclusions with one rule
+  that states its reason. And the head of the guest in front is still not a per-seat
+  defect — it IS the dominant occluder (crowns reach 0.855 against a 0.69-0.78 seated
+  eye), so blaming it per guest drowns everything else; it is reported once as a count.
+- **Do not put advice on the heads-in-line row. It was measured false twice.**
+  "Spaced rows opens it up" moves the count 28 → 27. "A wider aisle opens it up" holds
+  on a full 14-row nave (47 at 3 ft → 18 at 8 ft) but **inverts on a small one** —
+  live, on the sample plan, 5 ft → 10 ft went from 2 to 3, because seats pushed
+  outward look along their own row more obliquely. `--regress` therefore asserts that
+  the aisle control **changes** the number, never which direction. A count that is
+  true beats a lever that is true only sometimes.
+- **The probe imports the shipped arithmetic instead of copying it.** The first
+  `sightline-probe.mjs` re-implemented the maths and had already drifted (it dropped
+  `floralMark.x`). Node 24 strips TS types natively, so it copies `lib/sightlines.ts`
+  to a temp dir with the one `@/` alias rewritten and imports it for real — no build
+  step, no dependency, and drift is impossible rather than unlikely.
+- **A HYDRATION THAT RESTORES TWO OF THREE SLICES READS AS COMPLETE. It is not.**
+  `overview-dashboard.tsx`'s mount effect restored `plan` and `sceneEdits` and
+  silently omitted `staging`; the only other loader is the project-sync effect, which
+  returns early unless `localProject.hasLocalProject`. So for anyone without a saved
+  project the groom-start choice, the singer toggle and **every person mark the couple
+  dragged** were written to localStorage and dropped on the next visit. Fixed
+  2026-08-18. Found only because the sightline panel was asked to prove it noticed the
+  officiant being dragged in front of the couple and kept reporting the resting
+  numbers — the panel was right, the state was never loaded. **When a check disagrees
+  with the code you just wrote, suspect the state before the check.** The three-way
+  agreement that closed it is the pattern to reuse: the lib, the headless probe and
+  the live DOM all had to report the same 16 / 1 / 5.5 m.
+- **`lib/risk-analysis.ts` told one guest two opposite things, and the sightline panel
+  is what exposed it.** For every guest with an `accessibilityNotes` entry it advised
+  seating them "close to the entrance", which is the west portal — measured at
+  12.3-14.2 m from the couple, the furthest seats in the nave, i.e. the worst view and
+  the worst hearing. It also invented a category out of free text: a wheelchair user
+  and a guest who is hard of hearing need opposite seats. It now names the trade-off
+  and prescribes nothing. **When two surfaces describe the same room, check they
+  agree.**
 
 - **A camera can be PROVEN to frame what it is for, without a screenshot.**
   `npm run check:cameras` (`scripts/camera-bounds-probe.mjs`) grew three checks on

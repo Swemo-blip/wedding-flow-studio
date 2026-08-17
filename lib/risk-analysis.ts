@@ -173,15 +173,31 @@ export function analyzeWeddingFlow(source: RiskSource = {}): RiskItem[] {
     });
   }
 
+  // This used to read "{name} should be seated close to the entrance with a clear
+  // route", and it was wrong twice over.
+  //
+  // First, it INVENTED A CATEGORY out of free text. accessibilityNotes is a note
+  // the couple typed; a wheelchair user and a guest who is hard of hearing need
+  // opposite seats, and this told both the same thing.
+  // Second, it CONTRADICTED THE ROOM. Measured: the entrance is the west portal,
+  // and the back two rows sit 12.3-14.2 m from the couple — the furthest seats in
+  // the nave. So the app was pushing the guest who most needs to see and hear
+  // toward the worst seat for both, while the sightline panel reported that
+  // distance as a fact on the same screen.
+  //
+  // A note the couple wrote is theirs to act on. Name it, state the trade-off the
+  // geometry really carries, and prescribe nothing.
   for (const guest of guestItems.filter((item) => item.accessibilityNotes.length > 0)) {
     risks.push({
       id: `risk-accessibility:${guest.id}`,
       severity: "medium",
       title: "Review accessibility seating and guest flow.",
-      ...localizedDescription("{name} should be seated close to the entrance with a clear route.", { name: guest.name }),
+      ...localizedDescription("{name} has an access note. Near the entrance is the easiest to reach and the furthest from the ceremony.", {
+        name: guest.name
+      }),
       relatedEntityType: "guest",
       relatedEntityId: guest.id,
-      suggestedFix: "Move the assigned table closer to the entrance or confirm a clear path."
+      suggestedFix: "Read the note and place them, then check the route is clear."
     });
   }
 

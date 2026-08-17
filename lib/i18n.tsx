@@ -236,7 +236,8 @@ const sv: Record<string, string> = {
   "{name} has a {allergy} - notify catering.": "{name} har {allergy} – meddela cateringen.",
   "{name} has a vegan meal preference.": "{name} har önskemål om vegansk måltid.",
   "{name} needs a child meal and Table 5 requires one child seat.": "{name} behöver en barnmåltid och bord 5 kräver en barnstol.",
-  "{name} should be seated close to the entrance with a clear route.": "{name} bör placeras nära entrén med en tydlig väg.",
+  "{name} has an access note. Near the entrance is the easiest to reach and the furthest from the ceremony.":
+    "{name} har en tillgänglighetsnotering. Nära entrén är lättast att nå och längst från vigseln.",
   "{guest} and {conflictGuest} are marked as a seating conflict at {table}.":
     "{guest} och {conflictGuest} är markerade som en placeringskonflikt vid {table}.",
   "{title} requires {needs} support.": "{title} kräver stöd för {needs}.",
@@ -525,12 +526,18 @@ const sv: Record<string, string> = {
   // Sightline analysis (lib/sightlines.ts). Counts only — the product shows what
   // it measured, never a score.
   "Who can see the ceremony": "Vilka ser vigseln",
-  "{count} of {total} seats have a clear view": "{count} av {total} platser har fri sikt",
-  "{count} sit side-on and will see the vows in profile": "{count} sitter i sidled och ser löftena i profil",
-  "{count} sit more than 12 m back": "{count} sitter mer än 12 m bak",
-  "{count} are blocked by {what}": "{count} skyms av {what}",
+  "{bride} seats see the bride's face during the vows, {groom} see the groom's":
+    "{bride} platser ser brudens ansikte under löftena, {groom} ser brudgummens",
+  "{count} sit on the aisle and see both in profile": "{count} sitter mot mittgången och ser båda i profil",
+  "{count} cannot see past {what}": "{count} ser inte förbi {what}",
+  "{count} now sit level with the couple": "{count} sitter nu i linje med paret",
+  "{count} of {total} have a guest's head in the line": "{count} av {total} har en gästs huvud i siktlinjen",
+  "Back row {metres} m from the altar": "Bakre raden {metres} m från altaret",
   "the left altar arrangement": "den vänstra altarbuketten",
   "the right altar arrangement": "den högra altarbuketten",
+  "the officiant": "prästen",
+  "the singer": "sångaren",
+  "the microphone stand": "mikrofonstativet",
   "Nudge the selected object, or drag it in the scene": "Finjustera det valda objektet, eller dra det i scenen",
   "Something only we have": "Något bara vi har",
   "Getting ready": "Förberedelser",
@@ -1111,7 +1118,7 @@ const sv: Record<string, string> = {
   "Warnings": "Varningar",
   // Reception suggested fixes
   "Send final allergy details to the catering lead and mark the guest seat.": "Skicka slutgiltiga allergiuppgifter till cateringansvarig och markera gästens plats.",
-  "Move the assigned table closer to the entrance or confirm a clear path.": "Flytta det tilldelade bordet närmare entrén eller bekräfta en fri väg.",
+  "Read the note and place them, then check the route is clear.": "Läs noteringen och placera dem, kontrollera sedan att vägen är fri.",
   "Move one guest to a different table before exporting the seating plan.": "Flytta en gäst till ett annat bord innan du exporterar placeringsplanen.",
   "Confirm plated meal markers with catering.": "Bekräfta tallriksmarkörer med cateringen.",
   "Confirm child meal count and chair setup with catering and venue.": "Bekräfta antal barnmåltider och stoluppställning med catering och lokal.",

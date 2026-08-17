@@ -10755,8 +10755,9 @@ a {
 
 /* The sightline answer. A short block inside the Seating panel, not a card of its
    own: the studio's rule is zones within one surface rather than new plates. The
-   clear-view line carries the weight because it is the reassuring number; the
-   compromises are a quiet list under it. */
+   lead line carries the weight because it is the answer people actually want —
+   which of the two faces this seat sees during the vows; everything under it is a
+   quiet list, and only a genuine problem is inked up (.vstudio-sightline-warn). */
 .vstudio-sightlines {
   border-top: 1px solid var(--line);
   display: grid;
@@ -10779,4 +10780,12 @@ a {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* Only the two lines that mean something is WRONG take full ink. The rest of the
+   list is measured fact, and facts do not need emphasis — that distinction is the
+   whole reason this panel is readable now: the first version emphasised its
+   thresholds and buried its one real warning among them. */
+.vstudio-sightline-warn {
+  color: var(--ink);
 }
