@@ -10,6 +10,16 @@ import * as THREE from "three";
 import { Volume2, VolumeX } from "lucide-react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { INTERIOR_Z, SCENE_UNIT_METRES } from "@/lib/scene-units";
+import {
+  buildChurchSeatedGuests,
+  churchSeatLayout,
+  navePewRows,
+  PEW_BENCH_WIDTH,
+  PEW_BLOCK_X,
+  PROCESSION_END_Z,
+  type CongregationSeat,
+  type SeatLayoutParams
+} from "@/lib/church-seating";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LoopSubdivision } from "three-subdivide";
 import { PhotoMode, type PhotoPhase } from "@/components/wedding-studio/photo-mode";
@@ -948,7 +958,7 @@ function WeddingStageInterior({
   );
   const { aisleShift, pewYaw, rowSpacing } = seatLayout;
   const seatedGuests = useMemo(
-    () => (ceremonyVenue ? buildChurchSeatedGuests(seatedRows, capacity.visibleGuestMarkers, seatLayout) : []),
+    () => (ceremonyVenue ? buildChurchSeatedGuests(seatedRows, capacity.visibleGuestMarkers, seatLayout, CONGREGATION_MODELS.length) : []),
     [capacity.visibleGuestMarkers, ceremonyVenue, seatLayout, seatedRows]
   );
 
@@ -1950,13 +1960,6 @@ if (typeof window !== "undefined") {
   // boot gate holds the Canvas until the scene can light itself correctly.
   preloadHdr(BAKED_VENUE_URLS.church ? CHURCH_ROOM_HDR_URL : CHURCH_HDR_URL);
 }
-
-type CongregationSeat = {
-  id: string;
-  position: [number, number, number];
-  variant: number;
-  rotationY: number;
-};
 
 function CongregationVariant({ highQuality = true, seats, url }: { highQuality?: boolean; seats: CongregationSeat[]; url: string }) {
   const { scene } = useGLTF(url);
@@ -3145,7 +3148,6 @@ function Singer({ mark }: { mark: StudioSceneOffset }) {
 }
 
 const PROCESSION_START_Z = 4.4;
-export const PROCESSION_END_Z = -2.55;
 // 6.95 m of aisle. 13 s peaked at 1.07 m/s — a hurry, not a processional.
 // 20 s averages ~0.35 m/s at this world's 0.63 scale, a ceremonial pace.
 const PROCESSION_DURATION = 20;
@@ -3367,48 +3369,8 @@ function Processional({
   );
 }
 
-export type SeatLayoutParams = {
-  aisleShift: number;
-  pewYaw: number;
-  rowSpacing: number;
-};
 
-const DEFAULT_SEAT_LAYOUT: SeatLayoutParams = { aisleShift: 0, pewYaw: 0, rowSpacing: 0.62 };
-
-// What the two seating controls actually do to the nave, as one exported function.
-//
-// This derivation used to live inline in the scene component, which is how the
-// sightline panel shipped BLIND to the controls it renders directly beneath: the
-// panel called buildChurchSeatedGuests without a layout, so it kept reporting the
-// traditional grid while the couple switched to Spaced rows and watched the number
-// hold still. A live figure next to a live control that does not move it is the
-// dead-control failure this product exists to avoid. One function, two callers.
-export function churchSeatLayout({
-  aisleWidthFeet,
-  seatingLayout
-}: {
-  aisleWidthFeet: number;
-  seatingLayout: string;
-}): SeatLayoutParams {
-  const aisleScale = Math.max(0.5, aisleWidthFeet / 5);
-  const pewInnerEdge = PEW_BLOCK_X - PEW_BENCH_WIDTH / 2;
-  const runnerWidth = pewInnerEdge * 2 * aisleScale;
-  return {
-    aisleShift: (runnerWidth - pewInnerEdge * 2) / 2,
-    pewYaw: seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0,
-    rowSpacing: seatingLayout === "Spaced rows" ? 0.8 : 0.62
-  };
-}
-
-// Distance from the nave centreline to each pew block's centre. The blocks are
-// 2.55 wide, so this also sets the aisle: 2.2 leaves 1.85m between the pew ends,
-// which a gown and a groom can share. At the old 1.82 the gap was 1.09m and the
-// bride's skirt intersected the bench.
-const PEW_BLOCK_X = 2.2;
-// The pew bench's own width, from PewBody's boxGeometry. Named because the aisle
-// runner is derived from it: the two were independent numbers that quietly
-// disagreed by 0.30 units, and a literal repeated in two places is how they drifted.
-const PEW_BENCH_WIDTH = 2.55;
+// PEW_BLOCK_X and PEW_BENCH_WIDTH live in lib/church-seating.ts.
 
 // What the aisle control actually renders, in feet.
 //
@@ -3428,67 +3390,22 @@ export function aisleWidthInFeet(aisleWidthFeet: number) {
   return clearGap * Math.max(0.5, aisleWidthFeet / 5) * SCENE_UNIT_METRES * FEET_PER_METRE;
 }
 
-// The nave's pews follow the wedding it is actually holding: enough rows to seat
-// everyone with a couple spare, never so many that a small wedding is framed
-// against half a hall of empty benches. Eight seats per row is what the 3D lays
-// out, four each side of the aisle.
-const NAVE_SEATS_PER_ROW = 8;
-// A nave reads as a church at eight rows; below that it reads as a chapel set
-// built for the render. Small weddings still fill only the front rows.
-const MIN_PEW_ROWS = 8;
-const MAX_PEW_ROWS = 14;
+// The nave's pews follow the wedding it is actually holding. The grid itself now
+// lives in lib/church-seating.ts so the shared page can read it without pulling in
+// a 3D engine; see that file's header.
 
-export function navePewRows(guestCount: number) {
-  return Math.max(MIN_PEW_ROWS, Math.min(MAX_PEW_ROWS, Math.ceil(guestCount / NAVE_SEATS_PER_ROW) + 2));
-}
-
-// Exported so the sightline analysis reads the SAME seats the nave renders. A
-// second implementation of "where do the guests sit" would drift, and the whole
-// value of the analysis is that it describes what the couple is looking at.
-export function buildChurchSeatedGuests(
-  visibleRows: number,
-  maxGuests: number,
-  layout: SeatLayoutParams = DEFAULT_SEAT_LAYOUT
-): CongregationSeat[] {
-  const result: CongregationSeat[] = [];
-  const seatOffsets = [-0.86, -0.29, 0.29, 0.86];
-  let count = 0;
-
-  for (let row = 0; row < visibleRows; row += 1) {
-    const z = -2.4 + row * layout.rowSpacing;
-
-    for (const side of [-1, 1]) {
-      // The figures sit ON the pew block, so they inherit its aisle shift and
-      // rotate around the same block centre when the layout curves the rows.
-      const sideCenter = side * (PEW_BLOCK_X + layout.aisleShift);
-      const yaw = side * layout.pewYaw;
-
-      for (let seat = 0; seat < seatOffsets.length; seat += 1) {
-        if (count >= maxGuests) {
-          return result;
-        }
-
-        const seed = row * 4 + seat * 5 + (side < 0 ? 0 : 7);
-        const dx = seatOffsets[seat];
-        result.push({
-          id: `church-guest-${row}-${sideCenter}-${seat}`,
-          position: [sideCenter + dx * Math.cos(yaw), 0, z + 0.07 - dx * Math.sin(yaw)],
-          variant: (seed * 7 + row * 3) % CONGREGATION_MODELS.length,
-          // Most face the altar; roughly one in six is turned toward whoever is
-          // next to them, which is what a church looks like before the doors open.
-          rotationY:
-            Math.PI +
-            yaw +
-            ((seed % 7) - 3) * 0.075 +
-            (seed % 6 === 0 ? (seat % 2 === 0 ? 0.42 : -0.42) : 0)
-        });
-        count += 1;
-      }
-    }
-  }
-
-  return result;
-}
+// buildChurchSeatedGuests, navePewRows, churchSeatLayout, SeatLayoutParams and
+// CongregationSeat all live in lib/church-seating.ts now, and are re-exported
+// from this module for callers that already import them from here. They were
+// moved because the SHARED page needs the same seat grid, and a vendor opening a
+// link on a phone must not download three.js to be told where the guests sit.
+export {
+  buildChurchSeatedGuests,
+  churchSeatLayout,
+  navePewRows,
+  PROCESSION_END_Z,
+  type SeatLayoutParams
+} from "@/lib/church-seating";
 
 // Development-only capture hook. The browser throttles requestAnimationFrame when a
 // tab or pane is occluded, which pauses R3F's render loop — and a canvas resize in

@@ -12,7 +12,8 @@
     "check:colour": "node scripts/colour-audit.mjs --check",
     "check:seats": "node scripts/seat-contact-probe.mjs --check",
     "check:cameras": "node scripts/camera-bounds-probe.mjs --check",
-    "check:sightlines": "node scripts/sightline-probe.mjs --check"
+    "check:sightlines": "node scripts/sightline-probe.mjs --check",
+    "check:share": "node scripts/share-room-probe.mjs --check"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

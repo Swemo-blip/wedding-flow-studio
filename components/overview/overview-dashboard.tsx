@@ -539,13 +539,26 @@ const PHOTO_MODE_ENABLED = false;
 
   // A shareable read-only link carrying the plan in its hash, so a recipient
   // sees this couple's plan, not their own localStorage.
+  //
+  // It now carries the ROOM as well — the live plan, staging and object nudges —
+  // so the venue and the photographer open a floor plan of the ceremony instead of
+  // a list of times. These are the live hydrated values, not the stored ones, which
+  // matters: reading them back from localStorage here would share whatever was last
+  // persisted rather than what the couple is looking at.
   const shareUrl = useMemo(
     () =>
       buildShareUrl(
-        encodeSnapshot(buildShareSnapshot({ guests: localProject.guests, timelineItems: localProject.timelineItems, wedding: activeWedding }))
+        encodeSnapshot(
+          buildShareSnapshot({
+            guests: localProject.guests,
+            room: { plan, sceneEdits, staging },
+            timelineItems: localProject.timelineItems,
+            wedding: activeWedding
+          })
+        )
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeWedding, localProject.guests, localProject.timelineItems, localProject.updatedAt]
+    [activeWedding, localProject.guests, localProject.timelineItems, localProject.updatedAt, plan, sceneEdits, staging]
   );
 
   function updatePlan(nextPlan: WeddingStudioPlan) {

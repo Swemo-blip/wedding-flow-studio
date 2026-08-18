@@ -10,9 +10,9 @@
 // TWO THINGS THIS PROBE GOT WRONG THE FIRST TIME, both now structural:
 //
 // 1. IT RE-IMPLEMENTED THE ARITHMETIC IT WAS MEANT TO VERIFY, and had already
-//    drifted from it (it dropped floralMark.x entirely). It now IMPORTS
-//    lib/sightlines.ts through a tiny tsc-free loader, so there is exactly one
-//    copy of the maths and a drift is impossible rather than merely unlikely.
+//    drifted from it (it dropped floralMark.x entirely). It now IMPORTS the shipped
+//    modules — the analysis AND the seat grid — so there is exactly one copy of
+//    each and a drift is impossible rather than merely unlikely.
 // 2. ITS REGRESSION EXERCISED A STATE NO USER CAN REACH. It dragged the altar
 //    florals 2.4 units when clampStagingOffset caps that mark at 0.9 — certifying
 //    detection of something impossible, which is the exact trap CLAUDE.md records
@@ -25,47 +25,32 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 // ---------------------------------------------------------------------------
-// Import lib/sightlines.ts itself, with no build step and no dependency: Node 24
-// strips TypeScript types natively, so the only thing in the way is the "@/"
-// path alias, which tsconfig resolves and Node does not. Copy the two files to a
-// temp directory with that one import rewritten and import them for real.
-//
-// The point of the whole manoeuvre: the probe measures the SHIPPED arithmetic.
-// The first version carried its own copy of the maths and had already drifted.
+// Import the shipped TypeScript with no build step and no dependency: Node 24
+// strips types natively, so the only obstacle is the "@/" path alias, which
+// tsconfig resolves and Node does not. Copy the modules to a temp directory with
+// those imports rewritten and load them for real.
 // ---------------------------------------------------------------------------
-async function loadSightlines() {
+async function loadLib() {
   const dir = mkdtempSync(join(tmpdir(), "sightlines-"));
-  writeFileSync(join(dir, "scene-units.ts"), readFileSync("lib/scene-units.ts", "utf8"));
-  writeFileSync(
-    join(dir, "sightlines.ts"),
-    readFileSync("lib/sightlines.ts", "utf8").replace('from "@/lib/scene-units"', 'from "./scene-units.ts"')
-  );
-  return import(pathToFileURL(join(dir, "sightlines.ts")).href);
-}
-
-const scene = readFileSync("components/wedding-studio/church-scene.tsx", "utf8");
-const plan = readFileSync("lib/wedding-studio-plan.ts", "utf8");
-
-function sourceNumber(name, source = scene) {
-  const match = source.match(new RegExp(`${name}\\s*=\\s*(-?[\\d.]+)`));
-  if (!match) {
-    throw new Error(`could not find ${name}`);
+  for (const name of ["scene-units.ts", "church-seating.ts", "sightlines.ts"]) {
+    writeFileSync(
+      join(dir, name),
+      readFileSync(`lib/${name}`, "utf8").replace(/from "@\/lib\/([a-z-]+)"/g, 'from "./$1.ts"')
+    );
   }
-  return Number(match[1]);
+  const load = (name) => import(pathToFileURL(join(dir, name)).href);
+  return { seating: await load("church-seating.ts"), sightlines: await load("sightlines.ts"), units: await load("scene-units.ts") };
 }
 
-const INTERIOR_Z = sourceNumber("INTERIOR_Z", readFileSync("lib/scene-units.ts", "utf8"));
-const PEW_BLOCK_X = sourceNumber("PEW_BLOCK_X");
-const PEW_BENCH_WIDTH = sourceNumber("PEW_BENCH_WIDTH");
-const PROCESSION_END_Z = sourceNumber("PROCESSION_END_Z");
-const SEAT_OFFSETS = [-0.86, -0.29, 0.29, 0.86];
+const planSource = readFileSync("lib/wedding-studio-plan.ts", "utf8");
 
 // The reaches the UI actually enforces, parsed out of the plan so this probe can
-// never test past them again.
+// never test past them again. This is the only thing still read as text; all the
+// geometry is imported.
 function markReach(markId) {
-  // The nested `home: { ... }` sits between the id and the reach, so this cannot
-  // be a [^}] scan — it has to cross one closing brace.
-  const match = plan.match(new RegExp(`${markId}:\\s*\\{[\\s\\S]*?reach:\\s*([\\d.]+)`));
+  // The nested `home: { ... }` sits between the id and the reach, so this cannot be
+  // a [^}] scan — it has to cross one closing brace.
+  const match = planSource.match(new RegExp(`${markId}:\\s*\\{[\\s\\S]*?reach:\\s*([\\d.]+)`));
   if (!match) {
     throw new Error(`could not find reach for ${markId}`);
   }
@@ -74,39 +59,9 @@ function markReach(markId) {
 const CELEBRANT_REACH = markReach("celebrant");
 const FLORALS_REACH = markReach("florals");
 
-// The scene's own layout derivation, mirrored from churchSeatLayout. Parsed
-// values, but the shape is small and check:sightlines asserts the effect.
-function seatLayout({ aisleWidthFeet = 5, seatingLayout = "Traditional" } = {}) {
-  const aisleScale = Math.max(0.5, aisleWidthFeet / 5);
-  const pewInnerEdge = PEW_BLOCK_X - PEW_BENCH_WIDTH / 2;
-  const runnerWidth = pewInnerEdge * 2 * aisleScale;
-  return {
-    aisleShift: (runnerWidth - pewInnerEdge * 2) / 2,
-    pewYaw: seatingLayout === "Semi-circle" ? 0.24 : seatingLayout === "Curved rows" ? 0.11 : 0,
-    rowSpacing: seatingLayout === "Spaced rows" ? 0.8 : 0.62
-  };
-}
-
-function buildSeats(rows, layout) {
-  const seats = [];
-  for (let row = 0; row < rows; row += 1) {
-    const z = -2.4 + row * layout.rowSpacing;
-    for (const side of [-1, 1]) {
-      const sideCenter = side * (PEW_BLOCK_X + layout.aisleShift);
-      const yaw = side * layout.pewYaw;
-      for (const dx of SEAT_OFFSETS) {
-        seats.push({
-          id: `row${row + 1}-${side < 0 ? "L" : "R"}${dx}`,
-          x: sideCenter + dx * Math.cos(yaw),
-          z: z + 0.07 - dx * Math.sin(yaw) + INTERIOR_Z
-        });
-      }
-    }
-  }
-  return seats;
-}
-
-const lib = await loadSightlines();
+const { seating, sightlines: lib, units } = await loadLib();
+const { INTERIOR_Z } = units;
+const { buildChurchSeatedGuests, churchSeatLayout, PROCESSION_END_Z } = seating;
 const ROWS = 14;
 
 function run({
@@ -117,11 +72,16 @@ function run({
   focalPointEdit = { x: 0, z: 0 },
   seatingLayout = "Traditional",
   showSinger = false,
-  singerMark = { x: 0, z: 0 },
-  withHeads = true
+  singerMark = { x: 0, z: 0 }
 } = {}) {
-  const layout = seatLayout({ aisleWidthFeet, seatingLayout });
-  const seats = buildSeats(ROWS, layout);
+  const layout = churchSeatLayout({ aisleWidthFeet, seatingLayout });
+  // The REAL seat builder, with a guest count high enough to fill all 14 rows, so
+  // the probe measures a full nave rather than a grid of its own invention.
+  const seats = buildChurchSeatedGuests(ROWS, ROWS * 8, layout).map((seat) => ({
+    id: seat.id,
+    x: seat.position[0],
+    z: seat.position[2] + INTERIOR_Z
+  }));
   const obstacles = lib.churchSightlineObstacles({
     celebrantMark,
     floralMark,
@@ -133,7 +93,7 @@ function run({
   const verdicts = lib.analyzeSightlines({
     coupleX: 0.26 + coupleMark.x,
     coupleZ: PROCESSION_END_Z + coupleMark.z + INTERIOR_Z,
-    obstacles: withHeads ? [...obstacles, ...lib.seatedGuestObstacles(seats)] : obstacles,
+    obstacles: [...obstacles, ...lib.seatedGuestObstacles(seats)],
     seats
   });
   return { summary: lib.summarizeSightlines(verdicts), verdicts };
@@ -173,20 +133,17 @@ if (process.argv.includes("--regress")) {
   }
 
   // 4. BOTH SEATING CONTROLS MUST MOVE THE NUMBERS. This is the check that would
-  //    have caught the panel shipping blind to the two controls above it — and
-  //    each control is asserted against the number it ACTUALLY moves, which was
-  //    measured rather than assumed:
-  //      - the aisle slider drives heads-in-line hard (47 at 3 ft, 18 at 8 ft)
-  //      - Spaced rows barely touches it (28 → 27) but pushes the back row from
-  //        14.2 m to 17.7 m
-  //    Asserting the wrong pairing is how a check passes while the panel lies.
+  //    have caught the panel shipping blind to the two controls above it — and each
+  //    control is asserted against the number it ACTUALLY moves, measured rather
+  //    than assumed: the aisle slider drives heads-in-line hard, while Spaced rows
+  //    barely touches it and instead pushes the back row further away.
   //
   //    Note what is asserted about the aisle: that the number MOVES, not which way.
-  //    The direction is not monotone — on a full 14-row nave a wider aisle helps
-  //    (47 → 18), but on a small one it can hurt (measured live: 2 → 3 going from
-  //    5 ft to 10 ft), because seats pushed outward look along their own row more
-  //    obliquely. That is exactly why the panel states the count and gives no
-  //    advice, and this check must not assert a direction the product does not claim.
+  //    The direction is not monotone — on a full 14-row nave a wider aisle helps,
+  //    but on a small one it can hurt (measured live: 2 → 3 going from 5 ft to
+  //    10 ft), because seats pushed outward look along their own row more obliquely.
+  //    That is exactly why the panel states the count and gives no advice, and this
+  //    check must not assert a direction the product does not claim.
   const narrow = run({ aisleWidthFeet: 3 }).summary.headInLine;
   const wide = run({ aisleWidthFeet: 8 }).summary.headInLine;
   console.log(`\nHeads in the line — 3 ft aisle ${narrow}, 8 ft aisle ${wide}`);
@@ -200,6 +157,10 @@ if (process.argv.includes("--regress")) {
   if (spacedDepth <= traditionalDepth) {
     problems.push("Spaced rows did not push the back row further — the layout control is not wired in");
   }
+
+  // 5. The singer toggle adds two obstacles, so it must be able to change something.
+  const singer = run({ showSinger: true, singerMark: { x: -1.8, z: 0 } });
+  console.log(`\nSinger on and dragged toward the aisle: ${singer.summary.blocked.length} seat(s) blocked`);
 
   if (problems.length) {
     for (const problem of problems) {
@@ -228,8 +189,9 @@ console.log(`                              ${run({ seatingLayout: "Spaced rows" 
 if (process.argv.includes("--check")) {
   const problems = [];
 
-  // The facing split is the panel's headline, so it has to be non-degenerate: a
-  // nave where nobody sees either face means the geometry or the facing rule moved.
+  // The facing split is the panel's headline and the shared plan's legend, so it has
+  // to be non-degenerate: a nave where nobody sees either face means the geometry or
+  // the facing rule moved.
   if (summary.brideFace === 0 || summary.groomFace === 0) {
     problems.push("no seat sees one of the two faces — the vow facing rule is broken");
   }
@@ -247,9 +209,9 @@ if (process.argv.includes("--check")) {
     problems.push("a seat is level with the couple in the default layout — the couple's mark moved");
   }
 
-  // Heads are the dominant occluder and the reason the layout lever is worth
-  // naming. If they ever come back as zero, the head model has silently stopped
-  // being applied and the layout line in the panel is a lie.
+  // Heads are the dominant occluder and the reason the count is worth printing. If
+  // they ever come back as zero, the head model has silently stopped being applied
+  // and the layout line in the panel is a lie.
   if (summary.headInLine === 0) {
     problems.push("no seat has a head in the line — the congregation is no longer being measured");
   }
@@ -257,10 +219,9 @@ if (process.argv.includes("--check")) {
     problems.push("every seat has a head in the line — the head model is too coarse to say anything");
   }
 
-  // The lean allowance is what stops this crying wolf, so prove it still does
-  // something: without it the same nave must report strictly more obstruction.
-  const leanFloor = sourceNumber("LEAN_UNITS", readFileSync("lib/sightlines.ts", "utf8"));
-  if (!(leanFloor > 0)) {
+  // The lean allowance is what stops this crying wolf, so prove it is still real.
+  const leanMatch = readFileSync("lib/sightlines.ts", "utf8").match(/LEAN_UNITS\s*=\s*([\d.]+)/);
+  if (!leanMatch || !(Number(leanMatch[1]) > 0)) {
     problems.push("LEAN_UNITS is not positive — every thin object will read as a blocked view");
   }
 

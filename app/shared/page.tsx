@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SharedRoomPlan } from "@/components/shared/shared-room-plan";
 import { useTranslation } from "@/lib/i18n";
 import { decodeSnapshot, readShareHash, type ShareSnapshot } from "@/lib/share-snapshot";
 import { formatWeddingDate } from "@/lib/utils";
@@ -70,6 +71,13 @@ export default function SharedPage() {
           </div>
         ))}
       </section>
+
+      {/* The room comes BEFORE the run of show, because the people this link is
+          sent to — the venue, the photographer, the planner — are not reading it
+          to learn what time dinner is. They are reading it to learn the space they
+          have to work in. Rendered only when the sender's plan carried a room; an
+          older link without one still opens, and shows no invented church. */}
+      {snapshot.room ? <SharedRoomPlan room={snapshot.room} /> : null}
 
       {snapshot.timeline.length > 0 ? (
         <section className="shared-timeline" aria-label={t("Run of show")}>
