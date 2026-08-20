@@ -231,6 +231,30 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
+- **A TRACED VENUE FEEDS THE FLOOR PLAN, NEVER THE 3D — and that is the whole design.**
+  The look rests on the Blender baked-GI shell, and a bake is hours of one machine's
+  CPU per room, so a polygon a couple traces on a Tuesday can never have one.
+  "Upload the plan, get your venue in 3D" would hand every couple an analytically lit
+  extruded box: worse than the church already shipped, and the same "reads as a stage
+  prop" failure `RoomFrame`'s own comment records. So `/venue` (`lib/venue-trace.ts`,
+  `lib/venue-seating.ts`) produces a DRAWING — the crew-facing `/shared` plan, already
+  in metres, zero look risk. The 3D stays the couple's church.
+  - The scale UX is copied from Sweet Home 3D deliberately (drag two endpoints onto a
+    known length, type it). **That project is GPL-2.0+ — read none of its code.** The
+    one thing worth vendoring is `roomDetection.ts` from `laanlabs/openPlan3D` (MIT),
+    if segment-tracing is ever added. The ML wall-detectors are all CC-BY-NC or AGPL.
+  - **The scanline is the load-bearing idea.** For each row, ask the polygon where its
+    walls are ON THAT ROW and fill only between them. `--regress` proves it by laying
+    seats on the bounding box instead: 168 land outside an L-shaped hall.
+  - `npm run check:venue` asserts the one property that matters — **no seat outside the
+    walls** — plus that the same room traced clockwise and anticlockwise measures the
+    same, and that a too-short calibration line is REFUSED rather than scaled.
+  - The plan IMAGE never travels in the share link (hundreds of KB, often a photo of a
+    printout); only the geometry does, 388 hash chars for six corners and two pillars.
+    `check:share` asserts both halves.
+  - Pillars are modelled because a sightline answer for a real venue without them
+    would be actively misleading. The room's furniture is NOT modelled and is not
+    pretended to be.
 - **The sightline analysis is the product's one genuinely differentiated answer, and
   it is arithmetic.** `lib/sightlines.ts` + `npm run check:sightlines`: for each
   seat the nave actually renders (it imports `buildChurchSeatedGuests`, it does not
@@ -431,6 +455,7 @@ Run relevant checks before reporting:
 npm run check:figures
 npm run check:seats
 npm run check:sightlines
+npm run check:venue
 npm run check:colour
 npm run lint
 npm run typecheck

@@ -1,6 +1,7 @@
 import { assetPath } from "@/lib/asset-path";
 import type { CeremonyStaging, StudioSceneEdits, WeddingStudioPlan } from "@/lib/wedding-studio-plan";
 import type { Guest, TimelineItem, Wedding } from "@/lib/wedding-types";
+import type { VenueTrace } from "@/lib/venue-trace";
 
 // A shareable read-only snapshot of a plan, encoded into the URL hash so a
 // recipient sees the SENDER's plan — not their own localStorage. Everything is
@@ -120,12 +121,19 @@ export type ShareSnapshot = {
   // inventing a default church — a plan shown to a vendor has to be the couple's
   // own or absent, never a plausible stand-in.
   room?: PackedRoom;
+  // The couple's own traced venue, when they have one. Geometry only — the plan
+  // IMAGE never travels: it is hundreds of kilobytes, it is often a photo of a
+  // printout with a phone's glare across it, and a vendor wants the drawing, not
+  // the snapshot it was traced from. lib/venue-trace-store.ts keeps the image on
+  // the device that traced it.
+  trace?: VenueTrace;
 };
 
 export function buildShareSnapshot(input: {
   guests: Guest[];
   room?: ShareRoom;
   timelineItems: TimelineItem[];
+  trace?: VenueTrace | null;
   wedding: Wedding;
 }): ShareSnapshot {
   return {
@@ -134,6 +142,7 @@ export function buildShareSnapshot(input: {
     // anonymous in the model (`church-guest-<row>-<x>-<seat>`), so the plan a
     // vendor opens says where a body sits and never who it is.
     ...(input.room ? { room: packRoom(input.room) } : {}),
+    ...(input.trace ? { trace: input.trace } : {}),
     wedding: {
       coupleNames: input.wedding.coupleNames,
       date: input.wedding.date,

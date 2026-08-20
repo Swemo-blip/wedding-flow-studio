@@ -523,6 +523,44 @@ const sv: Record<string, string> = {
   "Watch notes": "Att hålla koll på",
   "to review before the day": "att gå igenom före dagen",
   "Nudge the selected object": "Putta det valda objektet",
+  // Tracing your own venue (/venue).
+  "Your venue": "Er lokal",
+  "Trace your floor plan": "Rita av er planritning",
+  "Upload the plan your venue sent you, set its scale, and click the walls. The room then appears on the floor plan you share with your crew.":
+    "Ladda upp ritningen ni fick av lokalen, ange skalan och klicka på väggarna. Rummet dyker sedan upp på planritningen ni delar med teamet.",
+  "Start over": "Börja om",
+  "Choose a floor plan image": "Välj en bild på planritningen",
+  "That file could not be read as an image.": "Den filen gick inte att läsa som en bild.",
+  "1. Set the scale": "1. Ange skalan",
+  "Click one end of something you know the length of, then the other.":
+    "Klicka på ena änden av något vars längd ni känner till, sedan på den andra.",
+  "That line is this many metres": "Den linjen är så här många meter",
+  "Next: trace the walls": "Nästa: rita väggarna",
+  "2. Click the corners": "2. Klicka på hörnen",
+  "Click each corner of the room. Doors and windows do not matter — only the walls.":
+    "Klicka på varje hörn i rummet. Dörrar och fönster spelar ingen roll — bara väggarna.",
+  "{count} corners": "{count} hörn",
+  "Undo corner": "Ångra hörn",
+  "Next: mark the ceremony end": "Nästa: markera vigselväggen",
+  "3. Mark the ceremony end": "3. Markera vigselväggen",
+  "Click the wall you will stand in front of. The aisle runs toward it.":
+    "Klicka på väggen ni kommer att stå framför. Mittgången går mot den.",
+  "Next: mark any pillars": "Nästa: markera eventuella pelare",
+  "4. Mark any pillars": "4. Markera eventuella pelare",
+  "Click each pillar. Click one again to remove it. Skip this if the room has none.":
+    "Klicka på varje pelare. Klicka igen för att ta bort. Hoppa över om rummet saknar pelare.",
+  "{count} pillars": "{count} pelare",
+  "Your room": "Ert rum",
+  "{width} x {depth} m": "{width} x {depth} m",
+  "{area} m2 of floor": "{area} m2 golvyta",
+  "Seats your {guests} guests, with room for {capacity}": "Rymmer era {guests} gäster, med plats för {capacity}",
+  "Seats {capacity} — you have {guests} guests": "Rymmer {capacity} — ni har {guests} gäster",
+  "The plan image stays on this device. Only the traced room travels in a shared link.":
+    "Bilden stannar på den här enheten. Bara det avritade rummet följer med i en delad länk.",
+  "Set the scale and click at least three corners to see your room.":
+    "Ange skalan och klicka på minst tre hörn för att se ert rum.",
+  "a pillar": "en pelare",
+
   // Sightline analysis (lib/sightlines.ts). Counts only — the product shows what
   // it measured, never a score.
   "Who can see the ceremony": "Vilka ser vigseln",

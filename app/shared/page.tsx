@@ -77,7 +77,7 @@ export default function SharedPage() {
           to learn what time dinner is. They are reading it to learn the space they
           have to work in. Rendered only when the sender's plan carried a room; an
           older link without one still opens, and shows no invented church. */}
-      {snapshot.room ? <SharedRoomPlan room={snapshot.room} /> : null}
+      {snapshot.room ? <SharedRoomPlan room={snapshot.room} trace={snapshot.trace} /> : null}
 
       {snapshot.timeline.length > 0 ? (
         <section className="shared-timeline" aria-label={t("Run of show")}>

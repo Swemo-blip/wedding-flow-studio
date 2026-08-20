@@ -10,6 +10,8 @@ import {
   type VowFacing
 } from "@/lib/sightlines";
 import { calculateWeddingStudioCapacity } from "@/lib/wedding-studio-plan";
+import { DEFAULT_VENUE_SEATING, fitSeatsToRoom } from "@/lib/venue-seating";
+import { resolveVenueTrace, type TracePoint, type VenueTrace } from "@/lib/venue-trace";
 
 // The room, flattened to a top-down plan a vendor can read on a phone.
 //
@@ -45,8 +47,16 @@ export type RoomPlan = {
   aisleMetres: number;
   bounds: { maxX: number; maxY: number; minX: number; minY: number };
   marks: RoomPlanMark[];
+  // The traced walls, in metres, when the couple has traced their own venue.
+  // Absent for the studio's church: drawing a generic nave outline around it would
+  // be a stand-in for a room nobody measured, and the whole worth of this drawing
+  // is that its distances are real.
+  outline?: TracePoint[];
+  pillars?: Array<{ radiusMetres: number; x: number; y: number }>;
   seats: RoomPlanSeat[];
   sightlines: SightlineSummary;
+  // True when the walls came from the couple's own plan rather than the studio.
+  traced: boolean;
 };
 
 /** Scene units to metres, and scene z to plan y (both run the same direction). */
@@ -143,6 +153,106 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
     },
     marks,
     seats: planSeats,
-    sightlines: summarizeSightlines(verdicts)
+    sightlines: summarizeSightlines(verdicts),
+    traced: false
+  };
+}
+
+/**
+ * The same drawing, for a room the couple traced from their venue's own plan.
+ *
+ * The sightline arithmetic is reused UNCHANGED, which is the payoff of having
+ * written it headless: analyzeSightlines takes positions, so it never learns
+ * whether the room is a modelled church or an outline somebody clicked. Only the
+ * units have to be met — its heights are in scene units, so metres are divided
+ * through SCENE_UNIT_METRES on the way in and multiplied back on the way out.
+ *
+ * What is deliberately NOT claimed here: the room's furniture. We know the walls
+ * and the pillars because a person marked them; we do not know where the font, the
+ * lectern or the piano stand, and no obstacle is invented for them. A vendor is
+ * told what was measured and nothing else.
+ */
+export function buildTracedRoomPlan({ guestCount, trace }: { guestCount: number; trace: VenueTrace | null | undefined }): RoomPlan | null {
+  const room = resolveVenueTrace(trace);
+  if (!room) {
+    return null;
+  }
+
+  const fitted = fitSeatsToRoom({
+    ...DEFAULT_VENUE_SEATING,
+    maxGuests: Math.max(1, guestCount),
+    pillars: room.pillars,
+    polygon: room.polygon
+  });
+  if (fitted.length === 0) {
+    return null;
+  }
+
+  const toUnits = (metres: number) => metres / SCENE_UNIT_METRES;
+  // The couple stand in the clear space at the ceremony end, halfway between the
+  // front wall and the first row — which is where they actually stand.
+  const coupleY = DEFAULT_VENUE_SEATING.frontClearanceMetres / 2;
+  const seats = fitted.map((seat) => ({ id: seat.id, x: toUnits(seat.x), z: toUnits(seat.y) }));
+
+  const pillarObstacles = room.pillars.map((pillar, index) => ({
+    kind: "fixture" as const,
+    label: "a pillar",
+    radius: toUnits(pillar.radiusMetres),
+    // A pillar runs floor to ceiling, so it is over every sightline there is.
+    topY: 99,
+    x: toUnits(pillar.x),
+    z: toUnits(pillar.y),
+    index
+  }));
+
+  const verdicts = analyzeSightlines({
+    coupleX: 0,
+    coupleZ: toUnits(coupleY),
+    obstacles: [...pillarObstacles, ...seatedGuestObstacles(seats)],
+    seats
+  });
+  const byId = new Map(verdicts.map((verdict) => [verdict.id, verdict]));
+
+  const planSeats: RoomPlanSeat[] = fitted.map((seat) => {
+    const verdict = byId.get(seat.id);
+    return {
+      blocked: verdict?.issues.includes("blocked") ?? false,
+      facing: verdict?.vowFacing ?? "profile",
+      id: seat.id,
+      x: seat.x,
+      y: seat.y
+    };
+  });
+
+  const marks: RoomPlanMark[] = [
+    { kind: "couple", label: "The couple", radiusMetres: 0.55, x: 0, y: coupleY },
+    ...room.pillars.map((pillar) => ({
+      kind: "arrangement" as const,
+      label: "a pillar",
+      radiusMetres: pillar.radiusMetres,
+      x: pillar.x,
+      y: pillar.y
+    }))
+  ];
+
+  const xs = room.polygon.map((point) => point.x);
+  const ys = room.polygon.map((point) => point.y);
+
+  return {
+    aisleMetres: DEFAULT_VENUE_SEATING.aisleMetres,
+    // The WALLS set the bounds here, not the seats: a plan that crops to the
+    // furniture would hide the very thing the couple traced.
+    bounds: {
+      maxX: Math.max(...xs) + 0.5,
+      maxY: Math.max(...ys) + 0.5,
+      minX: Math.min(...xs) - 0.5,
+      minY: Math.min(...ys) - 0.5
+    },
+    marks,
+    outline: room.polygon,
+    pillars: room.pillars,
+    seats: planSeats,
+    sightlines: summarizeSightlines(verdicts),
+    traced: true
   };
 }

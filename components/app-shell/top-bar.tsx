@@ -8,6 +8,8 @@ import { SavedChip } from "@/components/app-shell/saved-chip";
 import { useTranslation } from "@/lib/i18n";
 import { formatWeddingDate } from "@/lib/utils";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
+import { readStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
+import { readStoredVenueTrace } from "@/lib/venue-trace-store";
 import { useLocalProject } from "@/lib/use-local-project";
 import type { Wedding } from "@/lib/wedding-types";
 
@@ -24,8 +26,29 @@ export function TopBar({ wedding }: TopBarProps) {
   // A shareable read-only link carrying the plan in its hash, so a recipient
   // sees this couple's plan, not their own localStorage. Rebuilt when the plan
   // changes; `updatedAt` in the deps keeps it fresh after edits.
+  //
+  // THE ROOM TRAVELS FROM HERE TOO. This is the header's "Share Studio" — the most
+  // prominent share in the product — and it was building a link that carried only
+  // the itinerary while the studio's own copy button carried the floor plan. Two
+  // buttons called share, producing different links, is how a vendor ends up
+  // insisting they were never sent the plan. The stores are read directly because
+  // this component does not own that state; nothing here can be stale relative to
+  // an on-screen value it never holds.
   const shareUrl = useMemo(
-    () => buildShareUrl(encodeSnapshot(buildShareSnapshot({ guests, timelineItems, wedding: activeWedding }))),
+    () => {
+      const layout = readStoredWeddingStudioLayout();
+      return buildShareUrl(
+        encodeSnapshot(
+          buildShareSnapshot({
+            guests,
+            ...(layout ? { room: { plan: layout.plan, sceneEdits: layout.sceneEdits, staging: layout.staging } } : {}),
+            timelineItems,
+            trace: readStoredVenueTrace()?.trace ?? null,
+            wedding: activeWedding
+          })
+        )
+      );
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeWedding, guests, timelineItems, updatedAt]
   );

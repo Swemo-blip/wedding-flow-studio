@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const dir = mkdtempSync(join(tmpdir(), "share-room-"));
-for (const name of ["share-snapshot.ts", "wedding-studio-plan.ts", "wedding-types.ts", "asset-path.ts"]) {
+for (const name of ["share-snapshot.ts", "wedding-studio-plan.ts", "wedding-types.ts", "asset-path.ts", "venue-trace.ts", "scene-units.ts"]) {
   writeFileSync(join(dir, name), readFileSync(`lib/${name}`, "utf8").replace(/from "@\/lib\/([a-z-]+)"/g, 'from "./$1.ts"'));
 }
 const share = await import(pathToFileURL(join(dir, "share-snapshot.ts")).href);
@@ -107,6 +107,62 @@ const snapshot = share.buildShareSnapshot({
 });
 const full = hashLength(snapshot);
 console.log(`\n  a whole shared link (14 moments + the room): ${full} hash chars`);
+
+// A TRACED VENUE MUST TRAVEL, AND ITS IMAGE MUST NOT.
+//
+// The geometry is what a vendor needs and it is tiny; the plan photograph is
+// hundreds of kilobytes and belongs to the device that traced it. Asserting both
+// halves here, because "the trace travels" and "the image does not" are two
+// different ways for this feature to be wrong.
+const TRACED = {
+  v: 1,
+  calibration: { a: { x: 40, y: 900 }, b: { x: 540, y: 900 }, metres: 50 },
+  frontEdge: 0,
+  outline: [
+    { x: 100, y: 100 },
+    { x: 280, y: 100 },
+    { x: 280, y: 280 },
+    { x: 190, y: 280 },
+    { x: 190, y: 400 },
+    { x: 100, y: 400 }
+  ],
+  pillars: [
+    { radius: 8, x: 150, y: 220 },
+    { radius: 8, x: 230, y: 220 }
+  ]
+};
+const tracedSnapshot = share.buildShareSnapshot({
+  guests: [],
+  room: resting,
+  timelineItems: [],
+  trace: TRACED,
+  wedding: snapshot.wedding
+});
+const tracedRound = share.decodeSnapshot(share.encodeSnapshot(tracedSnapshot));
+const traceLossless = JSON.stringify(tracedRound?.trace) === JSON.stringify(TRACED);
+console.log(
+  `  a traced venue (6 corners, 2 pillars): ` +
+    `${hashLength(tracedSnapshot) - hashLength({ ...tracedSnapshot, trace: undefined })} extra hash chars, ` +
+    `${traceLossless ? "lossless" : "*** LOSSY ***"}`
+);
+if (!traceLossless) {
+  problems.push("the traced venue did not survive the round trip");
+}
+// The image must be impossible to smuggle in: buildShareSnapshot takes no image
+// argument at all, so the assertion is that no field of the encoded snapshot ever
+// holds a data URL, however the trace was assembled.
+const encoded = JSON.stringify(tracedSnapshot);
+if (encoded.includes("data:image")) {
+  problems.push("a plan image reached the share link — it must stay on the device that traced it");
+}
+const resolved = (await import(pathToFileURL(join(dir, "venue-trace.ts")).href)).resolveVenueTrace(tracedRound?.trace);
+console.log(
+  `  and it still resolves after the round trip: ` +
+    (resolved ? `${resolved.widthMetres} x ${resolved.depthMetres} m, ${resolved.pillars.length} pillars` : "*** NO ***")
+);
+if (!resolved || resolved.pillars.length !== TRACED.pillars.length) {
+  problems.push("the decoded trace no longer resolves to the room that was sent");
+}
 
 // THE ROOM MUST NOT TRAVEL WITH ANYONE'S NAME ATTACHED, and this is asserted as a
 // strict ALLOW-LIST of keys rather than a search for suspicious words. The same

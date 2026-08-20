@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslation } from "@/lib/i18n";
-import { buildRoomPlan, type RoomPlan } from "@/lib/room-plan";
+import { buildRoomPlan, buildTracedRoomPlan, type RoomPlan } from "@/lib/room-plan";
 import { unpackRoom, type ShareSnapshot } from "@/lib/share-snapshot";
 import { defaultCeremonyStaging, defaultStudioSceneEdits } from "@/lib/wedding-studio-plan";
 
@@ -67,13 +67,23 @@ function SeatMark({ seat, x, y }: { seat: RoomPlan["seats"][number]; x: number; 
   return <circle className="shared-room-seat" cx={x} cy={y} r={4} fill={seatFill(seat)} />;
 }
 
-export function SharedRoomPlan({ room }: { room: NonNullable<ShareSnapshot["room"]> }) {
+export function SharedRoomPlan({
+  room,
+  trace
+}: {
+  room: NonNullable<ShareSnapshot["room"]>;
+  trace?: ShareSnapshot["trace"];
+}) {
   const { t } = useTranslation();
   // The wire format omits every offset still at (0, 0), so fill the gaps from the
   // studio's own defaults rather than from a second copy of them here.
-  const plan = buildRoomPlan(
-    unpackRoom(room, { sceneEdits: defaultStudioSceneEdits, staging: defaultCeremonyStaging })
-  );
+  const unpacked = unpackRoom(room, { sceneEdits: defaultStudioSceneEdits, staging: defaultCeremonyStaging });
+  // A traced venue WINS over the studio's church, because it is the room these
+  // people will actually stand in. If the trace cannot be resolved we fall back
+  // rather than showing nothing — but we never blend the two, which would put the
+  // couple's real walls around a nave they do not have.
+  const plan =
+    buildTracedRoomPlan({ guestCount: unpacked.plan.guestCount, trace }) ?? buildRoomPlan(unpacked);
 
   if (!plan) {
     return null;
@@ -97,6 +107,25 @@ export function SharedRoomPlan({ room }: { room: NonNullable<ShareSnapshot["room
           viewBox={`0 0 ${Math.round(width)} ${Math.round(height)}`}
           width="100%"
         >
+          {/* The traced walls. Drawn ONLY when somebody measured them — see the
+              note on RoomPlan.outline. This is the whole point of the tracing
+              feature: the crew get the shape of the room they will work in, at a
+              scale the couple set against a length they knew. */}
+          {plan.outline ? (
+            <polygon
+              className="shared-room-walls"
+              points={plan.outline.map((point) => `${px(point.x)},${py(point.y)}`).join(" ")}
+            />
+          ) : null}
+          {plan.pillars?.map((pillar, index) => (
+            <circle
+              className="shared-room-pillar"
+              cx={px(pillar.x)}
+              cy={py(pillar.y)}
+              key={`pillar-${index}`}
+              r={Math.max(3, pillar.radiusMetres * SCALE)}
+            />
+          ))}
           {/* The altar end, named rather than drawn: the shell geometry is the 3D's
               business, and a wall on a plan that is not measured would be a guess. */}
           <text className="shared-room-edge" x={width / 2} y={PADDING} textAnchor="middle">

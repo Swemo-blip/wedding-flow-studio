@@ -4,22 +4,23 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarClock,
+  Camera,
   CircleUser,
   ClipboardList,
   FileCheck,
-  Camera,
   FileText,
-  Printer,
   LayoutGrid,
   ListChecks,
   Mic2,
   Music2,
+  Printer,
+  Ruler,
   Store,
   Timer,
+  type LucideIcon,
   Users,
   UtensilsCrossed,
-  Wallet,
-  type LucideIcon
+  Wallet
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
@@ -47,6 +48,7 @@ const navGroups: NavGroup[] = [
       // three doors to the same room is what made the app feel scattered.
       // Both routes still exist and every existing link still works.
       { href: "/", icon: LayoutGrid, label: "Studio" },
+      { href: "/venue", icon: Ruler, label: "Venue" },
       { href: "/day-flow", icon: CalendarClock, label: "Timeline" }
     ]
   },

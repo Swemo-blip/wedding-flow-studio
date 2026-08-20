@@ -10909,3 +10909,235 @@ a {
 .vstudio-sightline-warn {
   color: var(--ink);
 }
+
+/* ---------------------------------------------------------------------------
+   Tracing your own venue.
+
+   The plan image is the one place in this product where a PHOTOGRAPH is the
+   working surface, which cuts against the "no UI token may match a scene
+   material" rule in a way worth naming: here the image is not decoration, it is
+   the thing being measured. So the chrome around it stays cold ink and the marks
+   on it stay cold ink, and the image is given a plain rule rather than a frame —
+   a floor plan in a rounded card with a shadow would read as a picture of a plan
+   instead of a drawing being worked on.
+   --------------------------------------------------------------------------- */
+.venue-trace {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 auto;
+  max-width: 1400px;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.venue-trace-head {
+  align-items: start;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.venue-trace-head h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  line-height: 1.1;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.venue-trace-head p {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  margin: 0;
+  max-width: 56ch;
+}
+
+.venue-drop {
+  align-items: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.venue-drop:hover,
+.venue-drop:focus-within {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.venue-error {
+  color: var(--ink);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.venue-trace-body {
+  align-items: start;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+}
+
+.venue-canvas {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.venue-canvas svg {
+  cursor: crosshair;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.venue-steps {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.venue-steps ol {
+  display: grid;
+  gap: 0.15rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.venue-steps > ol > li > button {
+  background: none;
+  border: 0;
+  border-left: 2px solid var(--line);
+  color: var(--ink-faint);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.venue-steps > ol > li[aria-current="step"] > button {
+  border-left-color: var(--accent);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.venue-steps > ol > li > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.venue-step-body {
+  border-left: 2px solid var(--accent);
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.25rem 0.75rem 0.9rem;
+}
+
+.venue-step-body p {
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.venue-step-body label {
+  color: var(--ink-faint);
+  display: grid;
+  font-size: 0.76rem;
+  gap: 0.25rem;
+}
+
+.venue-step-body input {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.55rem;
+}
+
+.venue-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.venue-step-actions button:not(.button-primary) {
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.6rem;
+}
+
+.venue-count {
+  color: var(--ink-faint);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.venue-result {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.4rem;
+  padding-top: 1rem;
+}
+
+.venue-result-size {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.venue-result ul {
+  color: var(--ink-faint);
+  display: grid;
+  font-size: 0.8rem;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.venue-note {
+  color: var(--ink-faint);
+  font-size: 0.76rem;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .venue-trace-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .venue-trace-head {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* The traced walls on the shared plan. A rule, not a fill: the room is the frame
+   for everything inside it, and a tinted floor would compete with the seat marks
+   that carry the actual answer. */
+.shared-room-walls {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.shared-room-pillar {
+  fill: var(--ink-soft);
+  stroke: var(--surface);
+  stroke-width: 1;
+}

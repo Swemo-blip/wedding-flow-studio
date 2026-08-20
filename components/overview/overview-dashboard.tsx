@@ -53,6 +53,8 @@ import { confirmAndBackupBeforeReset } from "@/lib/project-backup";
 import { analyzeWeddingFlow } from "@/lib/risk-analysis";
 import { filterResolvedRisks, useRiskResolutions } from "@/lib/use-risk-resolutions";
 import { buildShareSnapshot, buildShareUrl, encodeSnapshot } from "@/lib/share-snapshot";
+import { readStoredVenueTrace } from "@/lib/venue-trace-store";
+import type { VenueTrace } from "@/lib/venue-trace";
 import { clearStoredCurrency } from "@/lib/use-currency";
 import { useCouplePhotos } from "@/lib/use-couple-photos";
 import { useLocalProject } from "@/lib/use-local-project";
@@ -205,6 +207,7 @@ const PHOTO_MODE_ENABLED = false;
   // page shows the ceremony the couple actually staged — a groom waiting at the
   // altar, a singer in the room — instead of silently reverting to defaults.
   const [staging, setStaging] = useState(defaultCeremonyStaging);
+  const [venueTrace, setVenueTrace] = useState<VenueTrace | null>(null);
   const congregationPhotos = useMemo(() => localProject.guests.map((guest) => guest.photoUrl ?? null), [localProject.guests]);
   const { bride: bridePhoto, groom: groomPhoto } = useCouplePhotos();
   const couplePhotos = useMemo(() => ({ bride: bridePhoto, groom: groomPhoto }), [bridePhoto, groomPhoto]);
@@ -465,6 +468,9 @@ const PHOTO_MODE_ENABLED = false;
         // hydration, which is why this survived several passes over this file.
         setStaging(storedLayout.staging);
       }
+      // The traced venue lives in its own record because the plan image is far too
+      // large for the layout one. Hydrated here so the share link can carry it.
+      setVenueTrace(readStoredVenueTrace()?.trace ?? null);
     });
   }, []);
 
@@ -553,12 +559,16 @@ const PHOTO_MODE_ENABLED = false;
             guests: localProject.guests,
             room: { plan, sceneEdits, staging },
             timelineItems: localProject.timelineItems,
+            // The traced venue is edited on /venue, not here, so the store IS the
+            // live value for it — unlike plan/sceneEdits/staging above, where
+            // reading it back would share the last save instead of what is on screen.
+            trace: venueTrace,
             wedding: activeWedding
           })
         )
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeWedding, localProject.guests, localProject.timelineItems, localProject.updatedAt, plan, sceneEdits, staging]
+    [activeWedding, localProject.guests, localProject.timelineItems, localProject.updatedAt, plan, sceneEdits, staging, venueTrace]
   );
 
   function updatePlan(nextPlan: WeddingStudioPlan) {
