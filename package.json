@@ -14,7 +14,8 @@
     "check:cameras": "node scripts/camera-bounds-probe.mjs --check",
     "check:sightlines": "node scripts/sightline-probe.mjs --check",
     "check:share": "node scripts/share-room-probe.mjs --check",
-    "check:venue": "node scripts/venue-trace-probe.mjs --check"
+    "check:venue": "node scripts/venue-trace-probe.mjs --check",
+    "check:photography": "node scripts/photography-probe.mjs --check"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

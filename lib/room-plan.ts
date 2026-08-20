@@ -11,7 +11,8 @@ import {
 } from "@/lib/sightlines";
 import { calculateWeddingStudioCapacity } from "@/lib/wedding-studio-plan";
 import { DEFAULT_VENUE_SEATING, fitSeatsToRoom } from "@/lib/venue-seating";
-import { resolveVenueTrace, type TracePoint, type VenueTrace } from "@/lib/venue-trace";
+import { isInsideRoom, resolveVenueTrace, type TracePoint, type VenueTrace } from "@/lib/venue-trace";
+import { planPhotography, type PhotographyPlan } from "@/lib/photography";
 
 // The room, flattened to a top-down plan a vendor can read on a phone.
 //
@@ -53,15 +54,52 @@ export type RoomPlan = {
   // is that its distances are real.
   outline?: TracePoint[];
   pillars?: Array<{ radiusMetres: number; x: number; y: number }>;
+  // Where the photographer can stand, in PLAN METRES. The crew-facing half of the
+  // same arithmetic: a guest is stuck in a seat, a photographer can move.
+  photography: RoomPhotography;
   seats: RoomPlanSeat[];
   sightlines: SightlineSummary;
   // True when the walls came from the couple's own plan rather than the studio.
   traced: boolean;
 };
 
+export type RoomPhotographyZone = {
+  count: number;
+  furthestMetres: number;
+  // One mark to draw: the closest position that is not in front of the guests.
+  mark: { x: number; y: number } | null;
+  nearestMetres: number;
+};
+
+export type RoomPhotography = {
+  aisle: RoomPhotographyZone;
+  bride: RoomPhotographyZone;
+  crowdBlocks: boolean;
+  frontRowMetres: number;
+  groom: RoomPhotographyZone;
+  seesBoth: boolean;
+};
+
 /** Scene units to metres, and scene z to plan y (both run the same direction). */
 function toMetres(units: number) {
   return units * SCENE_UNIT_METRES;
+}
+
+function toRoomPhotography(plan: PhotographyPlan, scale: (units: number) => number): RoomPhotography {
+  const zone = (source: PhotographyPlan["bride"]): RoomPhotographyZone => ({
+    count: source.count,
+    furthestMetres: source.furthestMetres,
+    mark: source.nearestWorkable ? { x: scale(source.nearestWorkable.x), y: scale(source.nearestWorkable.z) } : null,
+    nearestMetres: source.nearestMetres
+  });
+  return {
+    aisle: zone(plan.aisle),
+    bride: zone(plan.bride),
+    crowdBlocks: plan.crowdBlocks,
+    frontRowMetres: plan.frontRowMetres,
+    groom: zone(plan.groom),
+    seesBoth: plan.seesBoth
+  };
 }
 
 export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
@@ -152,6 +190,23 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
       minY: Math.min(...ys) - 1
     },
     marks,
+    photography: toRoomPhotography(
+      planPhotography({
+        // The nave's own extent. The side walls sit at +/-4.9 in the scene; 4.4
+        // keeps a standing person off the plaster.
+        bounds: {
+          maxX: 4.4,
+          maxZ: Math.max(...seats.map((seat) => seat.z)) + 1,
+          minX: -4.4,
+          minZ: coupleZ
+        },
+        coupleX,
+        coupleZ,
+        obstacles: [...fixtures, ...seatedGuestObstacles(seats)],
+        seats
+      }),
+      toMetres
+    ),
     seats: planSeats,
     sightlines: summarizeSightlines(verdicts),
     traced: false
@@ -250,6 +305,25 @@ export function buildTracedRoomPlan({ guestCount, trace }: { guestCount: number;
     },
     marks,
     outline: room.polygon,
+    photography: toRoomPhotography(
+      planPhotography({
+        bounds: {
+          maxX: toUnits(Math.max(...xs)),
+          maxZ: toUnits(Math.max(...ys)),
+          minX: toUnits(Math.min(...xs)),
+          minZ: toUnits(Math.min(...ys))
+        },
+        coupleX: 0,
+        coupleZ: toUnits(coupleY),
+        // The traced walls really constrain where a person can stand, so unlike the
+        // nave this one tests the polygon rather than a bounding box.
+        insideRoom: (point) =>
+          isInsideRoom(room.polygon, { x: point.x * SCENE_UNIT_METRES, y: point.z * SCENE_UNIT_METRES }),
+        obstacles: [...pillarObstacles, ...seatedGuestObstacles(seats)],
+        seats
+      }),
+      (units) => units * SCENE_UNIT_METRES
+    ),
     pillars: room.pillars,
     seats: planSeats,
     sightlines: summarizeSightlines(verdicts),

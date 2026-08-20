@@ -94,7 +94,7 @@ export function SharedRoomPlan({
   const px = (metres: number) => (metres - plan.bounds.minX) * SCALE + PADDING;
   const py = (metres: number) => (metres - plan.bounds.minY) * SCALE + PADDING;
 
-  const { sightlines } = plan;
+  const { photography, sightlines } = plan;
 
   return (
     <section className="shared-room" aria-label={t("The room")}>
@@ -170,6 +170,25 @@ export function SharedRoomPlan({
           {plan.seats.map((seat) => (
             <SeatMark key={seat.id} seat={seat} x={px(seat.x)} y={py(seat.y)} />
           ))}
+
+          {/* Camera positions. Drawn as a CROSSHAIR rather than a filled dot,
+              because the plan already spends filled dots on seats and outlined
+              rings on people — a third filled shape would have to be told apart by
+              colour alone, which is the mistake this drawing already made once and
+              measured its way out of. */}
+          {([
+            ["bride", plan.photography.bride],
+            ["groom", plan.photography.groom],
+            ["aisle", plan.photography.aisle]
+          ] as const).map(([key, zone]) =>
+            zone.mark ? (
+              <g className={`shared-room-camera shared-room-camera-${key}`} key={`camera-${key}`}>
+                <circle cx={px(zone.mark.x)} cy={py(zone.mark.y)} r={6} />
+                <line x1={px(zone.mark.x) - 9} x2={px(zone.mark.x) + 9} y1={py(zone.mark.y)} y2={py(zone.mark.y)} />
+                <line x1={px(zone.mark.x)} x2={px(zone.mark.x)} y1={py(zone.mark.y) - 9} y2={py(zone.mark.y) + 9} />
+              </g>
+            ) : null
+          )}
         </svg>
       </div>
 
@@ -203,6 +222,51 @@ export function SharedRoomPlan({
           </li>
         ) : null}
       </ul>
+
+      {/* THE PHOTOGRAPHER'S HALF. Led by the constraint rather than the
+          recommendation, because the constraint is the part nobody can work
+          around and the part no floor plan on paper can tell them: at the vows
+          the couple turn to face each other, and two directions 180 degrees apart
+          cannot both sit inside the 60 degrees a face stays readable through. So
+          there is no spot that gets both. That means two shooters, a planned move,
+          or a decision — and it is far better made in a kitchen than in a nave.
+          `seesBoth` is computed, so if the scene ever stops turning them, this
+          copy stops claiming it. */}
+      {photography.bride.mark || photography.groom.mark ? (
+        <div className="shared-room-camera-note">
+          <span className="eyebrow">{t("Where to stand")}</span>
+          {!photography.seesBoth ? <p>{t("No position sees both faces during the vows — they turn to face each other.")}</p> : null}
+          <ul>
+            {photography.bride.mark ? (
+              <li>
+                {t("Her face: {count} standing positions to the left of the aisle, {near}-{far} m out", {
+                  count: photography.bride.count,
+                  far: photography.bride.furthestMetres,
+                  near: photography.bride.nearestMetres
+                })}
+              </li>
+            ) : null}
+            {photography.groom.mark ? (
+              <li>
+                {t("His face: {count} to the right, {near}-{far} m out", {
+                  count: photography.groom.count,
+                  far: photography.groom.furthestMetres,
+                  near: photography.groom.nearestMetres
+                })}
+              </li>
+            ) : null}
+            {/* Reassuring and genuinely non-obvious: a standing eye at 1.60 m
+                clears a seated crown at 1.36 m, so the crowd that dominates every
+                guest's sightline is not a photographer's problem at all. */}
+            {!photography.crowdBlocks ? <li>{t("The seated guests are never in your way — you are above them.")}</li> : null}
+          </ul>
+          <p className="shared-room-facts">
+            {t("Marked spots are the closest that are not in front of the guests, who sit {front} m from the couple.", {
+              front: photography.frontRowMetres
+            })}
+          </p>
+        </div>
+      ) : null}
 
       <p className="shared-room-facts">
         {t("Aisle {aisle} m · back row {back} m from the altar", {

@@ -11141,3 +11141,68 @@ a {
   stroke: var(--surface);
   stroke-width: 1;
 }
+
+/* Camera positions on the shared plan. A CROSSHAIR, not a fourth filled dot: the
+   drawing already spends filled dots on seats and outlined rings on people, so a
+   third filled shape would have to be told apart by colour alone — the exact
+   mistake this plan already made once and measured its way out of. Shape first,
+   colour second, always. */
+.shared-room-camera circle {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.shared-room-camera line {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.shared-room-camera-bride circle,
+.shared-room-camera-bride line {
+  stroke: var(--accent);
+}
+
+.shared-room-camera-groom circle,
+.shared-room-camera-groom line {
+  stroke: var(--gilt);
+}
+
+/* THE THIRD MARK CANNOT BE SEPARATED BY COLOUR, measured rather than guessed.
+   The aisle spot in --ink sits at 1.12:1 against the bride's --accent, and the
+   obvious alternative --ink-faint measures 1.00:1 against the groom's --gilt —
+   IDENTICAL luminance. Every colour left in the palette collides with one of the
+   two it has to sit beside.
+   So the distinguishing signal is the DASH, which survives a photocopy and both
+   common kinds of colour blindness. It also happens to be the truthful encoding:
+   this position gets NEITHER face square on, so it should not wear either side's
+   colour. */
+.shared-room-camera-aisle circle,
+.shared-room-camera-aisle line {
+  stroke: var(--ink-faint);
+  stroke-dasharray: 3 2;
+}
+
+.shared-room-camera-note {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+}
+
+.shared-room-camera-note p {
+  color: var(--ink);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.shared-room-camera-note ul {
+  color: var(--ink-faint);
+  display: grid;
+  font-size: 0.8rem;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

@@ -231,6 +231,36 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
+- **NO POSITION IN THE ROOM SEES BOTH FACES DURING THE VOWS.** The scene turns the
+  couple to face each other (groom π/2, bride 3π/2, i.e. along x) and a face stays
+  readable through about 60° of yaw; two directions 180° apart cannot both sit inside
+  60° of anything. `lib/photography.ts` + `npm run check:photography`. That single
+  fact is the feature: it means two shooters, a planned move, or a decision about
+  whose face matters — better made in a kitchen than in a nave. **`seesBoth` is
+  COMPUTED, never asserted**, so if the scene stops turning them the copy stops
+  claiming it.
+  - The photographer reuses `analyzeSightlines` UNCHANGED; only `eyeY` was threaded
+    through. A standing eye at 1.60 m clears a seated crown at 1.36 m, so **the crowd
+    that dominates every guest's sightline is not a photographer's problem at all** —
+    the heights decide that, no hand-filtering. `check:photography` FAILS if the crowd
+    ever blocks, because that would mean `STANDING_EYE_Y` stopped reaching the test.
+  - **Where to stand is a REGION, not a dot.** The first version picked the closest
+    clear spot, so every answer landed exactly on the 1.8 m floor — "stand as close as
+    the code allows" is not advice. Zones now report their extent, and the one marked
+    spot is the closest that is **not in front of the guests**, a line measured from
+    the room (distance to the nearest seat) rather than chosen by taste. It is named
+    `nearestWorkable`, never `best`: the room cannot know if they want the window
+    behind them.
+  - **Three camera marks cannot be separated by colour, and this was measured.** The
+    aisle spot in `--ink` is **1.12:1** against the bride's `--accent`; the obvious
+    alternative `--ink-faint` is **1.00:1** against the groom's `--gilt`. Every
+    remaining colour collides with one of the two it must sit beside, so the aisle
+    mark is DASHED — which survives a photocopy, survives colour blindness, and is
+    the truthful encoding since that spot gets neither face.
+  - `--regress` proved directional after a fixture bug: the first test screen was
+    3 units wide, reached across the aisle and blocked the whole room, so it fired for
+    the wrong reason. At 1.2 units on the bride's side it costs her side 73 spots and
+    the groom's 0.
 - **A TRACED VENUE FEEDS THE FLOOR PLAN, NEVER THE 3D — and that is the whole design.**
   The look rests on the Blender baked-GI shell, and a bake is hours of one machine's
   CPU per room, so a polygon a couple traces on a Tuesday can never have one.
@@ -456,6 +486,7 @@ npm run check:figures
 npm run check:seats
 npm run check:sightlines
 npm run check:venue
+npm run check:photography
 npm run check:colour
 npm run lint
 npm run typecheck

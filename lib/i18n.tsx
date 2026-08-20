@@ -523,6 +523,19 @@ const sv: Record<string, string> = {
   "Watch notes": "Att hålla koll på",
   "to review before the day": "att gå igenom före dagen",
   "Nudge the selected object": "Putta det valda objektet",
+  // The photographer's half of the sightline answer (lib/photography.ts).
+  "Where to stand": "Var man ska stå",
+  "No position sees both faces during the vows — they turn to face each other.":
+    "Ingen plats ser båda ansiktena under löftena — de vänder sig mot varandra.",
+  "Her face: {count} standing positions to the left of the aisle, {near}-{far} m out":
+    "Hennes ansikte: {count} ståplatser till vänster om mittgången, {near}-{far} m ut",
+  "His face: {count} to the right, {near}-{far} m out":
+    "Hans ansikte: {count} till höger, {near}-{far} m ut",
+  "The seated guests are never in your way — you are above them.":
+    "De sittande gästerna är aldrig i vägen — du står över dem.",
+  "Marked spots are the closest that are not in front of the guests, who sit {front} m from the couple.":
+    "Markerade platser är de närmaste som inte står framför gästerna, som sitter {front} m från paret.",
+
   // Tracing your own venue (/venue).
   "Your venue": "Er lokal",
   "Trace your floor plan": "Rita av er planritning",

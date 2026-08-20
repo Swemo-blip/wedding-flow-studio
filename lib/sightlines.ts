@@ -111,7 +111,10 @@ export type SightlineVerdict = {
 // actually renders put their eye meshes at 0.691, 0.699, 0.760 and 0.781 units.
 // 0.73 is the midpoint of that range, and the 9 cm spread is smaller than the
 // lean allowance below — which is why one value is enough here.
-const SEATED_EYE_Y = 0.73;
+export const SEATED_EYE_Y = 0.73;
+// A standing adult's eye: 1.60 m over SCENE_UNIT_METRES. This is the number that
+// separates a photographer's problem from a guest's.
+export const STANDING_EYE_Y = 1.6 / SCENE_UNIT_METRES;
 // The couple's sternum. A 1.75 m adult's sternum sits at about 1.36 m; over
 // SCENE_UNIT_METRES that is 0.855. This is the target the line of sight has to
 // reach, chosen over the face because a guest who can see the chest can lean for
@@ -133,7 +136,7 @@ const LEAN_UNITS = 0.19;
 // Beyond this much yaw you are looking at the side of a head, not at a face:
 // both eyes and the mouth line stay readable to about 60 degrees, which is why a
 // three-quarter portrait sits inside it and a full profile is 90.
-const FACE_LEGIBLE_DEGREES = 60;
+export const FACE_LEGIBLE_DEGREES = 60;
 
 // The rendered congregation, measured: crowns at 0.758 / 0.830 / 0.845 / 0.855
 // units and half-widths 0.122 / 0.137 / 0.161 / 0.162. Heads are modelled at the
@@ -176,15 +179,16 @@ function approach(
 function interrupts(
   head: { x: number; z: number },
   couple: { x: number; z: number },
-  obstacle: SightlineObstacle
+  obstacle: SightlineObstacle,
+  eyeY: number
 ) {
   const { distance, fraction } = approach(head, couple, obstacle);
   if (distance > obstacle.radius) {
     return false;
   }
-  // The line of sight rises from the guest's eye to the couple's chest; if the
-  // obstacle is shorter than the line where it crosses, the guest sees over it.
-  const lineHeight = SEATED_EYE_Y + (COUPLE_CHEST_Y - SEATED_EYE_Y) * fraction;
+  // The line of sight runs from the observer's eye to the couple's chest; if the
+  // obstacle is shorter than the line where it crosses, they see over it.
+  const lineHeight = eyeY + (COUPLE_CHEST_Y - eyeY) * fraction;
   return obstacle.topY > lineHeight;
 }
 
@@ -192,7 +196,7 @@ function interrupts(
  * Blocked means blocked from every head position the guest can reach without
  * leaving their seat. See LEAN_UNITS.
  */
-function blocks(seat: SightlineSeat, couple: { x: number; z: number }, obstacle: SightlineObstacle) {
+function blocks(seat: SightlineSeat, couple: { x: number; z: number }, obstacle: SightlineObstacle, eyeY: number) {
   const spanX = couple.x - seat.x;
   const spanZ = couple.z - seat.z;
   const length = Math.hypot(spanX, spanZ) || 1;
@@ -205,7 +209,7 @@ function blocks(seat: SightlineSeat, couple: { x: number; z: number }, obstacle:
     { x: seat.x + leanX, z: seat.z + leanZ },
     { x: seat.x - leanX, z: seat.z - leanZ }
   ];
-  return heads.every((head) => interrupts(head, couple, obstacle));
+  return heads.every((head) => interrupts(head, couple, obstacle, eyeY));
 }
 
 /**
@@ -235,11 +239,19 @@ function vowFacing(seat: SightlineSeat, couple: { x: number; z: number }): VowFa
 export function analyzeSightlines({
   coupleX,
   coupleZ,
+  // Whose eye is this? Defaults to a seated guest, which is who this analysis was
+  // written for. A STANDING observer is not a detail — a photographer at 1.60 m
+  // sees straight over the seated crowns at 0.855 that dominate every guest's
+  // problem, so the same room gives a genuinely different answer depending on who
+  // is asking. Threading it through rather than hard-coding it is what let the
+  // photographer's view reuse this file unchanged.
+  eyeY = SEATED_EYE_Y,
   obstacles,
   seats
 }: {
   coupleX: number;
   coupleZ: number;
+  eyeY?: number;
   obstacles: SightlineObstacle[];
   seats: SightlineSeat[];
 }): SightlineVerdict[] {
@@ -262,7 +274,7 @@ export function analyzeSightlines({
     let blockedBy: string | undefined;
     let headInLine = false;
     for (const obstacle of obstacles) {
-      if (!blocks(seat, couple, obstacle)) {
+      if (!blocks(seat, couple, obstacle, eyeY)) {
         continue;
       }
       if (obstacle.kind === "person") {
