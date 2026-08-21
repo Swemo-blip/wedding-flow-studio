@@ -1003,6 +1003,7 @@ const PHOTO_MODE_ENABLED = false;
                   seatedGuests={seatedGuests}
                   selectedObjectId={activeSelectedObjectId}
                 sightlines={sightlines}
+                  partnerNames={{ one: activeWedding.partnerOneName, two: activeWedding.partnerTwoName }}
                   staging={staging}
                   updatePlan={updatePlan}
                   updateStaging={updateStaging}

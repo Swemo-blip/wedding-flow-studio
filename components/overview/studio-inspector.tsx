@@ -6,7 +6,19 @@ import { SCENE_UNIT_METRES, aisleWidthInFeet } from "@/components/wedding-studio
 import type { SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import type { SightlineSummary } from "@/lib/sightlines";
-import { buildCastFromTemplate, layoutCeremonyCast } from "@/lib/ceremony-cast";
+import { buildCastFromTemplate, defaultCeremonyCast, layoutCeremonyCast, processionalOrder, type CastRole } from "@/lib/ceremony-cast";
+
+// What to call each role when the couple has not typed a name. Kept beside the
+// panel that renders it rather than in the model: these are labels, not data.
+const CAST_ROLE_LABELS: Partial<Record<CastRole, string>> = {
+  attendant: "Attendant",
+  child: "Child",
+  escort: "Escort",
+  musician: "Musician",
+  officiant: "Officiant",
+  partner: "Partner",
+  reader: "Reader"
+};
 import {
   colorDirectionOptions,
   decorLevelOptions,
@@ -87,6 +99,10 @@ type StudioInspectorProps = {
   // an altar at dinner) and is not answered by pretending this analysis applies.
   sightlines: SightlineSummary | null;
   staging: CeremonyStaging;
+  // Their actual names. The processional order used to read "Partner two" back to
+  // a couple whose names the app already knew — a placeholder shown to the person
+  // it is a placeholder FOR is the same class of fake as sample data.
+  partnerNames: { one: string; two: string };
   updatePlan: (plan: WeddingStudioPlan) => void;
   updateStaging: (staging: CeremonyStaging) => void;
   warnings: SceneWarning[];
@@ -110,6 +126,7 @@ export function StudioInspector({
   sceneKind,
   seatedGuests,
   selectedObjectId,
+  partnerNames,
   sightlines,
   staging,
   updatePlan,
@@ -363,10 +380,66 @@ export function StudioInspector({
       staging.cast.filter((entry) => entry.role === "attendant" && entry.side === 1).length,
       staging.cast.filter((entry) => entry.role === "attendant" && entry.side === 2).length
     );
+    // Everyone who walks in, in order, EXCLUDING the two partners: they are
+    // handled by the groom-start control and by always arriving, so listing them
+    // here would offer a couple the chance to build a wedding nobody attends.
+    const walkers = staging.cast
+      .filter((entry) => entry.entrance === "walks-in" && entry.role !== "partner")
+      .sort((a, b) => a.order - b.order);
+    // groomStart is the one source of truth for whether partner one walks; the cast
+    // reflects it rather than storing the same fact twice.
+    const castWithNames = (staging.cast.length > 0 ? staging.cast : defaultCeremonyCast()).map((entry) => {
+      if (entry.id === "partner-one") {
+        return {
+          ...entry,
+          entrance: staging.groomStart === "aisle" ? ("walks-in" as const) : ("in-place" as const),
+          name: partnerNames.one || entry.name
+        };
+      }
+      if (entry.id === "partner-two") {
+        return { ...entry, name: partnerNames.two || entry.name };
+      }
+      return entry;
+    });
+    const processional = processionalOrder(castWithNames);
+    const writeCast = (cast: CeremonyStaging["cast"]) => updateStaging({ ...staging, cast: layoutCeremonyCast(cast) });
+    const addWalker = (role: "escort" | "child" | "reader") => {
+      const base = staging.cast.length > 0 ? staging.cast : defaultCeremonyCast({ partnerOne: partnerNames.one, partnerTwo: partnerNames.two });
+      const highest = base.reduce((max, entry) => Math.max(max, entry.order), 0);
+      writeCast([
+        ...base,
+        {
+          entrance: "walks-in" as const,
+          id: `${role}-${highest + 1}`,
+          look: role === "child" ? ("child" as const) : ("suit" as const),
+          mark: { x: 0, z: 0 },
+          name: "",
+          order: highest + 1,
+          role
+        }
+      ]);
+    };
+    const removeMember = (id: string) => writeCast(staging.cast.filter((entry) => entry.id !== id));
+    const renameMember = (id: string, name: string) =>
+      writeCast(staging.cast.map((entry) => (entry.id === id ? { ...entry, name } : entry)));
+    const moveWalker = (id: string, direction: -1 | 1) => {
+      const ordered = [...walkers];
+      const index = ordered.findIndex((entry) => entry.id === id);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= ordered.length) {
+        return;
+      }
+      [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+      // Renumber from the couple's own order so a walker can never sort ahead of
+      // the person they are escorting.
+      const renumbered = new Map(ordered.map((entry, position) => [entry.id, 10 + position]));
+      writeCast(staging.cast.map((entry) => (renumbered.has(entry.id) ? { ...entry, order: renumbered.get(entry.id)! } : entry)));
+    };
     const setAttendants = (perSide: number) => {
       const keep = staging.cast.filter((entry) => entry.role !== "attendant");
       const attendants = perSide > 0 ? buildCastFromTemplate("party-at-the-front", { attendantsPerSide: perSide }).filter((entry) => entry.role === "attendant") : [];
-      updateStaging({ ...staging, cast: layoutCeremonyCast([...keep, ...attendants]) });
+      const base = keep.length > 0 ? keep : defaultCeremonyCast({ partnerOne: partnerNames.one, partnerTwo: partnerNames.two });
+      updateStaging({ ...staging, cast: layoutCeremonyCast([...base, ...attendants]) });
     };
 
     return (
@@ -402,6 +475,71 @@ export function StudioInspector({
                 })}
           </p>
         </fieldset>
+
+        {/* WHO ELSE WALKS IN. This is the part that makes the processional a real
+            sequence rather than one person: a parent, a child with the rings, a
+            reader. Names are free text on purpose for now — the guest list knows
+            the relationships and could offer them, but guessing which "Anna" is
+            meant would be the kind of invention this product refuses. */}
+        <fieldset className="vstudio-field">
+          <legend>{t("Who else walks in")}</legend>
+          <div className="vstudio-cast-list">
+            {walkers.length === 0 ? <p className="vstudio-panel-hint">{t("Only you two, so far.")}</p> : null}
+            {walkers.map((entry, index) => (
+              <div className="vstudio-cast-row" key={entry.id}>
+                <input
+                  aria-label={t("Their name")}
+                  onChange={(event) => renameMember(entry.id, event.target.value)}
+                  placeholder={t(CAST_ROLE_LABELS[entry.role] ?? "In the ceremony")}
+                  value={entry.name}
+                />
+                <button
+                  aria-label={t("Earlier in the order")}
+                  disabled={index === 0}
+                  onClick={() => moveWalker(entry.id, -1)}
+                  type="button"
+                >
+                  <ArrowUp aria-hidden="true" size={14} strokeWidth={1.9} />
+                </button>
+                <button
+                  aria-label={t("Later in the order")}
+                  disabled={index === walkers.length - 1}
+                  onClick={() => moveWalker(entry.id, 1)}
+                  type="button"
+                >
+                  <ArrowDown aria-hidden="true" size={14} strokeWidth={1.9} />
+                </button>
+                <button aria-label={t("Remove")} onClick={() => removeMember(entry.id)} type="button">
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="vstudio-step-actions">
+            {(["escort", "child", "reader"] as const).map((role) => (
+              <button key={role} onClick={() => addWalker(role)} type="button">
+                + {t(CAST_ROLE_LABELS[role] ?? "In the ceremony")}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        {/* The order, derived rather than stored twice. This is the list a
+            toastmaster reads at the door, so it is numbered and it names the pairs
+            who walk together as one line. */}
+        {processional.length > 0 ? (
+          <div className="vstudio-processional">
+            <span className="eyebrow">{t("Walks in, in this order")}</span>
+            <ol>
+              {processional.map((group, index) => (
+                <li key={group.map((entry) => entry.id).join("-")}>
+                  <span>{index + 1}</span>
+                  {group.map((entry) => entry.name.trim() || t(CAST_ROLE_LABELS[entry.role] ?? "In the ceremony")).join(" & ")}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
 
         <fieldset className="vstudio-field">
           <legend>{t("The groom")}</legend>

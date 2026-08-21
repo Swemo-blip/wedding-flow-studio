@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Ban, Check, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { defaultCeremonyCast, processionalOrder } from "@/lib/ceremony-cast";
 import { useLocalProject } from "@/lib/use-local-project";
+import { readStoredWeddingStudioLayout } from "@/lib/wedding-studio-storage";
 import { joinDetails } from "@/lib/utils";
 import type { MomentRunState, TimelineItem } from "@/lib/wedding-types";
 
@@ -21,9 +23,21 @@ import type { MomentRunState, TimelineItem } from "@/lib/wedding-types";
 // the first moment still planned, in the timeline's own chronological order. Ticking
 // one off advances the view by definition, which means the toastmaster never has to
 // tell the app where they are.
+// The one list a toastmaster reads out loud.
+//
+// This file's own rule is that risks, readiness and inspectors are noise here — a
+// person standing in bad light with a queue of people needs what is now, what is
+// next, and two verbs. The processional order does not break that rule: on the
+// processional moment it IS what is now. It appears on that moment only, and
+// nowhere else.
+const PROCESSIONAL_PHASE = "Processional";
+
 export function RunTheDay() {
   const { t } = useTranslation();
   const { hasLocalProject, timelineItems, updateTimelineItems } = useLocalProject();
+  // Read once per render from the store the studio owns. The toastmaster surface
+  // does not edit the cast, so it has no state of its own to go stale.
+  const storedCast = useMemo(() => readStoredWeddingStudioLayout()?.staging.cast ?? [], []);
   const [manualIndex, setManualIndex] = useState<number | null>(null);
 
   const firstUnfinished = useMemo(() => {
@@ -77,6 +91,10 @@ export function RunTheDay() {
   }
 
   const currentState = current.runState ?? "planned";
+  const processional =
+    current.phase === PROCESSIONAL_PHASE
+      ? processionalOrder(storedCast.length > 0 ? storedCast : defaultCeremonyCast())
+      : [];
   // Empty on plenty of real moments — an empty <p> is a gap the eye has to
   // account for, so it does not render at all.
   const where = joinDetails([current.location, current.responsiblePerson]);
@@ -101,6 +119,16 @@ export function RunTheDay() {
         <h1>{current.title}</h1>
         {where ? <p className="run-day-where">{where}</p> : null}
         {current.notes ? <p className="run-day-notes">{current.notes}</p> : null}
+        {processional.length > 1 ? (
+          <ol className="run-day-order" aria-label={t("Walks in, in this order")}>
+            {processional.map((group, index) => (
+              <li key={group.map((entry) => entry.id).join("-")}>
+                <span>{index + 1}</span>
+                {group.map((entry) => entry.name.trim() || t("In the ceremony")).join(" & ")}
+              </li>
+            ))}
+          </ol>
+        ) : null}
         {currentState !== "planned" ? (
           <p className="run-day-state">
             {currentState === "done" ? t("Marked done") : t("Struck from the day")}

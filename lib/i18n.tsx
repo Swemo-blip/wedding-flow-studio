@@ -536,6 +536,22 @@ const sv: Record<string, string> = {
   "Marked spots are the closest that are not in front of the guests, who sit {front} m from the couple.":
     "Markerade platser är de närmaste som inte står framför gästerna, som sitter {front} m från paret.",
 
+  // The processional order — the one list a toastmaster reads at the door.
+  "Who else walks in": "Vem mer går in",
+  "Only you two, so far.": "Bara ni två, än så länge.",
+  "Their name": "Deras namn",
+  "In the ceremony": "I vigseln",
+  "Earlier in the order": "Tidigare i ordningen",
+  "Later in the order": "Senare i ordningen",
+  "Remove": "Ta bort",
+  "Walks in, in this order": "Går in i denna ordning",
+  "Attendant": "Tärna eller marskalk",
+  "Child": "Barn",
+  "Escort": "Följeslagare",
+  "Musician": "Musiker",
+  "Reader": "Textläsare",
+  "Partner": "Partner",
+
   // The wedding party (lib/ceremony-cast.ts).
   "Wedding party": "Brudföljet",
   "No attendants": "Inga",
