@@ -231,6 +231,34 @@ locale is a signal they set on purpose. `lib/i18n.tsx` `LanguageProvider`.
   L\* 97 (panel) and 92 (desk), so the render-to-chrome gap is about 24 points, not
   the 40-55 an earlier analysis asserted from an assumed candlelit scene. Do not
   reason about this render's luminance from the lighting you imagine; sample it.
+- **THE WEDDING PARTY'S COST IS DECIDED BY WHERE IT STANDS, NOT BY HOW BIG IT IS.**
+  `lib/ceremony-cast.ts` + `npm run check:cast`, measured over the 112-guest nave with
+  four attendants each side: **0.5 m upstage → 0 seats blocked, level with the couple
+  → 5, 0.5 m downstage → 10, 1.1 m downstage → 13.** At level, how far OUT the line
+  starts matters as much again: first attendant at 0.55 m blocks 13, at 2.0 m blocks
+  none. And party SIZE barely registers once downstage — one each side blocks 7, six
+  each side blocks 10, because from any one seat the rest stand in the first one's
+  shadow. **I asserted the opposite before measuring** (that attendants were making
+  the shipped sightline answer wrong); for a party standing where parties stand, they
+  are not, because they stand upstage and nothing behind the target can occlude it.
+  - **Choreography is a CAST, not more toggles.** It was two booleans
+    (`groomStart`, `showSinger`), so "I walk in with my father", "the party stands at
+    the front" and "we walk in together" were all inexpressible. The model is now a
+    list: each person either stands there already or walks in, in an order, ending on
+    a mark. Every variant is a configuration, which is the test of the right
+    primitive — no new code path per variant. Templates SEED the list and are never
+    modes; a mode you cannot leave is the lock-in this product exists to avoid.
+  - **One source of truth per person.** The cast lists who; the two partners' and the
+    officiant's positions still come from the staging marks the studio already drags
+    (`resolveCastMarks`), and `castSightlineObstacles` takes `skipOfficiant` so he is
+    not counted twice.
+  - **A CAST MARK IS ABSOLUTE, AND clampSceneOffset WILL DESTROY IT.** That clamp
+    bounds a DELTA at ±1.8. Run over an absolute chancel coordinate it moved every
+    attendant seeded at z -3.05 to -1.8 — from behind the couple's shoulders to three
+    quarters of a metre IN FRONT of them, where they block six seats — silently, on
+    the first save. Use `clampCastMark`/`CAST_MARK_BOUNDS`. Found by restoring a
+    backup and noticing the number, not by reading the code; `--regress` now asserts
+    that every seeded mark survives the clamp.
 - **NO POSITION IN THE ROOM SEES BOTH FACES DURING THE VOWS.** The scene turns the
   couple to face each other (groom π/2, bride 3π/2, i.e. along x) and a face stays
   readable through about 60° of yaw; two directions 180° apart cannot both sit inside
@@ -487,6 +515,7 @@ npm run check:seats
 npm run check:sightlines
 npm run check:venue
 npm run check:photography
+npm run check:cast
 npm run check:colour
 npm run lint
 npm run typecheck

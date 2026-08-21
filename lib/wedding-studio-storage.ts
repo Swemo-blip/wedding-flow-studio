@@ -20,6 +20,7 @@ import {
   type StudioSceneObjectId,
   type WeddingStudioPlan
 } from "@/lib/wedding-studio-plan";
+import { clampCastMark } from "@/lib/ceremony-cast";
 import { safeSetItem } from "@/lib/persistence-status";
 
 export const weddingStudioLayoutStorageKey = "wedding-flow-studio.layout.v1";
@@ -33,6 +34,11 @@ export type StoredWeddingStudioLayout = {
 };
 
 const sceneObjectIds = Object.keys(defaultStudioSceneEdits) as StudioSceneObjectId[];
+
+// A wedding party has a ceiling in practice, and a stored list has to have one in
+// code: without it a corrupted record could ask the analysis to trace ten thousand
+// rays per seat.
+const MAX_CAST_MEMBERS = 40;
 
 export function readStoredWeddingStudioLayout() {
   if (typeof window === "undefined") {
@@ -150,6 +156,26 @@ function createStudioSceneEditsDraft(source: Partial<StudioSceneEdits> | undefin
 
 function createCeremonyStagingDraft(source: Partial<CeremonyStaging> | undefined): CeremonyStaging {
   return {
+    // The cast is validated rather than trusted: a stored list is the one slice a
+    // couple could in principle grow without bound, and a member without a mark
+    // would put a body at the origin.
+    cast: Array.isArray(source?.cast)
+      ? source.cast
+          .filter((entry) => entry && typeof entry.id === "string" && typeof entry.role === "string")
+          .slice(0, MAX_CAST_MEMBERS)
+          .map((entry) => ({
+            ...entry,
+            // clampCastMark, NOT clampSceneOffset. A cast mark is an absolute
+            // position in the chancel; clampSceneOffset bounds a DELTA at +/-1.8 and
+            // dragged every attendant to z -1.8 — in front of the couple — on the
+            // first save. See CAST_MARK_BOUNDS.
+            mark: clampCastMark({
+              x: typeof entry.mark?.x === "number" ? entry.mark.x : 0,
+              z: typeof entry.mark?.z === "number" ? entry.mark.z : 0
+            }),
+            name: typeof entry.name === "string" ? entry.name.slice(0, 80) : ""
+          }))
+      : [],
     groomStart: source?.groomStart === "altar" ? "altar" : "aisle",
     marks: ceremonyStagingMarkIds.reduce<CeremonyStaging["marks"]>((draft, markId) => {
       const offset = source?.marks?.[markId];

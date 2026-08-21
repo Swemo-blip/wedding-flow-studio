@@ -6,6 +6,7 @@ import { SCENE_UNIT_METRES, aisleWidthInFeet } from "@/components/wedding-studio
 import type { SceneLighting } from "@/components/wedding-studio/church-scene";
 import { useTranslation } from "@/lib/i18n";
 import type { SightlineSummary } from "@/lib/sightlines";
+import { buildCastFromTemplate, layoutCeremonyCast } from "@/lib/ceremony-cast";
 import {
   colorDirectionOptions,
   decorLevelOptions,
@@ -358,9 +359,49 @@ export function StudioInspector({
   }
 
   if (activeTool === "staging") {
+    const attendantsPerSide = Math.max(
+      staging.cast.filter((entry) => entry.role === "attendant" && entry.side === 1).length,
+      staging.cast.filter((entry) => entry.role === "attendant" && entry.side === 2).length
+    );
+    const setAttendants = (perSide: number) => {
+      const keep = staging.cast.filter((entry) => entry.role !== "attendant");
+      const attendants = perSide > 0 ? buildCastFromTemplate("party-at-the-front", { attendantsPerSide: perSide }).filter((entry) => entry.role === "attendant") : [];
+      updateStaging({ ...staging, cast: layoutCeremonyCast([...keep, ...attendants]) });
+    };
+
     return (
       <div className="vstudio-panel">
         <h2>{t("Staging")}</h2>
+
+        {/* THE WEDDING PARTY. Not a list of toggles per role — a count, because
+            measurement said the count is the part that barely matters and the
+            POSITION is the part that decides. So the control is small and the
+            sentence under it carries the finding: standing where a party stands
+            costs nothing, and dragging them level with the couple costs seats.
+            See lib/ceremony-cast.ts for the sweep. */}
+        <fieldset className="vstudio-field">
+          <legend>{t("Wedding party")}</legend>
+          <div className="vstudio-choice-row" role="group" aria-label={t("Wedding party")}>
+            {[0, 1, 2, 3, 4].map((count) => (
+              <button
+                aria-pressed={attendantsPerSide === count}
+                data-active={attendantsPerSide === count}
+                key={count}
+                onClick={() => setAttendants(count)}
+                type="button"
+              >
+                {count === 0 ? t("No attendants") : count}
+              </button>
+            ))}
+          </div>
+          <p className="vstudio-panel-hint">
+            {attendantsPerSide === 0
+              ? t("Attendants standing each side of you.")
+              : t("{count} each side, standing behind your shoulders — where they cost the room no views. Drag them level with you and they start to.", {
+                  count: attendantsPerSide
+                })}
+          </p>
+        </fieldset>
 
         <fieldset className="vstudio-field">
           <legend>{t("The groom")}</legend>

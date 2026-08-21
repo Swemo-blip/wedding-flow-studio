@@ -318,9 +318,15 @@ export function getEditableObjectsForStep(activeStep: StudioPlanningStepId): Stu
 // saved plan in a wall.
 export type CeremonyStagingMarkId = "celebrant" | "couple" | "florals" | "singer";
 
+import type { CeremonyCastMember } from "@/lib/ceremony-cast";
+
 export type CeremonyGroomStart = "aisle" | "altar";
 
 export type CeremonyStaging = {
+  // Who is in the ceremony. Empty means the smallest cast — the two partners and
+  // the officiant — which is exactly what groomStart/showSinger used to express on
+  // their own. See lib/ceremony-cast.ts for why this is a list and not more toggles.
+  cast: CeremonyCastMember[];
   groomStart: CeremonyGroomStart;
   marks: Record<CeremonyStagingMarkId, StudioSceneOffset>;
   showSinger: boolean;
@@ -343,6 +349,7 @@ export const ceremonyStagingMarks: Record<
 export const ceremonyStagingMarkIds = Object.keys(ceremonyStagingMarks) as CeremonyStagingMarkId[];
 
 export const defaultCeremonyStaging: CeremonyStaging = {
+  cast: [],
   groomStart: "aisle",
   marks: {
     celebrant: { x: 0, z: 0 },
@@ -364,7 +371,11 @@ export function clampStagingOffset(markId: CeremonyStagingMarkId, value: number)
 }
 
 export function isCeremonyStagingDefault(staging: CeremonyStaging) {
-  if (staging.groomStart !== defaultCeremonyStaging.groomStart || staging.showSinger !== defaultCeremonyStaging.showSinger) {
+  if (
+    staging.groomStart !== defaultCeremonyStaging.groomStart ||
+    staging.showSinger !== defaultCeremonyStaging.showSinger ||
+    staging.cast.length !== 0
+  ) {
     return false;
   }
   return ceremonyStagingMarkIds.every((markId) => staging.marks[markId].x === 0 && staging.marks[markId].z === 0);

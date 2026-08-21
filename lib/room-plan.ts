@@ -13,6 +13,7 @@ import { calculateWeddingStudioCapacity } from "@/lib/wedding-studio-plan";
 import { DEFAULT_VENUE_SEATING, fitSeatsToRoom } from "@/lib/venue-seating";
 import { isInsideRoom, resolveVenueTrace, type TracePoint, type VenueTrace } from "@/lib/venue-trace";
 import { planPhotography, type PhotographyPlan } from "@/lib/photography";
+import { castSightlineObstacles, resolveCastMarks } from "@/lib/ceremony-cast";
 
 // The room, flattened to a top-down plan a vendor can read on a phone.
 //
@@ -29,7 +30,7 @@ import { planPhotography, type PhotographyPlan } from "@/lib/photography";
 // cannot describe a different room from the one the couple approved.
 
 export type RoomPlanMark = {
-  kind: "couple" | "officiant" | "singer" | "arrangement";
+  kind: "couple" | "officiant" | "singer" | "arrangement" | "attendant";
   label: string;
   radiusMetres: number;
   x: number;
@@ -129,6 +130,11 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
 
   const coupleX = 0.26 + room.staging.marks.couple.x;
   const coupleZ = PROCESSION_END_Z + room.staging.marks.couple.z + INTERIOR_Z;
+  // The wedding party stands in the room the crew is setting up, so it belongs on
+  // the crew's drawing — four people at the front are four chairs that cannot go there.
+  const party = castSightlineObstacles(resolveCastMarks(room.staging.cast, room.staging), INTERIOR_Z, {
+    skipOfficiant: true
+  });
   const fixtures = churchSightlineObstacles({
     celebrantMark: room.staging.marks.celebrant,
     floralMark: room.staging.marks.florals,
@@ -141,7 +147,7 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
   const verdicts = analyzeSightlines({
     coupleX,
     coupleZ,
-    obstacles: [...fixtures, ...seatedGuestObstacles(seats)],
+    obstacles: [...party, ...fixtures, ...seatedGuestObstacles(seats)],
     seats
   });
   const byId = new Map(verdicts.map((verdict) => [verdict.id, verdict]));
@@ -161,6 +167,13 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
     // The couple stand shoulder to shoulder at ±0.26 of their own mark; one pair of
     // shoulders is enough on a plan at this scale.
     { kind: "couple", label: "The couple", radiusMetres: 0.55, x: toMetres(coupleX), y: toMetres(coupleZ) },
+    ...party.map((entry) => ({
+      kind: "attendant" as const,
+      label: entry.label,
+      radiusMetres: toMetres(entry.radius),
+      x: toMetres(entry.x),
+      y: toMetres(entry.z)
+    })),
     ...fixtures
       // The microphone stand is real geometry but it is 4 cm wide; on a printed
       // plan it is a dot nobody can act on.
@@ -202,7 +215,7 @@ export function buildRoomPlan(room: ShareRoom): RoomPlan | null {
         },
         coupleX,
         coupleZ,
-        obstacles: [...fixtures, ...seatedGuestObstacles(seats)],
+        obstacles: [...party, ...fixtures, ...seatedGuestObstacles(seats)],
         seats
       }),
       toMetres

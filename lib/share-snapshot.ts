@@ -45,6 +45,9 @@ type PackedRoom = {
   plan: WeddingStudioPlan;
   sceneEdits?: Record<string, PackedOffset>;
   staging?: {
+    // The wedding party travels: a venue setting up chairs needs to know four
+    // people will be standing where they were going to put the first row.
+    cast?: CeremonyStaging["cast"];
     groomStart?: CeremonyStaging["groomStart"];
     marks?: Record<string, PackedOffset>;
     showSinger?: boolean;
@@ -92,6 +95,12 @@ export function packRoom(room: ShareRoom): PackedRoom {
   if (Object.keys(marks).length > 0) {
     staging.marks = marks;
   }
+  // Optional-chained on purpose. A ShareRoom is built from whatever the caller
+  // holds, including a layout record written before the cast existed, and a share
+  // link that throws is a share link that silently never gets sent.
+  if (room.staging.cast?.length) {
+    staging.cast = room.staging.cast;
+  }
   return {
     plan: room.plan,
     ...(Object.keys(sceneEdits).length > 0 ? { sceneEdits } : {}),
@@ -104,6 +113,7 @@ export function unpackRoom(packed: PackedRoom, defaults: { sceneEdits: StudioSce
     plan: packed.plan,
     sceneEdits: unpackOffsets(defaults.sceneEdits, packed.sceneEdits),
     staging: {
+      cast: Array.isArray(packed.staging?.cast) ? packed.staging.cast : [],
       groomStart: packed.staging?.groomStart ?? "aisle",
       marks: unpackOffsets(defaults.staging.marks, packed.staging?.marks),
       showSinger: packed.staging?.showSinger === true

@@ -536,6 +536,14 @@ const sv: Record<string, string> = {
   "Marked spots are the closest that are not in front of the guests, who sit {front} m from the couple.":
     "Markerade platser är de närmaste som inte står framför gästerna, som sitter {front} m från paret.",
 
+  // The wedding party (lib/ceremony-cast.ts).
+  "Wedding party": "Brudföljet",
+  "No attendants": "Inga",
+  "Attendants standing each side of you.": "Tärnor och marskalkar på var sida om er.",
+  "{count} each side, standing behind your shoulders — where they cost the room no views. Drag them level with you and they start to.":
+    "{count} på var sida, bakom era axlar — där kostar de rummet inga siktlinjer. Dra dem i linje med er så börjar de göra det.",
+  "someone in the wedding party": "någon i brudföljet",
+
   // Tracing your own venue (/venue).
   "Your venue": "Er lokal",
   "Trace your floor plan": "Rita av er planritning",

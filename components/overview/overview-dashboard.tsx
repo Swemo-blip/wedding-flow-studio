@@ -33,6 +33,7 @@ import {
   PROCESSION_END_Z,
   type SceneLighting
 } from "@/components/wedding-studio/church-scene";
+import { castSightlineObstacles, resolveCastMarks } from "@/lib/ceremony-cast";
 import {
   analyzeSightlines,
   churchSightlineObstacles,
@@ -393,6 +394,11 @@ const PHOTO_MODE_ENABLED = false;
       coupleX: 0.26 + staging.marks.couple.x,
       coupleZ: PROCESSION_END_Z + staging.marks.couple.z + INTERIOR_Z,
       obstacles: [
+        // The wedding party. Measured: standing where a party stands (upstage of
+        // the couple) this costs nothing — but the marks are draggable, and the
+        // moment they move level or downstage it costs real seats. That gradient
+        // is the whole reason it is passed in rather than assumed away.
+        ...castSightlineObstacles(resolveCastMarks(staging.cast, staging), INTERIOR_Z, { skipOfficiant: true }),
         ...churchSightlineObstacles({
           celebrantMark: staging.marks.celebrant,
           floralMark: staging.marks.florals,
@@ -416,8 +422,11 @@ const PHOTO_MODE_ENABLED = false;
     plan.seatingLayout,
     sceneEdits.focalPoint,
     sceneVenueType,
-    staging.marks,
-    staging.showSinger
+    // The whole staging object, not three of its fields. Listing slices is how the
+    // cast was nearly left out of the dependency list the same day it was added,
+    // and a memo that misses a slice is exactly the stale-panel bug this file has
+    // already shipped once.
+    staging
   ]);
 
 

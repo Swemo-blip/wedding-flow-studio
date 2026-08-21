@@ -11206,3 +11206,12 @@ a {
   margin: 0;
   padding: 0;
 }
+
+/* The wedding party on the shared plan. Same outlined-ring language as the other
+   people, one step lighter: they are real bodies the crew must leave room for, but
+   they are not the couple and they are not the officiant. */
+.shared-room-mark-attendant {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.2;
+}

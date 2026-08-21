@@ -44,6 +44,10 @@ const cases = [
     {
       ...resting,
       staging: {
+        // Spread the default FIRST: a fixture that omits a slice is not a valid
+        // CeremonyStaging, and the round trip would then report a loss that is
+        // really a hole in the test.
+        ...planLib.defaultCeremonyStaging,
         groomStart: "altar",
         marks: { ...planLib.defaultCeremonyStaging.marks, celebrant: { x: -1.5, z: 1.5 }, singer: { x: 0.4, z: 0 } },
         showSinger: true
@@ -58,6 +62,7 @@ const cases = [
         Object.keys(planLib.defaultStudioSceneEdits).map((key, index) => [key, { x: 0.1 * (index + 1), z: -0.2 }])
       ),
       staging: {
+        ...planLib.defaultCeremonyStaging,
         groomStart: "altar",
         marks: Object.fromEntries(
           Object.keys(planLib.defaultCeremonyStaging.marks).map((key, index) => [key, { x: 0.3, z: 0.1 * (index + 1) }])
@@ -114,6 +119,28 @@ console.log(`\n  a whole shared link (14 moments + the room): ${full} hash chars
 // hundreds of kilobytes and belongs to the device that traced it. Asserting both
 // halves here, because "the trace travels" and "the image does not" are two
 // different ways for this feature to be wrong.
+// A wedding party must travel too: a venue setting up chairs needs to know four
+// people will be standing where the front row was going to go.
+const WITH_PARTY = {
+  ...resting,
+  staging: {
+    ...resting.staging,
+    cast: [
+      { entrance: "in-place", id: "a-1-0", look: "suit", mark: { x: -1.05, z: -3.05 }, name: "Nils", order: 0, role: "attendant", side: 1 },
+      { entrance: "in-place", id: "a-2-0", look: "dress", mark: { x: 1.05, z: -3.05 }, name: "Elin", order: 0, role: "attendant", side: 2 }
+    ]
+  }
+};
+const partyRound = share.unpackRoom(share.packRoom(WITH_PARTY), defaults);
+const partyLossless = JSON.stringify(partyRound.staging.cast) === JSON.stringify(WITH_PARTY.staging.cast);
+console.log(
+  `  a wedding party of two: ${hashLength(share.packRoom(WITH_PARTY)) - hashLength(share.packRoom(resting))} extra hash chars, ` +
+    `${partyLossless ? "lossless" : "*** LOSSY ***"}`
+);
+if (!partyLossless) {
+  problems.push("the wedding party did not survive the round trip");
+}
+
 const TRACED = {
   v: 1,
   calibration: { a: { x: 40, y: 900 }, b: { x: 540, y: 900 }, metres: 50 },
